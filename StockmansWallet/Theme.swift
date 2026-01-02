@@ -24,22 +24,26 @@ struct Theme {
    
     // MARK: - Backgrounds
     // Debug: Standardized backgrounds for consistent visual identity across the app
-    // Rule #0: Single source of truth for gradient background used throughout main pages
+    // Rule #0: Single source of truth for background color used throughout main pages
+    
+    /// Main solid background color for all primary app screens (Dashboard, Portfolio, Market, etc.)
+    /// Dark brown (#130F0D) that creates depth and visual hierarchy
+    static let backgroundColor = Color(hex: "130F0D")
     
     /// Main gradient background for all primary app screens (Dashboard, Portfolio, Market, etc.)
     /// Dark brown gradient that creates depth and visual hierarchy
     static let backgroundGradient = LinearGradient(
         colors: [
-            Color(red: 0.2, green: 0.15, blue: 0.1),      // Lighter brown at top
-            Color(red: 0.129, green: 0.102, blue: 0.086)  // Darker brown at bottom
+            Color(hex: "130F0D"),  // Solid dark brown
+            Color(hex: "130F0D")   // Same color for uniform background
         ],
         startPoint: .top,
         endPoint: .bottom
     )
     
     /// Solid background color for sheets, modals, and overlays
-    /// Uses the darker brown from the gradient for consistency
-    static let sheetBackground = Color(red: 0.129, green: 0.102, blue: 0.086)
+    /// Uses #130F0D for consistency
+    static let sheetBackground = Color(hex: "130F0D")
 
     // MARK: - Typography
     // Prefer semantic SwiftUI text styles to support Dynamic Type automatically.

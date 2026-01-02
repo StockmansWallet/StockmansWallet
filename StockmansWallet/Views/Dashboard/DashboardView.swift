@@ -40,94 +40,14 @@ struct DashboardView: View {
     
     var body: some View {
         NavigationStack {
-            Group {
-                let activeHerds = herds.filter { !$0.isSold }
-                
-                // Debug: Handle empty, error, and loaded states
-                if activeHerds.isEmpty {
-                    EmptyDashboardView(showingAddAssetMenu: $showingAddAssetMenu)
-                        .accessibilityElement(children: .contain)
-                        .accessibilityLabel("Empty dashboard")
-                        .accessibilityHint("Add your first herd to get started.")
-                } else if let error = loadError {
-                    // Debug: Error state with retry option
-                    ErrorStateView(errorMessage: error) {
-                        Task {
-                            await loadValuations()
-                        }
-                    }
-                    .accessibilityLabel("Error loading dashboard")
-                    .accessibilityHint(error)
-                } else {
-                    ScrollView {
-                        Color.clear
-                            .frame(height: 0)
-                        VStack(spacing: Theme.sectionSpacing) {
-                            PortfolioValueCard(
-                                value: selectedValue ?? portfolioValue,
-                                change: isScrubbing ? portfolioChange : (portfolioValue - dayAgoValue),
-                                isLoading: isLoading,
-                                isScrubbing: isScrubbing
-                            )
-                            .padding(.horizontal)
-                            .padding(.bottom, -Theme.sectionSpacing + 8)
-                            .accessibilityElement(children: .combine)
-                            .accessibilityLabel("Total portfolio value")
-                            .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
-                            
-                            InteractiveChartView(
-                                data: filteredHistory,
-                                selectedDate: $selectedDate,
-                                selectedValue: $selectedValue,
-                                isScrubbing: $isScrubbing,
-                                timeRange: $timeRange,
-                                baseValue: baseValue,
-                                onValueChange: { newValue, change in
-                                    portfolioChange = change
-                                }
-                            )
-                            .padding(.horizontal)
-                            .accessibilityHint("Drag your finger across the chart to explore values over time.")
-                            
-                            TimeRangeSelector(timeRange: $timeRange)
-                                .padding(.horizontal)
-                                .padding(.top, -Theme.sectionSpacing)
-                                .accessibilityElement(children: .contain)
-                                .accessibilityLabel("Time range selector")
-                            
-                            MarketPulseView()
-                                .padding(.horizontal)
-                                .accessibilityElement(children: .contain)
-                                .accessibilityLabel("Market pulse")
-                            
-                            if !capitalConcentration.isEmpty {
-                                CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
-                                    .padding(.horizontal)
-                                    .accessibilityElement(children: .contain)
-                                    .accessibilityLabel("Capital concentration")
-                            }
-                            
-                            if let metrics = performanceMetrics {
-                                PerformanceMetricsView(metrics: metrics)
-                                    .padding(.horizontal)
-                                    .accessibilityElement(children: .contain)
-                                    .accessibilityLabel("Performance metrics")
-                            }
-                            
-                            CostToCarryView(totalCost: totalCostToCarry, portfolioValue: portfolioValue)
-                                .padding(.horizontal)
-                                .accessibilityElement(children: .contain)
-                                .accessibilityLabel("Cost to carry")
-                            
-                            QuickStatsView(herds: herds)
-                                .padding(.horizontal)
-                                .accessibilityElement(children: .contain)
-                                .accessibilityLabel("Quick stats")
-                        }
-                        .padding(.bottom, 100)
-                    }
-                }
-            }
+            mainContentWithModifiers
+        }
+    }
+    
+    // Debug: Separate view with all modifiers to reduce complexity
+    @ViewBuilder
+    private var mainContentWithModifiers: some View {
+        let contentWithNav = mainContent
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.clear, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -139,6 +59,8 @@ struct DashboardView: View {
                         .accessibilityAddTraits(.isHeader)
                 }
             }
+        
+        contentWithNav
             .task {
                 await loadValuations()
             }
@@ -165,8 +87,135 @@ struct DashboardView: View {
                     .transition(.move(edge: .trailing))
                     .presentationBackground(Theme.sheetBackground)
             }
-            .background(Theme.backgroundGradient.ignoresSafeArea())
+            .background(Theme.backgroundColor.ignoresSafeArea())
+    }
+    
+    // Debug: Extract main content to reduce body complexity
+    @ViewBuilder
+    private var mainContent: some View {
+        Group {
+            let activeHerds = herds.filter { !$0.isSold }
+            
+            // Debug: Handle empty, error, and loaded states
+            if activeHerds.isEmpty {
+                EmptyDashboardView(showingAddAssetMenu: $showingAddAssetMenu)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Empty dashboard")
+                    .accessibilityHint("Add your first herd to get started.")
+            } else if let error = loadError {
+                // Debug: Error state with retry option
+                ErrorStateView(errorMessage: error) {
+                    Task {
+                        await loadValuations()
+                    }
+                }
+                .accessibilityLabel("Error loading dashboard")
+                .accessibilityHint(error)
+            } else {
+                dashboardContentView
+            }
         }
+    }
+    
+    // Debug: Dashboard content with background image and sliding panel
+    @ViewBuilder
+    private var dashboardContentView: some View {
+        GeometryReader { geometry in
+            ZStack(alignment: .top) {
+                // Debug: Background image with solid 0.5 opacity
+                Image("FarmBG_01")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .opacity(0.5)
+                    .ignoresSafeArea()
+                
+                // Debug: Main scrollable content
+                ScrollView {
+                    VStack(spacing: 0) {
+                        // Debug: Portfolio value card on top of background (no panel)
+                        PortfolioValueCard(
+                            value: selectedValue ?? portfolioValue,
+                            change: isScrubbing ? portfolioChange : (portfolioValue - dayAgoValue),
+                            isLoading: isLoading,
+                            isScrubbing: isScrubbing
+                        )
+                        .padding(.horizontal)
+                        .padding(.top, 20)
+                        .accessibilityElement(children: .combine)
+                        .accessibilityLabel("Total portfolio value")
+                        .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
+                        
+                        contentPanel
+                    }
+                }
+            }
+        }
+    }
+    
+    // Debug: Rounded panel with all dashboard content
+    @ViewBuilder
+    private var contentPanel: some View {
+        VStack(spacing: Theme.sectionSpacing) {
+            InteractiveChartView(
+                data: filteredHistory,
+                selectedDate: $selectedDate,
+                selectedValue: $selectedValue,
+                isScrubbing: $isScrubbing,
+                timeRange: $timeRange,
+                baseValue: baseValue,
+                onValueChange: { newValue, change in
+                    portfolioChange = change
+                }
+            )
+            .padding(.horizontal)
+            .accessibilityHint("Drag your finger across the chart to explore values over time.")
+            
+            TimeRangeSelector(timeRange: $timeRange)
+                .padding(.horizontal)
+                .padding(.top, -Theme.sectionSpacing)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Time range selector")
+            
+            MarketPulseView()
+                .padding(.horizontal)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Market pulse")
+            
+            if !capitalConcentration.isEmpty {
+                CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
+                    .padding(.horizontal)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Capital concentration")
+            }
+            
+            if let metrics = performanceMetrics {
+                PerformanceMetricsView(metrics: metrics)
+                    .padding(.horizontal)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Performance metrics")
+            }
+            
+            CostToCarryView(totalCost: totalCostToCarry, portfolioValue: portfolioValue)
+                .padding(.horizontal)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Cost to carry")
+            
+            QuickStatsView(herds: herds)
+                .padding(.horizontal)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Quick stats")
+        }
+        .padding(.top, 24)
+        .padding(.bottom, 100)
+        .background(
+            // Debug: Dark panel background (#130F0D) with rounded top corners
+            RoundedTopCornersShape(radius: 24)
+                .fill(Theme.backgroundColor)
+                .shadow(color: .black.opacity(0.3), radius: 20, y: -5)
+                .ignoresSafeArea(edges: .bottom)
+        )
     }
     
     private var filteredHistory: [ValuationDataPoint] {
@@ -400,7 +449,7 @@ struct PortfolioValueCard: View {
         VStack(spacing: 0) {
             Text("Total Portfolio Value")
                 .font(Theme.caption)
-                .foregroundStyle(Theme.secondaryText)
+                .foregroundStyle(.white.opacity(0.7))
                 .padding(.bottom, 8)
                 .accessibilityAddTraits(.isHeader)
             
@@ -429,7 +478,7 @@ struct PortfolioValueCard: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .padding(Theme.cardPadding)
+        .padding(.vertical, Theme.cardPadding)
     }
 }
 
@@ -459,7 +508,7 @@ struct AnimatedCurrencyValue: View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text("$")
                 .font(.system(size: 28, weight: .bold))
-                .foregroundStyle(.primaryText)
+                .foregroundStyle(.white)
                 .tracking(-2)
                 .baselineOffset(4)
                 .padding(.trailing, 8)
@@ -470,7 +519,7 @@ struct AnimatedCurrencyValue: View {
             Text(formattedValue.whole)
                 .font(.system(size: 40, weight: .bold))
                 .monospacedDigit()
-                .foregroundStyle(.primaryText)
+                .foregroundStyle(.white)
                 .tracking(-2)
                 .if(useAnimations) { view in
                     view
@@ -480,14 +529,14 @@ struct AnimatedCurrencyValue: View {
             
             Text(".")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(.secondaryText)
+                .foregroundStyle(.white.opacity(0.6))
                 .tracking(-2)
                 .accessibilityHidden(true)
             
             Text(formattedValue.decimal)
                 .font(.system(size: 24, weight: .bold))
                 .monospacedDigit()
-                .foregroundStyle(.secondaryText)
+                .foregroundStyle(.white.opacity(0.6))
                 .tracking(-1)
                 .if(useAnimations) { view in
                     view
@@ -1168,7 +1217,7 @@ struct EmptyDashboardView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.backgroundGradient.ignoresSafeArea())
+        .background(Theme.backgroundColor.ignoresSafeArea())
     }
 }
 
@@ -1212,7 +1261,40 @@ struct ErrorStateView: View {
             .accessibilityHint("Retry loading the dashboard data")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.backgroundGradient.ignoresSafeArea())
+        .background(Theme.backgroundColor.ignoresSafeArea())
+    }
+}
+
+// MARK: - Custom Shape for Rounded Top Corners
+// Debug: Custom shape to create rounded top corners only for the sliding panel
+struct RoundedTopCornersShape: Shape {
+    let radius: CGFloat
+    
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        
+        let topLeft = CGPoint(x: rect.minX, y: rect.minY + radius)
+        let topRight = CGPoint(x: rect.maxX, y: rect.minY + radius)
+        let bottomRight = CGPoint(x: rect.maxX, y: rect.maxY)
+        let bottomLeft = CGPoint(x: rect.minX, y: rect.maxY)
+        
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY + radius))
+        path.addArc(center: CGPoint(x: rect.minX + radius, y: rect.minY + radius),
+                    radius: radius,
+                    startAngle: .degrees(180),
+                    endAngle: .degrees(270),
+                    clockwise: false)
+        path.addLine(to: CGPoint(x: rect.maxX - radius, y: rect.minY))
+        path.addArc(center: CGPoint(x: rect.maxX - radius, y: rect.minY + radius),
+                    radius: radius,
+                    startAngle: .degrees(270),
+                    endAngle: .degrees(0),
+                    clockwise: false)
+        path.addLine(to: bottomRight)
+        path.addLine(to: bottomLeft)
+        path.closeSubpath()
+        
+        return path
     }
 }
 
