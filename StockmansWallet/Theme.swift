@@ -48,11 +48,15 @@ struct Theme {
     // MARK: - Typography
     // Prefer semantic SwiftUI text styles to support Dynamic Type automatically.
     // Keep these as convenience aliases so the rest of the app can migrate incrementally.
-    static let largeTitle: Font = .largeTitle
-    static let title: Font = .title.weight(.semibold)
-    static let headline: Font = .headline.weight(.semibold)
-    static let body: Font = .body
-    static let caption: Font = .caption
+    static let largeTitle: Font = .largeTitle               // ~34pt - For major headings
+    static let title: Font = .title.weight(.semibold)       // ~28pt - For hero values (portfolio total)
+    static let title2: Font = .title2.weight(.semibold)     // ~22pt - For emphasized card values
+    static let title3: Font = .title3.weight(.semibold)     // ~20pt - For primary card values
+    static let headline: Font = .headline.weight(.semibold) // ~17pt - For card headers
+    static let body: Font = .body                           // ~17pt - For regular content, labels
+    static let callout: Font = .callout                     // ~16pt - For secondary values in lists
+    static let subheadline: Font = .subheadline             // ~15pt - For de-emphasized values
+    static let caption: Font = .caption                     // ~12pt - For metadata and small labels
     
     // MARK: - Spacing
     // Normalize corners to feel native (12–16pt). Use 16 for cards and surfaces.
@@ -178,7 +182,7 @@ struct StitchedCard: ViewModifier {
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                     .strokeBorder(
-                        Color.white.opacity(0.2),
+                        Color.white.opacity(0.1),
                         style: StrokeStyle(
                             lineWidth: 1,
                             lineCap: .round,

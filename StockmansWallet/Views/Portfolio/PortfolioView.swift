@@ -19,6 +19,7 @@ struct PortfolioView: View {
     let valuationEngine = ValuationEngine.shared
     
     @State private var showingAddAssetMenu = false
+    @State private var showingSearchPanel = false
     @State private var portfolioSummary: PortfolioSummary?
     @State private var isLoading = true
     @State private var selectedView: PortfolioViewMode = .overview
@@ -36,6 +37,12 @@ struct PortfolioView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: Theme.sectionSpacing) {
+                            // Debug: Portfolio stats moved above view selector to stay persistent
+                            if let summary = portfolioSummary {
+                                PortfolioStatsCard(summary: summary)
+                                    .padding(.horizontal)
+                            }
+                            
                             // View Mode Selector
                             PortfolioViewModeSelector(selectedView: $selectedView)
                                 .padding(.horizontal)
@@ -49,7 +56,6 @@ struct PortfolioView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 100)
                     }
-                    .scrollContentBackground(.hidden)
                     .background(Color.clear)
                     .refreshable {
                         await loadPortfolioSummary()
@@ -64,23 +70,39 @@ struct PortfolioView: View {
                         .foregroundStyle(Theme.primaryText)
                         .accessibilityAddTraits(.isHeader)
                 }
-                // Use a standard bar button style and symbol per Apple HIG.
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button(action: {
+                
+                // Debug: Correct pattern per Apple HIG - ToolbarItemGroup for placement, but buttons render separately
+                // Search and Add are unrelated actions, so they should be visually distinct with no shared background
+                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                    Button {
+                        HapticManager.tap()
+                        showingSearchPanel = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .accessibilityLabel("Search assets")
+                    
+                    Button {
                         HapticManager.tap()
                         showingAddAssetMenu = true
-                    }) {
+                    } label: {
                         Image(systemName: "plus")
                     }
-                    .buttonBorderShape(.roundedRectangle)
                     .accessibilityLabel("Add asset")
                 }
             }
-            .toolbarBackground(.clear, for: .navigationBar)
+            // Use a material at the scroll edge so content does not appear to fade into the background image under the nav bar
+            .toolbarBackground(.regularMaterial, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .fullScreenCover(isPresented: $showingAddAssetMenu) {
                 AddAssetMenuView(isPresented: $showingAddAssetMenu)
                     .transition(.move(edge: .trailing))
+                    .presentationBackground(Theme.sheetBackground)
+            }
+            .sheet(isPresented: $showingSearchPanel) {
+                PortfolioSearchPanel(herds: herds)
+                    .presentationDetents([.medium, .large])
+                    .presentationDragIndicator(.visible)
                     .presentationBackground(Theme.sheetBackground)
             }
             .task {
@@ -91,6 +113,7 @@ struct PortfolioView: View {
                     await loadPortfolioSummary()
                 }
             }
+            // Keep the screen background behind the scroll content
             .background(Theme.backgroundGradient.ignoresSafeArea())
         }
     }
@@ -102,17 +125,14 @@ struct PortfolioView: View {
                 NetWorthCard(summary: summary, isLoading: isLoading)
                     .padding(.horizontal)
                 
-                CapitalConcentrationCard(summary: summary)
-                    .padding(.horizontal)
-                
-                PerformanceMetricsCard(summary: summary)
-                    .padding(.horizontal)
-                
+                // Debug: Asset Breakdown moved above Capital Concentration per user request
                 AssetBreakdownCard(summary: summary)
                     .padding(.horizontal)
                 
-                CostToCarryCard(summary: summary)
+                CapitalConcentrationCard(summary: summary)
                     .padding(.horizontal)
+                
+             
             } else if isLoading {
                 ProgressView()
                     .tint(Theme.accent)
@@ -123,12 +143,10 @@ struct PortfolioView: View {
     }
     
     // MARK: - Assets Content
+    // Debug: Removed AssetRegisterHeader as stats now shown above view selector
     private var assetsContent: some View {
         Group {
             if let summary = portfolioSummary {
-                AssetRegisterHeader(summary: summary)
-                    .padding(.horizontal)
-                
                 LazyVStack(spacing: 16) {
                     ForEach(herds.filter { !$0.isSold }) { herd in
                         EnhancedHerdCard(herd: herd, summary: summary)
@@ -316,31 +334,62 @@ struct SpeciesBreakdown {
 }
 
 // MARK: - View Mode Selector
+// Debug: Using native segmented control for iOS HIG compliance with smooth sliding animation
 struct PortfolioViewModeSelector: View {
     @Binding var selectedView: PortfolioView.PortfolioViewMode
     
     var body: some View {
-        HStack(spacing: 0) {
+        Picker("View Mode", selection: $selectedView) {
             ForEach(PortfolioView.PortfolioViewMode.allCases, id: \.self) { mode in
-                Button(action: {
-                    HapticManager.tap()
-                    selectedView = mode
-                }) {
-                    Text(mode.rawValue)
-                        .font(Theme.headline)
-                        .foregroundStyle(selectedView == mode ? Theme.accent : Theme.secondaryText)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(
-                            selectedView == mode ? Theme.accent.opacity(0.15) : Color.clear
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                .buttonBorderShape(.roundedRectangle)
+                Text(mode.rawValue).tag(mode)
             }
         }
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .pickerStyle(.segmented)
+        .onChange(of: selectedView) { _, _ in
+            HapticManager.tap()
+        }
+    }
+}
+
+// MARK: - Portfolio Stats Card
+// Debug: Simple stats card with title above numbers, no icons
+struct PortfolioStatsCard: View {
+    let summary: PortfolioSummary
+    
+    var body: some View {
+        HStack(spacing: 16) {
+            // Total Head
+            VStack(spacing: 8) {
+                Text("Total Head")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                Text("\(summary.totalHeadCount)")
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            
+            // Active Herds
+            VStack(spacing: 8) {
+                Text("Active Herds")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                Text("\(summary.activeHerdCount)")
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
     }
 }
 
@@ -384,17 +433,7 @@ struct NetWorthCard: View {
                     )
                 }
                 
-                ValueBreakdownRow(
-                    label: "Cost to Carry",
-                    value: -summary.totalCostToCarry,
-                    color: .red
-                )
-                
-                ValueBreakdownRow(
-                    label: "Mortality Deduction",
-                    value: -summary.totalMortalityDeduction,
-                    color: .orange
-                )
+          
             }
         }
         .padding(Theme.cardPadding)
@@ -428,6 +467,7 @@ struct ValueBreakdownRow: View {
 }
 
 // MARK: - Capital Concentration Card
+// Debug: Removed largest category section per user request
 struct CapitalConcentrationCard: View {
     let summary: PortfolioSummary
     
@@ -443,37 +483,6 @@ struct CapitalConcentrationCard: View {
                     .accessibilityHidden(true)
             }
             
-            if !summary.largestCategory.isEmpty {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Text("Largest Category")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        Spacer()
-                        Text("\(summary.largestCategoryPercent, format: .number.precision(.fractionLength(1)))%")
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.accent)
-                    }
-                    
-                    Text(summary.largestCategory)
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.primaryText)
-                    
-                    GeometryReader { geometry in
-                        ZStack(alignment: .leading) {
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Theme.primaryText.opacity(0.2))
-                                .frame(height: 8)
-                            
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Theme.accent)
-                                .frame(width: geometry.size.width * CGFloat(summary.largestCategoryPercent / 100), height: 8)
-                        }
-                    }
-                    .frame(height: 8)
-                }
-            }
-            
             if !summary.categoryBreakdown.isEmpty {
                 VStack(spacing: 12) {
                     ForEach(summary.categoryBreakdown.sorted(by: { $0.totalValue > $1.totalValue }).prefix(5), id: \.category) { category in
@@ -485,7 +494,6 @@ struct CapitalConcentrationCard: View {
                         )
                     }
                 }
-                .padding(.top, 8)
             }
         }
         .padding(Theme.cardPadding)
@@ -548,6 +556,7 @@ struct CategoryRow: View {
 }
 
 // MARK: - Performance Metrics Card
+// Debug: Removed Total Head and Active Herds metrics - now shown at top
 struct PerformanceMetricsCard: View {
     let summary: PortfolioSummary
     
@@ -563,37 +572,18 @@ struct PerformanceMetricsCard: View {
                     .accessibilityHidden(true)
             }
             
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Unrealized Gains")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text(summary.unrealizedGains, format: .currency(code: "AUD"))
-                            .font(Theme.headline)
-                            .foregroundStyle(summary.unrealizedGains >= 0 ? .green : .red)
-                        Text("\(summary.unrealizedGainsPercent >= 0 ? "+" : "")\(summary.unrealizedGainsPercent, format: .number.precision(.fractionLength(1)))%")
-                            .font(Theme.caption)
-                            .foregroundStyle(summary.unrealizedGainsPercent >= 0 ? .green : .red)
-                    }
-                }
-                
-                Divider()
-                    .background(Theme.separator)
-                
-                HStack(spacing: 16) {
-                    MetricTile(
-                        title: "Total Head",
-                        value: "\(summary.totalHeadCount)",
-                        icon: "person.3.fill"
-                    )
-                    
-                    MetricTile(
-                        title: "Active Mobs",
-                        value: "\(summary.activeHerdCount)",
-                        icon: "square.stack.3d.up.fill"
-                    )
+            HStack {
+                Text("Unrealized Gains")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.secondaryText)
+                Spacer()
+                VStack(alignment: .trailing, spacing: 4) {
+                    Text(summary.unrealizedGains, format: .currency(code: "AUD"))
+                        .font(Theme.headline)
+                        .foregroundStyle(summary.unrealizedGains >= 0 ? .green : .red)
+                    Text("\(summary.unrealizedGainsPercent >= 0 ? "+" : "")\(summary.unrealizedGainsPercent, format: .number.precision(.fractionLength(1)))%")
+                        .font(Theme.caption)
+                        .foregroundStyle(summary.unrealizedGainsPercent >= 0 ? .green : .red)
                 }
             }
         }
@@ -702,98 +692,7 @@ struct SpeciesRow: View {
     }
 }
 
-// MARK: - Cost to Carry Card
-struct CostToCarryCard: View {
-    let summary: PortfolioSummary
-    
-    var netMargin: Double {
-        summary.totalNetWorth
-    }
-    
-    var marginPercent: Double {
-        summary.totalGrossValue > 0 ? (netMargin / summary.totalGrossValue) * 100 : 0
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Profitability Analysis")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Spacer()
-                Image(systemName: "dollarsign.circle.fill")
-                    .foregroundStyle(Theme.accent)
-                    .accessibilityHidden(true)
-            }
-            
-            VStack(spacing: 12) {
-                ProfitabilityRow(
-                    label: "Gross Value",
-                    value: summary.totalGrossValue,
-                    color: Theme.primaryText
-                )
-                
-                ProfitabilityRow(
-                    label: "Cost to Carry",
-                    value: -summary.totalCostToCarry,
-                    color: .red
-                )
-                
-                ProfitabilityRow(
-                    label: "Mortality Deduction",
-                    value: -summary.totalMortalityDeduction,
-                    color: .orange
-                )
-                
-                Divider()
-                    .background(Theme.separator)
-                
-                ProfitabilityRow(
-                    label: "Net Realizable Value",
-                    value: netMargin,
-                    color: netMargin >= 0 ? .green : .red
-                )
-                
-                HStack {
-                    Text("Net Margin")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    Spacer()
-                    Text("\(marginPercent >= 0 ? "+" : "")\(marginPercent, format: .number.precision(.fractionLength(1)))%")
-                        .font(Theme.headline)
-                        .foregroundStyle(marginPercent >= 0 ? .green : .red)
-                }
-            }
-        }
-        .padding(Theme.cardPadding)
-        .stitchedCard()
-    }
-}
 
-struct ProfitabilityRow: View {
-    let label: String
-    let value: Double
-    let color: Color
-    
-    var body: some View {
-        HStack(spacing: 12) {
-            Text(label)
-                .font(Theme.body)
-                .foregroundStyle(Theme.secondaryText)
-                .lineLimit(1)
-
-            Spacer(minLength: 8)
-
-            Text(value, format: .currency(code: "AUD"))
-                .font(Theme.headline)
-                .foregroundStyle(color)
-                .lineLimit(1)
-                .minimumScaleFactor(0.85)
-                .layoutPriority(1)
-        }
-        .padding(.horizontal, 6)
-    }
-}
 
 // MARK: - Asset Register Header
 struct AssetRegisterHeader: View {
@@ -816,7 +715,7 @@ struct AssetRegisterHeader: View {
 }
 
 // MARK: - Enhanced Herd Card
-// Debug: Individual herd card with valuation display
+// Debug: Entire card is tappable per iOS HIG best practices for list navigation
 struct EnhancedHerdCard: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
@@ -830,99 +729,84 @@ struct EnhancedHerdCard: View {
     @State private var isLoading = true
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            // Header
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(herd.name)
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                    
-                    Text("\(herd.headCount) head • \(herd.breed) \(herd.category)")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                }
-                
-                Spacer()
-                
-                if let valuation = valuation {
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
+        NavigationLink(destination: HerdDetailView(herd: herd)) {
+            VStack(alignment: .leading, spacing: 16) {
+                // Header with chevron indicator
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(herd.name)
                             .font(Theme.headline)
-                            .foregroundStyle(Theme.accent)
-                        Text("\(Int(valuation.projectedWeight))kg avg")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                } else if isLoading {
-                    ProgressView()
-                        .tint(Theme.accent)
-                }
-            }
-            
-            Divider()
-                .background(Theme.separator)
-            
-            // Valuation Details
-            if let valuation = valuation {
-                VStack(spacing: 10) {
-                    ValuationDetailRow(
-                        label: "Physical Value",
-                        value: valuation.physicalValue,
-                        color: Theme.accent
-                    )
-                    
-                    if valuation.breedingAccrual > 0 {
-                        ValuationDetailRow(
-                            label: "Breeding Accrual",
-                            value: valuation.breedingAccrual,
-                            color: .green
-                        )
-                    }
-                    
-                    ValuationDetailRow(
-                        label: "Price Source",
-                        value: valuation.priceSource,
-                        isText: true
-                    )
-                    
-                    HStack {
-                        Text("Price")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        Spacer()
-                        Text("\(valuation.pricePerKg, format: .number.precision(.fractionLength(2))) $/kg")
-                            .font(Theme.caption)
                             .foregroundStyle(Theme.primaryText)
-                    }
-                }
-            }
-            
-            // Action Buttons
-            HStack(spacing: 12) {
-                NavigationLink(destination: HerdDetailView(herd: herd)) {
-                    HStack {
-                        Text("View Details")
+                        
+                        Text("\(herd.headCount) head • \(herd.breed) \(herd.category)")
                             .font(Theme.caption)
-                            .foregroundStyle(Theme.accent)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.secondaryText)
                     }
+                    
+                    Spacer()
+                    
+                    if let valuation = valuation {
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.accent)
+                            Text("\(Int(valuation.projectedWeight))kg avg")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                        }
+                    } else if isLoading {
+                        ProgressView()
+                            .tint(Theme.accent)
+                    }
+                    
+                    // Chevron navigation indicator
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                        .padding(.leading, 8)
                 }
                 
-                NavigationLink(destination: EditHerdView(herd: herd)) {
-                    Image(systemName: "pencil")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Theme.accent)
-                        .padding(8)
-                        .background(Theme.accent.opacity(0.15))
-                        .clipShape(Circle())
+                Divider()
+                    .background(Theme.separator)
+                
+                // Valuation Details
+                if let valuation = valuation {
+                    VStack(spacing: 10) {
+                        ValuationDetailRow(
+                            label: "Physical Value",
+                            value: valuation.physicalValue,
+                            color: Theme.accent
+                        )
+                        
+                        if valuation.breedingAccrual > 0 {
+                            ValuationDetailRow(
+                                label: "Breeding Accrual",
+                                value: valuation.breedingAccrual,
+                                color: .green
+                            )
+                        }
+                        
+                        ValuationDetailRow(
+                            label: "Price Source",
+                            value: valuation.priceSource,
+                            isText: true
+                        )
+                        
+                        HStack {
+                            Text("Price")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            Spacer()
+                            Text("\(valuation.pricePerKg, format: .number.precision(.fractionLength(2))) $/kg")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.primaryText)
+                        }
+                    }
                 }
             }
+            .padding(Theme.cardPadding)
         }
-        .padding(Theme.cardPadding)
+        .buttonStyle(PlainButtonStyle())
         .stitchedCard()
         .task {
             await loadValuation()
@@ -1021,5 +905,316 @@ struct EmptyPortfolioView: View {
             .accessibilityLabel("Add asset")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+    }
+}
+
+// MARK: - Portfolio Search Panel
+// Debug: Search form for finding animals by NLIS/tag numbers or herd details
+struct PortfolioSearchPanel: View {
+    @Environment(\.dismiss) private var dismiss
+    let herds: [HerdGroup]
+    
+    @State private var nlisTagNumber = ""
+    @State private var selectedSpecies: String? = nil
+    @State private var selectedPaddock: String? = nil
+    @State private var searchResults: [HerdGroup] = []
+    @State private var hasSearched = false
+    
+    // Debug: Get unique species and paddocks from herds for filter options
+    var availableSpecies: [String] {
+        Array(Set(herds.filter { !$0.isSold }.map { $0.species })).sorted()
+    }
+    
+    var availablePaddocks: [String] {
+        Array(Set(herds.filter { !$0.isSold }.compactMap { $0.paddockName }.filter { !$0.isEmpty })).sorted()
+    }
+    
+    // Debug: Perform search based on NLIS tag, species, and paddock filters
+    func performSearch() {
+        hasSearched = true
+        let activeHerds = herds.filter { !$0.isSold }
+        
+        // If no search criteria, show nothing
+        guard !nlisTagNumber.isEmpty || selectedSpecies != nil || selectedPaddock != nil else {
+            searchResults = []
+            return
+        }
+        
+        searchResults = activeHerds.filter { herd in
+            var matches = true
+            
+            // Filter by NLIS/tag number in name or additional info
+            if !nlisTagNumber.isEmpty {
+                let lowercasedTag = nlisTagNumber.lowercased()
+                let nameMatch = herd.name.lowercased().contains(lowercasedTag)
+                let infoMatch = herd.additionalInfo?.lowercased().contains(lowercasedTag) ?? false
+                matches = matches && (nameMatch || infoMatch)
+            }
+            
+            // Filter by species
+            if let species = selectedSpecies {
+                matches = matches && (herd.species == species)
+            }
+            
+            // Filter by paddock
+            if let paddock = selectedPaddock {
+                matches = matches && (herd.paddockName == paddock)
+            }
+            
+            return matches
+        }
+    }
+    
+    func clearSearch() {
+        nlisTagNumber = ""
+        selectedSpecies = nil
+        selectedPaddock = nil
+        searchResults = []
+        hasSearched = false
+    }
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: Theme.sectionSpacing) {
+                    // Search Form Header
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Find Animals")
+                            .font(Theme.title)
+                            .foregroundStyle(Theme.primaryText)
+                        Text("Search by NLIS tag, animal ID, or use filters below")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal)
+                    .padding(.top)
+                    
+                    // Search Form Card
+                    VStack(alignment: .leading, spacing: 20) {
+                        // NLIS/Tag Number Input
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("NLIS Tag / Animal ID")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            TextField("Enter tag number or ID", text: $nlisTagNumber)
+                                .textFieldStyle(.roundedBorder)
+                                .textInputAutocapitalization(.characters)
+                                .keyboardType(.default)
+                                .submitLabel(.search)
+                                .onSubmit {
+                                    performSearch()
+                                }
+                        }
+                        
+                        Divider()
+                            .background(Theme.separator)
+                        
+                        // Optional Filters
+                        Text("Optional Filters")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        
+                        // Species Filter
+                        if !availableSpecies.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Species")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                
+                                Picker("Species", selection: $selectedSpecies) {
+                                    Text("All Species").tag(nil as String?)
+                                    ForEach(availableSpecies, id: \.self) { species in
+                                        Text(species).tag(species as String?)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                            }
+                        }
+                        
+                        // Paddock Filter
+                        if !availablePaddocks.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Paddock")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                
+                                Picker("Paddock", selection: $selectedPaddock) {
+                                    Text("All Paddocks").tag(nil as String?)
+                                    ForEach(availablePaddocks, id: \.self) { paddock in
+                                        Text(paddock).tag(paddock as String?)
+                                    }
+                                }
+                                .pickerStyle(.menu)
+                            }
+                        }
+                        
+                        // Search Buttons
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                HapticManager.tap()
+                                performSearch()
+                            }) {
+                                HStack {
+                                    Image(systemName: "magnifyingglass")
+                                    Text("Search")
+                                }
+                                .font(Theme.headline)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 12)
+                                .background(Theme.accent)
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            
+                            if hasSearched {
+                                Button(action: {
+                                    HapticManager.tap()
+                                    clearSearch()
+                                }) {
+                                    HStack {
+                                        Image(systemName: "xmark")
+                                        Text("Clear")
+                                    }
+                                    .font(Theme.headline)
+                                    .foregroundStyle(Theme.accent)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 12)
+                                    .background(Theme.accent.opacity(0.15))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                    }
+                    .padding(Theme.cardPadding)
+                    .stitchedCard()
+                    .padding(.horizontal)
+                    
+                    // Search Results
+                    if hasSearched {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("\(searchResults.count) Result\(searchResults.count == 1 ? "" : "s")")
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
+                                .padding(.horizontal)
+                            
+                            if searchResults.isEmpty {
+                                // No results
+                                VStack(spacing: 16) {
+                                    Image(systemName: "doc.text.magnifyingglass")
+                                        .font(.system(size: 48))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                                    
+                                    Text("No animals found")
+                                        .font(Theme.headline)
+                                        .foregroundStyle(Theme.primaryText)
+                                    
+                                    Text("Try adjusting your search criteria")
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                }
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 40)
+                            } else {
+                                // Results list
+                                LazyVStack(spacing: 12) {
+                                    ForEach(searchResults, id: \.id) { herd in
+                                        SearchResultCard(herd: herd)
+                                    }
+                                }
+                                .padding(.horizontal)
+                            }
+                        }
+                    }
+                }
+                .padding(.bottom, 100)
+            }
+            .background(Theme.backgroundGradient.ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Search Animals")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Search Result Card
+// Debug: Display search result with herd/animal details
+struct SearchResultCard: View {
+    let herd: HerdGroup
+    
+    var isIndividualAnimal: Bool {
+        herd.headCount == 1
+    }
+    
+    var body: some View {
+        NavigationLink(destination: HerdDetailView(herd: herd)) {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        // Name with tag indicator
+                        HStack(spacing: 8) {
+                            Text(herd.name)
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            if isIndividualAnimal {
+                                Image(systemName: "tag.fill")
+                                    .font(.system(size: 12))
+                                    .foregroundStyle(Theme.accent)
+                            }
+                        }
+                        
+                        // Details
+                        Text("\(herd.headCount) head • \(herd.breed) \(herd.category)")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        
+                        // Paddock location
+                        if let paddock = herd.paddockName, !paddock.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "map.fill")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText)
+                                Text(paddock)
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                            }
+                        }
+                        
+                        // Additional info (may contain NLIS/tag details)
+                        if let info = herd.additionalInfo, !info.isEmpty {
+                            Text(info)
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                                .lineLimit(2)
+                        }
+                    }
+                    
+                    Spacer()
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                }
+            }
+            .padding(Theme.cardPadding)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .stitchedCard()
     }
 }

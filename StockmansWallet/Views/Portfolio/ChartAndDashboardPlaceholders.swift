@@ -216,6 +216,7 @@ struct MarketIndicator: Identifiable {
 }
 
 // Simple indicator row used by MarketPulseView
+// Debug: Uses body font for both title and value to maintain visual hierarchy
 struct IndicatorRow: View {
     let title: String
     let value: String
@@ -228,7 +229,7 @@ struct IndicatorRow: View {
                 .foregroundStyle(Theme.primaryText)
             Spacer()
             Text(value)
-                .font(Theme.headline)
+                .font(Theme.body) // HIG: Use body font for consistent hierarchy
                 .foregroundStyle(Theme.primaryText)
             Image(systemName: trend == .up ? "arrow.up.right" : trend == .down ? "arrow.down.right" : "minus")
                 .foregroundStyle(trend == .up ? .green : trend == .down ? .red : .gray)
@@ -239,36 +240,35 @@ struct IndicatorRow: View {
 }
 
 // MARK: - Quick Stats View (Placeholder)
+// Debug: Simplified horizontal stat bar without card - compact layout per user request
 struct QuickStatsView: View {
     let herds: [HerdGroup]
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Quick Stats")
-                .font(Theme.headline)
-                .foregroundStyle(Theme.primaryText)
+        HStack(spacing: 32) {
+            // Total Herds stat
+            HStack(spacing: 8) {
+                Text("Total Herds")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                Text("\(herds.count)")
+                    .font(Theme.title3) // HIG: title3 (20pt) for stat values
+                    .foregroundStyle(Theme.primaryText)
+            }
             
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Total Herds")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                    Text("\(herds.count)")
-                        .font(Theme.title)
-                        .foregroundStyle(Theme.primaryText)
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 4) {
-                    Text("Total Head")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                    Text("\(herds.reduce(0) { $0 + $1.headCount })")
-                        .font(Theme.title)
-                        .foregroundStyle(Theme.accent)
-                }
+            Spacer()
+            
+            // Total Head stat
+            HStack(spacing: 8) {
+                Text("Total Head")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                Text("\(herds.reduce(0) { $0 + $1.headCount })")
+                    .font(Theme.title3) // HIG: title3 (20pt) for stat values
+                    .foregroundStyle(Theme.accent)
             }
         }
-        .padding(Theme.cardPadding)
-        .stitchedCard()
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("Quick stats: \(herds.count) herds, \(herds.reduce(0) { $0 + $1.headCount }) total head")
     }
 }

@@ -183,17 +183,10 @@ struct DashboardView: View {
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Time range selector")
             
-            MarketPulseView()
+            QuickStatsView(herds: herds)
                 .padding(.horizontal, Theme.cardPadding)
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel("Market pulse")
-            
-            if !capitalConcentration.isEmpty {
-                CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
-                    .padding(.horizontal, Theme.cardPadding)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel("Capital concentration")
-            }
+                .accessibilityLabel("Quick stats")
             
             if let metrics = performanceMetrics {
                 PerformanceMetricsView(metrics: metrics)
@@ -202,15 +195,23 @@ struct DashboardView: View {
                     .accessibilityLabel("Performance metrics")
             }
             
-            CostToCarryView(totalCost: totalCostToCarry, portfolioValue: portfolioValue)
+            MarketPulseView()
                 .padding(.horizontal, Theme.cardPadding)
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel("Cost to carry")
+                .accessibilityLabel("Market pulse")
             
-            QuickStatsView(herds: herds)
-                .padding(.horizontal, Theme.cardPadding)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Quick stats")
+            
+            if !capitalConcentration.isEmpty {
+                CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
+                    .padding(.horizontal, Theme.cardPadding)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Capital concentration")
+            }
+            
+        
+         
+            
+        
         }
         .padding(.top, -12)
         .padding(.bottom, 100)
@@ -1023,7 +1024,7 @@ struct CapitalConcentrationView: View {
                                 .foregroundStyle(Theme.primaryText)
                             Spacer()
                             Text(item.value, format: .currency(code: "AUD"))
-                                .font(Theme.body)
+                                .font(Theme.callout) // HIG: callout (16pt) for list values with many digits
                                 .foregroundStyle(Theme.primaryText)
                                 .accessibilityLabel("\(item.category) value")
                                 .accessibilityValue(item.value.formatted(.currency(code: "AUD")))
@@ -1081,7 +1082,7 @@ struct PerformanceMetricsView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                         Text(metrics.totalChange, format: .currency(code: "AUD"))
-                            .font(Theme.title)
+                            .font(Theme.title3) // HIG: title3 (20pt) - primary emphasis without overwhelming
                             .foregroundStyle(metrics.totalChange >= 0 ? .green : .red)
                             .accessibilityLabel("Total change")
                             .accessibilityValue(metrics.totalChange.formatted(.currency(code: "AUD")))
@@ -1092,7 +1093,7 @@ struct PerformanceMetricsView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                         Text("\(metrics.percentChange >= 0 ? "+" : "")\(metrics.percentChange, format: .number.precision(.fractionLength(1)))%")
-                            .font(Theme.title)
+                            .font(Theme.title3) // HIG: title3 (20pt) - primary emphasis without overwhelming
                             .foregroundStyle(metrics.percentChange >= 0 ? .green : .red)
                             .accessibilityLabel("Percent change")
                             .accessibilityValue("\(metrics.percentChange.formatted(.number.precision(.fractionLength(1)))) percent")
@@ -1108,7 +1109,7 @@ struct PerformanceMetricsView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                         Text(metrics.unrealizedGains, format: .currency(code: "AUD"))
-                            .font(Theme.headline)
+                            .font(Theme.callout) // HIG: callout (16pt) for secondary metrics
                             .foregroundStyle(Theme.accent)
                             .accessibilityLabel("Unrealized gains")
                             .accessibilityValue(metrics.unrealizedGains.formatted(.currency(code: "AUD")))
@@ -1119,7 +1120,7 @@ struct PerformanceMetricsView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                         Text(metrics.initialValue, format: .currency(code: "AUD"))
-                            .font(Theme.headline)
+                            .font(Theme.callout) // HIG: callout (16pt) for secondary metrics
                             .foregroundStyle(Theme.primaryText)
                             .accessibilityLabel("Initial value")
                             .accessibilityValue(metrics.initialValue.formatted(.currency(code: "AUD")))
@@ -1133,64 +1134,6 @@ struct PerformanceMetricsView: View {
     }
 }
 
-// MARK: - Cost to Carry View
-struct CostToCarryView: View {
-    let totalCost: Double
-    let portfolioValue: Double
-    
-    private var costPercentage: Double {
-        guard portfolioValue > 0 else { return 0 }
-        return (totalCost / portfolioValue) * 100
-    }
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Cost to Carry")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Spacer()
-                Image(systemName: "dollarsign.circle.fill")
-                    .foregroundStyle(Theme.accent)
-                    .accessibilityHidden(true)
-            }
-            
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Total Operating Costs")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        Text(totalCost, format: .currency(code: "AUD"))
-                            .font(Theme.title)
-                            .foregroundStyle(Theme.primaryText)
-                            .accessibilityLabel("Total operating costs")
-                            .accessibilityValue(totalCost.formatted(.currency(code: "AUD")))
-                    }
-                    Spacer()
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("% of Portfolio")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        Text("\(costPercentage, format: .number.precision(.fractionLength(1)))%")
-                            .font(Theme.title)
-                            .foregroundStyle(Theme.accent)
-                            .accessibilityLabel("Percent of portfolio")
-                            .accessibilityValue("\(costPercentage.formatted(.number.precision(.fractionLength(1)))) percent")
-                    }
-                }
-                
-                Text("Includes agistment, feed, and veterinary costs")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                    .accessibilityHidden(true)
-            }
-        }
-        .padding(Theme.cardPadding)
-        .stitchedCard()
-        .accessibilityElement(children: .contain)
-    }
-}
 
 // MARK: - Empty Dashboard View
 struct EmptyDashboardView: View {

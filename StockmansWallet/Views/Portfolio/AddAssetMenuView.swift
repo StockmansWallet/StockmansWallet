@@ -24,11 +24,11 @@ struct AddAssetMenuView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         // Header
                         VStack(alignment: .center, spacing: 8) {
-                            Text("Manage Assets")
+                            Text("Add / Sell Stock")
                                 .font(Theme.title)
                                 .foregroundStyle(.white)
                             
-                            Text("Add or sell full herds and individual animals")
+                            Text("Manage your livestock portfolio")
                                 .font(Theme.body)
                                 .foregroundStyle(.white.opacity(0.7))
                         }
@@ -43,7 +43,7 @@ struct AddAssetMenuView: View {
                                 iconColor: Theme.accent,
                                 iconSymbol: "plus.app",
                                 title: "Add Herd",
-                                subtitle: "Add a full herd"
+                                subtitle: "Record a new mob or group"
                             ) {
                                 HapticManager.tap()
                                 showingAddHerd = true
@@ -53,8 +53,8 @@ struct AddAssetMenuView: View {
                             AssetMenuRow(
                                 iconColor: .green,
                                 iconSymbol: "plus.app",
-                                title: "Add Individual",
-                                subtitle: "Add a single animal"
+                                title: "Add Individual Animal",
+                                subtitle: "Track a single tagged animal"
                             ) {
                                 HapticManager.tap()
                                 showingAddIndividual = true
@@ -65,7 +65,7 @@ struct AddAssetMenuView: View {
                                 iconColor: .blue,
                                 iconSymbol: "square.and.arrow.down",
                                 title: "Import CSV",
-                                subtitle: "Import a CSV database"
+                                subtitle: "Bulk import from spreadsheet"
                             ) {
                                 HapticManager.tap()
                                 showingCSVImport = true
@@ -75,30 +75,28 @@ struct AddAssetMenuView: View {
                             AssetMenuRow(
                                 iconColor: .red,
                                 iconSymbol: "dollarsign.square",
-                                title: "Sell Assets",
-                                subtitle: "Sell assets"
+                                title: "Sell Stock",
+                                subtitle: "Record sales and realised prices"
                             ) {
                                 HapticManager.tap()
                                 showingSellAssets = true
                             }
                         }
                         .padding(.horizontal, 24)
-                        
-                        // Done Button
-                        Button(action: {
-                            HapticManager.tap()
-                            isPresented = false
-                        }) {
-                            Text("Done")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(Theme.PrimaryButtonStyle())
-                        .padding(.horizontal, 24)
                         .padding(.bottom, 40)
                     }
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        HapticManager.tap()
+                        isPresented = false
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
             .sheet(isPresented: $showingAddHerd) {
                 AddHerdFlowView()
                     .presentationBackground(Theme.sheetBackground)
