@@ -109,7 +109,7 @@ struct FinancialEcosystemPage: View {
                 .padding(.bottom, 40)
             }
         }
-        .background(Theme.background.ignoresSafeArea())
+        .background(Theme.backgroundGradient.ignoresSafeArea())
     }
 }
 

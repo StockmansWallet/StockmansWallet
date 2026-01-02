@@ -163,8 +163,9 @@ struct DashboardView: View {
             .sheet(isPresented: $showingAddAssetMenu) {
                 AddAssetMenuView(isPresented: $showingAddAssetMenu)
                     .transition(.move(edge: .trailing))
+                    .presentationBackground(Theme.sheetBackground)
             }
-            .background(Theme.background.ignoresSafeArea())
+            .background(Theme.backgroundGradient.ignoresSafeArea())
         }
     }
     
@@ -1167,7 +1168,7 @@ struct EmptyDashboardView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.background.ignoresSafeArea())
+        .background(Theme.backgroundGradient.ignoresSafeArea())
     }
 }
 
@@ -1211,7 +1212,7 @@ struct ErrorStateView: View {
             .accessibilityHint("Retry loading the dashboard data")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.background.ignoresSafeArea())
+        .background(Theme.backgroundGradient.ignoresSafeArea())
     }
 }
 

@@ -42,7 +42,7 @@ struct EditPreferencesView: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.background)
+            .background(Theme.backgroundGradient)
             .navigationTitle("Edit Preferences")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)

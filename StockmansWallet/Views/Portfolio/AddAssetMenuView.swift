@@ -17,7 +17,8 @@ struct AddAssetMenuView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Theme.background.ignoresSafeArea()
+                // Debug: Solid sheet background for modal presentation
+                Theme.sheetBackground.ignoresSafeArea()
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
@@ -100,17 +101,21 @@ struct AddAssetMenuView: View {
             .navigationBarTitleDisplayMode(.inline)
             .sheet(isPresented: $showingAddHerd) {
                 AddHerdFlowView()
+                    .presentationBackground(Theme.sheetBackground)
             }
             .sheet(isPresented: $showingAddIndividual) {
                 AddIndividualAnimalView()
+                    .presentationBackground(Theme.sheetBackground)
             }
             .sheet(isPresented: $showingCSVImport) {
                 CSVImportView()
+                    .presentationBackground(Theme.sheetBackground)
             }
             .sheet(isPresented: $showingSellAssets) {
                 // TODO: Add Sell Assets view
                 Text("Sell Assets")
                     .foregroundStyle(Theme.primaryText)
+                    .presentationBackground(Theme.sheetBackground)
             }
         }
     }

@@ -38,7 +38,7 @@ struct AboutView: View {
             }
             .padding()
         }
-        .background(Theme.background)
+        .background(Theme.backgroundGradient)
         .navigationTitle("About")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)

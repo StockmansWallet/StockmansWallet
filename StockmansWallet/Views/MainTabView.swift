@@ -22,8 +22,8 @@ struct MainTabView: View {
     
     var body: some View {
         ZStack {
-            // Debug: Solid background behind everything for glass aesthetic
-            Theme.background.ignoresSafeArea()
+            // Debug: Gradient background behind everything for depth and visual hierarchy
+            Theme.backgroundGradient.ignoresSafeArea()
             
             TabView {
                 DashboardView()

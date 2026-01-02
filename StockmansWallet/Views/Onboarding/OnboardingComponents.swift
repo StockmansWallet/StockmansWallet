@@ -67,7 +67,7 @@ struct OnboardingPageTemplate<Content: View>: View {
             .padding(.bottom, 40)
         }
         .background(
-            Theme.background
+            Theme.backgroundGradient
                 .ignoresSafeArea()
         )
     }

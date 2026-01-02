@@ -203,6 +203,7 @@ struct AddHerdFlowView: View {
                         selectedBreed = breed
                     }
                 )
+                .presentationBackground(Theme.sheetBackground)
             }
             .sheet(isPresented: $showingCategoryPicker) {
                 ScrollablePickerSheet(
@@ -214,6 +215,7 @@ struct AddHerdFlowView: View {
                         selectedCategory = category
                     }
                 )
+                .presentationBackground(Theme.sheetBackground)
             }
             .sheet(isPresented: $showingPriceSourcePicker) {
                 ScrollablePickerSheet(
@@ -224,8 +226,9 @@ struct AddHerdFlowView: View {
                         priceSource = source
                     }
                 )
+                .presentationBackground(Theme.sheetBackground)
             }
-            .background(Theme.background.ignoresSafeArea())
+            .background(Theme.sheetBackground.ignoresSafeArea())
             .simultaneousGesture(
                 TapGesture().onEnded { _ in
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)

@@ -17,7 +17,8 @@ struct AssetRegisterPDFView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Theme.background.ignoresSafeArea()
+                // Debug: Solid sheet background for modal presentation
+                Theme.sheetBackground.ignoresSafeArea()
                 
                 Group {
                     if isGenerating {

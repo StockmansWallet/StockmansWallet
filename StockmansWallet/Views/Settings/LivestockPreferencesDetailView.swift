@@ -84,13 +84,14 @@ struct LivestockPreferencesDetailView: View {
                             update { $0.defaultSaleyard = yard.isEmpty ? nil : yard }
                         }
                     )
+                    .presentationBackground(Theme.sheetBackground)
                 }
             }
             .listRowBackground(Theme.cardBackground)
         }
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
-        .background(Theme.background)
+        .background(Theme.backgroundGradient)
         .navigationTitle("Livestock Preferences")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
@@ -184,7 +185,7 @@ private struct SaleyardSearchSheet: View {
                 }
                 .listStyle(.insetGrouped)
                 .scrollContentBackground(.hidden)
-                .background(Theme.background)
+                .background(Theme.backgroundGradient)
             }
             .background(Theme.background.ignoresSafeArea())
             .navigationTitle(title)

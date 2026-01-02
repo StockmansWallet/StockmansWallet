@@ -81,7 +81,8 @@ struct EditHerdView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                Theme.background.ignoresSafeArea()
+                // Debug: Gradient background for navigation destination views
+                Theme.backgroundGradient.ignoresSafeArea()
                 
                 ScrollView {
                     VStack(spacing: Theme.sectionSpacing) {

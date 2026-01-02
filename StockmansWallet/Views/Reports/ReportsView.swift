@@ -80,11 +80,13 @@ struct ReportsView: View {
                 )
                 .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
+                .presentationBackground(Theme.sheetBackground)
             }
             .sheet(isPresented: $showingSalesSummary) {
                 SalesSummaryPDFView(sales: sales)
                     .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
+                    .presentationBackground(Theme.sheetBackground)
             }
             .task {
                 await loadPortfolioValue()
@@ -94,7 +96,7 @@ struct ReportsView: View {
                     await loadPortfolioValue()
                 }
             }
-            .background(Theme.background.ignoresSafeArea())
+            .background(Theme.backgroundGradient.ignoresSafeArea())
         }
     }
     

@@ -30,16 +30,9 @@ struct WelcomeFeaturesPage: View {
 
     var body: some View {
         ZStack {
-            // Debug: Dark brown gradient background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.2, green: 0.15, blue: 0.1),
-                    Color(red: 0.129, green: 0.102, blue: 0.086)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            // Debug: Standardized gradient background from Theme (Rule #0: avoid duplication)
+            Theme.backgroundGradient
+                .ignoresSafeArea()
 
             GeometryReader { geometry in
                 VStack(spacing: 0) {

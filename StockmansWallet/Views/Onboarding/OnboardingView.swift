@@ -30,16 +30,9 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack {
-            // Debug: Dark brown gradient background
-            LinearGradient(
-                colors: [
-                    Color(red: 0.2, green: 0.15, blue: 0.1),
-                    Color(red: 0.129, green: 0.102, blue: 0.086)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea(.all)
+            // Debug: Standardized gradient background from Theme (Rule #0: avoid duplication)
+            Theme.backgroundGradient
+                .ignoresSafeArea(.all)
             
             Group {
                 switch onboardingStep {
@@ -134,8 +127,8 @@ struct OnboardingView: View {
                     onboardingStep = .onboardingPages
                 }
             )
-            // Debug: Native sheet with solid background - follows Apple HIG
-            .presentationBackground(Color(red: 0.129, green: 0.102, blue: 0.086))
+            // Debug: Native sheet with solid background from Theme - follows Apple HIG
+            .presentationBackground(Theme.sheetBackground)
             .presentationCornerRadius(Theme.cornerRadius * 2)
             .presentationDragIndicator(.visible)
         }

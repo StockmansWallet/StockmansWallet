@@ -22,6 +22,24 @@ struct Theme {
     static let cardBackground = Color.white.opacity(0.05)  // For buttons and UI components
     static let inputFieldBackground = Color.white.opacity(0.05)  // For text fields, pickers, etc.
    
+    // MARK: - Backgrounds
+    // Debug: Standardized backgrounds for consistent visual identity across the app
+    // Rule #0: Single source of truth for gradient background used throughout main pages
+    
+    /// Main gradient background for all primary app screens (Dashboard, Portfolio, Market, etc.)
+    /// Dark brown gradient that creates depth and visual hierarchy
+    static let backgroundGradient = LinearGradient(
+        colors: [
+            Color(red: 0.2, green: 0.15, blue: 0.1),      // Lighter brown at top
+            Color(red: 0.129, green: 0.102, blue: 0.086)  // Darker brown at bottom
+        ],
+        startPoint: .top,
+        endPoint: .bottom
+    )
+    
+    /// Solid background color for sheets, modals, and overlays
+    /// Uses the darker brown from the gradient for consistency
+    static let sheetBackground = Color(red: 0.129, green: 0.102, blue: 0.086)
 
     // MARK: - Typography
     // Prefer semantic SwiftUI text styles to support Dynamic Type automatically.

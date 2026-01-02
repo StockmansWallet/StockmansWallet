@@ -81,6 +81,7 @@ struct PortfolioView: View {
             .fullScreenCover(isPresented: $showingAddAssetMenu) {
                 AddAssetMenuView(isPresented: $showingAddAssetMenu)
                     .transition(.move(edge: .trailing))
+                    .presentationBackground(Theme.sheetBackground)
             }
             .task {
                 await loadPortfolioSummary()
@@ -90,7 +91,7 @@ struct PortfolioView: View {
                     await loadPortfolioSummary()
                 }
             }
-            .background(Theme.background.ignoresSafeArea())
+            .background(Theme.backgroundGradient.ignoresSafeArea())
         }
     }
     
