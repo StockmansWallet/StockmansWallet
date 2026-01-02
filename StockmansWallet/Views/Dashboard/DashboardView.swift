@@ -121,7 +121,7 @@ struct DashboardView: View {
     @ViewBuilder
     private var dashboardContentView: some View {
         ZStack(alignment: .top) {
-            // Debug: Background image with solid 0.5 opacity
+            // Debug: Background image with reduced opacity for better text readability
             GeometryReader { geometry in
                 Image("FarmBG_01")
                     .resizable()
@@ -129,7 +129,7 @@ struct DashboardView: View {
                     .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
                     .position(x: geometry.size.width / 2, y: geometry.size.height * 0.2)
                     .clipped()
-                    .opacity(0.5)
+                    .opacity(0.2)
             }
             .ignoresSafeArea(edges: .top)
             
@@ -213,10 +213,10 @@ struct DashboardView: View {
         .padding(.top, -12)
         .padding(.bottom, 100)
         .background(
-            // Debug: Dark panel background (#130F0D) with rounded top corners
+            // Debug: Dark panel background with prominent drop shadow for better separation
             RoundedTopCornersShape(radius: 24)
                 .fill(Theme.backgroundColor)
-                .shadow(color: .black.opacity(0.3), radius: 20, y: -5)
+                .shadow(color: .black.opacity(0.6), radius: 30, y: -8)
                 .ignoresSafeArea(edges: .bottom)
         )
     }
