@@ -56,22 +56,32 @@ struct PortfolioView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 100)
                     }
-                    .background(Theme.backgroundGradient) // keep the background on content, not on the nav bar
+                    .scrollContentBackground(.hidden) // iOS 26: keep bar transparent, content draws behind
+                    .background(Theme.backgroundGradient) // content background
                     .refreshable {
                         await loadPortfolioSummary()
                     }
                 }
             }
-            .navigationTitle("Portfolio")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                // Native trailing items
+                ToolbarItem(placement: .principal) {
+                    Text("Portfolio")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                        .accessibilityAddTraits(.isHeader)
+                }
+                
+                // Debug: Per Apple HIG - ToolbarItemGroup for unrelated actions renders as separate buttons
+                // No shared background, icons sit directly on nav bar material
+                // Buttons match title color (primaryText) for visual consistency
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     Button {
                         HapticManager.tap()
                         showingSearchPanel = true
                     } label: {
                         Image(systemName: "magnifyingglass")
+                            .foregroundStyle(Theme.primaryText)
                     }
                     .accessibilityLabel("Search assets")
                     
@@ -80,11 +90,13 @@ struct PortfolioView: View {
                         showingAddAssetMenu = true
                     } label: {
                         Image(systemName: "plus")
+                            .foregroundStyle(Theme.primaryText)
                     }
                     .accessibilityLabel("Add asset")
                 }
             }
-            // Remove forced toolbar background/material to keep native iOS 26 look
+            .toolbarBackground(.clear, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .fullScreenCover(isPresented: $showingAddAssetMenu) {
                 AddAssetMenuView(isPresented: $showingAddAssetMenu)
                     .transition(.move(edge: .trailing))
@@ -104,7 +116,7 @@ struct PortfolioView: View {
                     await loadPortfolioSummary()
                 }
             }
-            // Keep the screen background behind the scroll content only; avoid painting under nav bar
+            // Keep gradient off the nav bar edges to preserve the iOS 26 transparent bar visuals
             .background(Theme.backgroundGradient.ignoresSafeArea(edges: [.horizontal, .bottom]))
         }
     }
@@ -706,7 +718,8 @@ struct AssetRegisterHeader: View {
 }
 
 // MARK: - Enhanced Herd Card
-// Debug: Entire card is tappable per iOS HIG best practices for list navigation
+// Debug: Redesigned to match sales record card style with orange accents
+// Layout: name/value on top, details below, right-aligned numbers with separate chevron
 struct EnhancedHerdCard: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
@@ -721,84 +734,65 @@ struct EnhancedHerdCard: View {
     
     var body: some View {
         NavigationLink(destination: HerdDetailView(herd: herd)) {
-            VStack(alignment: .leading, spacing: 16) {
-                // Header with chevron indicator
+            VStack(alignment: .leading, spacing: 12) {
+                // Top Row: Name (left, orange) and Chevron (right)
                 HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(herd.name)
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.primaryText)
-                        
-                        Text("\(herd.headCount) head • \(herd.breed) \(herd.category)")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
+                    Text(herd.name)
+                        .font(Theme.headline) // ~17pt - Prominent orange text
+                        .foregroundStyle(Theme.accent) // Orange color for prominent text
+                    
+                    Spacer()
+                    
+                    // Chevron on the top line, separate from numbers
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                }
+                
+                // Solid horizontal divider below title
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(Theme.separator.opacity(0.15)) // Solid line, more transparent
+                
+                // Middle Row: Quantity/Type (left, white) and Total Value (right, orange)
+                HStack(alignment: .top) { // Top align so white text and orange number align at their tops
+                    Text("\(herd.headCount) \(herd.breed) \(herd.category)")
+                        .font(Theme.subheadline) // ~15pt - White text, same size as total value, slightly smaller
+                        .foregroundStyle(.white)
                     
                     Spacer()
                     
                     if let valuation = valuation {
-                        VStack(alignment: .trailing, spacing: 4) {
-                            Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.accent)
-                            Text("\(Int(valuation.projectedWeight))kg avg")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                        }
+                        Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
+                            .font(Theme.subheadline) // ~15pt - Same size as white text, slightly smaller
+                            .foregroundStyle(Theme.accent) // Orange color for total value
                     } else if isLoading {
                         ProgressView()
                             .tint(Theme.accent)
+                            .scaleEffect(0.8)
                     }
-                    
-                    // Chevron navigation indicator
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
-                        .padding(.leading, 8)
                 }
                 
-                Divider()
-                    .background(Theme.separator)
-                
-                // Valuation Details
+                // Bottom Row: Price Source (left, grey) and Combined avg weight + price per kg (right, grey)
                 if let valuation = valuation {
-                    VStack(spacing: 10) {
-                        ValuationDetailRow(
-                            label: "Physical Value",
-                            value: valuation.physicalValue,
-                            color: Theme.accent
-                        )
+                    HStack {
+                        Text("Price Source: \(valuation.priceSource)")
+                            .font(Theme.caption) // ~12pt - Smallest grey text
+                            .foregroundStyle(Theme.secondaryText) // Grey text
                         
-                        if valuation.breedingAccrual > 0 {
-                            ValuationDetailRow(
-                                label: "Breeding Accrual",
-                                value: valuation.breedingAccrual,
-                                color: .green
-                            )
-                        }
+                        Spacer()
                         
-                        ValuationDetailRow(
-                            label: "Price Source",
-                            value: valuation.priceSource,
-                            isText: true
-                        )
-                        
-                        HStack {
-                            Text("Price")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                            Spacer()
-                            Text("\(valuation.pricePerKg, format: .number.precision(.fractionLength(2))) $/kg")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.primaryText)
-                        }
+                        // Average weight and price per kg on same line, separated by slash
+                        Text("\(Int(valuation.projectedWeight)) kg avg / \(valuation.pricePerKg, format: .number.precision(.fractionLength(2))) /kg")
+                            .font(Theme.caption) // ~12pt - Smallest grey text
+                            .foregroundStyle(Theme.secondaryText) // Grey text
                     }
                 }
             }
             .padding(Theme.cardPadding)
         }
         .buttonStyle(PlainButtonStyle())
-        .stitchedCard()
+        .stitchedCard() // Use standard card styling
         .task {
             await loadValuation()
         }
