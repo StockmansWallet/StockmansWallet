@@ -56,23 +56,16 @@ struct PortfolioView: View {
                         .frame(maxWidth: .infinity)
                         .padding(.bottom, 100)
                     }
-                    .background(Color.clear)
+                    .background(Theme.backgroundGradient) // keep the background on content, not on the nav bar
                     .refreshable {
                         await loadPortfolioSummary()
                     }
                 }
             }
+            .navigationTitle("Portfolio")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Portfolio")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                        .accessibilityAddTraits(.isHeader)
-                }
-                
-                // Debug: Correct pattern per Apple HIG - ToolbarItemGroup for placement, but buttons render separately
-                // Search and Add are unrelated actions, so they should be visually distinct with no shared background
+                // Native trailing items
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     Button {
                         HapticManager.tap()
@@ -91,9 +84,7 @@ struct PortfolioView: View {
                     .accessibilityLabel("Add asset")
                 }
             }
-            // Use a material at the scroll edge so content does not appear to fade into the background image under the nav bar
-            .toolbarBackground(.regularMaterial, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
+            // Remove forced toolbar background/material to keep native iOS 26 look
             .fullScreenCover(isPresented: $showingAddAssetMenu) {
                 AddAssetMenuView(isPresented: $showingAddAssetMenu)
                     .transition(.move(edge: .trailing))
@@ -113,8 +104,8 @@ struct PortfolioView: View {
                     await loadPortfolioSummary()
                 }
             }
-            // Keep the screen background behind the scroll content
-            .background(Theme.backgroundGradient.ignoresSafeArea())
+            // Keep the screen background behind the scroll content only; avoid painting under nav bar
+            .background(Theme.backgroundGradient.ignoresSafeArea(edges: [.horizontal, .bottom]))
         }
     }
     
@@ -1218,3 +1209,4 @@ struct SearchResultCard: View {
         .stitchedCard()
     }
 }
+
