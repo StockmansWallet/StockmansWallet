@@ -1,0 +1,57 @@
+# Git attributes for iOS projects
+
+# Handle line endings automatically for files detected as text
+* text=auto
+
+# Swift source files
+*.swift text diff=swift
+
+# Xcode project files
+*.pbxproj text
+*.xcworkspacedata text
+*.xcscheme text
+*.storyboard text
+*.xib text
+
+# JSON files
+*.json text
+
+# Markdown files
+*.md text diff=markdown
+
+# Shell scripts
+*.sh text eol=lf
+
+# Prevent binary files from being treated as text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.mov binary
+*.mp4 binary
+*.mp3 binary
+*.flv binary
+*.fla binary
+*.swf binary
+*.gz binary
+*.zip binary
+*.7z binary
+*.ttf binary
+*.eot binary
+*.woff binary
+*.woff2 binary
+*.pyc binary
+*.pdf binary
+*.docx binary
+
+# Xcode binary files
+*.xcuserstate binary
+*.xcworkspacedata binary
+
+# Linguist overrides for proper language detection
+*.swift linguist-language=Swift
+*.h linguist-language=Objective-C
+*.m linguist-language=Objective-C
+
+
