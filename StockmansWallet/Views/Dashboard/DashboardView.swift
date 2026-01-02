@@ -127,7 +127,7 @@ struct DashboardView: View {
                     .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
                     .position(x: geometry.size.width / 2, y: geometry.size.height * 0.2)
                     .clipped()
-                    .opacity(0.2)
+                    .opacity(0.1)
             }
             .ignoresSafeArea(edges: .top)
             
@@ -219,7 +219,7 @@ struct DashboardView: View {
             // Debug: Dark panel background with prominent drop shadow for better separation
             RoundedTopCornersShape(radius: 24)
                 .fill(Theme.backgroundColor)
-                .shadow(color: .black.opacity(0.6), radius: 30, y: -8)
+                .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
                 .ignoresSafeArea()
         )
     }

@@ -56,39 +56,49 @@ struct OnboardingView: View {
                     )
                     
                 case .onboardingPages:
-                    TabView(selection: $currentPage) {
-                        IdentityCredentialsPage(
-                            userPrefs: $userPrefs,
-                            currentPage: $currentPage
-                        )
-                        .tag(0)
-                        
-                        PersonaSecurityPage(
-                            userPrefs: $userPrefs,
-                            currentPage: $currentPage
-                        )
-                        .tag(1)
-                        
-                        PropertyLocalizationPage(
-                            userPrefs: $userPrefs,
-                            currentPage: $currentPage
-                        )
-                        .tag(2)
-                        
-                        MarketLogisticsPage(
-                            userPrefs: $userPrefs,
-                            currentPage: $currentPage
-                        )
-                        .tag(3)
-                        
-                        FinancialEcosystemPage(
-                            userPrefs: $userPrefs,
-                            onComplete: saveAndComplete
-                        )
-                        .tag(4)
+                    // Debug: Disable swiping - users must use Next/Back buttons after completing required fields
+                    // Use custom view container instead of TabView to prevent swipe gestures
+                    Group {
+                        switch currentPage {
+                        case 0:
+                            AboutYouPage(
+                                userPrefs: $userPrefs,
+                                currentPage: $currentPage
+                            )
+                        case 1:
+                            YourRolePage(
+                                userPrefs: $userPrefs,
+                                currentPage: $currentPage
+                            )
+                        case 2:
+                            SecurityPrivacyPage(
+                                userPrefs: $userPrefs,
+                                currentPage: $currentPage
+                            )
+                        case 3:
+                            YourPropertyPage(
+                                userPrefs: $userPrefs,
+                                currentPage: $currentPage
+                            )
+                        case 4:
+                            MarketPreferencesPage(
+                                userPrefs: $userPrefs,
+                                currentPage: $currentPage
+                            )
+                        case 5:
+                            ConnectYourAccountsPage(
+                                userPrefs: $userPrefs,
+                                currentPage: $currentPage,
+                                onComplete: saveAndComplete
+                            )
+                        default:
+                            AboutYouPage(
+                                userPrefs: $userPrefs,
+                                currentPage: $currentPage
+                            )
+                        }
                     }
-                    .tabViewStyle(.page(indexDisplayMode: .always))
-                    .indexViewStyle(.page(backgroundDisplayMode: .always))
+                    .transition(.opacity)
                 }
             }
             .ignoresSafeArea()

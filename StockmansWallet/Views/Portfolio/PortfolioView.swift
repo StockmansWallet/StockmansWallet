@@ -477,7 +477,7 @@ struct CapitalConcentrationCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Capital Concentration")
+                Text("Category Breakdown")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
