@@ -137,6 +137,7 @@ struct DashboardView: View {
             ScrollView {
                 VStack(spacing: 0) {
                     // Debug: Portfolio value card on top of background (no panel)
+                    // Adjusted spacing: less space above, more below for visual balance
                     PortfolioValueCard(
                         value: selectedValue ?? portfolioValue,
                         change: isScrubbing ? portfolioChange : (portfolioValue - dayAgoValue),
@@ -144,8 +145,8 @@ struct DashboardView: View {
                         isScrubbing: isScrubbing
                     )
                     .padding(.horizontal, Theme.cardPadding)
-                    .padding(.top, 40)
-                    .padding(.bottom, 0)
+                    .padding(.top, 8)
+                    .padding(.bottom, 40)
                     .accessibilityElement(children: .combine)
                     .accessibilityLabel("Total portfolio value")
                     .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
@@ -464,18 +465,23 @@ struct PortfolioValueCard: View {
             }
             
             if !isLoading {
+                // Debug: Change ticker in glass pill with fully rounded capsule shape
                 HStack(spacing: 4) {
                     Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
-                        .font(.system(size: 12, weight: .semibold))
+                        .font(.system(size: 10, weight: .regular))
                         .foregroundStyle(change >= 0 ? .green : .red)
                         .accessibilityHidden(true)
                     Text(change, format: .currency(code: "AUD"))
-                        .font(.system(size: 15, weight: .regular))
+                        .font(.system(size: 11, weight: .regular))
                         .monospacedDigit()
                         .foregroundStyle(change >= 0 ? .green : .red)
                         .accessibilityLabel("Change since yesterday")
                         .accessibilityValue("\(change.formatted(.currency(code: "AUD")))")
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .glassEffect(.regular.interactive(), in: Capsule())
+                .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                 .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)
             }
         }
@@ -745,20 +751,22 @@ struct InteractiveChartView: View {
         Group {
             if isScrubbing, let selectedDate = selectedDate, let scrubberX = scrubberX {
                 GeometryReader { geometry in
-                    let pillWidth: CGFloat = 110
-                    let pillOffset = scrubberX - (pillWidth / 2)
-                    let clampedOffset = max(0, min(pillOffset, geometry.size.width - pillWidth))
-                    
-                    Text(selectedDate, format: .dateTime.day(.twoDigits).month(.abbreviated).year())
-                        .font(.system(size: 11, weight: .semibold)).monospacedDigit()
+                    // Debug: Date pill with fully rounded capsule shape
+                    let content = Text(selectedDate, format: .dateTime.day(.twoDigits).month(.abbreviated).year())
+                        .font(.system(size: 11, weight: .regular)).monospacedDigit()
                         .foregroundStyle(Theme.primaryText)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .frame(width: pillWidth)
-                        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .glassEffect(.regular.interactive(), in: Capsule())
                         .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                         .scaleEffect(pillScale, anchor: .center)
                         .opacity(pillOpacity)
+                    
+                    let pillWidth: CGFloat = 100
+                    let pillOffset = scrubberX - (pillWidth / 2)
+                    let clampedOffset = max(0, min(pillOffset, geometry.size.width - pillWidth))
+                    
+                    content
                         .offset(x: clampedOffset)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .accessibilityLabel("Selected date")
