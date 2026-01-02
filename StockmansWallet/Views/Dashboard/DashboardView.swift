@@ -49,8 +49,6 @@ struct DashboardView: View {
     private var mainContentWithModifiers: some View {
         let contentWithNav = mainContent
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.clear, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .principal) {
                     Text("Dashboard")
@@ -133,7 +131,7 @@ struct DashboardView: View {
             }
             .ignoresSafeArea(edges: .top)
             
-            // Debug: Main scrollable content
+            // Debug: Main scrollable content - extends into safe area to prevent clipping
             ScrollView {
                 VStack(spacing: 0) {
                     // Debug: Portfolio value card on top of background (no panel)
@@ -153,6 +151,10 @@ struct DashboardView: View {
                     
                     contentPanel
                 }
+            }
+            .scrollIndicators(.hidden)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                Color.clear.frame(height: 0)
             }
         }
     }
@@ -217,7 +219,7 @@ struct DashboardView: View {
             RoundedTopCornersShape(radius: 24)
                 .fill(Theme.backgroundColor)
                 .shadow(color: .black.opacity(0.6), radius: 30, y: -8)
-                .ignoresSafeArea(edges: .bottom)
+                .ignoresSafeArea()
         )
     }
     

@@ -156,7 +156,7 @@ struct ValuationCard: View {
                 Divider()
                     .background(Theme.primaryText.opacity(0.3))
                 
-                ValuationRow(label: "Physical Value", value: valuation.physicalValue, color: Theme.accent)
+               
                 
                 if valuation.breedingAccrual > 0 {
                     ValuationRow(label: "Breeding Accrual", value: valuation.breedingAccrual, color: .green)
@@ -166,7 +166,7 @@ struct ValuationCard: View {
                 
                 ValuationRow(label: "Mortality Deduction", value: -valuation.mortalityDeduction, color: .orange)
                 
-                ValuationRow(label: "Cost to Carry", value: -valuation.costToCarry, color: .red)
+               
                 
                 Divider()
                     .background(Theme.primaryText.opacity(0.3))
@@ -191,15 +191,7 @@ struct ValuationCard: View {
                         .foregroundStyle(Theme.primaryText.opacity(0.8))
                 }
                 
-                HStack {
-                    Text("Projected Weight")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.primaryText.opacity(0.7))
-                    Spacer()
-                    Text("\(Int(valuation.projectedWeight)) kg")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.primaryText.opacity(0.8))
-                }
+               
             }
         }
         .padding(Theme.cardPadding)
