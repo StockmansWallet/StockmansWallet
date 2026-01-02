@@ -182,7 +182,7 @@ struct StitchedCard: ViewModifier {
                         style: StrokeStyle(
                             lineWidth: 1,
                             lineCap: .round,
-                            dash: [6, 6] // Subtle stitching pattern: 6pt dash, 6pt gap
+                            dash: [4, 4] // Subtle stitching pattern: 6pt dash, 6pt gap
                         )
                     )
             )

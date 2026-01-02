@@ -120,35 +120,37 @@ struct DashboardView: View {
     // Debug: Dashboard content with background image and sliding panel
     @ViewBuilder
     private var dashboardContentView: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .top) {
-                // Debug: Background image with solid 0.5 opacity
+        ZStack(alignment: .top) {
+            // Debug: Background image with solid 0.5 opacity
+            GeometryReader { geometry in
                 Image("FarmBG_01")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
+                    .position(x: geometry.size.width / 2, y: geometry.size.height * 0.2)
                     .clipped()
                     .opacity(0.5)
-                    .ignoresSafeArea()
-                
-                // Debug: Main scrollable content
-                ScrollView {
-                    VStack(spacing: 0) {
-                        // Debug: Portfolio value card on top of background (no panel)
-                        PortfolioValueCard(
-                            value: selectedValue ?? portfolioValue,
-                            change: isScrubbing ? portfolioChange : (portfolioValue - dayAgoValue),
-                            isLoading: isLoading,
-                            isScrubbing: isScrubbing
-                        )
-                        .padding(.horizontal)
-                        .padding(.top, 20)
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("Total portfolio value")
-                        .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
-                        
-                        contentPanel
-                    }
+            }
+            .ignoresSafeArea(edges: .top)
+            
+            // Debug: Main scrollable content
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Debug: Portfolio value card on top of background (no panel)
+                    PortfolioValueCard(
+                        value: selectedValue ?? portfolioValue,
+                        change: isScrubbing ? portfolioChange : (portfolioValue - dayAgoValue),
+                        isLoading: isLoading,
+                        isScrubbing: isScrubbing
+                    )
+                    .padding(.horizontal, Theme.cardPadding)
+                    .padding(.top, 40)
+                    .padding(.bottom, 0)
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Total portfolio value")
+                    .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
+                    
+                    contentPanel
                 }
             }
         }
@@ -169,45 +171,45 @@ struct DashboardView: View {
                     portfolioChange = change
                 }
             )
-            .padding(.horizontal)
+            .padding(.horizontal, Theme.cardPadding)
             .accessibilityHint("Drag your finger across the chart to explore values over time.")
             
             TimeRangeSelector(timeRange: $timeRange)
-                .padding(.horizontal)
+                .padding(.horizontal, Theme.cardPadding)
                 .padding(.top, -Theme.sectionSpacing)
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Time range selector")
             
             MarketPulseView()
-                .padding(.horizontal)
+                .padding(.horizontal, Theme.cardPadding)
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Market pulse")
             
             if !capitalConcentration.isEmpty {
                 CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
-                    .padding(.horizontal)
+                    .padding(.horizontal, Theme.cardPadding)
                     .accessibilityElement(children: .contain)
                     .accessibilityLabel("Capital concentration")
             }
             
             if let metrics = performanceMetrics {
                 PerformanceMetricsView(metrics: metrics)
-                    .padding(.horizontal)
+                    .padding(.horizontal, Theme.cardPadding)
                     .accessibilityElement(children: .contain)
                     .accessibilityLabel("Performance metrics")
             }
             
             CostToCarryView(totalCost: totalCostToCarry, portfolioValue: portfolioValue)
-                .padding(.horizontal)
+                .padding(.horizontal, Theme.cardPadding)
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Cost to carry")
             
             QuickStatsView(herds: herds)
-                .padding(.horizontal)
+                .padding(.horizontal, Theme.cardPadding)
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Quick stats")
         }
-        .padding(.top, 24)
+        .padding(.top, -12)
         .padding(.bottom, 100)
         .background(
             // Debug: Dark panel background (#130F0D) with rounded top corners
@@ -749,13 +751,12 @@ struct InteractiveChartView: View {
                     
                     Text(selectedDate, format: .dateTime.day(.twoDigits).month(.abbreviated).year())
                         .font(.system(size: 11, weight: .semibold)).monospacedDigit()
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.primaryText)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .background(Theme.accent.opacity(0.15))
-                        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                        .shadow(color: .black.opacity(0.2), radius: 4, y: 2)
                         .frame(width: pillWidth)
+                        .glassEffect(.regular.interactive(), in: RoundedRectangle(cornerRadius: 8, style: .continuous))
+                        .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                         .scaleEffect(pillScale, anchor: .center)
                         .opacity(pillOpacity)
                         .offset(x: clampedOffset)
@@ -1273,25 +1274,32 @@ struct RoundedTopCornersShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
         
-        let topLeft = CGPoint(x: rect.minX, y: rect.minY + radius)
-        let topRight = CGPoint(x: rect.maxX, y: rect.minY + radius)
-        let bottomRight = CGPoint(x: rect.maxX, y: rect.maxY)
-        let bottomLeft = CGPoint(x: rect.minX, y: rect.maxY)
-        
+        // Debug: Start from top left corner
         path.move(to: CGPoint(x: rect.minX, y: rect.minY + radius))
+        
+        // Top left arc
         path.addArc(center: CGPoint(x: rect.minX + radius, y: rect.minY + radius),
                     radius: radius,
                     startAngle: .degrees(180),
                     endAngle: .degrees(270),
                     clockwise: false)
+        
+        // Top edge to top right corner
         path.addLine(to: CGPoint(x: rect.maxX - radius, y: rect.minY))
+        
+        // Top right arc
         path.addArc(center: CGPoint(x: rect.maxX - radius, y: rect.minY + radius),
                     radius: radius,
                     startAngle: .degrees(270),
                     endAngle: .degrees(0),
                     clockwise: false)
-        path.addLine(to: bottomRight)
-        path.addLine(to: bottomLeft)
+        
+        // Right edge to bottom right
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        
+        // Bottom edge to bottom left
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
+        
         path.closeSubpath()
         
         return path
