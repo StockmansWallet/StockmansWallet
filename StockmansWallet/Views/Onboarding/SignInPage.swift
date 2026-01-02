@@ -32,13 +32,9 @@ struct SignInPage: View {
     }
     
     var body: some View {
+        // Debug: No background color - let ultraThinMaterial blur through to content behind modal
         NavigationStack {
-            ZStack {
-                // Debug: Glassmorphism effect for sheet - shows blurred background through material
-                Theme.background
-                    .ignoresSafeArea()
-                
-                ScrollView {
+            ScrollView {
                 VStack(spacing: 32) {
                         // Debug: Improved header with better visual hierarchy
                         VStack(spacing: 12) {
@@ -233,12 +229,13 @@ struct SignInPage: View {
                             .tint(Theme.secondaryText.opacity(0.7)) // Debug: Subtle link
                         }
                         .frame(maxWidth: .infinity)
-                    }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 40)
                 }
-                .scrollContentBackground(.hidden)
+                .padding(.horizontal, 24)
+                .padding(.bottom, 40)
             }
+            .scrollContentBackground(.hidden)
+            .navigationTitle("")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -246,14 +243,14 @@ struct SignInPage: View {
                         showingSignIn = false
                     } label: {
                         Image(systemName: "xmark")
+                            .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(Theme.primaryText)
                     }
                     .accessibilityLabel("Close")
                 }
             }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .background(.clear)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.dark, for: .navigationBar)
         }
     }
     

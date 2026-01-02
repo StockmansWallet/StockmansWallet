@@ -134,8 +134,10 @@ struct OnboardingView: View {
                     onboardingStep = .onboardingPages
                 }
             )
-            .presentationBackground(.clear) // Debug: Clear - let gradient show through without material
-            .presentationCornerRadius(Theme.cornerRadius * 2) // Debug: Larger corners for sheet presentation
+            // Debug: Native sheet with solid background - follows Apple HIG
+            .presentationBackground(Color(red: 0.129, green: 0.102, blue: 0.086))
+            .presentationCornerRadius(Theme.cornerRadius * 2)
+            .presentationDragIndicator(.visible)
         }
     }
     
