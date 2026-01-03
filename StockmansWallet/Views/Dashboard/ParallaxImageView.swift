@@ -16,31 +16,55 @@ struct ParallaxImageView: View {
     let opacity: Double
     let scale: CGFloat // Scale DOWN to show more (0.5 = 50% of screen height)
     let verticalOffset: CGFloat // Position from top
+    let blur: CGFloat // Blur radius
     
     init(
         imageName: String,
         intensity: CGFloat = 25,
         opacity: Double = 0.1,
         scale: CGFloat = 0.5, // 50% of screen height by default
-        verticalOffset: CGFloat = 0 // Start at top by default
+        verticalOffset: CGFloat = 0, // Start at top by default
+        blur: CGFloat = 0 // No blur by default
     ) {
         self.imageName = imageName
         self.intensity = intensity
         self.opacity = opacity
         self.scale = scale
         self.verticalOffset = verticalOffset
+        self.blur = blur
     }
     
     var body: some View {
         GeometryReader { geometry in
-            ParallaxImageRepresentable(
-                imageName: imageName,
-                intensity: intensity,
-                size: geometry.size,
-                scale: scale,
-                verticalOffset: verticalOffset
-            )
-            .opacity(opacity)
+            ZStack {
+                ParallaxImageRepresentable(
+                    imageName: imageName,
+                    intensity: intensity,
+                    size: geometry.size,
+                    scale: scale,
+                    verticalOffset: verticalOffset
+                )
+                .blur(radius: blur) // Apply blur effect
+                .opacity(opacity)
+                
+                // Debug: Bottom fade gradient to hide image edge when pulled down
+                VStack(spacing: 0) {
+                    Spacer()
+                    
+                    // Start fade from middle-bottom area
+                    LinearGradient(
+                        colors: [
+                            .clear,
+                            Theme.backgroundColor.opacity(0.5),
+                            Theme.backgroundColor.opacity(0.9),
+                            Theme.backgroundColor
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .frame(height: geometry.size.height * 0.4) // Fade over bottom 40% of image
+                }
+            }
         }
         .ignoresSafeArea(edges: .top)
     }

@@ -115,7 +115,7 @@ struct DashboardView: View {
         }
     }
     
-    // Debug: Dashboard content with parallax background image and sliding panel
+    // Debug: Dashboard content with parallax background and fixed header
     @ViewBuilder
     private var dashboardContentView: some View {
         ZStack(alignment: .top) {
@@ -123,36 +123,40 @@ struct DashboardView: View {
             ParallaxImageView(
                 imageName: "FarmBG_01",
                 intensity: 25,           // Movement amount (20-40)
-                opacity: 0.3,            // Background opacity
+                opacity: 0.2,            // Background opacity
                 scale: 0.5,              // Image takes 50% of screen height
-                verticalOffset: 0        // Position at top
+                verticalOffset: -60,     // Move image up to show more middle/lower area
+                blur: 0                // BG Image Blur radius
             )
             
-            // Debug: Main scrollable content - extends into safe area to prevent clipping
+            // Debug: Fixed portfolio value - stays in place while content scrolls over it
+            VStack {
+                PortfolioValueCard(
+                    value: selectedValue ?? portfolioValue,
+                    change: isScrubbing ? portfolioChange : (portfolioValue - dayAgoValue),
+                    isLoading: isLoading,
+                    isScrubbing: isScrubbing
+                )
+                .padding(.horizontal, Theme.cardPadding)
+                .padding(.top, 8)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Total portfolio value")
+                .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
+                
+                Spacer()
+            }
+            
+            // Debug: Scrollable content panel - starts lower to show more background
             ScrollView {
                 VStack(spacing: 0) {
-                    // Debug: Portfolio value card on top of background (no panel)
-                    // Adjusted spacing: less space above, more below for visual balance
-                    PortfolioValueCard(
-                        value: selectedValue ?? portfolioValue,
-                        change: isScrubbing ? portfolioChange : (portfolioValue - dayAgoValue),
-                        isLoading: isLoading,
-                        isScrubbing: isScrubbing
-                    )
-                    .padding(.horizontal, Theme.cardPadding)
-                    .padding(.top, 8)
-                    .padding(.bottom, 40)
-                    .accessibilityElement(children: .combine)
-                    .accessibilityLabel("Total portfolio value")
-                    .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
+                    // Debug: Top spacing to position content panel lower and clear the fixed header
+                    Color.clear
+                        .frame(height: 210) // Adjust this to control how much background shows
                     
                     contentPanel
                 }
             }
             .scrollIndicators(.hidden)
-            .safeAreaInset(edge: .top, spacing: 0) {
-                Color.clear.frame(height: 0)
-            }
         }
     }
     
