@@ -72,22 +72,23 @@ struct OnboardingPageTemplate<Content: View>: View {
                 }
                 .padding(.horizontal, horizontalPadding)
                 
-                VStack(spacing: titleSpacing) {
+                VStack(spacing: 12) {
                     Text(title)
-                        .font(.system(size: 17, weight: .medium))
+                        .font(.system(size: 28, weight: .bold))
                         .foregroundStyle(Theme.primaryText)
                         .multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
                     
                     Text(subtitle)
-                        .font(.system(size: 15, weight: .regular))
+                        .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
                         .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
                 }
                 .padding(.horizontal, horizontalPadding)
-                .padding(.bottom, 16)
+                .padding(.bottom, 32)
             }
-            .padding(.top, 12) // Comfortable default; safe area is respected by default
+            .padding(.top, 40) // Debug: Updated to match Select User page styling for consistency
             
             // Scrollable content
             ScrollView {

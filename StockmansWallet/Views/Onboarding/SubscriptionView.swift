@@ -142,10 +142,9 @@ struct SubscriptionView: View {
     }
     
     // MARK: - Header View
+    // Debug: Consistent styling with other onboarding pages (28pt bold title, Theme.body subtitle)
     private var headerView: some View {
         VStack(spacing: 12) {
-          
-            
             Text(userPrefs.userRole == .farmerGrazier ? "Choose Your Plan" : "You're All Set!")
                 .font(.system(size: 28, weight: .bold))
                 .foregroundStyle(Theme.primaryText)
