@@ -23,7 +23,7 @@ struct SecurityPrivacyPage: View {
             currentPage: $currentPage,
             nextPage: 4,
             isValid: isValid,
-            totalPages: 5 // Debug: SHARED page - both paths have 5 pages
+            totalPages: 6 // Debug: SHARED page - both paths have 6 pages (includes Subscription)
         ) {
             // Debug: Organized layout following HIG - clear sections with proper spacing
             VStack(spacing: 24) {

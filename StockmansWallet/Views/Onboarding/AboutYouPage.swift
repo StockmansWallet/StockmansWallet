@@ -15,9 +15,9 @@ struct AboutYouPage: View {
     @State private var showPassword = false
     @State private var showConfirmPassword = false
     
-    // Debug: Both paths now have 5 pages (Security & Summary are shared)
+    // Debug: Both paths now have 6 pages (includes Subscription screen)
     private var totalPages: Int {
-        5
+        6
     }
     
     // Debug: Password fields disabled in demo mode - removed from validation

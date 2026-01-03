@@ -66,6 +66,10 @@ final class UserPreferences {
     var companyAddress: String?
     var roleInCompany: String? // User's specific role within the company
     
+    // MARK: - Subscription Information
+    // Debug: User's selected subscription tier
+    var subscriptionTier: String? // SubscriptionTier as String for SwiftData compatibility
+    
     // MARK: - Market & Logistics
     var defaultSaleyard: String?
     var region: String?
@@ -110,6 +114,7 @@ final class UserPreferences {
         self.companyType = nil
         self.companyAddress = nil
         self.roleInCompany = nil
+        self.subscriptionTier = nil
         self.defaultSaleyard = nil
         self.region = nil
         self.truckItEnabled = false

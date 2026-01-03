@@ -29,7 +29,7 @@ struct YourPropertyPage: View {
             currentPage: $currentPage,
             nextPage: 3,
             isValid: isValid,
-            totalPages: 5 // Debug: Farmer path has 5 pages
+            totalPages: 6 // Debug: Farmer path has 6 pages (includes Subscription)
         ) {
             // Debug: Organized layout following HIG - clear sections with logical grouping
             VStack(spacing: 24) {

@@ -18,9 +18,9 @@ struct OnboardingSummaryPage: View {
         userPrefs.userRole == .farmerGrazier
     }
     
-    // Debug: Both paths now have 5 pages (Security & Summary are shared)
+    // Debug: Both paths now have 6 pages (includes Subscription screen at the end)
     private var totalPages: Int {
-        5
+        6
     }
     
     var body: some View {

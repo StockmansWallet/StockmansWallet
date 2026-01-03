@@ -57,9 +57,9 @@ struct OnboardingView: View {
                     
                 case .onboardingPages:
                     // Debug: Branching onboarding flow based on user role
-                    // Green Path (Farmer): UserType → AboutYou → Property → Security → Summary (5 pages)
-                    // Pink Path (Advisory): UserType → AboutYou → Company → Security → Summary (5 pages)
-                    // Security & Summary pages are SHARED between both paths
+                    // Green Path (Farmer): UserType → AboutYou → Property → Security → Summary → Subscription (6 pages)
+                    // Pink Path (Advisory): UserType → AboutYou → Company → Security → Summary → Subscription (6 pages)
+                    // Security, Summary & Subscription pages are SHARED between both paths
                     Group {
                         switch currentPage {
                         case 0:
@@ -96,10 +96,21 @@ struct OnboardingView: View {
                                 currentPage: $currentPage
                             )
                         case 4:
-                            // Fifth page: Onboarding Summary (SHARED - both paths, final page)
+                            // Fifth page: Onboarding Summary (SHARED - both paths)
                             OnboardingSummaryPage(
                                 userPrefs: $userPrefs,
                                 currentPage: $currentPage,
+                                onComplete: {
+                                    // Move to subscription page instead of completing
+                                    withAnimation {
+                                        currentPage = 5
+                                    }
+                                }
+                            )
+                        case 5:
+                            // Sixth page: Subscription/Pricing (SHARED - final page)
+                            SubscriptionView(
+                                userPrefs: $userPrefs,
                                 onComplete: saveAndComplete
                             )
                         default:
@@ -184,6 +195,9 @@ struct OnboardingView: View {
             existing.companyType = userPrefs.companyType
             existing.companyAddress = userPrefs.companyAddress
             existing.roleInCompany = userPrefs.roleInCompany
+            
+            // Subscription tier
+            existing.subscriptionTier = userPrefs.subscriptionTier
             
             // Legacy fields (can be set later in settings)
             existing.defaultSaleyard = userPrefs.defaultSaleyard

@@ -35,7 +35,7 @@ struct CompanyInfoPage: View {
             currentPage: $currentPage,
             nextPage: 3, // Go to Security/Privacy (shared page)
             isValid: isValid,
-            totalPages: 5 // Debug: Both paths now have 5 pages
+            totalPages: 6 // Debug: Both paths now have 6 pages (includes Subscription)
         ) {
             // Debug: Organized layout following HIG - clear sections with logical grouping
             VStack(spacing: 24) {
