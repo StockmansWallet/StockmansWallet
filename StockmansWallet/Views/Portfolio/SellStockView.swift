@@ -176,7 +176,7 @@ struct SellStockView: View {
                                     }
                                     
                                     // Calculated total price
-                                    if pricePerKg > 0, let herd = selectedHerd {
+                                    if pricePerKg > 0, selectedHerd != nil {
                                         VStack(alignment: .leading, spacing: 12) {
                                             HStack {
                                                 Text("Estimated Total:")
