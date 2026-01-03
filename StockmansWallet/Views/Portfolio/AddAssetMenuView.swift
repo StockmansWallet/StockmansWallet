@@ -38,6 +38,21 @@ struct AddAssetMenuView: View {
                         
                         // Individual Option Buttons
                         VStack(spacing: 16) {
+                            
+                            
+                            // Add Individual
+                            AssetMenuRow(
+                                iconColor: Theme.accent,
+                                iconSymbol: "plus.app",
+                                customImageName: "cattle_tag",
+                                title: "Add Individual",
+                                subtitle: "Track a single tagged animal"
+                            ) {
+                                HapticManager.tap()
+                                showingAddIndividual = true
+                            }
+                            
+                            
                             // Add Herd / Mob
                             AssetMenuRow(
                                 iconColor: Theme.accent,
@@ -50,17 +65,6 @@ struct AddAssetMenuView: View {
                                 showingAddHerd = true
                             }
                             
-                            // Add Individual
-                            AssetMenuRow(
-                                iconColor: Theme.accent,
-                                iconSymbol: "plus.app",
-                                customImageName: "cattle_tag",
-                                title: "Add Individual Animal",
-                                subtitle: "Track a single tagged animal"
-                            ) {
-                                HapticManager.tap()
-                                showingAddIndividual = true
-                            }
                             
                             // Import CSV
                             AssetMenuRow(
