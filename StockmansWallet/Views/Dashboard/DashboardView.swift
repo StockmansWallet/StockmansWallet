@@ -518,7 +518,7 @@ struct PortfolioValueCard: View {
             }
             
             if !isLoading {
-                // Debug: Change ticker in glass pill with fully rounded capsule shape
+                // Debug: Change ticker in glass pill with fully rounded capsule shape and dynamic tint (green/red)
                 HStack(spacing: 4) {
                     Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
                         .font(.system(size: 10, weight: .regular))
@@ -533,7 +533,7 @@ struct PortfolioValueCard: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 6)
-                .glassEffect(.regular.interactive(), in: Capsule())
+                .glassEffect(.regular.interactive().tint((change >= 0 ? Color.green : Color.red).opacity(0.1)), in: Capsule())
                 .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                 .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)
             }
@@ -568,7 +568,7 @@ struct AnimatedCurrencyValue: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text("$")
-                .font(.system(size: 28, weight: .bold))
+                .font(.system(size: 40, weight: .bold))
                 .foregroundStyle(.white)
                 .tracking(-2)
                 .baselineOffset(4)
@@ -578,7 +578,7 @@ struct AnimatedCurrencyValue: View {
             let useAnimations = !UIAccessibility.isReduceMotionEnabled && isScrubbing
             
             Text(formattedValue.whole)
-                .font(.system(size: 40, weight: .bold))
+                .font(.system(size: 50, weight: .bold))
                 .monospacedDigit()
                 .foregroundStyle(.white)
                 .tracking(-2)
