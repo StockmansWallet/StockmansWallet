@@ -150,7 +150,7 @@ struct OnboardingPageTemplate<Content: View>: View {
                     .accessibilityHint(isValid ? "" : "Please complete all required fields")
                 }
             }
-            .background(Theme.backgroundGradient)
+            // Debug: Removed background to prevent visible line at bottom (background already applied to main view)
         }
     }
 }

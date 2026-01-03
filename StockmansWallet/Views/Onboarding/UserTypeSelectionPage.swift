@@ -208,7 +208,7 @@ struct UserTypeSelectionPage: View {
                     .padding(.bottom, 16)
                 }
             }
-            .background(Theme.backgroundGradient)
+            // Debug: Removed background to prevent visible line at bottom (background already applied to main view)
         }
     }
 }
