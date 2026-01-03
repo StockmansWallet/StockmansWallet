@@ -24,7 +24,16 @@ struct AdvisoryDashboardView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Background gradient
+                // Debug: Background with parallax effect (like iOS home screen wallpapers)
+                ParallaxImageView(
+                    imageName: "FarmBG_01",
+                    intensity: 25,
+                    opacity: 0.08,
+                    scale: 0.5,              // Image takes 50% of screen height
+                    verticalOffset: 0        // Position at top
+                )
+                
+                // Background gradient overlay
                 Theme.backgroundGradient.ignoresSafeArea()
                 
                 VStack(spacing: 32) {

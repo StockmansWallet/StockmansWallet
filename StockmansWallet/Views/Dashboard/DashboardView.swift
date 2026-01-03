@@ -115,21 +115,18 @@ struct DashboardView: View {
         }
     }
     
-    // Debug: Dashboard content with background image and sliding panel
+    // Debug: Dashboard content with parallax background image and sliding panel
     @ViewBuilder
     private var dashboardContentView: some View {
         ZStack(alignment: .top) {
-            // Debug: Background image with reduced opacity for better text readability
-            GeometryReader { geometry in
-                Image("FarmBG_01")
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: geometry.size.width, height: geometry.size.height * 0.5)
-                    .position(x: geometry.size.width / 2, y: geometry.size.height * 0.2)
-                    .clipped()
-                    .opacity(0.1)
-            }
-            .ignoresSafeArea(edges: .top)
+            // Debug: Background image with parallax effect (like iOS home screen wallpapers)
+            ParallaxImageView(
+                imageName: "FarmBG_01",
+                intensity: 25,           // Movement amount (20-40)
+                opacity: 0.3,            // Background opacity
+                scale: 0.5,              // Image takes 50% of screen height
+                verticalOffset: 0        // Position at top
+            )
             
             // Debug: Main scrollable content - extends into safe area to prevent clipping
             ScrollView {
