@@ -250,11 +250,27 @@ struct DashboardView: View {
         .padding(.top, -12)
         .padding(.bottom, 100)
         .background(
-            // Debug: Dark panel background with prominent drop shadow for better separation
-            RoundedTopCornersShape(radius: 24)
-                .fill(Theme.backgroundColor)
-                .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
-                .ignoresSafeArea()
+            // Debug: Dark panel background with gradient and prominent drop shadow for better separation
+            ZStack {
+                RoundedTopCornersShape(radius: 24)
+                    .fill(Theme.backgroundColor)
+                    .ignoresSafeArea()
+                
+                RoundedTopCornersShape(radius: 24)
+                    .fill(
+                        RadialGradient(
+                            colors: [
+                                Color(hex: "FFA042").opacity(0.15),  // Orange accent
+                                Color(hex: "1E1815").opacity(0)      // Fade to transparent
+                            ],
+                            center: .top,
+                            startRadius: 0,
+                            endRadius: 500
+                        )
+                    )
+                    .ignoresSafeArea()
+            }
+            .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
         )
     }
     
