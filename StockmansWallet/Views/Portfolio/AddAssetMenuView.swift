@@ -17,8 +17,8 @@ struct AddAssetMenuView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                // Debug: Solid sheet background for modal presentation
-                Theme.sheetBackground.ignoresSafeArea()
+                // Debug: Background gradient treatment for visual consistency with main pages
+                Theme.backgroundGradient
                 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {

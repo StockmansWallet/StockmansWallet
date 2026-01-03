@@ -978,16 +978,20 @@ struct PortfolioSearchPanel: View {
                     // Search Form Card
                     VStack(alignment: .leading, spacing: 20) {
                         // NLIS/Tag Number Input
-                        VStack(alignment: .leading, spacing: 8) {
+                        // Debug: Consistent text field styling with rest of app
+                        VStack(alignment: .leading, spacing: 12) {
                             Text("NLIS Tag / Animal ID")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
                             
                             TextField("Enter tag number or ID", text: $nlisTagNumber)
-                                .textFieldStyle(.roundedBorder)
+                                .textFieldStyle(.plain)
                                 .textInputAutocapitalization(.characters)
                                 .keyboardType(.default)
                                 .submitLabel(.search)
+                                .padding()
+                                .background(Theme.inputFieldBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .onSubmit {
                                     performSearch()
                                 }

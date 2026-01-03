@@ -21,17 +21,37 @@ struct HerdDetailView: View {
     @State private var isLoading = true
     
     var body: some View {
-        ZStack {
-            Image("bg_default")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea(edges: .all)
-            
-            ScrollView {
-                VStack(spacing: Theme.sectionSpacing) {
-                    // Herd Header
-                    HerdHeaderCard(herd: herd)
-                        .padding(.horizontal)
+        // Debug: Background image removed for cleaner design
+        ScrollView {
+            VStack(spacing: Theme.sectionSpacing) {
+                // Herd Header (without card for cleaner design)
+                VStack(alignment: .leading, spacing: 8) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(herd.name)
+                                .font(Theme.title)
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            Text("\(herd.headCount) head • \(herd.breed) \(herd.category)")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.primaryText.opacity(0.7))
+                        }
+                        
+                        Spacer()
+                        
+                        // Debug: Display SOLD badge if applicable
+                        if herd.isSold {
+                            Text("SOLD")
+                                .font(Theme.caption)
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(.red)
+                                .clipShape(Capsule())
+                        }
+                    }
+                }
+                .padding(.horizontal)
                     
                     // Current Valuation
                     if let valuation = valuation {
@@ -59,14 +79,13 @@ struct HerdDetailView: View {
                         LocationCard(paddock: paddock, saleyard: herd.selectedSaleyard)
                             .padding(.horizontal)
                     }
-                }
-                // Prevent width expansion from any child view.
-                .frame(maxWidth: .infinity)
-                .padding(.bottom, 100)
             }
-            .scrollContentBackground(.hidden)
-            .background(Color.clear)
+            // Prevent width expansion from any child view.
+            .frame(maxWidth: .infinity)
+            .padding(.bottom, 100)
         }
+        .scrollContentBackground(.hidden)
+        .background(Theme.backgroundColor) // Debug: Use theme background color
         .navigationTitle(herd.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -94,41 +113,6 @@ struct HerdDetailView: View {
             self.valuation = calculatedValuation
             self.isLoading = false
         }
-    }
-}
-
-// MARK: - Herd Header Card
-struct HerdHeaderCard: View {
-    let herd: HerdGroup
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(herd.name)
-                        .font(Theme.title)
-                        .foregroundStyle(Theme.primaryText)
-                    
-                    Text("\(herd.headCount) head • \(herd.breed) \(herd.category)")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.primaryText.opacity(0.7))
-                }
-                
-                Spacer()
-                
-                if herd.isSold {
-                    Text("SOLD")
-                        .font(Theme.caption)
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(.red)
-                        .clipShape(Capsule())
-                }
-            }
-        }
-        .padding(Theme.cardPadding)
-        .stitchedCard()
     }
 }
 
