@@ -3,19 +3,14 @@
 //  StockmansWallet
 //
 //  Page 4: Your Property
-//  Debug: Uses @Observable pattern for LocationManager
 //
 
 import SwiftUI
-import CoreLocation
 
 struct YourPropertyPage: View {
     @Binding var userPrefs: UserPreferences
     @Binding var currentPage: Int
     
-    // Debug: Use @State with @Observable instead of @StateObject
-    @State private var locationManager = LocationManager()
-    @State private var isRequestingLocation = false
     
     // Debug: Validation - property name and state are required
     private var isValid: Bool {
@@ -98,46 +93,6 @@ struct YourPropertyPage: View {
                         .buttonStyle(Theme.RowButtonStyle())
                         .accessibilityLabel("Select state")
                         .accessibilityValue(userPrefs.defaultState)
-                        
-                        // GPS Location Button
-                        Button(action: {
-                            HapticManager.tap()
-                            isRequestingLocation = true
-                            locationManager.requestLocation { location in
-                                userPrefs.latitude = location.coordinate.latitude
-                                userPrefs.longitude = location.coordinate.longitude
-                                isRequestingLocation = false
-                                HapticManager.success()
-                            }
-                        }) {
-                            HStack {
-                                if isRequestingLocation {
-                                    ProgressView()
-                                        .progressViewStyle(CircularProgressViewStyle(tint: Theme.accent))
-                                } else {
-                                    Image(systemName: "location.fill")
-                                }
-                                Text(isRequestingLocation ? "Getting Location..." : "Use Current GPS Location")
-                                    .font(Theme.body)
-                            }
-                            .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(Theme.SecondaryButtonStyle())
-                        .disabled(isRequestingLocation)
-                        .accessibilityLabel("Use current GPS location")
-                        
-                        // Debug: Show success indicator when location is captured
-                        if userPrefs.latitude != nil && userPrefs.longitude != nil {
-                            HStack(spacing: 8) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(.green)
-                                Text("Location successful")
-                                    .font(Theme.caption)
-                                    .foregroundStyle(Theme.secondaryText)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .accessibilityLabel("Location successful")
-                        }
                     }
                     .padding(.horizontal, 20)
                 }

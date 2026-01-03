@@ -19,7 +19,7 @@ enum SubscriptionTier: String, Codable, CaseIterable {
         case .smallFarmerFree, .advisoryFree:
             return "Free"
         case .professionalFarmer:
-            return "$29.99/month"
+            return "$29.99"
         }
     }
     
@@ -113,13 +113,16 @@ struct SubscriptionView: View {
             
             VStack(spacing: 0) {
                 // Header
+                // Debug: Reduced top/bottom padding for more compact layout
                 headerView
-                    .padding(.top, 40)
-                    .padding(.bottom, 24)
+                    .padding(.top, 32)
+                    .padding(.bottom, 20)
                 
-                // Tiers
-                ScrollView {
-                    VStack(spacing: 16) {
+                // Debug: Use horizontal paging for multiple tiers (iOS HIG pattern), simple card for single tier
+                if availableTiers.count > 1 {
+                    // Multiple tiers - horizontal paging (like App Store, iCloud+)
+                    // Debug: Fixed height container for consistent card alignment
+                    TabView(selection: $selectedTier) {
                         ForEach(availableTiers, id: \.self) { tier in
                             SubscriptionTierCard(
                                 tier: tier,
@@ -127,12 +130,35 @@ struct SubscriptionView: View {
                                 onSelect: {
                                     HapticManager.tap()
                                     selectedTier = tier
-                                }
+                                },
+                                isPaginated: true
                             )
+                            .padding(.horizontal, 20)
+                            .tag(tier)
                         }
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.bottom, 20)
+                    .tabViewStyle(.page(indexDisplayMode: .always))
+                    .indexViewStyle(.page(backgroundDisplayMode: .always))
+                    .frame(height: 580) // Debug: Fixed height prevents card misalignment
+                    .onChange(of: selectedTier) { _, newValue in
+                        HapticManager.tap()
+                    }
+                } else {
+                    // Single tier - simple scrollable card
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            ForEach(availableTiers, id: \.self) { tier in
+                                SubscriptionTierCard(
+                                    tier: tier,
+                                    isSelected: true,
+                                    onSelect: {},
+                                    isPaginated: false
+                                )
+                            }
+                        }
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 20)
+                    }
                 }
                 
                 // Footer with action button
@@ -161,8 +187,9 @@ struct SubscriptionView: View {
     }
     
     // MARK: - Footer View
+    // Debug: Compact footer with minimal spacing for better vertical balance
     private var footerView: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             // Primary action button
             Button(action: {
                 HapticManager.success()
@@ -176,13 +203,19 @@ struct SubscriptionView: View {
             .buttonStyle(Theme.PrimaryButtonStyle())
             .padding(.horizontal, 20)
             
-            // Free trial info for paid tier
-            if !selectedTier.isFree {
-                Text("7-day free trial • Cancel anytime")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                    .padding(.bottom, 8)
+            // Debug: Reserve space for trial info to prevent layout jump
+            Group {
+                if !selectedTier.isFree {
+                    Text("7-day free trial • Cancel anytime")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                } else {
+                    // Reserve same space with invisible text
+                    Text(" ")
+                        .font(Theme.caption)
+                }
             }
+            .frame(height: 16) // Debug: Reduced fixed height
             
             // "I'll decide later" option for farmers
             if userPrefs.userRole == .farmerGrazier && availableTiers.count > 1 {
@@ -197,11 +230,11 @@ struct SubscriptionView: View {
                         .foregroundStyle(Theme.secondaryText)
                         .underline()
                 }
-                .padding(.bottom, 16)
+                .padding(.top, 4)
             }
         }
-        // Debug: Removed background to prevent visible line at bottom (background already applied to main view)
-        .padding(.bottom, 20)
+        // Debug: Minimal bottom padding to reduce empty space
+        .padding(.bottom, 12)
     }
 }
 
@@ -210,42 +243,35 @@ struct SubscriptionTierCard: View {
     let tier: SubscriptionTier
     let isSelected: Bool
     let onSelect: () -> Void
+    var isPaginated: Bool = false // Debug: Different layout for paginated vs single view
     
     var body: some View {
         Button(action: onSelect) {
-            VStack(alignment: .leading, spacing: 16) {
-                // Header with price
-                HStack(alignment: .top) {
-                    VStack(alignment: .leading, spacing: 6) {
-                        // Tier name
-                        HStack(spacing: 8) {
-                            Text(tier.rawValue)
-                                .font(.system(size: 20, weight: .bold))
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            // Recommended badge
-                            if tier.isRecommended {
-                                Text("RECOMMENDED")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundStyle(.white)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(
-                                        Capsule()
-                                            .fill(Theme.accent)
-                                    )
-                            }
-                        }
-                        
-                        // Price
+            // Debug: ZStack for badge overlay to prevent layout shifts
+            ZStack(alignment: .top) {
+                // Main card content with consistent spacing
+                VStack(alignment: .leading, spacing: 12) {
+                    // Debug: Fixed height spacer for badge area to ensure alignment
+                    Spacer()
+                        .frame(height: tier.isRecommended ? 34 : 0)
+                    
+                    // Tier name - centered for paginated
+                    Text(tier.rawValue)
+                        .font(.system(size: 22, weight: .bold))
+                        .foregroundStyle(Theme.primaryText)
+                        .frame(maxWidth: .infinity, alignment: isPaginated ? .center : .leading)
+                        .padding(.top, tier.isRecommended ? 0 : 34) // Debug: Balance spacing when no badge
+                    
+                    // Price - centered for paginated
+                    VStack(spacing: 2) {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(tier.price)
-                                .font(.system(size: 28, weight: .bold))
+                                .font(.system(size: 34, weight: .bold))
                                 .foregroundStyle(tier.isFree ? .green : Theme.accent)
                             
                             if !tier.isFree {
                                 Text("/ month")
-                                    .font(Theme.caption)
+                                    .font(Theme.body)
                                     .foregroundStyle(Theme.secondaryText)
                             }
                         }
@@ -255,48 +281,61 @@ struct SubscriptionTierCard: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                     }
+                    .frame(maxWidth: .infinity, alignment: isPaginated ? .center : .leading)
+                    .padding(.bottom, 8)
                     
-                    Spacer()
+                    // Divider
+                    Rectangle()
+                        .fill(Theme.separator.opacity(0.3))
+                        .frame(height: 1)
+                        .padding(.vertical, 8)
                     
-                    // Selection indicator
-                    ZStack {
-                        Circle()
-                            .strokeBorder(isSelected ? Theme.accent : Theme.separator, lineWidth: 2)
-                            .frame(width: 24, height: 24)
-                        
-                        if isSelected {
-                            Circle()
-                                .fill(Theme.accent)
-                                .frame(width: 16, height: 16)
+                    // Features list - scrollable for long lists
+                    // Debug: Optimized height for better space usage
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 10) {
+                            ForEach(tier.features, id: \.self) { feature in
+                                HStack(alignment: .top, spacing: 10) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .font(.body)
+                                        .foregroundStyle(tier.isFree ? .green : Theme.accent)
+                                        .frame(width: 18)
+                                    
+                                    Text(feature)
+                                        .font(Theme.subheadline)
+                                        .foregroundStyle(Theme.primaryText)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    
+                                    Spacer(minLength: 0)
+                                }
+                            }
                         }
+                        .padding(.bottom, 8) // Debug: Compact bottom padding
                     }
+                    .frame(maxHeight: isPaginated ? 320 : .infinity) // Debug: Reduced height for better fit
                 }
+                .padding(.horizontal, 20)
+                .padding(.top, 16)
+                .padding(.bottom, 16) // Debug: Balanced bottom padding
                 
-                // Divider
-                Rectangle()
-                    .fill(Theme.separator.opacity(0.3))
-                    .frame(height: 1)
-                
-                // Features list
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(tier.features, id: \.self) { feature in
-                        HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.body)
-                                .foregroundStyle(tier.isFree ? .green : Theme.accent)
-                                .frame(width: 20)
-                            
-                            Text(feature)
-                                .font(Theme.subheadline)
-                                .foregroundStyle(Theme.primaryText)
-                                .fixedSize(horizontal: false, vertical: true)
-                            
-                            Spacer(minLength: 0)
-                        }
+                // Debug: Overlay badge on top - doesn't affect layout
+                if tier.isRecommended {
+                    HStack {
+                        Spacer()
+                        Text("RECOMMENDED FOR YOU")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundStyle(.white)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(Theme.accent)
+                            )
+                        Spacer()
                     }
+                    .padding(.top, 12)
                 }
             }
-            .padding(20)
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius * 1.5, style: .continuous)
                     .fill(Theme.cardBackground)
@@ -304,15 +343,15 @@ struct SubscriptionTierCard: View {
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius * 1.5, style: .continuous)
                     .strokeBorder(
-                        isSelected ? Theme.accent : Theme.separator.opacity(0.3),
-                        lineWidth: isSelected ? 2 : 1
+                        isPaginated ? Theme.accent.opacity(0.5) : (isSelected ? Theme.accent : Theme.separator.opacity(0.3)),
+                        lineWidth: isPaginated ? 2 : (isSelected ? 2 : 1)
                     )
             )
             .shadow(
-                color: isSelected ? Theme.accent.opacity(0.2) : .clear,
-                radius: isSelected ? 12 : 0,
+                color: isPaginated ? Theme.accent.opacity(0.15) : (isSelected ? Theme.accent.opacity(0.2) : .clear),
+                radius: isPaginated ? 20 : (isSelected ? 12 : 0),
                 x: 0,
-                y: isSelected ? 4 : 0
+                y: isPaginated ? 8 : (isSelected ? 4 : 0)
             )
         }
         .buttonStyle(.plain)

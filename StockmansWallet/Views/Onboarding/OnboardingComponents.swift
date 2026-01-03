@@ -91,11 +91,13 @@ struct OnboardingPageTemplate<Content: View>: View {
             .padding(.top, 40) // Debug: Updated to match Select User page styling for consistency
             
             // Scrollable content
+            // Debug: iOS 16+ - Interactive keyboard dismissal on scroll (official HIG behavior)
             ScrollView {
                 content
                     .padding(.top, 8)
                     .padding(.bottom, 8)
             }
+            .scrollDismissesKeyboard(.interactively)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.backgroundGradient) // Background can be extended by parent if needed

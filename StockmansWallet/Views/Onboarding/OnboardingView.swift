@@ -57,9 +57,9 @@ struct OnboardingView: View {
                     
                 case .onboardingPages:
                     // Debug: Branching onboarding flow based on user role
-                    // Green Path (Farmer): UserType → AboutYou → Property → Security → Summary → Subscription (6 pages)
-                    // Pink Path (Advisory): UserType → AboutYou → Company → Security → Summary → Subscription (6 pages)
-                    // Security, Summary & Subscription pages are SHARED between both paths
+                    // Green Path (Farmer): UserType → AboutYou → Property → Security → Welcome → Subscription (6 pages)
+                    // Pink Path (Advisory): UserType → AboutYou → Company → Security → Welcome → Subscription (6 pages)
+                    // Security, Welcome & Subscription pages are SHARED between both paths
                     Group {
                         switch currentPage {
                         case 0:
@@ -96,16 +96,11 @@ struct OnboardingView: View {
                                 currentPage: $currentPage
                             )
                         case 4:
-                            // Fifth page: Onboarding Summary (SHARED - both paths)
-                            OnboardingSummaryPage(
+                            // Fifth page: Welcome/Completion (SHARED - both paths)
+                            // Debug: Celebrates completion before subscription selection
+                            WelcomeCompletionPage(
                                 userPrefs: $userPrefs,
-                                currentPage: $currentPage,
-                                onComplete: {
-                                    // Move to subscription page instead of completing
-                                    withAnimation {
-                                        currentPage = 5
-                                    }
-                                }
+                                currentPage: $currentPage
                             )
                         case 5:
                             // Sixth page: Subscription/Pricing (SHARED - final page)
