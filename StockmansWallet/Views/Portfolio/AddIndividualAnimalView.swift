@@ -331,46 +331,53 @@ struct AddIndividualAnimalView: View {
     // MARK: - Breeders (Conditional)
     private var breedersContent: some View {
         VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header - center aligned and larger font
             Text("Breeders")
-                .font(Theme.headline)
+                .font(Theme.title)
                 .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
             
+            // Debug: Calving rate title outside container matching other field labels
             VStack(alignment: .leading, spacing: 8) {
                 Text("Calving Rate: \(calvingRate)%")
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.secondaryText)
-                HStack {
-                    Slider(value: Binding(
-                        get: { Double(calvingRate) },
-                        set: { calvingRate = Int($0) }
-                    ), in: 50...100, step: 1)
-                    Text("\(calvingRate)%")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                        .frame(width: 60)
-                }
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                Slider(value: Binding(
+                    get: { Double(calvingRate) },
+                    set: { calvingRate = Int($0) }
+                ), in: 50...100, step: 1)
                 .padding()
                 .background(Theme.inputFieldBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .accessibilityLabel("Calving rate")
             }
+            .accessibilityLabel("Calving rate")
             
-            DatePicker("Joined Date", selection: $joinedDate, displayedComponents: .date)
-                .datePickerStyle(.compact)
-                .padding()
-                .background(Theme.inputFieldBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .accessibilityLabel("Joined date")
+            // Debug: Joined date full width
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Joined Date")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                DatePicker("", selection: $joinedDate, displayedComponents: .date)
+                    .labelsHidden()
+                    .datePickerStyle(.compact)
+                    .padding()
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            .accessibilityLabel("Joined date")
             
-            Toggle(isOn: $inCalf) {
+            // Debug: In Calf full width
+            VStack(alignment: .leading, spacing: 8) {
                 Text("In Calf")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
+                Toggle("", isOn: $inCalf)
+                    .labelsHidden()
+                    .tint(.green)
+                    .padding()
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
-            .tint(.green)
-            .padding()
-            .background(Theme.inputFieldBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 20)
@@ -381,7 +388,7 @@ struct AddIndividualAnimalView: View {
         VStack(alignment: .leading, spacing: 24) {
             Toggle(isOn: $hasBirthDate) {
                 Text("Specify Birth Date")
-                    .font(Theme.headline)
+                    .font(Theme.body)
                     .foregroundStyle(Theme.primaryText)
             }
             .tint(Theme.accent)
@@ -395,18 +402,20 @@ struct AddIndividualAnimalView: View {
                     set: { birthDate = $0 }
                 ), displayedComponents: .date)
                 .datePickerStyle(.compact)
+                .foregroundStyle(Theme.primaryText)
                 .padding()
                 .background(Theme.inputFieldBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             } else {
+                // Debug: Field label outside container, value inside with body font
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Age (months)")
                         .font(Theme.headline)
                         .foregroundStyle(Theme.primaryText)
                     Stepper(value: $ageMonths, in: 1...120, step: 1) {
                         Text("\(ageMonths) months")
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.primaryText)
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.secondaryText)
                     }
                     .padding()
                     .background(Theme.inputFieldBackground)
@@ -414,6 +423,7 @@ struct AddIndividualAnimalView: View {
                 }
             }
             
+            // Debug: Field label outside container, value inside with body font
             VStack(alignment: .leading, spacing: 8) {
                 Text("Current Weight (kg)")
                     .font(Theme.headline)
@@ -421,8 +431,8 @@ struct AddIndividualAnimalView: View {
                 HStack {
                     Slider(value: $initialWeight, in: 50...1000, step: 5)
                     Text("\(Int(initialWeight)) kg")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.secondaryText)
                         .frame(width: 80)
                 }
                 .padding()
@@ -430,6 +440,7 @@ struct AddIndividualAnimalView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             
+            // Debug: Field label outside container, value inside with body font
             VStack(alignment: .leading, spacing: 8) {
                 Text("Daily Weight Gain (kg/day)")
                     .font(Theme.headline)
@@ -437,8 +448,8 @@ struct AddIndividualAnimalView: View {
                 HStack {
                     Slider(value: $dailyWeightGain, in: 0...2.0, step: 0.1)
                     Text(String(format: "%.2f kg/day", dailyWeightGain))
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.secondaryText)
                         .frame(width: 100)
                 }
                 .padding()

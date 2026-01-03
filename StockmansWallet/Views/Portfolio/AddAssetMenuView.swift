@@ -42,8 +42,9 @@ struct AddAssetMenuView: View {
                             AssetMenuRow(
                                 iconColor: Theme.accent,
                                 iconSymbol: "plus.app",
+                                customImageName: "cattle_tags",
                                 title: "Add Herd",
-                                subtitle: "Record a new mob or group"
+                                subtitle: "Record a new herd"
                             ) {
                                 HapticManager.tap()
                                 showingAddHerd = true
@@ -51,8 +52,9 @@ struct AddAssetMenuView: View {
                             
                             // Add Individual
                             AssetMenuRow(
-                                iconColor: .green,
+                                iconColor: Theme.accent,
                                 iconSymbol: "plus.app",
+                                customImageName: "cattle_tag",
                                 title: "Add Individual Animal",
                                 subtitle: "Track a single tagged animal"
                             ) {
@@ -62,7 +64,7 @@ struct AddAssetMenuView: View {
                             
                             // Import CSV
                             AssetMenuRow(
-                                iconColor: .blue,
+                                iconColor: .green,
                                 iconSymbol: "square.and.arrow.down",
                                 title: "Import CSV",
                                 subtitle: "Bulk import from spreadsheet"
@@ -73,7 +75,7 @@ struct AddAssetMenuView: View {
                             
                             // Sell Assets
                             AssetMenuRow(
-                                iconColor: .red,
+                                iconColor: .blue,
                                 iconSymbol: "dollarsign",
                                 title: "Sell Stock",
                                 subtitle: "Record sales and realised prices"
@@ -121,6 +123,7 @@ struct AddAssetMenuView: View {
 struct AssetMenuRow: View {
     let iconColor: Color
     let iconSymbol: String
+    var customImageName: String? = nil // Debug: Optional custom image from Assets
     let title: String
     let subtitle: String
     let action: () -> Void
@@ -136,10 +139,18 @@ struct AssetMenuRow: View {
                         .fill(iconColor.opacity(0.3))
                         .frame(width: 50, height: 50)
                     
-                    // Full bright colored icon inside - bigger with less padding
-                    Image(systemName: iconSymbol)
-                        .font(.system(size: 24, weight: .semibold))
-                        .foregroundStyle(iconColor)
+                    // Debug: Use custom image if provided, otherwise SF Symbol
+                    if let customImageName = customImageName {
+                        Image(customImageName)
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 28, height: 28)
+                            .foregroundStyle(iconColor)
+                    } else {
+                        Image(systemName: iconSymbol)
+                            .font(.system(size: 24, weight: .semibold))
+                            .foregroundStyle(iconColor)
+                    }
                 }
                 
                 // Text Content
