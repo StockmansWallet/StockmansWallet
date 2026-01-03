@@ -125,20 +125,36 @@ struct UserTypeSelectionPage: View {
         VStack(spacing: 0) {
             // Header
             VStack(spacing: 12) {
-                Text("Select User")
-                    .font(.system(size: 28, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .multilineTextAlignment(.center)
+                // Debug: Navigation area spacer to match other onboarding pages
+                HStack {
+                    Color.clear
+                        .frame(width: Theme.minimumTouchTarget, height: Theme.minimumTouchTarget)
+                        .accessibilityHidden(true)
+                    
+                    Spacer()
+                    
+                    Color.clear
+                        .frame(width: Theme.minimumTouchTarget, height: Theme.minimumTouchTarget)
+                        .accessibilityHidden(true)
+                }
+                .padding(.horizontal, 20)
                 
-                Text("Choose the option that best describes your role")
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.secondaryText)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal, 40)
+                VStack(spacing: 12) {
+                    Text("Select User")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundStyle(Theme.primaryText)
+                        .multilineTextAlignment(.center)
+                    
+                    Text("Choose the option that best describes your role")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.secondaryText)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 40)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 32)
             }
-            .padding(.horizontal, 20)
             .padding(.top, 40)
-            .padding(.bottom, 32)
             
             // Scrollable content
             ScrollView {
