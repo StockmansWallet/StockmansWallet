@@ -61,19 +61,48 @@ struct AddIndividualAnimalView: View {
     
     var body: some View {
         NavigationStack {
-            ZStack {
-                // Debug: Solid sheet background for modal presentation
-                Theme.sheetBackground.ignoresSafeArea()
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    // Debug: Back button meets iOS 26 HIG minimum touch target of 44x44pt
+                    Button(action: {
+                        HapticManager.tap()
+                        dismiss()
+                    }) {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(Theme.primaryText)
+                            .frame(width: 44, height: 44) // iOS 26 HIG: Minimum 44x44pt
+                            .background(Theme.inputFieldBackground)
+                            .clipShape(Circle())
+                    }
+                    .buttonBorderShape(.roundedRectangle)
+                    .accessibilityLabel("Back")
+                    
+                    Spacer()
+                    
+                    Text("Add Individual Animal")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                        .accessibilityAddTraits(.isHeader)
+                    
+                    Spacer()
+                    
+                    Circle()
+                        .fill(Color.clear)
+                        .frame(width: 40, height: 40)
+                        .accessibilityHidden(true)
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 12)
+                .padding(.bottom, 20)
                 
+                // Content
                 ScrollView {
-                    VStack(spacing: Theme.sectionSpacing) {
-                        // Basic Information
-                        VStack(alignment: .leading, spacing: 20) {
-                            Text("Animal Information")
-                                .font(Theme.title)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            VStack(alignment: .leading, spacing: 12) {
+                    VStack(spacing: 24) {
+                        // Basic Information (no card, no title)
+                        VStack(alignment: .leading, spacing: 24) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Animal Name/Tag")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
@@ -81,10 +110,10 @@ struct AddIndividualAnimalView: View {
                                     .textFieldStyle(.plain)
                                     .padding()
                                     .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Species")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
@@ -95,12 +124,13 @@ struct AddIndividualAnimalView: View {
                                 }
                                 .pickerStyle(.segmented)
                                 .onChange(of: selectedSpecies) { _, _ in
+                                    HapticManager.tap()
                                     selectedBreed = ""
                                     selectedCategory = ""
                                 }
                             }
                             
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Breed")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
@@ -113,10 +143,10 @@ struct AddIndividualAnimalView: View {
                                 .pickerStyle(.menu)
                                 .padding()
                                 .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Category")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
@@ -129,10 +159,10 @@ struct AddIndividualAnimalView: View {
                                 .pickerStyle(.menu)
                                 .padding()
                                 .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Sex")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
@@ -143,16 +173,10 @@ struct AddIndividualAnimalView: View {
                                 .pickerStyle(.segmented)
                             }
                         }
-                        .padding(Theme.cardPadding)
-                        .stitchedCard()
                         
-                        // Physical Attributes
-                        VStack(alignment: .leading, spacing: 20) {
-                            Text("Physical Attributes")
-                                .font(Theme.title)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            VStack(alignment: .leading, spacing: 12) {
+                        // Physical Attributes (no section title)
+                        VStack(alignment: .leading, spacing: 24) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Toggle(isOn: $hasBirthDate) {
                                     Text("Specify Birth Date")
                                         .font(Theme.headline)
@@ -167,7 +191,7 @@ struct AddIndividualAnimalView: View {
                                     ), displayedComponents: .date)
                                     .datePickerStyle(.compact)
                                 } else {
-                                    VStack(alignment: .leading, spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 8) {
                                         Text("Age (months)")
                                             .font(Theme.headline)
                                             .foregroundStyle(Theme.primaryText)
@@ -178,12 +202,12 @@ struct AddIndividualAnimalView: View {
                                         }
                                         .padding()
                                         .background(Theme.inputFieldBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     }
                                 }
                             }
                             
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Current Weight (kg)")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
@@ -196,10 +220,10 @@ struct AddIndividualAnimalView: View {
                                 }
                                 .padding()
                                 .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Daily Weight Gain (kg/day)")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
@@ -212,19 +236,13 @@ struct AddIndividualAnimalView: View {
                                 }
                                 .padding()
                                 .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                         }
-                        .padding(Theme.cardPadding)
-                        .stitchedCard()
                         
-                        // Additional Details
-                        VStack(alignment: .leading, spacing: 20) {
-                            Text("Additional Details")
-                                .font(Theme.title)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            VStack(alignment: .leading, spacing: 12) {
+                        // Additional Details (no section title)
+                        VStack(alignment: .leading, spacing: 24) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Paddock Name (Optional)")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
@@ -232,10 +250,10 @@ struct AddIndividualAnimalView: View {
                                     .textFieldStyle(.plain)
                                     .padding()
                                     .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Saleyard (Optional)")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
@@ -248,7 +266,7 @@ struct AddIndividualAnimalView: View {
                                 .pickerStyle(.menu)
                                 .padding()
                                 .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                             
                             Toggle(isOn: $isBreeder) {
@@ -259,7 +277,7 @@ struct AddIndividualAnimalView: View {
                             .tint(Theme.accent)
                             .padding()
                             .background(Theme.inputFieldBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             
                             if isBreeder {
                                 VStack(alignment: .leading, spacing: 12) {
@@ -282,39 +300,45 @@ struct AddIndividualAnimalView: View {
                                         }
                                         .padding()
                                         .background(Theme.inputFieldBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     }
                                 }
                                 .padding()
                                 .background(Theme.cardBackground.opacity(0.5))
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                             }
                         }
-                        .padding(Theme.cardPadding)
-                        .stitchedCard()
                     }
-                    .padding()
+                    .padding(.horizontal, 20)
+                    .padding(.top, 8)
+                    .padding(.bottom, 120)
                 }
-            }
-            .navigationTitle("Add Individual Animal")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") {
-                        HapticManager.tap()
-                        dismiss()
-                    }
-                    .foregroundStyle(Theme.accent)
-                }
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
+                
+                // Bottom controls (matching AddHerdFlowView)
+                // Debug: No background on bottom controls for cleaner design
+                VStack(spacing: 16) {
+                    // Debug: Using Theme.PrimaryButtonStyle for iOS 26 HIG compliance (52pt height, proper styling)
+                    Button(action: {
                         HapticManager.tap()
                         saveAnimal()
+                    }) {
+                        Text("Save")
                     }
-                    .foregroundStyle(Theme.accent)
+                    .buttonStyle(Theme.PrimaryButtonStyle())
                     .disabled(!isValid)
+                    .opacity(isValid ? 1.0 : 0.5)
+                    .padding(.horizontal, 20)
+                    .accessibilityLabel("Save animal")
                 }
+                .padding(.bottom, 20)
             }
+            .navigationBarHidden(true)
+            .background(Theme.sheetBackground.ignoresSafeArea())
+            .simultaneousGesture(
+                TapGesture().onEnded { _ in
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+            )
         }
     }
     

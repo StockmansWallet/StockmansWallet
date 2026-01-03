@@ -24,7 +24,7 @@ struct AddAssetMenuView: View {
                     VStack(alignment: .leading, spacing: 24) {
                         // Header
                         VStack(alignment: .center, spacing: 8) {
-                            Text("Add / Sell Stock")
+                            Text("Add & Sell Stock")
                                 .font(Theme.title)
                                 .foregroundStyle(.white)
                             
@@ -74,7 +74,7 @@ struct AddAssetMenuView: View {
                             // Sell Assets
                             AssetMenuRow(
                                 iconColor: .red,
-                                iconSymbol: "dollarsign.square",
+                                iconSymbol: "dollarsign",
                                 title: "Sell Stock",
                                 subtitle: "Record sales and realised prices"
                             ) {
@@ -110,9 +110,7 @@ struct AddAssetMenuView: View {
                     .presentationBackground(Theme.sheetBackground)
             }
             .sheet(isPresented: $showingSellAssets) {
-                // TODO: Add Sell Assets view
-                Text("Sell Assets")
-                    .foregroundStyle(Theme.primaryText)
+                SellStockView()
                     .presentationBackground(Theme.sheetBackground)
             }
         }

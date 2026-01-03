@@ -274,6 +274,7 @@ struct AddHerdFlowView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                // Note: SwiftUI segmented controls don't reliably respect custom tint colors in dark mode
                 .onChange(of: selectedSpecies) { _, _ in
                     HapticManager.tap()
                     selectedBreed = ""

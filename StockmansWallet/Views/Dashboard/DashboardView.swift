@@ -660,7 +660,7 @@ struct InteractiveChartView: View {
     @State private var pillScale: CGFloat = 0.0
     @State private var pillOpacity: Double = 0.0
     
-    private let gridSpacing: CGFloat = 15
+    private let gridSpacing: CGFloat = 50
     
     private var timeRangeSelector: some View {
         HStack {
@@ -749,7 +749,7 @@ struct InteractiveChartView: View {
                     y += gridSpacing
                 }
             }
-            .stroke(Theme.primaryText.opacity(0.03), lineWidth: 0.5)
+            .stroke(Theme.primaryText.opacity(0.1), lineWidth: 0.5)
         }
     }
     
