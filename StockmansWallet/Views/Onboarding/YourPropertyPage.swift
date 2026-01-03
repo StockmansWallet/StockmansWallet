@@ -130,12 +130,12 @@ struct YourPropertyPage: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "checkmark.circle.fill")
                                     .foregroundStyle(.green)
-                                Text("Location captured successfully")
+                                Text("Location successful")
                                     .font(Theme.caption)
                                     .foregroundStyle(Theme.secondaryText)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .accessibilityLabel("Location captured successfully")
+                            .accessibilityLabel("Location successful")
                         }
                     }
                     .padding(.horizontal, 20)

@@ -32,11 +32,20 @@ struct SettingsView: View {
                 .listSectionSeparator(.hidden)
                 
                 Section {
-                    NavigationLink(destination: LivestockPreferencesDetailView(prefs: userPrefs)) {
+                    NavigationLink(destination: ProfileView()) {
                         SettingsListRow(
-                            icon: "pawprint.fill",
-                            title: "Livestock Preferences",
-                            subtitle: "\(userPrefs.defaultState) • \(Int(userPrefs.defaultMortalityRate * 100))% mortality"
+                            icon: "person.circle.fill",
+                            title: "Profile",
+                            subtitle: userPrefs.firstName != nil ? "\(userPrefs.firstName!) \(userPrefs.lastName ?? "")" : nil
+                        )
+                    }
+                    .listRowBackground(Theme.cardBackground)
+                    
+                    NavigationLink(destination: PropertiesView()) {
+                        SettingsListRow(
+                            icon: "building.2.fill",
+                            title: "Properties",
+                            subtitle: "Manage your farms and preferences"
                         )
                     }
                     .listRowBackground(Theme.cardBackground)

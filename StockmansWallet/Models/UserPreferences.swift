@@ -25,6 +25,7 @@ final class UserPreferences {
     var firstName: String?
     var lastName: String?
     var email: String?
+    var profilePhotoData: Data? // Profile photo as Data
     
     // MARK: - Persona & Security
     var role: String? // UserRole as String for SwiftData compatibility
@@ -69,6 +70,7 @@ final class UserPreferences {
         self.firstName = nil
         self.lastName = nil
         self.email = nil
+        self.profilePhotoData = nil
         self.role = nil
         self.twoFactorEnabled = false
         self.appsComplianceAccepted = false

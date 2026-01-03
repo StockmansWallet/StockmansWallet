@@ -68,8 +68,8 @@ struct SecurityPrivacyPage: View {
                         .foregroundStyle(Theme.primaryText)
                         .padding(.horizontal, 20)
                     
-                    VStack(spacing: 12) {
-                        // APPs Compliance Checkbox
+                    // Match inner content padding with the card above (16), but no card here
+                    VStack(spacing: 8) {
                         HStack(alignment: .top, spacing: 12) {
                             Button(action: {
                                 HapticManager.tap()
@@ -84,17 +84,18 @@ struct SecurityPrivacyPage: View {
                             .buttonBorderShape(.roundedRectangle)
                             .accessibilityLabel(userPrefs.appsComplianceAccepted ? "APPs compliance accepted" : "APPs compliance not accepted")
                             
-                            VStack(alignment: .leading, spacing: 8) {
+                            VStack(alignment: .leading, spacing: 6) {
                                 Text("I accept the Australian Privacy Principles (APPs) compliance requirements")
-                                    .font(Theme.body)
+                                    .font(Theme.subheadline) // smaller than body for better balance
                                     .foregroundStyle(Theme.primaryText)
+                                    .multilineTextAlignment(.leading)
                                 
                                 Button(action: {
                                     HapticManager.tap()
                                     // TODO: Show APPs compliance details
                                 }) {
                                     Text("Learn more")
-                                        .font(Theme.body)
+                                        .font(Theme.subheadline) // match line height and size
                                         .foregroundStyle(Theme.accent)
                                         .frame(height: Theme.minimumTouchTarget)
                                         .contentShape(Rectangle())
@@ -102,10 +103,11 @@ struct SecurityPrivacyPage: View {
                                 .buttonBorderShape(.roundedRectangle)
                                 .accessibilityLabel("Learn more about APPs compliance")
                             }
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .stitchedCard()
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 16) // align with the card content above
+                        .padding(.vertical, 8)
                         
                         // Debug: Show validation hint if APPs not accepted
                         if !userPrefs.appsComplianceAccepted {
@@ -118,15 +120,13 @@ struct SecurityPrivacyPage: View {
                                     .foregroundStyle(Theme.destructive)
                             }
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(.leading, 16)
+                            .padding(.horizontal, 20) // align with section titles/outer edge
                             .padding(.top, 4)
                         }
                     }
-                    .padding(.horizontal, 20)
                 }
             }
             .padding(.top, 8)
         }
     }
 }
-

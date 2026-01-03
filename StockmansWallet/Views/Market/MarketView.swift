@@ -2,7 +2,8 @@
 //  MarketView.swift
 //  StockmansWallet
 //
-//  Live Market Pricing and Market Pulse Ticker
+//  Market View - Apple HIG Compliant Design
+//  Debug: Clean, spacious layout with clear visual hierarchy
 //
 
 import SwiftUI
@@ -12,32 +13,35 @@ struct MarketView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
     
-    @State private var selectedSaleyard: String?
-    @State private var marketPrices: [MarketPriceData] = []
-    @State private var isLoading = false
-    @State private var lastUpdated: Date? = nil
+    // Debug: Use 'let' with @Observable instead of @StateObject (modern pattern)
+    @State private var viewModel = MarketViewModel()
+    
+    // Debug: UI state
+    @State private var showingHistoricalChart = false
+    @State private var showingMarketInsights = false
+    @State private var selectedPriceForDetail: CategoryPrice?
     
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(spacing: Theme.sectionSpacing) {
-                    // Compact filter bar (Menu-based saleyard picker)
-                    FilterBarView(selectedSaleyard: $selectedSaleyard)
-                        .padding(.horizontal)
+                VStack(spacing: 0) {
+                    // Hero Section - National Indicators (Priority #1)
+                    // Debug: Large, prominent display at the top
+                    heroIndicatorsSection
+                        .padding(.top, 8)
+                        .padding(.bottom, 32)
                     
-                    // Key indicators in an adaptive grid (glanceable)
-                    KeyIndicatorsGrid()
-                        .padding(.horizontal)
+                    // Compact Filter Bar
+                    // Debug: Clean, horizontal layout - no card wrapper
+                    compactFilterBar
+                        .padding(.horizontal, 20)
+                        .padding(.bottom, 24)
                     
-                    // Live Prices
-                    LivePricesView(
-                        prices: marketPrices,
-                        isLoading: isLoading,
-                        lastUpdated: lastUpdated
-                    )
-                    .padding(.horizontal)
+                    // Live Prices Section
+                    // Debug: Main content with generous spacing
+                    livePricesSection
+                        .padding(.horizontal, 20)
                 }
-                .frame(maxWidth: .infinity)
                 .padding(.bottom, 100)
             }
             .scrollContentBackground(.hidden)
@@ -53,267 +57,513 @@ struct MarketView: View {
                         .accessibilityAddTraits(.isHeader)
                 }
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        Task { await loadMarketPrices() }
-                    } label: {
-                        Image(systemName: "arrow.clockwise")
-                            .foregroundStyle(Theme.accent)
+                    HStack(spacing: 16) {
+                        // Market Insights button
+                        Button {
+                            HapticManager.tap()
+                            showingMarketInsights = true
+                        } label: {
+                            Image(systemName: "newspaper")
+                                .foregroundStyle(Theme.accent)
+                        }
+                        .accessibilityLabel("Market insights")
+                        
+                        // Refresh button
+                        Button {
+                            Task { await viewModel.loadAllData() }
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .foregroundStyle(Theme.accent)
+                        }
+                        .accessibilityLabel("Refresh market data")
                     }
-                    .accessibilityLabel("Refresh prices")
                 }
             }
             .task {
-                if selectedSaleyard == nil {
-                    selectedSaleyard = preferences.first?.defaultSaleyard
-                }
-                await loadMarketPrices()
+                await viewModel.loadAllData()
             }
             .refreshable {
-                await loadMarketPrices()
+                await viewModel.loadAllData()
             }
-            .onChange(of: selectedSaleyard) { _, _ in
-                Task { await loadMarketPrices() }
+            .sheet(isPresented: $showingHistoricalChart) {
+                if let price = selectedPriceForDetail {
+                    PriceDetailSheet(
+                        categoryPrice: price,
+                        historicalPrices: viewModel.historicalPrices,
+                        regionalPrices: viewModel.regionalPrices,
+                        isLoadingHistory: viewModel.isLoadingHistory,
+                        isLoadingRegional: viewModel.isLoadingRegional
+                    )
+                }
+            }
+            .sheet(isPresented: $showingMarketInsights) {
+                MarketInsightsSheet(
+                    commentary: viewModel.marketCommentary,
+                    isLoading: viewModel.isLoadingCommentary
+                )
             }
         }
     }
     
-    private func loadMarketPrices() async {
-        await MainActor.run { isLoading = true }
-        HapticManager.tap()
-        
-        // TODO: Replace with actual MLA API integration.
-        try? await Task.sleep(nanoseconds: 500_000_000)
-        
-        // Could vary prices by selectedSaleyard if desired.
-        let mockPrices = [
-            MarketPriceData(category: "Feeder Steer",   price: 6.45, change:  0.15, trend: PriceTrend.up),
-            MarketPriceData(category: "Yearling Steer", price: 6.80, change: -0.10, trend: PriceTrend.down),
-            MarketPriceData(category: "Breeding Cow",   price: 4.20, change:  0.05, trend: PriceTrend.up),
-            MarketPriceData(category: "Cull Cow",       price: 3.50, change:  0.00, trend: PriceTrend.neutral),
-            MarketPriceData(category: "Weaner Steer",   price: 7.20, change:  0.25, trend: PriceTrend.up),
-            MarketPriceData(category: "Heifer",         price: 6.30, change:  0.12, trend: PriceTrend.up),
-            MarketPriceData(category: "Grown Steer",    price: 6.15, change: -0.05, trend: PriceTrend.down),
-        ]
-        
-        await MainActor.run {
-            self.marketPrices = mockPrices
-            self.isLoading = false
-            self.lastUpdated = Date()
-            HapticManager.success()
+    // MARK: - Hero Indicators Section
+    // Debug: Large, prominent national indicators - Apple Stocks style
+    private var heroIndicatorsSection: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("National Indicators")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.secondaryText)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                Spacer()
+                if let lastUpdated = viewModel.lastUpdated {
+                    Text(lastUpdated, style: .relative)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                }
+            }
+            .padding(.horizontal, 20)
+            
+            if viewModel.isLoadingIndicators {
+                ProgressView()
+                    .tint(Theme.accent)
+                    .frame(height: 200)
+            } else if viewModel.nationalIndicators.isEmpty {
+                emptyStateView(message: "No indicator data available")
+            } else {
+                // Two-column grid for hero indicators
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12)
+                    ],
+                    spacing: 12
+                ) {
+                    ForEach(viewModel.nationalIndicators) { indicator in
+                        HeroIndicatorCard(indicator: indicator)
+                    }
+                }
+                .padding(.horizontal, 20)
+            }
         }
+    }
+    
+    // MARK: - Compact Filter Bar
+    // Debug: Streamlined filters without heavy card styling
+    private var compactFilterBar: some View {
+        VStack(spacing: 12) {
+            // Livestock type pills
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    FilterPill(
+                        title: "All",
+                        isSelected: viewModel.selectedLivestockType == nil
+                    ) {
+                        Task { await viewModel.selectLivestockType(nil) }
+                    }
+                    
+                    ForEach(LivestockType.allCases) { type in
+                        FilterPill(
+                            title: type.rawValue,
+                            icon: type.icon,
+                            isSelected: viewModel.selectedLivestockType == type
+                        ) {
+                            Task { await viewModel.selectLivestockType(type) }
+                        }
+                    }
+                }
+            }
+            
+            // Secondary filters (saleyard & state) - only show if needed
+            if viewModel.hasActiveFilters || viewModel.selectedLivestockType != nil {
+                HStack(spacing: 8) {
+                    // Saleyard filter
+                    Menu {
+                        Button("All Saleyards") {
+                            Task { await viewModel.selectSaleyard(nil) }
+                        }
+                        
+                        Divider()
+                        
+                        ForEach(ReferenceData.saleyards.prefix(10), id: \.self) { yard in
+                            Button(yard) {
+                                Task { await viewModel.selectSaleyard(yard) }
+                            }
+                        }
+                    } label: {
+                        SecondaryFilterButton(
+                            icon: "mappin.circle",
+                            title: viewModel.selectedSaleyard ?? "Saleyard",
+                            isActive: viewModel.selectedSaleyard != nil
+                        )
+                    }
+                    
+                    // State filter
+                    Menu {
+                        Button("All States") {
+                            Task { await viewModel.selectState(nil) }
+                        }
+                        
+                        Divider()
+                        
+                        ForEach(ReferenceData.states, id: \.self) { state in
+                            Button(state) {
+                                Task { await viewModel.selectState(state) }
+                            }
+                        }
+                    } label: {
+                        SecondaryFilterButton(
+                            icon: "map",
+                            title: viewModel.selectedState ?? "State",
+                            isActive: viewModel.selectedState != nil
+                        )
+                    }
+                    
+                    Spacer()
+                    
+                    // Clear filters
+                    if viewModel.hasActiveFilters {
+                        Button {
+                            Task { await viewModel.clearFilters() }
+                        } label: {
+                            Text("Clear")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundStyle(Theme.accent)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Live Prices Section
+    // Debug: Clean grid with generous spacing
+    private var livePricesSection: some View {
+        VStack(spacing: 16) {
+            HStack {
+                Text("Live Prices")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.secondaryText)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
+                Spacer()
+                Text("\(viewModel.filteredPrices.count)")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+            }
+            
+            if viewModel.isLoadingPrices {
+                ProgressView()
+                    .tint(Theme.accent)
+                    .frame(height: 200)
+            } else if viewModel.filteredPrices.isEmpty {
+                emptyStateView(message: "No prices for selected filters")
+            } else {
+                LazyVGrid(
+                    columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12)
+                    ],
+                    spacing: 12
+                ) {
+                    ForEach(viewModel.filteredPrices) { price in
+                        CleanPriceCard(price: price) {
+                            selectedPriceForDetail = price
+                            Task {
+                                await viewModel.loadHistoricalPrices(
+                                    category: price.category,
+                                    livestockType: price.livestockType,
+                                    months: 12
+                                )
+                                await viewModel.loadRegionalComparison(
+                                    category: price.category,
+                                    livestockType: price.livestockType
+                                )
+                                showingHistoricalChart = true
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Empty State View
+    private func emptyStateView(message: String) -> some View {
+        VStack(spacing: 12) {
+            Image(systemName: "chart.bar.doc.horizontal")
+                .font(.system(size: 40))
+                .foregroundStyle(Theme.secondaryText.opacity(0.5))
+            Text(message)
+                .font(.system(size: 15))
+                .foregroundStyle(Theme.secondaryText)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 200)
     }
 }
 
-// MARK: - Filter Bar (compact Menu-based)
-struct FilterBarView: View {
-    @Binding var selectedSaleyard: String?
+// MARK: - Hero Indicator Card
+// Debug: Large, prominent cards for national indicators
+struct HeroIndicatorCard: View {
+    let indicator: NationalIndicator
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Filters")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Spacer()
-                Image(systemName: "line.3.horizontal.decrease.circle.fill")
-                    .foregroundStyle(Theme.accent)
-                    .accessibilityHidden(true)
-            }
+            // Abbreviation
+            Text(indicator.abbreviation)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(Theme.accent)
+                .textCase(.uppercase)
+                .tracking(0.5)
             
-            HStack(spacing: 12) {
-                Menu {
-                    Button {
-                        HapticManager.tap()
-                        selectedSaleyard = nil
-                    } label: {
-                        Label("All Saleyards", systemImage: selectedSaleyard == nil ? "checkmark" : "circle")
-                    }
-                    
-                    ForEach(ReferenceData.saleyards, id: \.self) { yard in
-                        Button {
-                            HapticManager.tap()
-                            selectedSaleyard = yard
-                        } label: {
-                            Label(yard, systemImage: selectedSaleyard == yard ? "checkmark" : "circle")
-                        }
-                    }
-                } label: {
-                    HStack {
-                        Image(systemName: "mappin.circle.fill")
-                            .foregroundStyle(Theme.accent)
-                        Text(selectedSaleyard ?? "All Saleyards")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.primaryText)
-                        Image(systemName: "chevron.down")
-                            .foregroundStyle(Theme.secondaryText)
-                            .accessibilityHidden(true)
-                    }
-                    .padding(.vertical, 8)
-                    .padding(.horizontal, 12)
-                    .background(Theme.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Select saleyard")
-                
-                Spacer(minLength: 0)
-            }
-        }
-        .padding(Theme.cardPadding)
-        .stitchedCard()
-    }
-}
-
-// MARK: - Key Indicators (Adaptive Grid)
-struct KeyIndicatorsGrid: View {
-    private let columns = [
-        GridItem(.adaptive(minimum: 160), spacing: 12, alignment: .top)
-    ]
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Market Pulse")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Spacer()
-                Image(systemName: "waveform.path.ecg")
-                    .foregroundStyle(Theme.accent)
-                    .accessibilityHidden(true)
-            }
+            // Value
+            Text(indicator.value, format: .number.precision(.fractionLength(2)))
+                .font(.system(size: 36, weight: .semibold))
+                .foregroundStyle(Theme.primaryText)
+                .minimumScaleFactor(0.8)
             
-            LazyVGrid(columns: columns, alignment: .leading, spacing: 12) {
-                IndicatorTile(title: "Eastern Young Cattle Indicator", value: "$6.45/kg", trend: .up, changeText: "+0.08")
-                IndicatorTile(title: "Western Young Cattle Indicator", value: "$6.20/kg", trend: .down, changeText: "-0.04")
-                IndicatorTile(title: "National Sheep Indicator", value: "$8.10/kg", trend: .up, changeText: "+0.05")
+            // Change
+            HStack(spacing: 4) {
+                Image(systemName: indicator.trend == .up ? "arrow.up" : indicator.trend == .down ? "arrow.down" : "minus")
+                    .font(.system(size: 12, weight: .semibold))
+                Text("\(indicator.change >= 0 ? "+" : "")\(indicator.change, format: .number.precision(.fractionLength(2)))")
+                    .font(.system(size: 14, weight: .semibold))
             }
+            .foregroundStyle(indicator.trend == .up ? .green : indicator.trend == .down ? .red : Theme.secondaryText)
         }
-        .padding(Theme.cardPadding)
-        .stitchedCard()
-    }
-}
-
-struct IndicatorTile: View {
-    let title: String
-    let value: String
-    let trend: PriceTrend
-    let changeText: String
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(title)
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondaryText)
-                .lineLimit(2)
-                .multilineTextAlignment(.leading)
-            
-            HStack(alignment: .firstTextBaseline, spacing: 6) {
-                Text(value)
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                
-                HStack(spacing: 4) {
-                    Image(systemName: trend == .up ? "arrow.up.right" : trend == .down ? "arrow.down.right" : "minus")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(trend == .up ? .green : trend == .down ? .red : Theme.primaryText.opacity(0.6))
-                        .accessibilityHidden(true)
-                    Text(changeText)
-                        .font(Theme.caption)
-                        .foregroundStyle(trend == .up ? .green : trend == .down ? .red : Theme.secondaryText)
-                }
-            }
-        }
-        .padding()
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(20)
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(title), \(value), \(trend == .up ? "up" : trend == .down ? "down" : "no change") \(changeText)")
     }
 }
 
-// MARK: - Live Prices View
-struct LivePricesView: View {
-    let prices: [MarketPriceData]
-    let isLoading: Bool
-    let lastUpdated: Date?
+// MARK: - Filter Pill
+// Debug: Clean pill-style filter buttons
+struct FilterPill: View {
+    let title: String
+    var icon: String? = nil
+    let isSelected: Bool
+    let action: () -> Void
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Live Prices")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                    if let lastUpdated {
-                        Text("Updated \(lastUpdated, style: .relative) ago")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                            .accessibilityLabel("Last updated \(lastUpdated.formatted(date: .abbreviated, time: .shortened))")
-                    }
+        Button(action: {
+            HapticManager.tap()
+            action()
+        }) {
+            HStack(spacing: 6) {
+                if let icon {
+                    Text(icon)
+                        .font(.system(size: 16))
                 }
-                Spacer()
-                Image(systemName: "chart.bar.fill")
-                    .foregroundStyle(Theme.accent)
-                    .accessibilityHidden(true)
+                Text(title)
+                    .font(.system(size: 15, weight: .medium))
             }
-            
-            if isLoading {
-                ProgressView()
-                    .tint(Theme.accent)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
-            } else if prices.isEmpty {
-                Text("No prices available")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                    .padding(.vertical, 8)
-            } else {
-                VStack(spacing: 12) {
-                    ForEach(Array(prices.enumerated()), id: \.element.id) { index, item in
-                        PriceRow(data: item)
-                        
-                        if index < prices.count - 1 {
-                            Divider()
-                                .background(Theme.separator)
+            .foregroundStyle(isSelected ? .white : Theme.primaryText)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(isSelected ? Theme.accent : Theme.cardBackground)
+            .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Secondary Filter Button
+struct SecondaryFilterButton: View {
+    let icon: String
+    let title: String
+    let isActive: Bool
+    
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 13))
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+                .lineLimit(1)
+            Image(systemName: "chevron.down")
+                .font(.system(size: 10, weight: .semibold))
+        }
+        .foregroundStyle(isActive ? Theme.accent : Theme.secondaryText)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(isActive ? Theme.accent.opacity(0.12) : Theme.cardBackground)
+        .clipShape(Capsule())
+    }
+}
+
+// MARK: - Clean Price Card
+// Debug: Refined price cards with better spacing and hierarchy
+struct CleanPriceCard: View {
+    let price: CategoryPrice
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: {
+            HapticManager.tap()
+            action()
+        }) {
+            VStack(alignment: .leading, spacing: 16) {
+                // Header
+                VStack(alignment: .leading, spacing: 6) {
+                    // Category
+                    Text(price.category)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Theme.primaryText)
+                        .lineLimit(2)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    
+                    // Weight range
+                    Text(price.weightRange)
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                
+                Spacer()
+                
+                // Price
+                HStack(alignment: .firstTextBaseline, spacing: 2) {
+                    Text("$\(price.price, format: .number.precision(.fractionLength(2)))")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundStyle(Theme.primaryText)
+                    Text("/kg")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                
+                // Change indicator
+                HStack(spacing: 4) {
+                    Image(systemName: price.trend == .up ? "arrow.up" : price.trend == .down ? "arrow.down" : "minus")
+                        .font(.system(size: 11, weight: .semibold))
+                    Text("\(price.change >= 0 ? "+" : "")\(price.change, format: .number.precision(.fractionLength(2)))")
+                        .font(.system(size: 13, weight: .semibold))
+                }
+                .foregroundStyle(price.trend == .up ? .green : price.trend == .down ? .red : Theme.secondaryText)
+            }
+            .padding(20)
+            .frame(height: 180)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityElement(children: .combine)
+    }
+}
+
+// MARK: - Market Insights Sheet
+struct MarketInsightsSheet: View {
+    let commentary: [MarketCommentary]
+    let isLoading: Bool
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 16) {
+                    if isLoading {
+                        ProgressView()
+                            .tint(Theme.accent)
+                            .frame(height: 200)
+                    } else if commentary.isEmpty {
+                        emptyInsightsView
+                    } else {
+                        ForEach(commentary) { item in
+                            InsightCard(commentary: item)
                         }
                     }
                 }
+                .padding(20)
+                .padding(.bottom, 100)
+            }
+            .background(Theme.sheetBackground.ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .principal) {
+                    Text("Market Insights")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                }
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                }
             }
         }
-        .padding(Theme.cardPadding)
-        .stitchedCard()
+    }
+    
+    private var emptyInsightsView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "newspaper")
+                .font(.system(size: 40))
+                .foregroundStyle(Theme.secondaryText.opacity(0.5))
+            Text("No insights available")
+                .font(.system(size: 15))
+                .foregroundStyle(Theme.secondaryText)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 200)
     }
 }
 
-struct PriceRow: View {
-    let data: MarketPriceData
+// MARK: - Insight Card
+struct InsightCard: View {
+    let commentary: MarketCommentary
     
     var body: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(data.category)
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.primaryText)
-                Text("\(data.price, format: .number.precision(.fractionLength(2))) $/kg")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-            }
-            
-            Spacer()
-            
-            HStack(spacing: 6) {
-                Image(systemName: data.trend == PriceTrend.up ? "arrow.up.right" : data.trend == PriceTrend.down ? "arrow.down.right" : "minus")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(data.trend == PriceTrend.up ? .green : data.trend == PriceTrend.down ? .red : Theme.primaryText.opacity(0.6))
-                    .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 12) {
+            // Header
+            HStack {
+                Text(commentary.category)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundStyle(Theme.accent)
+                    .textCase(.uppercase)
+                    .tracking(0.5)
                 
-                Text("\(data.change >= 0 ? "+" : "")\(data.change, format: .number.precision(.fractionLength(2)))")
-                    .font(Theme.caption)
-                    .foregroundStyle(data.trend == PriceTrend.up ? .green : data.trend == PriceTrend.down ? .red : Theme.secondaryText)
+                Spacer()
+                
+                Image(systemName: commentary.sentiment.icon)
+                    .font(.system(size: 16))
+                    .foregroundStyle(sentimentColor)
             }
+            
+            // Title
+            Text(commentary.title)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(Theme.primaryText)
+            
+            // Summary
+            Text(commentary.summary)
+                .font(.system(size: 15))
+                .foregroundStyle(Theme.secondaryText)
+                .lineSpacing(4)
+            
+            // Time
+            Text(commentary.date, style: .relative)
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.secondaryText.opacity(0.7))
         }
-        .padding(.vertical, 4)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(data.category), \(data.price, format: .number.precision(.fractionLength(2))) dollars per kilogram, \(data.trend == .up ? "up" : data.trend == .down ? "down" : "no change") \(abs(data.change), format: .number.precision(.fractionLength(2)))")
+        .padding(20)
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
+    
+    private var sentimentColor: Color {
+        switch commentary.sentiment {
+        case .positive: return .green
+        case .neutral: return .gray
+        case .negative: return .red
+        }
+    }
+}
+
+// MARK: - Preview
+#Preview {
+    MarketView()
+        .modelContainer(for: [HerdGroup.self, UserPreferences.self, MarketPrice.self], inMemory: true)
 }

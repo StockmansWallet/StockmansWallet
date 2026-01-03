@@ -30,7 +30,7 @@ struct OnboardingView: View {
     
     var body: some View {
         ZStack {
-            // Debug: Standardized gradient background from Theme (Rule #0: avoid duplication)
+            // Background can and should fill the screen
             Theme.backgroundGradient
                 .ignoresSafeArea(.all)
             
@@ -56,7 +56,7 @@ struct OnboardingView: View {
                     )
                     
                 case .onboardingPages:
-                    // Debug: Disable swiping - users must use Next/Back buttons after completing required fields
+                    // Disable swiping - users must use Next/Back buttons after completing required fields
                     // Use custom view container instead of TabView to prevent swipe gestures
                     Group {
                         switch currentPage {
@@ -101,7 +101,7 @@ struct OnboardingView: View {
                     .transition(.opacity)
                 }
             }
-            .ignoresSafeArea()
+            // Removed .ignoresSafeArea() so content respects the top safe area
             // Subtle intro fade for first render (no scale to avoid layout perception shift)
             .opacity(introOpacity)
             .onAppear {
@@ -137,7 +137,7 @@ struct OnboardingView: View {
                     onboardingStep = .onboardingPages
                 }
             )
-            // Debug: Native sheet with solid background from Theme - follows Apple HIG
+            // Native sheet with solid background from Theme - follows Apple HIG
             .presentationBackground(Theme.sheetBackground)
             .presentationCornerRadius(Theme.cornerRadius * 2)
             .presentationDragIndicator(.visible)

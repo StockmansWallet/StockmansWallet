@@ -28,7 +28,7 @@ struct MainTabView: View {
             TabView {
                 DashboardView()
                     .tabItem {
-                        Label("Dashboard", systemImage: "chart.line.uptrend.xyaxis")
+                        Label("Dashboard", systemImage: "chart.line.text.clipboard.fill")
                     }
                     // Debug: Accessibility - clear labels for VoiceOver
                     .accessibilityLabel("Dashboard tab")
@@ -41,15 +41,15 @@ struct MainTabView: View {
                 
                 MarketView()
                     .tabItem {
-                        Label("Market", systemImage: "chart.bar.fill")
+                        Label("Market", systemImage: "chart.bar.xaxis.ascending")
                     }
                     .accessibilityLabel("Market tab")
                 
-                ReportsView()
+                ToolsView()
                     .tabItem {
-                        Label("Reports", systemImage: "doc.text.fill")
+                        Label("Tools", systemImage: "hammer.fill")
                     }
-                    .accessibilityLabel("Reports tab")
+                    .accessibilityLabel("Tools tab")
                 
                 SettingsView()
                     .tabItem {
