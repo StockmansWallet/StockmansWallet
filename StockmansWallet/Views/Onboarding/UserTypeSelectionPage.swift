@@ -109,99 +109,51 @@ struct UserTypeSelectionCard: View {
 struct UserTypeSelectionPage: View {
     @Binding var userPrefs: UserPreferences
     @Binding var currentPage: Int
-    @State private var selectedUserType: UserType?
-    @State private var selectedAdvisoryRole: UserRole?
     
-    // Debug: Advisory roles only (excludes Farmer/Grazier)
-    private var advisoryRoles: [UserRole] {
-        UserRole.allCases.filter { $0 != .farmerGrazier }
+    // Debug: All user roles in order (Farmer first, then advisory roles)
+    private var allRoles: [UserRole] {
+        [.farmerGrazier, .agribusinessBanker, .insurer, .livestockAgent, .accountant, .successionPlanner]
     }
     
-    // Debug: Validation - user type required, and advisory role if advisory selected
+    // Debug: Validation - role selection is required
     private var isValid: Bool {
-        guard let userType = selectedUserType else { return false }
-        if userType == .advisory {
-            return selectedAdvisoryRole != nil
-        }
-        return true
+        userPrefs.userRole != nil
     }
     
     var body: some View {
         // Debug: Use a custom layout instead of OnboardingPageTemplate since this is page 0
         VStack(spacing: 0) {
-            // Header with logo/branding
+            // Header
             VStack(spacing: 24) {
-                // Logo or branding
-                Image(systemName: "building.2.crop.circle.fill")
-                    .font(.system(size: 64))
-                    .foregroundStyle(Theme.accent)
+                Text("Select User")
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
                     .padding(.top, 40)
-                
-                VStack(spacing: 8) {
-                    Text("Welcome to Stockman's Wallet")
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(Theme.primaryText)
-                        .multilineTextAlignment(.center)
-                    
-                    Text("Let's get started by selecting your user type")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal, 20)
             }
             .padding(.bottom, 32)
             
             // Scrollable content
             ScrollView {
                 VStack(spacing: 20) {
-                    // User Type Selection
-                    VStack(spacing: 16) {
-                        ForEach([UserType.farmer, UserType.advisory], id: \.self) { userType in
-                            UserTypeSelectionCard(
-                                userType: userType,
-                                isSelected: selectedUserType == userType,
+                    // Debug: Grid layout for all user roles (2 columns)
+                    LazyVGrid(columns: [
+                        GridItem(.flexible(), spacing: 12),
+                        GridItem(.flexible(), spacing: 12)
+                    ], spacing: 12) {
+                        ForEach(allRoles, id: \.self) { role in
+                            RoleSelectionCard(
+                                role: role,
+                                isSelected: userPrefs.userRole == role,
                                 action: {
                                     HapticManager.tap()
-                                    selectedUserType = userType
-                                    // Reset advisory role when switching types
-                                    if userType == .farmer {
-                                        selectedAdvisoryRole = nil
-                                    }
+                                    userPrefs.userRole = role
                                 }
                             )
                         }
                     }
                     .padding(.horizontal, 20)
-                    
-                    // Debug: Show advisory role selection if advisory type is selected
-                    if selectedUserType == .advisory {
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Select Your Role")
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
-                                .padding(.horizontal, 20)
-                            
-                            // Grid layout for advisory roles
-                            LazyVGrid(columns: [
-                                GridItem(.flexible(), spacing: 12),
-                                GridItem(.flexible(), spacing: 12)
-                            ], spacing: 12) {
-                                ForEach(advisoryRoles, id: \.self) { role in
-                                    RoleSelectionCard(
-                                        role: role,
-                                        isSelected: selectedAdvisoryRole == role,
-                                        action: {
-                                            HapticManager.tap()
-                                            selectedAdvisoryRole = role
-                                        }
-                                    )
-                                }
-                            }
-                            .padding(.horizontal, 20)
-                        }
-                        .transition(.opacity)
-                    }
                 }
                 .padding(.bottom, 8)
             }
@@ -216,17 +168,7 @@ struct UserTypeSelectionPage: View {
                 // Continue button
                 Button(action: {
                     HapticManager.tap()
-                    guard let userType = selectedUserType else {
-                        HapticManager.error()
-                        return
-                    }
-                    
-                    // Debug: Set the appropriate role based on user type
-                    if userType == .farmer {
-                        userPrefs.userRole = .farmerGrazier
-                    } else if let advisoryRole = selectedAdvisoryRole {
-                        userPrefs.userRole = advisoryRole
-                    } else {
+                    guard userPrefs.userRole != nil else {
                         HapticManager.error()
                         return
                     }
@@ -253,7 +195,7 @@ struct UserTypeSelectionPage: View {
                         Image(systemName: "info.circle.fill")
                             .foregroundStyle(Theme.secondaryText)
                             .font(.caption)
-                        Text(selectedUserType == .advisory ? "Please select your specific role to continue" : "Please select your user type to continue")
+                        Text("Please select your user type to continue")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                     }
