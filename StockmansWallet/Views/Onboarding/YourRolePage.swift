@@ -26,7 +26,7 @@ struct RoleSelectionCard: View {
         case .livestockAgent:
             return "person.2.fill"
         case .accountant:
-            return "calculator.fill"
+            return "chart.line.text.clipboard.fill"
         case .successionPlanner:
             return "doc.text.fill"
         }
