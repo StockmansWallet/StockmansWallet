@@ -804,13 +804,13 @@ struct InteractiveChartView: View {
         Group {
             if isScrubbing, let selectedDate = selectedDate, let scrubberX = scrubberX {
                 GeometryReader { geometry in
-                    // Debug: Date pill with fully rounded capsule shape
+                    // Debug: Date pill with fully rounded capsule shape and subtle orange tint
                     let content = Text(selectedDate, format: .dateTime.day(.twoDigits).month(.abbreviated).year())
                         .font(.system(size: 11, weight: .regular)).monospacedDigit()
-                        .foregroundStyle(Theme.primaryText)
+                        .foregroundStyle(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .glassEffect(.regular.interactive(), in: Capsule())
+                        .glassEffect(.regular.interactive().tint(Theme.accent.opacity(0.15)), in: Capsule())
                         .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                         .scaleEffect(pillScale, anchor: .center)
                         .opacity(pillOpacity)
