@@ -20,53 +20,106 @@ struct MainTabView: View {
     // Debug: State for managing tab bar appearance
     @State private var tabBarAppearanceConfigured = false
     
+    // Debug: Determine if user is a farmer or advisory user
+    private var isFarmer: Bool {
+        guard let userPrefs = preferences.first else { return true }
+        return userPrefs.userRole == .farmerGrazier
+    }
+    
     var body: some View {
         ZStack {
             // Debug: Gradient background behind everything for depth and visual hierarchy
             Theme.backgroundGradient.ignoresSafeArea()
             
-            TabView {
-                DashboardView()
-                    .tabItem {
-                        Label("Dashboard", systemImage: "chart.line.text.clipboard.fill")
-                    }
-                    // Debug: Accessibility - clear labels for VoiceOver
-                    .accessibilityLabel("Dashboard tab")
-                
-                PortfolioView()
-                    .tabItem {
-                        Label("Portfolio", systemImage: "wallet.bifold")
-                    }
-                    .accessibilityLabel("Portfolio tab")
-                
-                MarketView()
-                    .tabItem {
-                        Label("Market", systemImage: "chart.bar.xaxis.ascending")
-                    }
-                    .accessibilityLabel("Market tab")
-                
-                ToolsView()
-                    .tabItem {
-                        Label("Tools", systemImage: "hammer.fill")
-                    }
-                    .accessibilityLabel("Tools tab")
-                
-                SettingsView()
-                    .tabItem {
-                        Label("Settings", systemImage: "gearshape.fill")
-                    }
-                    .accessibilityLabel("Settings tab")
+            // Debug: Conditional tab view based on user role
+            if isFarmer {
+                farmerTabView
+            } else {
+                advisoryTabView
             }
-            // Debug: Pure SwiftUI approach for tab bar styling
-            .toolbarBackground(.clear, for: .tabBar)
-            .toolbarBackground(.visible, for: .tabBar)
-            .tint(Theme.accent)
-            .onAppear {
-                // Debug: Only configure appearance once (HIG: avoid repeated UIKit access)
-                if !tabBarAppearanceConfigured {
-                    configureTabBarAppearance()
-                    tabBarAppearanceConfigured = true
+        }
+    }
+    
+    // MARK: - Farmer Tab View (Original)
+    // Debug: Dashboard, Portfolio, Market, Tools, Settings
+    private var farmerTabView: some View {
+        TabView {
+            DashboardView()
+                .tabItem {
+                    Label("Dashboard", systemImage: "chart.line.text.clipboard.fill")
                 }
+                .accessibilityLabel("Dashboard tab")
+            
+            PortfolioView()
+                .tabItem {
+                    Label("Portfolio", systemImage: "wallet.bifold")
+                }
+                .accessibilityLabel("Portfolio tab")
+            
+            MarketView()
+                .tabItem {
+                    Label("Market", systemImage: "chart.bar.xaxis.ascending")
+                }
+                .accessibilityLabel("Market tab")
+            
+            ToolsView()
+                .tabItem {
+                    Label("Tools", systemImage: "hammer.fill")
+                }
+                .accessibilityLabel("Tools tab")
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
+                .accessibilityLabel("Settings tab")
+        }
+        .toolbarBackground(.clear, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .tint(Theme.accent)
+        .onAppear {
+            if !tabBarAppearanceConfigured {
+                configureTabBarAppearance()
+                tabBarAppearanceConfigured = true
+            }
+        }
+    }
+    
+    // MARK: - Advisory Tab View
+    // Debug: Dashboard, Clients, Tools, Settings
+    private var advisoryTabView: some View {
+        TabView {
+            AdvisoryDashboardView()
+                .tabItem {
+                    Label("Dashboard", systemImage: "chart.line.text.clipboard.fill")
+                }
+                .accessibilityLabel("Dashboard tab")
+            
+            ClientsView()
+                .tabItem {
+                    Label("Clients", systemImage: "person.3.fill")
+                }
+                .accessibilityLabel("Clients tab")
+            
+            ToolsView()
+                .tabItem {
+                    Label("Tools", systemImage: "hammer.fill")
+                }
+                .accessibilityLabel("Tools tab")
+            
+            SettingsView()
+                .tabItem {
+                    Label("Settings", systemImage: "gearshape.fill")
+                }
+                .accessibilityLabel("Settings tab")
+        }
+        .toolbarBackground(.clear, for: .tabBar)
+        .toolbarBackground(.visible, for: .tabBar)
+        .tint(Theme.accent)
+        .onAppear {
+            if !tabBarAppearanceConfigured {
+                configureTabBarAppearance()
+                tabBarAppearanceConfigured = true
             }
         }
     }

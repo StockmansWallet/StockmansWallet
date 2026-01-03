@@ -116,27 +116,15 @@ struct OnboardingPageTemplate<Content: View>: View {
                 
                 // Action buttons
                 if isLastPage, let onComplete = onComplete {
-                    VStack(spacing: 16) {
-                        Button(action: {
-                            HapticManager.tap()
-                            onComplete()
-                        }) {
-                            Text("Complete Setup")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(Theme.PrimaryButtonStyle())
-                        .accessibilityLabel("Complete onboarding setup")
-                        
-                        Button(action: {
-                            HapticManager.tap()
-                            onComplete()
-                        }) {
-                            Text("Skip for Now")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(Theme.SecondaryButtonStyle())
-                        .accessibilityLabel("Skip and complete setup")
+                    Button(action: {
+                        HapticManager.tap()
+                        onComplete()
+                    }) {
+                        Text("Complete Setup")
+                            .frame(maxWidth: .infinity)
                     }
+                    .buttonStyle(Theme.PrimaryButtonStyle())
+                    .accessibilityLabel("Complete onboarding setup")
                     .padding(.horizontal, 20)
                     .padding(.bottom, 20)
                 } else {

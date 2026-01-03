@@ -20,6 +20,11 @@ struct SettingsView: View {
         preferences.first ?? UserPreferences()
     }
     
+    // Debug: Determine if user is a farmer (has properties)
+    private var isFarmer: Bool {
+        userPrefs.userRole == .farmerGrazier
+    }
+    
     var body: some View {
         NavigationStack {
             List {
@@ -41,14 +46,17 @@ struct SettingsView: View {
                     }
                     .listRowBackground(Theme.cardBackground)
                     
-                    NavigationLink(destination: PropertiesView()) {
-                        SettingsListRow(
-                            icon: "building.2.fill",
-                            title: "Properties",
-                            subtitle: "Manage your farms and preferences"
-                        )
+                    // Debug: Only show Properties for farmers (not advisory users)
+                    if isFarmer {
+                        NavigationLink(destination: PropertiesView()) {
+                            SettingsListRow(
+                                icon: "building.2.fill",
+                                title: "Properties",
+                                subtitle: "Manage your farms and preferences"
+                            )
+                        }
+                        .listRowBackground(Theme.cardBackground)
                     }
-                    .listRowBackground(Theme.cardBackground)
                 }
                 .listSectionSeparator(.hidden)
                 

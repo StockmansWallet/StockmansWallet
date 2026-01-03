@@ -124,14 +124,20 @@ struct UserTypeSelectionPage: View {
         // Debug: Use a custom layout instead of OnboardingPageTemplate since this is page 0
         VStack(spacing: 0) {
             // Header
-            VStack(spacing: 24) {
+            VStack(spacing: 12) {
                 Text("Select User")
                     .font(.system(size: 28, weight: .bold))
                     .foregroundStyle(Theme.primaryText)
                     .multilineTextAlignment(.center)
-                    .padding(.horizontal, 20)
-                    .padding(.top, 40)
+                
+                Text("Choose the option that best describes your role")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
             }
+            .padding(.horizontal, 20)
+            .padding(.top, 40)
             .padding(.bottom, 32)
             
             // Scrollable content
