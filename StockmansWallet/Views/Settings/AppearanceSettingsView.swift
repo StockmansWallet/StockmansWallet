@@ -1,6 +1,14 @@
+//
+//  AppearanceSettingsView.swift
+//  StockmansWallet
+//
+//  Appearance and Display Settings
+//  Debug: Includes background image selection, text size, and accessibility options
+//
+
 import SwiftUI
 
-struct DisplaySettingsView: View {
+struct AppearanceSettingsView: View {
     @State private var useSystemAppearance = true
     @State private var selectedAppearance = 0 // 0: Light, 1: Dark
     @State private var contentSizeCategory = ContentSizeCategory.large
@@ -9,6 +17,18 @@ struct DisplaySettingsView: View {
 
     var body: some View {
         List {
+            // Debug: Background image selection section
+            Section("Background") {
+                NavigationLink(destination: BackgroundImageSelectorView()) {
+                    SettingsListRow(
+                        icon: "photo.fill",
+                        title: "Dashboard Background",
+                        subtitle: "Customize your dashboard image"
+                    )
+                }
+            }
+            .listRowBackground(Theme.cardBackground)
+            
             Section("Appearance") {
                 Toggle("Match System", isOn: $useSystemAppearance)
                 if !useSystemAppearance {
@@ -48,7 +68,7 @@ struct DisplaySettingsView: View {
         .listStyle(.insetGrouped)
         .scrollContentBackground(.hidden)
         .background(Theme.backgroundGradient)
-        .navigationTitle("Display")
+        .navigationTitle("Appearance")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
     }
@@ -73,3 +93,4 @@ struct DisplaySettingsView: View {
 }
 
 // ContentSizeCategory already conforms to CaseIterable in SwiftUI, no extension needed
+

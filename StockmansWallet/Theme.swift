@@ -19,31 +19,36 @@ struct Theme {
     
     // MARK: - Code-based Colors (not from assets)
     // Debug: Defined in code for maximum flexibility and maintainability
-    static let cardBackground = Color.white.opacity(0.05)  // For buttons and UI components
-    static let inputFieldBackground = Color.white.opacity(0.05)  // For text fields, pickers, etc.
+    static let cardBackground = Color.white.opacity(0.03)  // For buttons and UI components
+    static let inputFieldBackground = Color.white.opacity(0.03)  // For text fields, pickers, etc.
    
     // MARK: - Backgrounds
     // Debug: Standardized backgrounds for consistent visual identity across the app
     // Rule #0: Single source of truth for background color used throughout main pages
     
     /// Main solid background color for all primary app screens (Dashboard, Portfolio, Market, etc.)
-    /// Dark brown (#130F0D) that creates depth and visual hierarchy
-    static let backgroundColor = Color(hex: "130F0D")
+    /// Dark brown (#1E1815) that creates depth and visual hierarchy
+    static let backgroundColor = Color(hex: "1E1815")
     
-    /// Main gradient background for all primary app screens (Dashboard, Portfolio, Market, etc.)
-    /// Dark brown gradient that creates depth and visual hierarchy
-    static let backgroundGradient = LinearGradient(
-        colors: [
-            Color(hex: "130F0D"),  // Solid dark brown
-            Color(hex: "130F0D")   // Same color for uniform background
-        ],
-        startPoint: .top,
-        endPoint: .bottom
-    )
+    /// Main gradient background - orange accent radiating from top
+    /// Debug: Simple radial gradient - adjust opacity to control strength of orange glow
+    @ViewBuilder
+    static var backgroundGradient: some View {
+        RadialGradient(
+            colors: [
+                Color(hex: "FFA042").opacity(0.15),  // Orange accent
+                Color(hex: "1E1815")                // Dark brown at edges
+            ],
+            center: .top,
+            startRadius: 0,
+            endRadius: 500
+        )
+        .ignoresSafeArea()
+    }
     
     /// Solid background color for sheets, modals, and overlays
     /// Uses #130F0D for consistency
-    static let sheetBackground = Color(hex: "130F0D")
+    static let sheetBackground = Color(hex: "1E1815")
 
     // MARK: - Typography
     // Prefer semantic SwiftUI text styles to support Dynamic Type automatically.

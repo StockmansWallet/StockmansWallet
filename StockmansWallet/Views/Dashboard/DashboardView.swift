@@ -37,6 +37,7 @@ struct DashboardView: View {
     @State private var performanceMetrics: PerformanceMetrics?
     
     @State private var showingAddAssetMenu = false
+    @State private var backgroundImageTrigger = false // Debug: Trigger to force view refresh on background change
     
     var body: some View {
         NavigationStack {
@@ -73,6 +74,14 @@ struct DashboardView: View {
                         self.baseValue = 0.0
                     }
                     await loadValuations()
+                }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("BackgroundImageChanged"))) { _ in
+                // Debug: Toggle state to force view refresh when background image changes
+                Task { @MainActor in
+                    print("🖼️ DashboardView: Background image changed notification received")
+                    backgroundImageTrigger.toggle()
+                    print("🖼️ DashboardView: backgroundImageTrigger is now \(backgroundImageTrigger)")
                 }
             }
             .onChange(of: herds.count) { _, _ in
@@ -118,16 +127,38 @@ struct DashboardView: View {
     // Debug: Dashboard content with parallax background and fixed header
     @ViewBuilder
     private var dashboardContentView: some View {
+        let userPrefs = preferences.first ?? UserPreferences()
+        let backgroundImageName = userPrefs.backgroundImageName ?? "BackgroundDefault"
+        // Debug: Force view update when backgroundImageTrigger changes
+        let _ = backgroundImageTrigger
+        let _ = print("🖼️ DashboardView: Rendering with background=\(backgroundImageName), isCustom=\(userPrefs.isCustomBackground), trigger=\(backgroundImageTrigger)")
+        
         ZStack(alignment: .top) {
             // Debug: Background image with parallax effect (like iOS home screen wallpapers)
-            ParallaxImageView(
-                imageName: "FarmBG_01",
-                intensity: 25,           // Movement amount (20-40)
-                opacity: 0.2,            // Background opacity
-                scale: 0.5,              // Image takes 50% of screen height
-                verticalOffset: -60,     // Move image up to show more middle/lower area
-                blur: 0                // BG Image Blur radius
-            )
+            // Uses user's selected background from preferences (built-in or custom)
+            if userPrefs.isCustomBackground {
+                // Debug: Load custom background from document directory
+                CustomParallaxImageView(
+                    imageName: backgroundImageName,
+                    intensity: 25,           // Movement amount (20-40)
+                    opacity: 0.2,            // Background opacity
+                    scale: 0.5,              // Image takes 50% of screen height
+                    verticalOffset: -60,     // Move image up to show more middle/lower area
+                    blur: 0                  // BG Image Blur radius
+                )
+                .id("custom_\(backgroundImageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
+            } else {
+                // Debug: Load built-in background from Assets
+                ParallaxImageView(
+                    imageName: backgroundImageName,
+                    intensity: 25,           // Movement amount (20-40)
+                    opacity: 0.2,            // Background opacity
+                    scale: 0.5,              // Image takes 50% of screen height
+                    verticalOffset: -60,     // Move image up to show more middle/lower area
+                    blur: 0                  // BG Image Blur radius
+                )
+                .id("builtin_\(backgroundImageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
+            }
             
             // Debug: Fixed portfolio value - stays in place while content scrolls over it
             VStack {
@@ -136,12 +167,14 @@ struct DashboardView: View {
                     change: isScrubbing ? portfolioChange : (portfolioValue - dayAgoValue),
                     isLoading: isLoading,
                     isScrubbing: isScrubbing
+                  
                 )
                 .padding(.horizontal, Theme.cardPadding)
                 .padding(.top, 8)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Total portfolio value")
                 .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
+                
                 
                 Spacer()
             }

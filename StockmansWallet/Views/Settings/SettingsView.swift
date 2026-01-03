@@ -71,8 +71,8 @@ struct SettingsView: View {
                     }
                     .listRowBackground(Theme.cardBackground)
                     
-                    NavigationLink(destination: DisplaySettingsView()) {
-                        SettingsListRow(icon: "textformat", title: "Display", subtitle: nil)
+                    NavigationLink(destination: AppearanceSettingsView()) {
+                        SettingsListRow(icon: "paintbrush.fill", title: "Appearance", subtitle: nil)
                     }
                     .listRowBackground(Theme.cardBackground)
                 }

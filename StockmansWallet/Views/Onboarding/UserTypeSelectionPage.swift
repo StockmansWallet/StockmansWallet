@@ -60,7 +60,7 @@ struct UserTypeSelectionCard: View {
                                     .foregroundStyle(Theme.accent)
                                     .background(
                                         Circle()
-                                            .fill(Theme.backgroundGradient)
+                                            .fill(Theme.backgroundColor) // Debug: Use solid background color instead
                                             .frame(width: 26, height: 26)
                                     )
                             }

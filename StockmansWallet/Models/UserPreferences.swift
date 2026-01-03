@@ -93,7 +93,8 @@ final class UserPreferences {
     var currency: String // "AUD", "USD", etc.
     var weightUnit: String // "kg", "lbs"
     var dateFormat: String
-    var backgroundImageName: String? // Name of selected background image
+    var backgroundImageName: String? // Name of selected background image (asset name or custom filename)
+    var isCustomBackground: Bool // Debug: True if background is a custom uploaded image
     
     init() {
         self.id = UUID()
@@ -130,6 +131,7 @@ final class UserPreferences {
         self.weightUnit = "kg"
         self.dateFormat = "dd/MM/yyyy"
         self.backgroundImageName = "BackgroundDefault" // Default background image
+        self.isCustomBackground = false // Debug: Default to built-in asset
     }
     
     // Helper to get/set role as enum

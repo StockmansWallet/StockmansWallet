@@ -58,7 +58,7 @@ struct RoleSelectionCard: View {
                                     .foregroundStyle(Theme.accent)
                                     .background(
                                         Circle()
-                                            .fill(Theme.backgroundGradient)
+                                            .fill(Theme.backgroundColor) // Debug: Use solid background color instead
                                             .frame(width: 24, height: 24)
                                     )
                             }
