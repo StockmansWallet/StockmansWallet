@@ -21,8 +21,9 @@ struct SecurityPrivacyPage: View {
             title: "Security & Privacy",
             subtitle: "Configure your security preferences",
             currentPage: $currentPage,
-            nextPage: 3,
-            isValid: isValid
+            nextPage: 4,
+            isValid: isValid,
+            totalPages: 5 // Debug: SHARED page - both paths have 5 pages
         ) {
             // Debug: Organized layout following HIG - clear sections with proper spacing
             VStack(spacing: 24) {

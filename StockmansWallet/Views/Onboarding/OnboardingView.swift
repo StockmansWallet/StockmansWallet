@@ -11,7 +11,7 @@ import SwiftData
 struct OnboardingView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
-    @State private var onboardingStep: OnboardingStep = .landing
+    @State private var onboardingStep: OnboardingStep = .landing // Debug: Start with landing page as before
     @State private var currentPage = 0
     @State private var userPrefs = UserPreferences()
     @State private var showingSignIn = false
@@ -56,43 +56,55 @@ struct OnboardingView: View {
                     )
                     
                 case .onboardingPages:
-                    // Disable swiping - users must use Next/Back buttons after completing required fields
-                    // Use custom view container instead of TabView to prevent swipe gestures
+                    // Debug: Branching onboarding flow based on user role
+                    // Green Path (Farmer): UserType → AboutYou → Property → Security → Summary (5 pages)
+                    // Pink Path (Advisory): UserType → AboutYou → Company → Security → Summary (5 pages)
+                    // Security & Summary pages are SHARED between both paths
                     Group {
                         switch currentPage {
                         case 0:
-                            AboutYouPage(
+                            // First page: User Type Selection (both paths)
+                            UserTypeSelectionPage(
                                 userPrefs: $userPrefs,
                                 currentPage: $currentPage
                             )
                         case 1:
-                            YourRolePage(
+                            // Second page: About You (both paths)
+                            AboutYouPage(
                                 userPrefs: $userPrefs,
                                 currentPage: $currentPage
                             )
                         case 2:
+                            // Third page: Branch based on user role
+                            if userPrefs.userRole == .farmerGrazier {
+                                // Green Path: Property Information
+                                YourPropertyPage(
+                                    userPrefs: $userPrefs,
+                                    currentPage: $currentPage
+                                )
+                            } else {
+                                // Pink Path: Company Information
+                                CompanyInfoPage(
+                                    userPrefs: $userPrefs,
+                                    currentPage: $currentPage
+                                )
+                            }
+                        case 3:
+                            // Fourth page: Security & Privacy (SHARED - both paths)
                             SecurityPrivacyPage(
                                 userPrefs: $userPrefs,
                                 currentPage: $currentPage
                             )
-                        case 3:
-                            YourPropertyPage(
-                                userPrefs: $userPrefs,
-                                currentPage: $currentPage
-                            )
                         case 4:
-                            MarketPreferencesPage(
-                                userPrefs: $userPrefs,
-                                currentPage: $currentPage
-                            )
-                        case 5:
-                            ConnectYourAccountsPage(
+                            // Fifth page: Onboarding Summary (SHARED - both paths, final page)
+                            OnboardingSummaryPage(
                                 userPrefs: $userPrefs,
                                 currentPage: $currentPage,
                                 onComplete: saveAndComplete
                             )
                         default:
-                            AboutYouPage(
+                            // Fallback to first page
+                            UserTypeSelectionPage(
                                 userPrefs: $userPrefs,
                                 currentPage: $currentPage
                             )
@@ -151,7 +163,7 @@ struct OnboardingView: View {
         if preferences.isEmpty {
             modelContext.insert(userPrefs)
         } else if let existing = preferences.first {
-            // Update existing preferences
+            // Debug: Update existing preferences with all onboarding data
             existing.hasCompletedOnboarding = true
             existing.firstName = userPrefs.firstName
             existing.lastName = userPrefs.lastName
@@ -159,11 +171,21 @@ struct OnboardingView: View {
             existing.role = userPrefs.role
             existing.twoFactorEnabled = userPrefs.twoFactorEnabled
             existing.appsComplianceAccepted = userPrefs.appsComplianceAccepted
+            
+            // Property fields (Farmer path)
             existing.propertyName = userPrefs.propertyName
             existing.propertyPIC = userPrefs.propertyPIC
             existing.defaultState = userPrefs.defaultState
             existing.latitude = userPrefs.latitude
             existing.longitude = userPrefs.longitude
+            
+            // Company fields (Advisory path)
+            existing.companyName = userPrefs.companyName
+            existing.companyType = userPrefs.companyType
+            existing.companyAddress = userPrefs.companyAddress
+            existing.roleInCompany = userPrefs.roleInCompany
+            
+            // Legacy fields (can be set later in settings)
             existing.defaultSaleyard = userPrefs.defaultSaleyard
             existing.truckItEnabled = userPrefs.truckItEnabled
             existing.xeroConnected = userPrefs.xeroConnected

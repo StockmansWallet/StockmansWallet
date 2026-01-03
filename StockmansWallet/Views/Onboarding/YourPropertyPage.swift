@@ -27,8 +27,9 @@ struct YourPropertyPage: View {
             title: "Your Property",
             subtitle: "Tell us about your property",
             currentPage: $currentPage,
-            nextPage: 4,
-            isValid: isValid
+            nextPage: 3,
+            isValid: isValid,
+            totalPages: 5 // Debug: Farmer path has 5 pages
         ) {
             // Debug: Organized layout following HIG - clear sections with logical grouping
             VStack(spacing: 24) {

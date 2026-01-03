@@ -21,6 +21,7 @@ struct OnboardingPageTemplate<Content: View>: View {
     var showBack: Bool = true
     var isValid: Bool = true // Default to true for optional pages
     var isLastPage: Bool = false // Set to true for the final page
+    var totalPages: Int = 5 // Debug: Total pages in flow (default 5 for farmer, can be 4 for advisory)
     var onComplete: (() -> Void)? = nil // Optional completion handler for last page
     @ViewBuilder let content: Content
     
@@ -100,9 +101,9 @@ struct OnboardingPageTemplate<Content: View>: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             // Footer section - pinned to bottom using safeAreaInset
             VStack(spacing: 0) {
-                // Progress dots
+                // Debug: Dynamic progress dots based on total pages in flow
                 HStack(spacing: 8) {
-                    ForEach(0..<6, id: \.self) { index in
+                    ForEach(0..<totalPages, id: \.self) { index in
                         Circle()
                             .fill(index <= currentPage ? Theme.accent : Theme.secondaryText.opacity(0.3))
                             .frame(width: 8, height: 8)
@@ -111,7 +112,7 @@ struct OnboardingPageTemplate<Content: View>: View {
                 }
                 .padding(.top, 16)
                 .padding(.bottom, 16)
-                .accessibilityLabel("Page \(currentPage + 1) of 6")
+                .accessibilityLabel("Page \(currentPage + 1) of \(totalPages)")
                 
                 // Action buttons
                 if isLastPage, let onComplete = onComplete {

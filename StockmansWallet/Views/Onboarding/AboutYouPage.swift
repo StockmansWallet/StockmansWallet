@@ -15,6 +15,11 @@ struct AboutYouPage: View {
     @State private var showPassword = false
     @State private var showConfirmPassword = false
     
+    // Debug: Both paths now have 5 pages (Security & Summary are shared)
+    private var totalPages: Int {
+        5
+    }
+    
     // Debug: Password fields disabled in demo mode - removed from validation
     // Make validation reactive by computing it in the view body
     private var isValid: Bool {
@@ -53,9 +58,10 @@ struct AboutYouPage: View {
             title: "About You",
             subtitle: "Let's get you set up",
             currentPage: $currentPage,
-            nextPage: 1,
-            showBack: false,
-            isValid: validationState
+            nextPage: 2,
+            showBack: true,
+            isValid: validationState,
+            totalPages: totalPages
         ) {
             // Debug: Organized form layout following HIG - clear hierarchy and spacing
             VStack(spacing: 20) {

@@ -25,6 +25,10 @@ struct RoleSelectionCard: View {
             return "shield.checkered"
         case .livestockAgent:
             return "person.2.fill"
+        case .accountant:
+            return "calculator.fill"
+        case .successionPlanner:
+            return "doc.text.fill"
         }
     }
     

@@ -9,11 +9,31 @@ import Foundation
 import SwiftData
 
 // MARK: - User Role Enum
+// Debug: All user types from workflow diagram
 enum UserRole: String, Codable, CaseIterable {
     case farmerGrazier = "Farmer/Grazier"
     case agribusinessBanker = "Agribusiness Banker"
     case insurer = "Insurer"
     case livestockAgent = "Livestock Agent"
+    case accountant = "Accountant"
+    case successionPlanner = "Succession Planner"
+}
+
+// MARK: - User Type Enum
+// Debug: Top-level classification - determines onboarding flow path
+enum UserType: String, Codable {
+    case farmer = "Farmer/Grazier"
+    case advisory = "Advisory User"
+    
+    // Helper to determine if a role is advisory
+    static func isAdvisoryRole(_ role: UserRole) -> Bool {
+        switch role {
+        case .farmerGrazier:
+            return false
+        case .agribusinessBanker, .insurer, .livestockAgent, .accountant, .successionPlanner:
+            return true
+        }
+    }
 }
 
 @Model
@@ -32,12 +52,19 @@ final class UserPreferences {
     var twoFactorEnabled: Bool
     var appsComplianceAccepted: Bool
     
-    // MARK: - Property Localization
+    // MARK: - Property Localization (Farmer/Grazier)
     var propertyName: String?
     var propertyPIC: String? // Property Identification Code
     var defaultState: String // "NSW", "VIC", "QLD", etc.
     var latitude: Double?
     var longitude: Double?
+    
+    // MARK: - Company Information (Advisory Users)
+    // Debug: Fields for advisory user onboarding flow
+    var companyName: String?
+    var companyType: String? // e.g., "Bank", "Insurance Company", "Livestock Agency"
+    var companyAddress: String?
+    var roleInCompany: String? // User's specific role within the company
     
     // MARK: - Market & Logistics
     var defaultSaleyard: String?
@@ -76,9 +103,13 @@ final class UserPreferences {
         self.appsComplianceAccepted = false
         self.propertyName = nil
         self.propertyPIC = nil
-        self.defaultState = "NSW"
+        self.defaultState = "QLD" // Debug: Default to QLD as per user request
         self.latitude = nil
         self.longitude = nil
+        self.companyName = nil
+        self.companyType = nil
+        self.companyAddress = nil
+        self.roleInCompany = nil
         self.defaultSaleyard = nil
         self.region = nil
         self.truckItEnabled = false
