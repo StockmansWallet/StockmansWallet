@@ -13,50 +13,73 @@ struct AddIndividualAnimalView: View {
     @Environment(\.dismiss) private var dismiss
     @Query private var preferences: [UserPreferences]
     
+    @State private var currentStep = 1
+    @State private var isMovingForward = true
     @State private var animalName = ""
+    @State private var paddockName = ""
     @State private var selectedSpecies = "Cattle"
     @State private var selectedBreed = ""
     @State private var selectedCategory = ""
-    @State private var sex = "Male"
     @State private var ageMonths = 12
     @State private var initialWeight: Double = 300
     @State private var dailyWeightGain: Double = 0.5
-    @State private var isBreeder = false
     @State private var isPregnant = false
     @State private var joinedDate = Date()
-    @State private var calvingRate: Double = 0.85
+    @State private var calvingRate: Int = 85
+    @State private var inCalf = true
     @State private var selectedSaleyard: String?
-    @State private var paddockName = ""
     @State private var tagNumber = ""
     @State private var birthDate: Date?
     @State private var hasBirthDate = false
+    @State private var breedSearchText = ""
+    @State private var categorySearchText = ""
+    @State private var showingBreedPicker = false
+    @State private var showingCategoryPicker = false
     
     private let speciesOptions = ["Cattle", "Sheep", "Pig"]
     
+    private var isBreederCategory: Bool {
+        let breederCategories = [
+            "Breeding Cow", "Breeding Ewe", "Breeder Sow", "Breeding Doe",
+            "Maiden Ewe (Joined)"
+        ]
+        return breederCategories.contains(selectedCategory)
+    }
+    
+    private var totalSteps: Int {
+        isBreederCategory ? 4 : 3 // Basic Info, Breeder (conditional), Physical Attributes, Additional Details
+    }
+    
     private var breedOptions: [String] {
+        let breeds: [String]
         switch selectedSpecies {
         case "Cattle":
-            return ReferenceData.cattleBreeds
+            breeds = ReferenceData.cattleBreeds
         case "Sheep":
-            return ["Merino", "Dorper", "Poll Dorset", "Suffolk", "Border Leicester", "Corriedale", "Romney", "Other"]
+            breeds = ReferenceData.sheepBreeds
         case "Pig":
-            return ["Large White", "Landrace", "Duroc", "Hampshire", "Pietrain", "Berkshire", "Other"]
+            breeds = ReferenceData.pigBreeds
         default:
-            return []
+            breeds = []
         }
+        if breedSearchText.isEmpty { return breeds }
+        return breeds.filter { $0.localizedCaseInsensitiveContains(breedSearchText) }
     }
     
     private var categoryOptions: [String] {
+        let categories: [String]
         switch selectedSpecies {
         case "Cattle":
-            return ReferenceData.cattleCategories
+            categories = ReferenceData.cattleCategories
         case "Sheep":
-            return ReferenceData.sheepCategories
+            categories = ReferenceData.sheepCategories
         case "Pig":
-            return ReferenceData.pigCategories
+            categories = ReferenceData.pigCategories
         default:
-            return []
+            categories = []
         }
+        if categorySearchText.isEmpty { return categories }
+        return categories.filter { $0.localizedCaseInsensitiveContains(categorySearchText) }
     }
     
     var body: some View {
@@ -67,7 +90,14 @@ struct AddIndividualAnimalView: View {
                     // Debug: Back button meets iOS 26 HIG minimum touch target of 44x44pt
                     Button(action: {
                         HapticManager.tap()
-                        dismiss()
+                        if currentStep > 1 {
+                            isMovingForward = false
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                currentStep -= 1
+                            }
+                        } else {
+                            dismiss()
+                        }
                     }) {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
@@ -99,214 +129,19 @@ struct AddIndividualAnimalView: View {
                 
                 // Content
                 ScrollView {
-                    VStack(spacing: 24) {
-                        // Basic Information (no card, no title)
-                        VStack(alignment: .leading, spacing: 24) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Animal Name/Tag")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                TextField("e.g., TAG-001 or Bessie", text: $animalName)
-                                    .textFieldStyle(.plain)
-                                    .padding()
-                                    .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Species")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Picker("Species", selection: $selectedSpecies) {
-                                    ForEach(speciesOptions, id: \.self) { species in
-                                        Text(species).tag(species)
-                                    }
-                                }
-                                .pickerStyle(.segmented)
-                                .onChange(of: selectedSpecies) { _, _ in
-                                    HapticManager.tap()
-                                    selectedBreed = ""
-                                    selectedCategory = ""
-                                }
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Breed")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Picker("Breed", selection: $selectedBreed) {
-                                    Text("Select Breed").tag("")
-                                    ForEach(breedOptions, id: \.self) { breed in
-                                        Text(breed).tag(breed)
-                                    }
-                                }
-                                .pickerStyle(.menu)
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Category")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Picker("Category", selection: $selectedCategory) {
-                                    Text("Select Category").tag("")
-                                    ForEach(categoryOptions, id: \.self) { category in
-                                        Text(category).tag(category)
-                                    }
-                                }
-                                .pickerStyle(.menu)
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Sex")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Picker("Sex", selection: $sex) {
-                                    Text("Male").tag("Male")
-                                    Text("Female").tag("Female")
-                                }
-                                .pickerStyle(.segmented)
-                            }
-                        }
-                        
-                        // Physical Attributes (no section title)
-                        VStack(alignment: .leading, spacing: 24) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Toggle(isOn: $hasBirthDate) {
-                                    Text("Specify Birth Date")
-                                        .font(Theme.headline)
-                                        .foregroundStyle(Theme.primaryText)
-                                }
-                                .tint(Theme.accent)
-                                
-                                if hasBirthDate {
-                                    DatePicker("Birth Date", selection: Binding(
-                                        get: { birthDate ?? Date() },
-                                        set: { birthDate = $0 }
-                                    ), displayedComponents: .date)
-                                    .datePickerStyle(.compact)
-                                } else {
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text("Age (months)")
-                                            .font(Theme.headline)
-                                            .foregroundStyle(Theme.primaryText)
-                                        Stepper(value: $ageMonths, in: 1...120, step: 1) {
-                                            Text("\(ageMonths) months")
-                                                .font(Theme.headline)
-                                                .foregroundStyle(Theme.primaryText)
-                                        }
-                                        .padding()
-                                        .background(Theme.inputFieldBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                    }
-                                }
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Current Weight (kg)")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                HStack {
-                                    Slider(value: $initialWeight, in: 50...1000, step: 5)
-                                    Text("\(Int(initialWeight)) kg")
-                                        .font(Theme.headline)
-                                        .foregroundStyle(Theme.primaryText)
-                                        .frame(width: 80)
-                                }
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Daily Weight Gain (kg/day)")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                HStack {
-                                    Slider(value: $dailyWeightGain, in: 0...2.0, step: 0.1)
-                                    Text(String(format: "%.2f kg/day", dailyWeightGain))
-                                        .font(Theme.headline)
-                                        .foregroundStyle(Theme.primaryText)
-                                        .frame(width: 100)
-                                }
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                        }
-                        
-                        // Additional Details (no section title)
-                        VStack(alignment: .leading, spacing: 24) {
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Paddock Name (Optional)")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                TextField("e.g., North Paddock", text: $paddockName)
-                                    .textFieldStyle(.plain)
-                                    .padding()
-                                    .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Saleyard (Optional)")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Picker("Saleyard", selection: $selectedSaleyard) {
-                                    Text("Use Default").tag(nil as String?)
-                                    ForEach(ReferenceData.saleyards, id: \.self) { saleyard in
-                                        Text(saleyard).tag(saleyard as String?)
-                                    }
-                                }
-                                .pickerStyle(.menu)
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
-                            
-                            Toggle(isOn: $isBreeder) {
-                                Text("Breeding Stock")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                            }
-                            .tint(Theme.accent)
-                            .padding()
-                            .background(Theme.inputFieldBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            
-                            if isBreeder {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Toggle(isOn: $isPregnant) {
-                                        Text("Currently Pregnant")
-                                            .font(Theme.headline)
-                                            .foregroundStyle(Theme.primaryText)
-                                    }
-                                    .tint(Theme.accent)
-                                    
-                                    if isPregnant {
-                                        DatePicker("Joined Date", selection: $joinedDate, displayedComponents: .date)
-                                            .datePickerStyle(.compact)
-                                        
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            Text("Calving Rate: \(Int(calvingRate * 100))%")
-                                                .font(Theme.caption)
-                                                .foregroundStyle(Theme.primaryText.opacity(0.7))
-                                            Slider(value: $calvingRate, in: 0.5...1.0, step: 0.05)
-                                        }
-                                        .padding()
-                                        .background(Theme.inputFieldBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                    }
-                                }
-                                .padding()
-                                .background(Theme.cardBackground.opacity(0.5))
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            }
+                    VStack(spacing: 0) {
+                        if currentStep == 1 {
+                            step1Content
+                                .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
+                        } else if currentStep == 2 && isBreederCategory {
+                            breedersContent
+                                .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
+                        } else if (currentStep == 2 && !isBreederCategory) || (currentStep == 3 && isBreederCategory) {
+                            step2Content
+                                .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
+                        } else {
+                            step3Content
+                                .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         }
                     }
                     .padding(.horizontal, 20)
@@ -314,25 +149,65 @@ struct AddIndividualAnimalView: View {
                     .padding(.bottom, 120)
                 }
                 
-                // Bottom controls (matching AddHerdFlowView)
-                // Debug: No background on bottom controls for cleaner design
+                // Bottom controls
+                // Debug: No background on bottom controls for cleaner design (like AddHerdFlowView)
                 VStack(spacing: 16) {
                     // Debug: Using Theme.PrimaryButtonStyle for iOS 26 HIG compliance (52pt height, proper styling)
                     Button(action: {
                         HapticManager.tap()
-                        saveAnimal()
+                        if currentStep < totalSteps {
+                            isMovingForward = true
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                currentStep += 1
+                            }
+                        } else {
+                            saveAnimal()
+                        }
                     }) {
-                        Text("Save")
+                        Text(currentStep < totalSteps ? "Next" : "Done")
                     }
                     .buttonStyle(Theme.PrimaryButtonStyle())
-                    .disabled(!isValid)
-                    .opacity(isValid ? 1.0 : 0.5)
+                    .disabled(!isStepValid)
+                    .opacity(isStepValid ? 1.0 : 0.5)
                     .padding(.horizontal, 20)
-                    .accessibilityLabel("Save animal")
+                    .accessibilityLabel(currentStep < totalSteps ? "Next" : "Done")
+                    
+                    HStack(spacing: 8) {
+                        ForEach(1...totalSteps, id: \.self) { step in
+                            Circle()
+                                .fill(step <= currentStep ? Theme.accent : Theme.primaryText.opacity(0.3))
+                                .frame(width: 8, height: 8)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    .padding(.bottom, 20)
                 }
-                .padding(.bottom, 20)
             }
             .navigationBarHidden(true)
+            .sheet(isPresented: $showingBreedPicker) {
+                ScrollablePickerSheet(
+                    title: "Select Breed",
+                    options: breedOptions,
+                    selectedValue: $selectedBreed,
+                    searchText: $breedSearchText,
+                    onSelect: { breed in
+                        selectedBreed = breed
+                    }
+                )
+                .presentationBackground(Theme.sheetBackground)
+            }
+            .sheet(isPresented: $showingCategoryPicker) {
+                ScrollablePickerSheet(
+                    title: "Select Category",
+                    options: categoryOptions,
+                    selectedValue: $selectedCategory,
+                    searchText: $categorySearchText,
+                    onSelect: { category in
+                        selectedCategory = category
+                    }
+                )
+                .presentationBackground(Theme.sheetBackground)
+            }
             .background(Theme.sheetBackground.ignoresSafeArea())
             .simultaneousGesture(
                 TapGesture().onEnded { _ in
@@ -342,8 +217,285 @@ struct AddIndividualAnimalView: View {
         }
     }
     
-    private var isValid: Bool {
-        !animalName.isEmpty && !selectedBreed.isEmpty && !selectedCategory.isEmpty && initialWeight > 0
+    // MARK: - Step 1: Basic Information
+    private var step1Content: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Animal Name/Tag")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                TextField("e.g., TAG-001 or Bessie", text: $animalName)
+                    .textFieldStyle(AddHerdTextFieldStyle())
+                    .accessibilityLabel("Animal name")
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 4) {
+                    Text("Paddock Location")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Text("Optional")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                TextField("e.g., North Paddock", text: $paddockName)
+                    .textFieldStyle(AddHerdTextFieldStyle())
+                    .accessibilityLabel("Paddock location")
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Species")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                
+                Picker("Species", selection: $selectedSpecies) {
+                    ForEach(speciesOptions, id: \.self) { species in
+                        Text(species).tag(species)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .onChange(of: selectedSpecies) { _, _ in
+                    HapticManager.tap()
+                    selectedBreed = ""
+                    selectedCategory = ""
+                    breedSearchText = ""
+                    categorySearchText = ""
+                }
+                .accessibilityLabel("Species")
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Breed")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                
+                // Debug: Picker button meets iOS 26 HIG minimum touch target of 44pt height
+                Button(action: {
+                    HapticManager.tap()
+                    showingBreedPicker = true
+                }) {
+                    HStack {
+                        Text(selectedBreed.isEmpty ? "Select Breed" : selectedBreed)
+                            .font(Theme.body)
+                            .foregroundStyle(selectedBreed.isEmpty ? Theme.secondaryText : Theme.primaryText)
+                        Spacer()
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    .padding()
+                    .frame(minHeight: Theme.minimumTouchTarget) // iOS 26 HIG: Minimum 44pt
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonBorderShape(.roundedRectangle)
+                .disabled(selectedSpecies.isEmpty)
+                .opacity(selectedSpecies.isEmpty ? 0.5 : 1.0)
+                .accessibilityLabel("Select breed")
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Category")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                
+                // Debug: Picker button meets iOS 26 HIG minimum touch target of 44pt height
+                Button(action: {
+                    HapticManager.tap()
+                    showingCategoryPicker = true
+                }) {
+                    HStack {
+                        Text(selectedCategory.isEmpty ? "Select Category" : selectedCategory)
+                            .font(Theme.body)
+                            .foregroundStyle(selectedCategory.isEmpty ? Theme.secondaryText : Theme.primaryText)
+                        Spacer()
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    .padding()
+                    .frame(minHeight: Theme.minimumTouchTarget) // iOS 26 HIG: Minimum 44pt
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonBorderShape(.roundedRectangle)
+                .disabled(selectedSpecies.isEmpty)
+                .opacity(selectedSpecies.isEmpty ? 0.5 : 1.0)
+                .accessibilityLabel("Select category")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 20)
+    }
+    
+    // MARK: - Breeders (Conditional)
+    private var breedersContent: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Text("Breeders")
+                .font(Theme.headline)
+                .foregroundStyle(Theme.primaryText)
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Calving Rate: \(calvingRate)%")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.secondaryText)
+                HStack {
+                    Slider(value: Binding(
+                        get: { Double(calvingRate) },
+                        set: { calvingRate = Int($0) }
+                    ), in: 50...100, step: 1)
+                    Text("\(calvingRate)%")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                        .frame(width: 60)
+                }
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .accessibilityLabel("Calving rate")
+            }
+            
+            DatePicker("Joined Date", selection: $joinedDate, displayedComponents: .date)
+                .datePickerStyle(.compact)
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .accessibilityLabel("Joined date")
+            
+            Toggle(isOn: $inCalf) {
+                Text("In Calf")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+            }
+            .tint(.green)
+            .padding()
+            .background(Theme.inputFieldBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 20)
+    }
+    
+    // MARK: - Step 2/3: Physical Attributes
+    private var step2Content: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            Toggle(isOn: $hasBirthDate) {
+                Text("Specify Birth Date")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+            }
+            .tint(Theme.accent)
+            .padding()
+            .background(Theme.inputFieldBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            
+            if hasBirthDate {
+                DatePicker("Birth Date", selection: Binding(
+                    get: { birthDate ?? Date() },
+                    set: { birthDate = $0 }
+                ), displayedComponents: .date)
+                .datePickerStyle(.compact)
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Age (months)")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Stepper(value: $ageMonths, in: 1...120, step: 1) {
+                        Text("\(ageMonths) months")
+                            .font(Theme.headline)
+                            .foregroundStyle(Theme.primaryText)
+                    }
+                    .padding()
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Current Weight (kg)")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                HStack {
+                    Slider(value: $initialWeight, in: 50...1000, step: 5)
+                    Text("\(Int(initialWeight)) kg")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                        .frame(width: 80)
+                }
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Daily Weight Gain (kg/day)")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                HStack {
+                    Slider(value: $dailyWeightGain, in: 0...2.0, step: 0.1)
+                    Text(String(format: "%.2f kg/day", dailyWeightGain))
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                        .frame(width: 100)
+                }
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 20)
+    }
+    
+    // MARK: - Step 3/4: Additional Details
+    private var step3Content: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Saleyard (Optional)")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                
+                Picker("Saleyard", selection: $selectedSaleyard) {
+                    Text("Use Default").tag(nil as String?)
+                    ForEach(ReferenceData.saleyards, id: \.self) { saleyard in
+                        Text(saleyard).tag(saleyard as String?)
+                    }
+                }
+                .pickerStyle(.menu)
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 20)
+    }
+    
+    // MARK: - Validation
+    private var isStepValid: Bool {
+        switch currentStep {
+        case 1:
+            return !animalName.isEmpty && !selectedBreed.isEmpty && !selectedCategory.isEmpty
+        case 2:
+            if isBreederCategory {
+                return true // Breeder step is always valid
+            } else {
+                return initialWeight > 0 // Physical attributes
+            }
+        case 3:
+            if isBreederCategory {
+                return initialWeight > 0 // Physical attributes
+            } else {
+                return true // Additional details always valid
+            }
+        case 4:
+            return true // Additional details always valid
+        default:
+            return false
+        }
     }
     
     private func saveAnimal() {
@@ -356,6 +508,26 @@ struct AddIndividualAnimalView: View {
             calculatedAgeMonths = ageComponents.month ?? ageMonths
         }
         
+        // Determine sex from category
+        let sex: String
+        if selectedCategory.lowercased().contains("steer")
+            || selectedCategory.lowercased().contains("bull")
+            || selectedCategory.lowercased().contains("ram")
+            || selectedCategory.lowercased().contains("buck")
+            || selectedCategory.lowercased().contains("wether")
+            || selectedCategory.lowercased().contains("barrow") {
+            sex = "Male"
+        } else if selectedCategory.lowercased().contains("heifer")
+                    || selectedCategory.lowercased().contains("cow")
+                    || selectedCategory.lowercased().contains("ewe")
+                    || selectedCategory.lowercased().contains("sow")
+                    || selectedCategory.lowercased().contains("doe")
+                    || selectedCategory.lowercased().contains("gilt") {
+            sex = "Female"
+        } else {
+            sex = "Mixed"
+        }
+        
         let herd = HerdGroup(
             name: animalName,
             species: selectedSpecies,
@@ -366,15 +538,15 @@ struct AddIndividualAnimalView: View {
             headCount: 1,
             initialWeight: initialWeight,
             dailyWeightGain: dailyWeightGain,
-            isBreeder: isBreeder,
+            isBreeder: inCalf || selectedCategory.lowercased().contains("breeding"),
             selectedSaleyard: selectedSaleyard ?? prefs.defaultSaleyard
         )
         
         herd.paddockName = paddockName.isEmpty ? nil : paddockName
-        herd.isPregnant = isBreeder && isPregnant
+        herd.isPregnant = inCalf
         if herd.isPregnant {
             herd.joinedDate = joinedDate
-            herd.calvingRate = calvingRate
+            herd.calvingRate = Double(calvingRate) / 100.0
         }
         
         modelContext.insert(herd)

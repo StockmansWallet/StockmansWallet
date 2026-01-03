@@ -356,38 +356,32 @@ struct AddHerdFlowView: View {
                 .font(Theme.headline)
                 .foregroundStyle(Theme.primaryText)
             
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Calving Rate")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    Picker("Calving Rate", selection: $calvingRate) {
-                        ForEach(0...100, id: \.self) { value in
-                            Text("\(value)").tag(value)
-                        }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(height: 80)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .accessibilityLabel("Calving rate")
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Calving Rate: \(calvingRate)%")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.secondaryText)
+                HStack {
+                    Slider(value: Binding(
+                        get: { Double(calvingRate) },
+                        set: { calvingRate = Int($0) }
+                    ), in: 50...100, step: 1)
+                    Text("\(calvingRate)%")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                        .frame(width: 60)
                 }
-                .frame(maxWidth: .infinity)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Joined Date")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    DatePicker("", selection: $joinedDate, displayedComponents: .date)
-                        .datePickerStyle(.compact)
-                        .labelsHidden()
-                        .frame(height: 80)
-                        .background(Theme.inputFieldBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .accessibilityLabel("Joined date")
-                }
-                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .accessibilityLabel("Calving rate")
             }
+            
+            DatePicker("Joined Date", selection: $joinedDate, displayedComponents: .date)
+                .datePickerStyle(.compact)
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .accessibilityLabel("Joined date")
             
             Toggle(isOn: $inCalf) {
                 Text("In Calf")
