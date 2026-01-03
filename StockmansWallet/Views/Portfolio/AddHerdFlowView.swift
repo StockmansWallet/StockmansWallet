@@ -159,6 +159,7 @@ struct AddHerdFlowView: View {
                 }
                 
                 // Bottom controls
+                // Debug: No background on bottom controls for cleaner design (like onboarding pages)
                 VStack(spacing: 16) {
                     // Debug: Using Theme.PrimaryButtonStyle for iOS 26 HIG compliance (52pt height, proper styling)
                     Button(action: {
@@ -190,7 +191,6 @@ struct AddHerdFlowView: View {
                     }
                     .padding(.bottom, 20)
                 }
-                .background(Theme.inputFieldBackground)
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $showingBreedPicker) {
@@ -244,7 +244,7 @@ struct AddHerdFlowView: View {
                 Text("Herd Name")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
-                TextField("e.g., North Paddock Mob", text: $herdName)
+                TextField("e.g. North Paddock Herd", text: $herdName)
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .accessibilityLabel("Herd name")
             }
@@ -258,7 +258,7 @@ struct AddHerdFlowView: View {
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                 }
-                TextField("e.g., North Paddock", text: $paddockLocation)
+                TextField("e.g. North Paddock", text: $paddockLocation)
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .accessibilityLabel("Paddock location")
             }
