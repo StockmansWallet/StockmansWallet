@@ -50,7 +50,7 @@ struct WelcomeFeaturesPage: View {
                             } else {
                                 // Lottie animation layer
                                 LottieView(
-                                    animationName: "sw_logoanim_c",
+                                    animationName: "sw_logoanim",
                                     isPlaying: $playLogo
                                 )
                                 .allowsHitTesting(false)

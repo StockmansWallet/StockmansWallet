@@ -144,10 +144,7 @@ struct SubscriptionView: View {
     // MARK: - Header View
     private var headerView: some View {
         VStack(spacing: 12) {
-            // Icon
-            Image(systemName: userPrefs.userRole == .farmerGrazier ? "star.circle.fill" : "checkmark.seal.fill")
-                .font(.system(size: 56))
-                .foregroundStyle(Theme.accent)
+          
             
             Text(userPrefs.userRole == .farmerGrazier ? "Choose Your Plan" : "You're All Set!")
                 .font(.system(size: 28, weight: .bold))
