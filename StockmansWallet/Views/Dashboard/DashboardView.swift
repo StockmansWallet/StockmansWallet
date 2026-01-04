@@ -669,9 +669,7 @@ struct PortfolioValueCard: View {
             // Debug: Always show the number - never hide it with ProgressView
             // Use pulsing effect (isUpdating) to indicate loading instead
             AnimatedCurrencyValue(
-                value: value,
-                isScrubbing: isScrubbing, // Debug: Enable animation during chart scrubbing
-                animationDuration: 0.2 // Smooth transitions during scrubbing
+                value: value
             )
                 .padding(.bottom, 8)
                 // Debug: Pulse/glow effect during value update (crypto-style)
@@ -709,50 +707,29 @@ struct PortfolioValueCard: View {
     }
 }
 
-// MARK: - Animated Currency Value with Native SwiftUI Animations
-// Optimized for 60fps performance during chart scrubbing and value updates
+// MARK: - Animated Currency Value with Native iOS Animation
+// Uses pure SwiftUI .contentTransition(.numericText()) - no custom timing or hacks
 struct AnimatedCurrencyValue: View {
     let value: Double
-    let isScrubbing: Bool
-    var animationDuration: Double = 0.2 // Default duration for value update animations
     @State private var previousValue: Double = 0.0
-    @State private var initialLoad = true
+    
+    // Performance: Reuse formatter instead of creating new one on every render
+    private static let numberFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        formatter.maximumFractionDigits = 0
+        formatter.groupingSeparator = ","
+        formatter.usesGroupingSeparator = true
+        return formatter
+    }()
     
     // Determine if value is decreasing for reverse spin animation
     private var isDecreasing: Bool {
         return value < previousValue
     }
     
-    // Optimized animation duration: fast during scrubbing (60fps), smooth during updates
-    private var optimizedDuration: Double {
-        if isScrubbing {
-            // Ultra-fast animation during scrubbing for instant 60fps feel
-            return 0.05
-        } else {
-            // Smooth animation for value updates
-            return animationDuration
-        }
-    }
-    
-    // Optimized animation curve: linear during scrubbing, easeInOut for updates
-    private var animationCurve: Animation {
-        if isScrubbing {
-            // Linear for scrubbing = instant response, no easing lag
-            return .linear(duration: optimizedDuration)
-        } else {
-            // EaseInOut for smooth value updates
-            return .easeInOut(duration: optimizedDuration)
-        }
-    }
-    
     private var formattedValue: (whole: String, decimal: String) {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .decimal
-        formatter.maximumFractionDigits = 0
-        formatter.groupingSeparator = ","
-        formatter.usesGroupingSeparator = true
-        
-        let whole = formatter.string(from: NSNumber(value: abs(value))) ?? "0"
+        let whole = Self.numberFormatter.string(from: NSNumber(value: abs(value))) ?? "0"
         let decimal = String(format: "%02d", Int((abs(value) - floor(abs(value))) * 100))
         
         return (whole: whole, decimal: decimal)
@@ -768,26 +745,16 @@ struct AnimatedCurrencyValue: View {
                 .padding(.trailing, 8)
                 .accessibilityHidden(true)
             
-            // Native SwiftUI numeric animation with optimized timing
-            // Uses .contentTransition(.numericText()) for smooth digit rolling
+            // Native iOS animation - .contentTransition(.numericText()) handles everything automatically
             // Spin down when decreasing, spin up when increasing
-            let useAnimations = !UIAccessibility.isReduceMotionEnabled
-            
             Text(formattedValue.whole)
                 .font(.system(size: 50, weight: .bold))
                 .monospacedDigit()
                 .foregroundStyle(.white)
                 .tracking(-2)
-                .fixedSize() // Prevents layout shift during digit rolling animation
-                .if(useAnimations) { view in
-                    view
-                        .contentTransition(.numericText(countsDown: isDecreasing))
-                        .transaction { transaction in
-                            // Transaction-based animation prevents stacking during rapid updates
-                            transaction.animation = animationCurve
-                        }
-                        .animation(animationCurve, value: formattedValue.whole)
-                }
+                .fixedSize()
+                .contentTransition(.numericText(countsDown: isDecreasing))
+                .animation(.default, value: formattedValue.whole)
             
             Text(".")
                 .font(.system(size: 18, weight: .bold))
@@ -800,16 +767,9 @@ struct AnimatedCurrencyValue: View {
                 .monospacedDigit()
                 .foregroundStyle(.white.opacity(0.6))
                 .tracking(-1)
-                .fixedSize() // Prevents layout shift during digit rolling animation
-                .if(useAnimations) { view in
-                    view
-                        .contentTransition(.numericText(countsDown: isDecreasing))
-                        .transaction { transaction in
-                            // Transaction-based animation prevents stacking during rapid updates
-                            transaction.animation = animationCurve
-                        }
-                        .animation(animationCurve, value: formattedValue.decimal)
-                }
+                .fixedSize()
+                .contentTransition(.numericText(countsDown: isDecreasing))
+                .animation(.default, value: formattedValue.decimal)
         }
         // Padding gives the digit rolling animation room to render without clipping
         .padding(.vertical, 8)
@@ -820,17 +780,9 @@ struct AnimatedCurrencyValue: View {
         }
         .onAppear {
             previousValue = value
-            initialLoad = false
         }
         .accessibilityLabel("Portfolio value")
         .accessibilityValue(value.formatted(.currency(code: "AUD")))
-    }
-}
-
-// Small helper to conditionally apply modifiers.
-private extension View {
-    @ViewBuilder func `if`<Content: View>(_ condition: Bool, transform: (Self) -> Content) -> some View {
-        if condition { transform(self) } else { self }
     }
 }
 
