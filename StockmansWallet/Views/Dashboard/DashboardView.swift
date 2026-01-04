@@ -803,7 +803,6 @@ struct InteractiveChartView: View {
     let baseValue: Double
     let onValueChange: (Double, Double) -> Void
     
-    @State private var dragLocation: CGPoint?
     @State private var scrubberX: CGFloat?
     @State private var chartRevealProgress: CGFloat = 0.0
     @State private var pillScale: CGFloat = 0.0
@@ -814,6 +813,35 @@ struct InteractiveChartView: View {
     @State private var sortedData: [ValuationDataPoint] = []
     
     private let gridSpacing: CGFloat = 50
+    
+    // Performance: Binary search for fast data point lookup during scrubbing (O(log n) vs O(n))
+    private func findSurroundingPoints(for date: Date, in sorted: [ValuationDataPoint]) -> (before: ValuationDataPoint?, after: ValuationDataPoint?) {
+        guard !sorted.isEmpty else { return (nil, nil) }
+        
+        // Binary search to find insertion point
+        var left = 0
+        var right = sorted.count - 1
+        
+        while left <= right {
+            let mid = (left + right) / 2
+            let midDate = sorted[mid].date
+            
+            if midDate < date {
+                left = mid + 1
+            } else if midDate > date {
+                right = mid - 1
+            } else {
+                // Exact match
+                return (sorted[mid], mid + 1 < sorted.count ? sorted[mid + 1] : nil)
+            }
+        }
+        
+        // left is now the insertion point
+        let before = right >= 0 ? sorted[right] : nil
+        let after = left < sorted.count ? sorted[left] : nil
+        
+        return (before, after)
+    }
     
     private var timeRangeSelector: some View {
         HStack {
@@ -1037,8 +1065,12 @@ struct InteractiveChartView: View {
                                             .onChanged { value in
                                                 guard !data.isEmpty else { return }
                                                 
+                                                // Performance: Set scrubbing state once at start of gesture
+                                                if !isScrubbing {
+                                                    isScrubbing = true
+                                                }
+                                                
                                                 let location = value.location
-                                                self.dragLocation = location
                                                 
                                                 if let date: Date = proxy.value(atX: location.x) {
                                                     // Performance: Use cached sorted array instead of sorting on every drag event
@@ -1055,7 +1087,6 @@ struct InteractiveChartView: View {
                                                             } else {
                                                                 scrubberX = location.x
                                                             }
-                                                            isScrubbing = true
                                                             onValueChange(first.value, first.value - baseValue)
                                                             return
                                                         }
@@ -1067,22 +1098,12 @@ struct InteractiveChartView: View {
                                                             } else {
                                                                 scrubberX = location.x
                                                             }
-                                                            isScrubbing = true
                                                             onValueChange(last.value, last.value - baseValue)
                                                             return
                                                         }
                                                         
-                                                        var before: ValuationDataPoint?
-                                                        var after: ValuationDataPoint?
-                                                        
-                                                        for i in 0..<sorted.count {
-                                                            if sorted[i].date <= date {
-                                                                before = sorted[i]
-                                                            } else {
-                                                                after = sorted[i]
-                                                                break
-                                                            }
-                                                        }
+                                                        // Performance: Binary search instead of linear search (O(log n) vs O(n))
+                                                        let (before, after) = findSurroundingPoints(for: date, in: sorted)
                                                         
                                                         if let b = before, let a = after {
                                                             let timeDiff = a.date.timeIntervalSince(b.date)
@@ -1103,7 +1124,6 @@ struct InteractiveChartView: View {
                                                                 scrubberX = location.x
                                                             }
                                                             
-                                                            isScrubbing = true
                                                             onValueChange(interpolated, interpolated - baseValue)
                                                         }
                                                     }
