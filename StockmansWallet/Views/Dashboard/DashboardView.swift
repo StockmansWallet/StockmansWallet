@@ -203,7 +203,7 @@ struct DashboardView: View {
                     isUpdating: isUpdatingValue
                 )
                 .padding(.horizontal, Theme.cardPadding)
-                .padding(.top, 20) 
+                .padding(.top, 30) 
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Total portfolio value")
                 .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
@@ -217,7 +217,7 @@ struct DashboardView: View {
                 VStack(spacing: 0) {
                     // Debug: Top spacing to position content panel lower and clear the fixed header
                     Color.clear
-                        .frame(height: 220) // Adjust this to control how much background shows
+                        .frame(height: 230) // Adjust this to control how much background shows
                     
                     contentPanel
                 }
@@ -710,16 +710,39 @@ struct PortfolioValueCard: View {
 }
 
 // MARK: - Animated Currency Value with Native SwiftUI Animations
+// Optimized for 60fps performance during chart scrubbing and value updates
 struct AnimatedCurrencyValue: View {
     let value: Double
     let isScrubbing: Bool
-    var animationDuration: Double = 0.2 // Debug: Custom duration for value update animations
+    var animationDuration: Double = 0.2 // Default duration for value update animations
     @State private var previousValue: Double = 0.0
     @State private var initialLoad = true
     
-    // Debug: Determine if value is decreasing for reverse spin animation
+    // Determine if value is decreasing for reverse spin animation
     private var isDecreasing: Bool {
         return value < previousValue
+    }
+    
+    // Optimized animation duration: fast during scrubbing (60fps), smooth during updates
+    private var optimizedDuration: Double {
+        if isScrubbing {
+            // Ultra-fast animation during scrubbing for instant 60fps feel
+            return 0.05
+        } else {
+            // Smooth animation for value updates
+            return animationDuration
+        }
+    }
+    
+    // Optimized animation curve: linear during scrubbing, easeInOut for updates
+    private var animationCurve: Animation {
+        if isScrubbing {
+            // Linear for scrubbing = instant response, no easing lag
+            return .linear(duration: optimizedDuration)
+        } else {
+            // EaseInOut for smooth value updates
+            return .easeInOut(duration: optimizedDuration)
+        }
     }
     
     private var formattedValue: (whole: String, decimal: String) {
@@ -745,7 +768,8 @@ struct AnimatedCurrencyValue: View {
                 .padding(.trailing, 8)
                 .accessibilityHidden(true)
             
-            // Debug: Always use native SwiftUI numeric animation (same animation for scrubbing and value updates)
+            // Native SwiftUI numeric animation with optimized timing
+            // Uses .contentTransition(.numericText()) for smooth digit rolling
             // Spin down when decreasing, spin up when increasing
             let useAnimations = !UIAccessibility.isReduceMotionEnabled
             
@@ -754,10 +778,15 @@ struct AnimatedCurrencyValue: View {
                 .monospacedDigit()
                 .foregroundStyle(.white)
                 .tracking(-2)
+                .fixedSize() // Prevents layout shift during digit rolling animation
                 .if(useAnimations) { view in
                     view
                         .contentTransition(.numericText(countsDown: isDecreasing))
-                        .animation(.easeInOut(duration: animationDuration), value: formattedValue.whole)
+                        .transaction { transaction in
+                            // Transaction-based animation prevents stacking during rapid updates
+                            transaction.animation = animationCurve
+                        }
+                        .animation(animationCurve, value: formattedValue.whole)
                 }
             
             Text(".")
@@ -771,13 +800,20 @@ struct AnimatedCurrencyValue: View {
                 .monospacedDigit()
                 .foregroundStyle(.white.opacity(0.6))
                 .tracking(-1)
+                .fixedSize() // Prevents layout shift during digit rolling animation
                 .if(useAnimations) { view in
                     view
                         .contentTransition(.numericText(countsDown: isDecreasing))
-                        .animation(.easeInOut(duration: animationDuration), value: formattedValue.decimal)
+                        .transaction { transaction in
+                            // Transaction-based animation prevents stacking during rapid updates
+                            transaction.animation = animationCurve
+                        }
+                        .animation(animationCurve, value: formattedValue.decimal)
                 }
         }
-        // Debug: No scale/opacity animation - value always stays at full visibility
+        // Padding gives the digit rolling animation room to render without clipping
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
         .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 4)
         .onChange(of: value) { oldValue, newValue in
             previousValue = oldValue
@@ -820,6 +856,10 @@ struct InteractiveChartView: View {
     @State private var chartRevealProgress: CGFloat = 0.0
     @State private var pillScale: CGFloat = 0.0
     @State private var pillOpacity: Double = 0.0
+    
+    // Performance optimization: Cache sorted data to avoid sorting on every drag event (60fps)
+    // This dramatically improves scrubbing performance by sorting once instead of 60 times/second
+    @State private var sortedData: [ValuationDataPoint] = []
     
     private let gridSpacing: CGFloat = 50
     
@@ -1049,7 +1089,8 @@ struct InteractiveChartView: View {
                                                 self.dragLocation = location
                                                 
                                                 if let date: Date = proxy.value(atX: location.x) {
-                                                    let sorted = data.sorted { $0.date < $1.date }
+                                                    // Performance: Use cached sorted array instead of sorting on every drag event
+                                                    let sorted = sortedData
                                                     
                                                     if let plotFrameAnchor = proxy.plotFrame {
                                                         let plotFrame = geo[plotFrameAnchor]
@@ -1172,6 +1213,9 @@ struct InteractiveChartView: View {
             .padding(.bottom, 4)
         }
         .onAppear {
+            // Performance: Initialize sorted data cache for smooth scrubbing
+            sortedData = data.sorted { $0.date < $1.date }
+            
             chartRevealProgress = 0
             if UIAccessibility.isReduceMotionEnabled {
                 chartRevealProgress = 1.0
@@ -1182,6 +1226,9 @@ struct InteractiveChartView: View {
             }
         }
         .onChange(of: data.count) { _, _ in
+            // Performance: Update sorted data cache when data changes
+            sortedData = data.sorted { $0.date < $1.date }
+            
             chartRevealProgress = 0
             if UIAccessibility.isReduceMotionEnabled {
                 chartRevealProgress = 1.0
