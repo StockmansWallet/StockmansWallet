@@ -402,7 +402,18 @@ struct DashboardView: View {
         // Debug: Hold at old value for 2 seconds with pulse/glow
         try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
         
-        print("💰 Step 3: Counting from \(lastValue) to \(newValue)")
+        print("💰 Step 3: Stopping pulse before counting begins")
+        // Debug: Turn off pulsing BEFORE the number changes (per user requirement)
+        await MainActor.run {
+            withAnimation(.easeOut(duration: 0.3)) {
+                isUpdatingValue = false
+            }
+        }
+        
+        // Debug: Brief delay to let the glow fade out
+        try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+        
+        print("💰 Step 4: Counting from \(lastValue) to \(newValue)")
         // Debug: Odometer-style counter that increments through intermediate values
         // This makes lower digits spin faster than higher digits (natural counting effect)
         let duration: TimeInterval = 1.0 // Total animation duration in seconds
@@ -433,19 +444,7 @@ struct DashboardView: View {
         await MainActor.run {
             displayValue = newValue
         }
-        print("💰 Counting complete!")
-        
-        print("💰 Step 4: Fading out glow after 0.3s...")
-        // Debug: Brief pause before fading out glow
-        try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
-        
-        print("💰 Step 5: Fading out glow")
-        await MainActor.run {
-            withAnimation(.easeOut(duration: 0.3)) {
-                isUpdatingValue = false
-            }
-        }
-        print("💰 Animation complete!")
+        print("💰 Counting complete! Animation finished.")
     }
     
     // Debug: Async data loading with proper error handling
@@ -698,8 +697,8 @@ struct PortfolioValueCard: View {
             } else {
                 AnimatedCurrencyValue(
                     value: value,
-                    isScrubbing: isScrubbing || isUpdating, // Debug: Enable animation during both scrubbing and counting
-                    animationDuration: isUpdating ? 0.05 : 0.2 // Very fast transitions during counting, normal during scrubbing
+                    isScrubbing: isScrubbing, // Debug: Enable animation during chart scrubbing
+                    animationDuration: 0.2 // Smooth transitions during scrubbing
                 )
                     .padding(.bottom, 8)
                     // Debug: Pulse/glow effect during value update (crypto-style)
