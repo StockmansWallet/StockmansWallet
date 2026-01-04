@@ -19,6 +19,10 @@ struct WelcomeFeaturesPage: View {
     
     // Start child motion only after parent fade
     var introComplete: Bool = true
+    
+    // Debug: TEMPORARY - Skip onboarding callbacks for development (DELETE BEFORE LAUNCH)
+    var onSkipAsFarmer: (() -> Void)? = nil
+    var onSkipAsAdvisor: (() -> Void)? = nil
 
     @State private var step: OnboardingStep = .landing
     @State private var showHeaderText = false
@@ -33,6 +37,52 @@ struct WelcomeFeaturesPage: View {
             // Debug: Standardized gradient background from Theme (Rule #0: avoid duplication)
             Theme.backgroundGradient
                 .ignoresSafeArea()
+            
+            // TEMPORARY: Dev skip buttons for Farmer/Advisor testing (DELETE BEFORE LAUNCH) ⚠️
+            VStack {
+                HStack(spacing: 8) {
+                    Spacer()
+                    
+                    // Debug: Skip as Farmer - goes to farmer dashboard
+                    Button(action: {
+                        HapticManager.tap()
+                        onSkipAsFarmer?()
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "figure.walk")
+                                .font(.system(size: 10))
+                            Text("Farmer")
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.green.opacity(0.15))
+                        .clipShape(Capsule())
+                    }
+                    
+                    // Debug: Skip as Advisor - goes to advisory dashboard
+                    Button(action: {
+                        HapticManager.tap()
+                        onSkipAsAdvisor?()
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "briefcase.fill")
+                                .font(.system(size: 10))
+                            Text("Advisor")
+                                .font(.caption2)
+                        }
+                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color.blue.opacity(0.15))
+                        .clipShape(Capsule())
+                    }
+                }
+                .padding(.top, 50)
+                .padding(.trailing, 20)
+                Spacer()
+            }
 
             GeometryReader { geometry in
                 VStack(spacing: 0) {

@@ -96,6 +96,11 @@ final class UserPreferences {
     var backgroundImageName: String? // Name of selected background image (asset name or custom filename)
     var isCustomBackground: Bool // Debug: True if background is a custom uploaded image
     
+    // MARK: - Dashboard State
+    // Debug: Store last known portfolio value for "crypto-style" value reveal on dashboard load
+    var lastPortfolioValue: Double // Last calculated portfolio value
+    var lastPortfolioUpdateDate: Date? // When the value was last updated
+    
     init() {
         self.id = UUID()
         self.hasCompletedOnboarding = false
@@ -132,6 +137,8 @@ final class UserPreferences {
         self.dateFormat = "dd/MM/yyyy"
         self.backgroundImageName = "BackgroundDefault" // Default background image
         self.isCustomBackground = false // Debug: Default to built-in asset
+        self.lastPortfolioValue = 0.0 // Debug: Start at 0, will be updated after first calculation
+        self.lastPortfolioUpdateDate = nil // Debug: No previous update
     }
     
     // Helper to get/set role as enum

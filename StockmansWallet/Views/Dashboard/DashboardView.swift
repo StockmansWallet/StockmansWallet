@@ -36,6 +36,18 @@ struct DashboardView: View {
     @State private var totalCostToCarry: Double = 0.0
     @State private var performanceMetrics: PerformanceMetrics?
     
+    // Debug: Crypto-style value reveal - show last known value briefly before updating
+    @State private var displayValue: Double = 0.0 {
+        didSet {
+            print("💰 displayValue changed: \(oldValue) → \(displayValue)")
+        }
+    }
+    @State private var isUpdatingValue: Bool = false {
+        didSet {
+            print("💰 isUpdatingValue changed: \(oldValue) → \(isUpdatingValue)")
+        }
+    }
+    
     // Debug: Dynamic change values for each time range (like CoinSpot)
     @State private var timeRangeChange: Double = 0.0
     
@@ -62,6 +74,11 @@ struct DashboardView: View {
         
         contentWithNav
             .task {
+                // Debug: Initialize displayValue with last known value before loading
+                let prefs = preferences.first ?? UserPreferences()
+                displayValue = prefs.lastPortfolioValue
+                print("💰 Initial displayValue set to: \(displayValue) (from prefs.lastPortfolioValue)")
+                
                 await loadValuations()
             }
             .refreshable {
@@ -179,11 +196,11 @@ struct DashboardView: View {
             // Debug: Fixed portfolio value - stays in place while content scrolls over it
             VStack {
                 PortfolioValueCard(
-                    value: selectedValue ?? portfolioValue,
+                    value: selectedValue ?? displayValue,
                     change: isScrubbing ? portfolioChange : timeRangeChange,
                     isLoading: isLoading,
-                    isScrubbing: isScrubbing
-                  
+                    isScrubbing: isScrubbing,
+                    isUpdating: isUpdatingValue
                 )
                 .padding(.horizontal, Theme.cardPadding)
                 .padding(.top, 20) 
@@ -351,8 +368,89 @@ struct DashboardView: View {
         timeRangeChange = portfolioValue - firstValue
     }
     
+    // Debug: Crypto-style value reveal - show last value, hold for 1 second, then animate to new value
+    // Only triggers when value has changed (new herd, sold animal, app launch, etc.)
+    // Uses the same smooth numeric animation as chart scrubbing
+    private func updateDisplayValueWithDelay(newValue: Double, lastValue: Double) async {
+        print("💰 updateDisplayValueWithDelay: lastValue=\(lastValue), newValue=\(newValue), diff=\(abs(newValue - lastValue))")
+        
+        // Debug: Check if value has actually changed (threshold of $1 to avoid floating point issues)
+        guard abs(newValue - lastValue) > 1.0 else {
+            print("💰 No significant change, updating immediately")
+            // No significant change, update immediately
+            await MainActor.run {
+                displayValue = newValue
+            }
+            return
+        }
+        
+        print("💰 Step 1: Showing last value \(lastValue)")
+        // Debug: Show last known value first
+        await MainActor.run {
+            displayValue = lastValue
+        }
+        
+        // Debug: Small delay to ensure the UI renders with the old value
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        
+        print("💰 Step 2: Starting pulse/glow and holding for 2 seconds...")
+        // Debug: Enable glow while holding at old value
+        await MainActor.run {
+            isUpdatingValue = true
+        }
+        
+        // Debug: Hold at old value for 2 seconds with pulse/glow
+        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        
+        print("💰 Step 3: Counting from \(lastValue) to \(newValue)")
+        // Debug: Odometer-style counter that increments through intermediate values
+        // This makes lower digits spin faster than higher digits (natural counting effect)
+        let duration: TimeInterval = 1.0 // Total animation duration in seconds
+        let targetFPS = 60.0 // Target frame rate
+        let totalFrames = Int(duration * targetFPS)
+        let difference = newValue - lastValue
+        let frameDelay = UInt64(duration * 1_000_000_000 / Double(totalFrames)) // Nanoseconds per frame
+        
+        // Debug: Increment through values to create odometer effect
+        for frame in 1...totalFrames {
+            let progress = Double(frame) / Double(totalFrames)
+            // Use easeInOut curve for natural acceleration/deceleration
+            let easedProgress = progress < 0.5 
+                ? 2 * progress * progress 
+                : 1 - pow(-2 * progress + 2, 2) / 2
+            let currentValue = lastValue + (difference * easedProgress)
+            
+            await MainActor.run {
+                displayValue = currentValue
+            }
+            
+            if frame < totalFrames {
+                try? await Task.sleep(nanoseconds: frameDelay)
+            }
+        }
+        
+        // Debug: Ensure we end exactly on the target value
+        await MainActor.run {
+            displayValue = newValue
+        }
+        print("💰 Counting complete!")
+        
+        print("💰 Step 4: Fading out glow after 0.3s...")
+        // Debug: Brief pause before fading out glow
+        try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
+        
+        print("💰 Step 5: Fading out glow")
+        await MainActor.run {
+            withAnimation(.easeOut(duration: 0.3)) {
+                isUpdatingValue = false
+            }
+        }
+        print("💰 Animation complete!")
+    }
+    
     // Debug: Async data loading with proper error handling
     private func loadValuations() async {
+        print("💰 loadValuations() called")
         await MainActor.run {
             self.isLoading = true
             self.loadError = nil
@@ -368,6 +466,7 @@ struct DashboardView: View {
         guard !activeHerds.isEmpty else {
             await MainActor.run {
                 self.portfolioValue = 0.0
+                self.displayValue = 0.0 // Debug: No delay for empty state
                 self.baseValue = 0.0
                 self.valuationHistory = []
                 self.capitalConcentration = []
@@ -463,6 +562,9 @@ struct DashboardView: View {
         let totalChange = valuations - initialValue
         let percentChange = initialValue > 0 ? (totalChange / initialValue) * 100 : 0.0
         
+        // Debug: Get last known portfolio value for crypto-style reveal
+        let lastKnownValue = prefs.lastPortfolioValue
+        
         // Debug: Update UI state on main actor
         await MainActor.run {
             self.portfolioValue = valuations
@@ -482,7 +584,20 @@ struct DashboardView: View {
         
         HapticManager.tap()
         
-        // Debug: Load historical data in background (lower priority)
+        // Debug: Crypto-style value reveal - run in parallel so it doesn't block chart loading
+        print("💰 Starting value animation in parallel with chart loading")
+        Task {
+            await updateDisplayValueWithDelay(newValue: valuations, lastValue: lastKnownValue)
+            
+            // Debug: Save new portfolio value to preferences AFTER animation completes
+            await MainActor.run {
+                prefs.lastPortfolioValue = valuations
+                prefs.lastPortfolioUpdateDate = Date()
+                print("💰 Saved new portfolio value to preferences: \(valuations)")
+            }
+        }
+        
+        // Debug: Load historical data immediately (doesn't wait for value animation)
         Task(priority: .utility) {
             let freshHerds = self.herds
             let freshActiveHerds = freshHerds.filter { !$0.isSold }
@@ -567,6 +682,7 @@ struct PortfolioValueCard: View {
     let change: Double
     let isLoading: Bool
     let isScrubbing: Bool
+    let isUpdating: Bool // Debug: Pulse/glow state during value transition
     
     var body: some View {
         VStack(spacing: 0) {
@@ -580,8 +696,22 @@ struct PortfolioValueCard: View {
                 ProgressView()
                     .tint(Theme.accent)
             } else {
-                AnimatedCurrencyValue(value: value, isScrubbing: isScrubbing)
+                AnimatedCurrencyValue(
+                    value: value,
+                    isScrubbing: isScrubbing || isUpdating, // Debug: Enable animation during both scrubbing and counting
+                    animationDuration: isUpdating ? 0.05 : 0.2 // Very fast transitions during counting, normal during scrubbing
+                )
                     .padding(.bottom, 8)
+                    // Debug: Pulse/glow effect during value update (crypto-style)
+                    .shadow(
+                        color: isUpdating ? Theme.accent.opacity(0.6) : .clear,
+                        radius: isUpdating ? 20 : 0
+                    )
+                    .shadow(
+                        color: isUpdating ? Theme.accent.opacity(0.4) : .clear,
+                        radius: isUpdating ? 40 : 0
+                    )
+                    .animation(.easeInOut(duration: 0.8).repeatCount(3, autoreverses: true), value: isUpdating)
             }
             
             if !isLoading {
@@ -615,10 +745,9 @@ struct PortfolioValueCard: View {
 struct AnimatedCurrencyValue: View {
     let value: Double
     let isScrubbing: Bool
+    var animationDuration: Double = 0.2 // Debug: Custom duration for value update animations
     @State private var previousValue: Double = 0.0
     @State private var initialLoad = true
-    @State private var scale: CGFloat = 0.8
-    @State private var opacity: Double = 0.0
     
     private var formattedValue: (whole: String, decimal: String) {
         let formatter = NumberFormatter()
@@ -653,7 +782,7 @@ struct AnimatedCurrencyValue: View {
                 .if(useAnimations) { view in
                     view
                         .contentTransition(.numericText())
-                        .animation(.easeInOut(duration: 0.2), value: formattedValue.whole)
+                        .animation(.easeInOut(duration: animationDuration), value: formattedValue.whole)
                 }
             
             Text(".")
@@ -670,29 +799,17 @@ struct AnimatedCurrencyValue: View {
                 .if(useAnimations) { view in
                     view
                         .contentTransition(.numericText())
-                        .animation(.easeInOut(duration: 0.2), value: formattedValue.decimal)
+                        .animation(.easeInOut(duration: animationDuration), value: formattedValue.decimal)
                 }
         }
-        .scaleEffect(scale)
-        .opacity(opacity)
+        // Debug: No scale/opacity animation - value always stays at full visibility
         .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 4)
         .onChange(of: value) { oldValue, newValue in
             previousValue = oldValue
         }
         .onAppear {
             previousValue = value
-            if initialLoad {
-                if UIAccessibility.isReduceMotionEnabled {
-                    scale = 1.0
-                    opacity = 1.0
-                } else {
-                    withAnimation(.spring(response: 0.5, dampingFraction: 0.7)) {
-                        scale = 1.0
-                        opacity = 1.0
-                    }
-                }
-                initialLoad = false
-            }
+            initialLoad = false
         }
         .accessibilityLabel("Portfolio value")
         .accessibilityValue(value.formatted(.currency(code: "AUD")))

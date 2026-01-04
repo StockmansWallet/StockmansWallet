@@ -41,7 +41,10 @@ struct OnboardingView: View {
                         onboardingStep: $onboardingStep,
                         showingSignIn: $showingSignIn,
                         // Pass down intro completion so Lottie can start after fade
-                        introComplete: introComplete
+                        introComplete: introComplete,
+                        // Debug: TEMPORARY - Skip onboarding for development (DELETE BEFORE LAUNCH) ⚠️
+                        onSkipAsFarmer: skipAsFarmerForDev,
+                        onSkipAsAdvisor: skipAsAdvisorForDev
                     )
                     
                 case .signIn:
@@ -199,6 +202,40 @@ struct OnboardingView: View {
             existing.truckItEnabled = userPrefs.truckItEnabled
             existing.xeroConnected = userPrefs.xeroConnected
             existing.myobConnected = userPrefs.myobConnected
+        }
+        
+        try? modelContext.save()
+    }
+    
+    // Debug: TEMPORARY - Skip onboarding as Farmer for development testing (DELETE BEFORE LAUNCH) ⚠️
+    // This allows quick access to the farmer dashboard without going through onboarding
+    private func skipAsFarmerForDev() {
+        HapticManager.tap()
+        userPrefs.hasCompletedOnboarding = true
+        userPrefs.role = UserRole.farmerGrazier.rawValue // Set as farmer
+        
+        if preferences.isEmpty {
+            modelContext.insert(userPrefs)
+        } else if let existing = preferences.first {
+            existing.hasCompletedOnboarding = true
+            existing.role = UserRole.farmerGrazier.rawValue
+        }
+        
+        try? modelContext.save()
+    }
+    
+    // Debug: TEMPORARY - Skip onboarding as Advisor for development testing (DELETE BEFORE LAUNCH) ⚠️
+    // This allows quick access to the advisory dashboard without going through onboarding
+    private func skipAsAdvisorForDev() {
+        HapticManager.tap()
+        userPrefs.hasCompletedOnboarding = true
+        userPrefs.role = UserRole.livestockAgent.rawValue // Set as advisory user (livestock agent)
+        
+        if preferences.isEmpty {
+            modelContext.insert(userPrefs)
+        } else if let existing = preferences.first {
+            existing.hasCompletedOnboarding = true
+            existing.role = UserRole.livestockAgent.rawValue
         }
         
         try? modelContext.save()
