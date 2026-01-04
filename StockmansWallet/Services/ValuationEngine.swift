@@ -116,12 +116,14 @@ class ValuationEngine {
     
     // MARK: - Complete Valuation
     /// Calculates total portfolio value for a herd group
+    /// Debug: Supports optional saleyard override for dashboard-level price filtering
     @MainActor
     func calculateHerdValue(
         herd: HerdGroup,
         preferences: UserPreferences,
         modelContext: ModelContext,
-        asOfDate: Date = Date()
+        asOfDate: Date = Date(),
+        saleyardOverride: String? = nil
     ) async -> HerdValuation {
         // 1. Calculate projected weight
         let projectedWeight = calculateProjectedWeight(
@@ -134,9 +136,12 @@ class ValuationEngine {
         )
         
         // 2. Get market price (use historical price if asOfDate is provided)
+        // Debug: Use saleyardOverride if provided (for dashboard comparison mode), 
+        // otherwise use herd's configured saleyard (normal operation)
+        let effectiveSaleyard = saleyardOverride ?? herd.selectedSaleyard
         let (pricePerKg, priceSource) = await getMarketPrice(
             category: herd.category,
-            saleyard: herd.selectedSaleyard,
+            saleyard: effectiveSaleyard,
             state: preferences.defaultState,
             modelContext: modelContext,
             asOfDate: asOfDate

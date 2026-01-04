@@ -36,6 +36,14 @@ struct DashboardView: View {
     @State private var totalCostToCarry: Double = 0.0
     @State private var performanceMetrics: PerformanceMetrics?
     
+    // Debug: Dynamic change values for each time range (like CoinSpot)
+    @State private var timeRangeChange: Double = 0.0
+    
+    // Debug: Saleyard override for dashboard-level pricing comparison
+    // nil = default, uses each herd's configured saleyard (normal operation)
+    // non-nil = overrides all herds to use specified saleyard (comparison mode)
+    @State private var selectedSaleyard: String? = nil
+    
     @State private var showingAddAssetMenu = false
     @State private var backgroundImageTrigger = false // Debug: Trigger to force view refresh on background change
     
@@ -50,14 +58,7 @@ struct DashboardView: View {
     private var mainContentWithModifiers: some View {
         let contentWithNav = mainContent
             .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Dashboard")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                        .accessibilityAddTraits(.isHeader)
-                }
-            }
+            
         
         contentWithNav
             .task {
@@ -85,6 +86,21 @@ struct DashboardView: View {
                 }
             }
             .onChange(of: herds.count) { _, _ in
+                Task {
+                    await loadValuations()
+                }
+            }
+            .onChange(of: timeRange) { _, _ in
+                // Debug: Update change value when time range changes (like CoinSpot)
+                updateTimeRangeChange()
+            }
+            .onChange(of: valuationHistory.count) { _, _ in
+                // Debug: Update change value when history data changes
+                updateTimeRangeChange()
+            }
+            .onChange(of: selectedSaleyard) { _, _ in
+                // Debug: Recalculate all valuations when saleyard selection changes
+                // This allows comparing portfolio value across different saleyards
                 Task {
                     await loadValuations()
                 }
@@ -164,13 +180,13 @@ struct DashboardView: View {
             VStack {
                 PortfolioValueCard(
                     value: selectedValue ?? portfolioValue,
-                    change: isScrubbing ? portfolioChange : (portfolioValue - dayAgoValue),
+                    change: isScrubbing ? portfolioChange : timeRangeChange,
                     isLoading: isLoading,
                     isScrubbing: isScrubbing
                   
                 )
                 .padding(.horizontal, Theme.cardPadding)
-                .padding(.top, 8)
+                .padding(.top, 20) 
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Total portfolio value")
                 .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
@@ -184,7 +200,7 @@ struct DashboardView: View {
                 VStack(spacing: 0) {
                     // Debug: Top spacing to position content panel lower and clear the fixed header
                     Color.clear
-                        .frame(height: 210) // Adjust this to control how much background shows
+                        .frame(height: 220) // Adjust this to control how much background shows
                     
                     contentPanel
                 }
@@ -216,6 +232,12 @@ struct DashboardView: View {
                 .padding(.top, -Theme.sectionSpacing)
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Time range selector")
+            
+            // Debug: Saleyard selector - updates valuations based on selected saleyard prices
+            SaleyardSelector(selectedSaleyard: $selectedSaleyard)
+                .padding(.horizontal, Theme.cardPadding)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Saleyard selector")
             
             QuickStatsView(herds: herds)
                 .padding(.horizontal, Theme.cardPadding)
@@ -271,6 +293,23 @@ struct DashboardView: View {
                     .ignoresSafeArea()
             }
             .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
+            // Debug: Add subtle white highlight stroke at top edge with gradient fade
+            .overlay(
+                RoundedTopCornersShape(radius: 24)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color.white.opacity(0.1),   // White highlight at top
+                                Color.white.opacity(0.1),   // Maintain through corners
+                                Color.white.opacity(0.0)    // Fade to transparent on sides
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        ),
+                        lineWidth: 1
+                    )
+                    .ignoresSafeArea()
+            )
         )
     }
     
@@ -292,6 +331,24 @@ struct DashboardView: View {
         }
         
         return valuationHistory.filter { $0.date >= cutoffDate }
+    }
+    
+    // Debug: Calculate change based on selected time range (like CoinSpot)
+    // Updates dynamically when user changes time range filter
+    private func updateTimeRangeChange() {
+        guard !valuationHistory.isEmpty else {
+            timeRangeChange = 0.0
+            return
+        }
+        
+        let filtered = filteredHistory
+        guard let firstValue = filtered.first?.value else {
+            timeRangeChange = 0.0
+            return
+        }
+        
+        // Debug: Calculate change from first point in range to current value
+        timeRangeChange = portfolioValue - firstValue
     }
     
     // Debug: Async data loading with proper error handling
@@ -317,6 +374,7 @@ struct DashboardView: View {
                 self.unrealizedGains = 0.0
                 self.totalCostToCarry = 0.0
                 self.performanceMetrics = nil
+                self.timeRangeChange = 0.0
                 self.isLoading = false
             }
             return
@@ -341,17 +399,22 @@ struct DashboardView: View {
             var results: [(netValue: Double, category: String, cost: Double, breeding: Double, initial: Double)] = []
             for herd in activeHerds {
                 group.addTask { @MainActor [modelContext] in
+                    // Debug: Pass selectedSaleyard override for comparison mode
+                    // When nil (default), uses each herd's configured saleyard
+                    // When set, overrides all herds to use that specific saleyard
                     let valuation = await self.valuationEngine.calculateHerdValue(
                         herd: herd,
                         preferences: prefs,
-                        modelContext: modelContext
+                        modelContext: modelContext,
+                        saleyardOverride: self.selectedSaleyard
                     )
                     
                     let initialValuation = await self.valuationEngine.calculateHerdValue(
                         herd: herd,
                         preferences: prefs,
                         modelContext: modelContext,
-                        asOfDate: herd.createdAt
+                        asOfDate: herd.createdAt,
+                        saleyardOverride: self.selectedSaleyard
                     )
                     
                     return (
@@ -453,11 +516,13 @@ struct DashboardView: View {
                     var totals = (physical: 0.0, breeding: 0.0, total: 0.0)
                     for herd in activeHerdsForDate {
                         group.addTask { @MainActor [modelContext] in
+                            // Debug: Apply saleyard override to historical calculations
                             let valuation = await self.valuationEngine.calculateHerdValue(
                                 herd: herd,
                                 preferences: prefs,
                                 modelContext: modelContext,
-                                asOfDate: date
+                                asOfDate: date,
+                                saleyardOverride: self.selectedSaleyard
                             )
                             return (valuation.physicalValue, valuation.breedingAccrual, valuation.netRealizableValue)
                         }
@@ -488,6 +553,8 @@ struct DashboardView: View {
             await MainActor.run {
                 self.valuationHistory = history
                 self.dayAgoValue = dayAgoDataPoint?.value ?? currentPortfolioValue
+                // Debug: Update time range change after history is loaded
+                self.updateTimeRangeChange()
                 HapticManager.success()
             }
         }
@@ -519,6 +586,7 @@ struct PortfolioValueCard: View {
             
             if !isLoading {
                 // Debug: Change ticker in glass pill with fully rounded capsule shape and dynamic tint (green/red)
+                // Updates based on selected time range (Week/Month/Year/All) like CoinSpot
                 HStack(spacing: 4) {
                     Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
                         .font(.system(size: 10, weight: .regular))
@@ -528,7 +596,7 @@ struct PortfolioValueCard: View {
                         .font(.system(size: 11, weight: .regular))
                         .monospacedDigit()
                         .foregroundStyle(change >= 0 ? .green : .red)
-                        .accessibilityLabel("Change since yesterday")
+                        .accessibilityLabel("Change for selected time range")
                         .accessibilityValue("\(change.formatted(.currency(code: "AUD")))")
                 }
                 .padding(.horizontal, 12)
@@ -607,6 +675,7 @@ struct AnimatedCurrencyValue: View {
         }
         .scaleEffect(scale)
         .opacity(opacity)
+        .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 4)
         .onChange(of: value) { oldValue, newValue in
             previousValue = oldValue
         }
@@ -1266,6 +1335,61 @@ struct ErrorStateView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.backgroundColor.ignoresSafeArea())
+    }
+}
+
+// MARK: - Saleyard Selector
+// Debug: Dropdown menu to filter portfolio valuations by specific saleyard prices
+// Default (nil) uses each herd's configured saleyard, otherwise overrides all herds
+struct SaleyardSelector: View {
+    @Binding var selectedSaleyard: String?
+    
+    var body: some View {
+        Menu {
+            // Debug: Default option - uses the saleyards configured in each herd
+            Button("Your Selected Saleyards") {
+                HapticManager.tap()
+                selectedSaleyard = nil
+            }
+            
+            Divider()
+            
+            // Debug: Show all available saleyards from reference data for comparison
+            ForEach(ReferenceData.saleyards, id: \.self) { saleyard in
+                Button(saleyard) {
+                    HapticManager.tap()
+                    selectedSaleyard = saleyard
+                }
+            }
+        } label: {
+            HStack {
+                Image(systemName: "mappin.circle.fill")
+                    .foregroundStyle(Theme.accent)
+                    .font(.system(size: 16))
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Saleyard")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.secondaryText)
+                    Text(selectedSaleyard ?? "Your Selected Saleyards")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.primaryText)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.up.chevron.down")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            .padding(16)
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .accessibilityLabel("Select saleyard")
+        .accessibilityValue(selectedSaleyard ?? "Your selected saleyards")
+        .accessibilityHint("Filter portfolio valuations by saleyard prices. Default uses each herd's configured saleyard.")
     }
 }
 

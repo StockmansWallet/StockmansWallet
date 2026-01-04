@@ -48,22 +48,24 @@ struct ParallaxImageView: View {
                 .blur(radius: blur) // Apply blur effect
                 .opacity(opacity)
                 
-                // Debug: Bottom fade gradient to hide image edge when pulled down
+                // Debug: Bottom fade gradient to blend image edge seamlessly into background
+                // Fixed 300pt gradient provides consistent, smooth transition
                 VStack(spacing: 0) {
                     Spacer()
                     
-                    // Start fade from middle-bottom area
                     LinearGradient(
                         colors: [
-                            .clear,
-                            Theme.backgroundColor.opacity(0.5),
-                            Theme.backgroundColor.opacity(0.9),
-                            Theme.backgroundColor
+                            Color.clear,                          // Transparent at top
+                            Theme.backgroundColor.opacity(0.2),   // Gentle start
+                            Theme.backgroundColor.opacity(0.5),   // Mid fade
+                            Theme.backgroundColor.opacity(0.8),   // Strong fade
+                            Theme.backgroundColor                 // Solid at bottom
                         ],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: geometry.size.height * 0.4) // Fade over bottom 40% of image
+                    .frame(height: 300)  // Fixed 300pt gradient fade zone
+                    .allowsHitTesting(false)  // Don't intercept touches
                 }
             }
         }
@@ -215,21 +217,24 @@ struct CustomParallaxImageView: View {
                 .blur(radius: blur)
                 .opacity(opacity)
                 
-                // Debug: Bottom fade gradient to hide image edge when pulled down
+                // Debug: Bottom fade gradient to blend image edge seamlessly into background
+                // Fixed 300pt gradient provides consistent, smooth transition
                 VStack(spacing: 0) {
                     Spacer()
                     
                     LinearGradient(
                         colors: [
-                            .clear,
-                            Theme.backgroundColor.opacity(0.5),
-                            Theme.backgroundColor.opacity(0.9),
-                            Theme.backgroundColor
+                            Color.clear,                          // Transparent at top
+                            Theme.backgroundColor.opacity(0.2),   // Gentle start
+                            Theme.backgroundColor.opacity(0.5),   // Mid fade
+                            Theme.backgroundColor.opacity(0.8),   // Strong fade
+                            Theme.backgroundColor                 // Solid at bottom
                         ],
                         startPoint: .top,
                         endPoint: .bottom
                     )
-                    .frame(height: geometry.size.height * 0.4)
+                    .frame(height: 300)  // Fixed 300pt gradient fade zone
+                    .allowsHitTesting(false)  // Don't intercept touches
                 }
             }
         }

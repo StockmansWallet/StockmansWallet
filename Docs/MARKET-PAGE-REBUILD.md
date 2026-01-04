@@ -443,3 +443,4 @@ All data fetching is centralized in `MarketDataService`:
 **Built with care by Claude** 🤖  
 **Ready for MLA API integration** 🚀
 
+
