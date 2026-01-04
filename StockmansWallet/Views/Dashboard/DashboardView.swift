@@ -368,9 +368,9 @@ struct DashboardView: View {
         timeRangeChange = portfolioValue - firstValue
     }
     
-    // Debug: Crypto-style value reveal - show last value, hold for 1 second, then animate to new value
+    // Debug: Value reveal - show last value, hold with pulse, then transition to new value
     // Only triggers when value has changed (new herd, sold animal, app launch, etc.)
-    // Uses the same smooth numeric animation as chart scrubbing
+    // Uses simple SwiftUI numeric text animation (same as chart scrubbing)
     private func updateDisplayValueWithDelay(newValue: Double, lastValue: Double) async {
         print("💰 updateDisplayValueWithDelay: lastValue=\(lastValue), newValue=\(newValue), diff=\(abs(newValue - lastValue))")
         
@@ -402,7 +402,7 @@ struct DashboardView: View {
         // Debug: Hold at old value for 2 seconds with pulse/glow
         try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
         
-        print("💰 Step 3: Stopping pulse before counting begins")
+        print("💰 Step 3: Stopping pulse before value changes")
         // Debug: Turn off pulsing BEFORE the number changes (per user requirement)
         await MainActor.run {
             withAnimation(.easeOut(duration: 0.3)) {
@@ -413,38 +413,13 @@ struct DashboardView: View {
         // Debug: Brief delay to let the glow fade out
         try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
         
-        print("💰 Step 4: Counting from \(lastValue) to \(newValue)")
-        // Debug: Odometer-style counter that increments through intermediate values
-        // This makes lower digits spin faster than higher digits (natural counting effect)
-        let duration: TimeInterval = 1.0 // Total animation duration in seconds
-        let targetFPS = 60.0 // Target frame rate
-        let totalFrames = Int(duration * targetFPS)
-        let difference = newValue - lastValue
-        let frameDelay = UInt64(duration * 1_000_000_000 / Double(totalFrames)) // Nanoseconds per frame
-        
-        // Debug: Increment through values to create odometer effect
-        for frame in 1...totalFrames {
-            let progress = Double(frame) / Double(totalFrames)
-            // Use easeInOut curve for natural acceleration/deceleration
-            let easedProgress = progress < 0.5 
-                ? 2 * progress * progress 
-                : 1 - pow(-2 * progress + 2, 2) / 2
-            let currentValue = lastValue + (difference * easedProgress)
-            
-            await MainActor.run {
-                displayValue = currentValue
-            }
-            
-            if frame < totalFrames {
-                try? await Task.sleep(nanoseconds: frameDelay)
-            }
-        }
-        
-        // Debug: Ensure we end exactly on the target value
+        print("💰 Step 4: Transitioning from \(lastValue) to \(newValue) using native SwiftUI animation")
+        // Debug: Simple value transition - SwiftUI's numericText animation handles the smooth transition
         await MainActor.run {
             displayValue = newValue
         }
-        print("💰 Counting complete! Animation finished.")
+        
+        print("💰 Animation complete!")
     }
     
     // Debug: Async data loading with proper error handling
@@ -691,49 +666,43 @@ struct PortfolioValueCard: View {
                 .padding(.bottom, 8)
                 .accessibilityAddTraits(.isHeader)
             
-            if isLoading {
-                ProgressView()
-                    .tint(Theme.accent)
-            } else {
-                AnimatedCurrencyValue(
-                    value: value,
-                    isScrubbing: isScrubbing, // Debug: Enable animation during chart scrubbing
-                    animationDuration: 0.2 // Smooth transitions during scrubbing
+            // Debug: Always show the number - never hide it with ProgressView
+            // Use pulsing effect (isUpdating) to indicate loading instead
+            AnimatedCurrencyValue(
+                value: value,
+                isScrubbing: isScrubbing, // Debug: Enable animation during chart scrubbing
+                animationDuration: 0.2 // Smooth transitions during scrubbing
+            )
+                .padding(.bottom, 8)
+                // Debug: Pulse/glow effect during value update (crypto-style)
+                .shadow(
+                    color: isUpdating ? Theme.accent.opacity(0.6) : .clear,
+                    radius: isUpdating ? 20 : 0
                 )
-                    .padding(.bottom, 8)
-                    // Debug: Pulse/glow effect during value update (crypto-style)
-                    .shadow(
-                        color: isUpdating ? Theme.accent.opacity(0.6) : .clear,
-                        radius: isUpdating ? 20 : 0
-                    )
-                    .shadow(
-                        color: isUpdating ? Theme.accent.opacity(0.4) : .clear,
-                        radius: isUpdating ? 40 : 0
-                    )
-                    .animation(.easeInOut(duration: 0.8).repeatCount(3, autoreverses: true), value: isUpdating)
-            }
+                .shadow(
+                    color: isUpdating ? Theme.accent.opacity(0.4) : .clear,
+                    radius: isUpdating ? 40 : 0
+                )
+                .animation(.easeInOut(duration: 0.8).repeatCount(3, autoreverses: true), value: isUpdating)
             
-            if !isLoading {
-                // Debug: Change ticker in glass pill with fully rounded capsule shape and dynamic tint (green/red)
-                // Updates based on selected time range (Week/Month/Year/All) like CoinSpot
-                HStack(spacing: 4) {
-                    Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
-                        .font(.system(size: 10, weight: .regular))
-                        .foregroundStyle(change >= 0 ? .green : .red)
-                        .accessibilityHidden(true)
-                    Text(change, format: .currency(code: "AUD"))
-                        .font(.system(size: 11, weight: .regular))
-                        .monospacedDigit()
-                        .foregroundStyle(change >= 0 ? .green : .red)
-                        .accessibilityLabel("Change for selected time range")
-                        .accessibilityValue("\(change.formatted(.currency(code: "AUD")))")
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .glassEffect(.regular.interactive().tint((change >= 0 ? Color.green : Color.red).opacity(0.1)), in: Capsule())
-                .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
-                .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)
+            // Debug: Always show change pill - keeps UI stable
+            HStack(spacing: 4) {
+                Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
+                    .font(.system(size: 10, weight: .regular))
+                    .foregroundStyle(change >= 0 ? .green : .red)
+                    .accessibilityHidden(true)
+                Text(change, format: .currency(code: "AUD"))
+                    .font(.system(size: 11, weight: .regular))
+                    .monospacedDigit()
+                    .foregroundStyle(change >= 0 ? .green : .red)
+                    .accessibilityLabel("Change for selected time range")
+                    .accessibilityValue("\(change.formatted(.currency(code: "AUD")))")
             }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 6)
+            .glassEffect(.regular.interactive().tint((change >= 0 ? Color.green : Color.red).opacity(0.1)), in: Capsule())
+            .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+            .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, Theme.cardPadding)
@@ -771,7 +740,8 @@ struct AnimatedCurrencyValue: View {
                 .padding(.trailing, 8)
                 .accessibilityHidden(true)
             
-            let useAnimations = !UIAccessibility.isReduceMotionEnabled && isScrubbing
+            // Debug: Always use native SwiftUI numeric animation (same animation for scrubbing and value updates)
+            let useAnimations = !UIAccessibility.isReduceMotionEnabled
             
             Text(formattedValue.whole)
                 .font(.system(size: 50, weight: .bold))
