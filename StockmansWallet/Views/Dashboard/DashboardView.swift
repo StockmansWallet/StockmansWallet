@@ -717,6 +717,11 @@ struct AnimatedCurrencyValue: View {
     @State private var previousValue: Double = 0.0
     @State private var initialLoad = true
     
+    // Debug: Determine if value is decreasing for reverse spin animation
+    private var isDecreasing: Bool {
+        return value < previousValue
+    }
+    
     private var formattedValue: (whole: String, decimal: String) {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
@@ -741,6 +746,7 @@ struct AnimatedCurrencyValue: View {
                 .accessibilityHidden(true)
             
             // Debug: Always use native SwiftUI numeric animation (same animation for scrubbing and value updates)
+            // Spin down when decreasing, spin up when increasing
             let useAnimations = !UIAccessibility.isReduceMotionEnabled
             
             Text(formattedValue.whole)
@@ -750,7 +756,7 @@ struct AnimatedCurrencyValue: View {
                 .tracking(-2)
                 .if(useAnimations) { view in
                     view
-                        .contentTransition(.numericText())
+                        .contentTransition(.numericText(countsDown: isDecreasing))
                         .animation(.easeInOut(duration: animationDuration), value: formattedValue.whole)
                 }
             
@@ -767,7 +773,7 @@ struct AnimatedCurrencyValue: View {
                 .tracking(-1)
                 .if(useAnimations) { view in
                     view
-                        .contentTransition(.numericText())
+                        .contentTransition(.numericText(countsDown: isDecreasing))
                         .animation(.easeInOut(duration: animationDuration), value: formattedValue.decimal)
                 }
         }
