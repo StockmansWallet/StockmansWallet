@@ -92,13 +92,14 @@ struct PortfolioView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
+                    // Debug: Per iOS HIG - Use .borderedProminent for primary toolbar action
+                    // Creates a filled, tinted button that stands out as the main CTA
+                    Button("Add") {
                         HapticManager.tap()
                         showingAddAssetMenu = true
-                    } label: {
-                        Image(systemName: "plus")
-                            .foregroundStyle(Theme.primaryText)
                     }
+                    .buttonStyle(.borderedProminent)
+                    .tint(Theme.accent)
                     .accessibilityLabel("Add asset")
                 }
             }
@@ -906,19 +907,14 @@ struct EmptyPortfolioView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             
-            Button(action: {
+            // Debug: Per iOS HIG - Use .borderedProminent for primary CTA in empty states
+            Button("Add Asset") {
                 HapticManager.tap()
                 showingAddAssetMenu = true
-            }) {
-                Text("Add Asset")
-                    .font(Theme.headline)
-                    .foregroundStyle(.white)
-                    .padding()
-                    .frame(maxWidth: 200)
-                    .background(Theme.accent)
-                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
             }
-            .buttonBorderShape(.roundedRectangle)
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.accent)
+            .controlSize(.large)
             .accessibilityLabel("Add asset")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
@@ -1071,42 +1067,28 @@ struct PortfolioSearchPanel: View {
                             }
                         }
                         
-                        // Search Buttons
+                        // Debug: Per iOS HIG - Use bordered button styles for actions within content
                         HStack(spacing: 12) {
-                            Button(action: {
+                            Button {
                                 HapticManager.tap()
                                 performSearch()
-                            }) {
-                                HStack {
-                                    Image(systemName: "magnifyingglass")
-                                    Text("Search")
-                                }
-                                .font(Theme.headline)
-                                .foregroundStyle(.white)
-                                .frame(maxWidth: .infinity)
-                                .padding(.vertical, 12)
-                                .background(Theme.accent)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            } label: {
+                                Label("Search", systemImage: "magnifyingglass")
                             }
-                            .buttonStyle(.plain)
+                            .buttonStyle(.borderedProminent)
+                            .tint(Theme.accent)
+                            .frame(maxWidth: .infinity)
                             
                             if hasSearched {
-                                Button(action: {
+                                Button {
                                     HapticManager.tap()
                                     clearSearch()
-                                }) {
-                                    HStack {
-                                        Image(systemName: "xmark")
-                                        Text("Clear")
-                                    }
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.accent)
-                                    .frame(maxWidth: .infinity)
-                                    .padding(.vertical, 12)
-                                    .background(Theme.accent.opacity(0.15))
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                } label: {
+                                    Label("Clear", systemImage: "xmark")
                                 }
-                                .buttonStyle(.plain)
+                                .buttonStyle(.bordered)
+                                .tint(Theme.accent)
+                                .frame(maxWidth: .infinity)
                             }
                         }
                     }
