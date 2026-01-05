@@ -312,9 +312,7 @@ struct SignInPage: View {
                 .padding(.horizontal, 24)
                 .padding(.top, 60) // Debug: Add top padding for status bar
                 .padding(.bottom, 40)
-            }
-            .frame(maxHeight: .infinity)
+                .frame(maxHeight: .infinity)
         }
     }
-    
 }
