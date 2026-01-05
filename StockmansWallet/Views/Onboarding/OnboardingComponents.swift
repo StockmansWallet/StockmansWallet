@@ -21,7 +21,7 @@ struct OnboardingPageTemplate<Content: View>: View {
     var showBack: Bool = true
     var isValid: Bool = true // Default to true for optional pages
     var isLastPage: Bool = false // Set to true for the final page
-    var totalPages: Int = 6 // Debug: Total pages in flow (6 pages for both farmer and advisory paths)
+    var totalPages: Int = 5 // Debug: Total pages in flow (5 pages for both farmer and advisory paths)
     var onComplete: (() -> Void)? = nil // Optional completion handler for last page
     @ViewBuilder let content: Content
     

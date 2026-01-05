@@ -43,9 +43,9 @@ struct CompanyInfoPage: View {
             title: "Company Information",
             subtitle: "Tell us about your organization",
             currentPage: $currentPage,
-            nextPage: 3, // Go to Security/Privacy (shared page)
+            nextPage: 3, // Go to Welcome/Completion (shared page)
             isValid: isValid,
-            totalPages: 6 // Debug: Both paths now have 6 pages (includes Subscription)
+            totalPages: 5 // Debug: Both paths now have 5 pages (Security moved to Terms sheet)
         ) {
             // Debug: iOS 26 HIG - Organized layout with proper keyboard navigation
             VStack(spacing: 24) {

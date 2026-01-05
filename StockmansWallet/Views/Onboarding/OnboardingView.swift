@@ -17,6 +17,10 @@ struct OnboardingView: View {
     @State private var showingSignIn = false
     @State private var isSigningIn = false
     
+    // Debug: Terms & Privacy acceptance (shown before onboarding)
+    @State private var showingTermsPrivacy = false
+    @State private var hasAcceptedTerms = false
+    
     // Intro animation state (HIG-aligned: subtle fade only)
     @State private var introOpacity: Double = 0.0
     @State private var introComplete: Bool = false
@@ -59,10 +63,11 @@ struct OnboardingView: View {
                     )
                     
                 case .onboardingPages:
-                    // Debug: Branching onboarding flow based on user role
-                    // Green Path (Farmer): UserType → AboutYou → Property → Security → Welcome → Subscription (6 pages)
-                    // Pink Path (Advisory): UserType → AboutYou → Company → Security → Welcome → Subscription (6 pages)
-                    // Security, Welcome & Subscription pages are SHARED between both paths
+                    // Debug: Branching onboarding flow based on user role (5 pages total)
+                    // Green Path (Farmer): UserType → AboutYou → Property → Welcome → Subscription (5 pages)
+                    // Pink Path (Advisory): UserType → AboutYou → Company → Welcome → Subscription (5 pages)
+                    // Welcome & Subscription pages are SHARED between both paths
+                    // Security/Privacy moved to Terms sheet (shown before onboarding)
                     Group {
                         switch currentPage {
                         case 0:
@@ -93,20 +98,14 @@ struct OnboardingView: View {
                                 )
                             }
                         case 3:
-                            // Fourth page: Security & Privacy (SHARED - both paths)
-                            SecurityPrivacyPage(
-                                userPrefs: $userPrefs,
-                                currentPage: $currentPage
-                            )
-                        case 4:
-                            // Fifth page: Welcome/Completion (SHARED - both paths)
+                            // Fourth page: Welcome/Completion (SHARED - both paths)
                             // Debug: Celebrates completion before subscription selection
                             WelcomeCompletionPage(
                                 userPrefs: $userPrefs,
                                 currentPage: $currentPage
                             )
-                        case 5:
-                            // Sixth page: Subscription/Pricing (SHARED - final page)
+                        case 4:
+                            // Fifth page: Subscription/Pricing (SHARED - final page)
                             SubscriptionView(
                                 userPrefs: $userPrefs,
                                 onComplete: saveAndComplete
@@ -147,6 +146,21 @@ struct OnboardingView: View {
             } else if let existing = preferences.first {
                 userPrefs = existing
             }
+            
+            // Debug: Show Terms & Privacy sheet on first launch if not already accepted
+            if !hasAcceptedTerms && !userPrefs.hasCompletedOnboarding {
+                // Small delay to let the view settle
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                    showingTermsPrivacy = true
+                }
+            }
+        }
+        .sheet(isPresented: $showingTermsPrivacy) {
+            TermsPrivacySheet(
+                isPresented: $showingTermsPrivacy,
+                hasAccepted: $hasAcceptedTerms
+            )
+            .interactiveDismissDisabled() // Debug: Must accept terms, can't dismiss
         }
         .sheet(isPresented: $showingSignIn) {
             SignInPage(

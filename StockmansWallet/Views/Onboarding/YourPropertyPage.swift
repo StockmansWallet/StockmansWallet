@@ -32,7 +32,7 @@ struct YourPropertyPage: View {
             currentPage: $currentPage,
             nextPage: 3,
             isValid: isValid,
-            totalPages: 6 // Debug: Farmer path has 6 pages (includes Subscription)
+            totalPages: 5 // Debug: Farmer path has 5 pages (Security moved to Terms sheet)
         ) {
             // Debug: iOS 26 HIG - Organized layout with proper keyboard navigation
             VStack(spacing: 24) {

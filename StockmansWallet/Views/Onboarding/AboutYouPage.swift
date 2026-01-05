@@ -25,9 +25,9 @@ struct AboutYouPage: View {
         case email
     }
     
-    // Debug: Both paths now have 6 pages (includes Subscription screen)
+    // Debug: Both paths now have 5 pages (Security moved to Terms sheet)
     private var totalPages: Int {
-        6
+        5
     }
     
     // Debug: Password fields disabled in demo mode - removed from validation
