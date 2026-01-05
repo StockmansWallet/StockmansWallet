@@ -52,58 +52,59 @@ class HistoricalMockDataService {
         ]
         
         // Define 15 diverse herd configurations
+        // Debug: Extended startDateOffset values to go back to Jan 10, 2023 (~1090 days from Jan 6, 2026)
         let herdConfigs: [(name: String, species: String, breed: String, category: String, 
                           sex: String, headCount: Int, initialWeight: Double, dwg: Double,
                           dwgChange: Double?, dwgChangeDays: Int?, startDateOffset: Int,
                           isBreeder: Bool, calvingRate: Double, saleyard: String)] = [
-            // Cattle - Breeding herds (3)
+            // Cattle - Breeding herds (3) - Starting from early 2023
             ("River Paddock - Angus Breeding Cows", "Cattle", "Angus", "Breeding Cow", "Female",
-             120, 550.0, 0.3, nil, nil, -730, true, 0.88, saleyards[0]),
+             120, 550.0, 0.3, nil, nil, -1090, true, 0.88, saleyards[0]),
             
             ("Back Hill - Wagyu Breeding Cows", "Cattle", "Wagyu", "Breeding Cow", "Female",
-             85, 580.0, 0.25, nil, nil, -650, true, 0.82, saleyards[1]),
+             85, 580.0, 0.25, nil, nil, -1070, true, 0.82, saleyards[1]),
             
             ("The Flats - Brahman Breeding Cows", "Cattle", "Brahman", "Breeding Cow", "Female",
-             150, 520.0, 0.35, nil, nil, -600, true, 0.85, saleyards[2]),
+             150, 520.0, 0.35, nil, nil, -1050, true, 0.85, saleyards[2]),
             
-            // Cattle - Growing herds with DWG changes (5)
+            // Cattle - Growing herds with DWG changes (5) - Staggered through 2023-2024
             ("North Ridge - Yearling Steers", "Cattle", "Angus", "Yearling Steer", "Male",
-             95, 380.0, 0.6, 1.1, 120, -500, false, 0.0, saleyards[0]),
+             95, 380.0, 0.6, 1.1, 120, -1000, false, 0.0, saleyards[0]),
             
             ("South Pasture - Feeder Steers", "Cattle", "Hereford", "Grown Steer", "Male",
-             75, 450.0, 0.5, 0.9, 90, -450, false, 0.0, saleyards[1]),
+             75, 450.0, 0.5, 0.9, 90, -950, false, 0.0, saleyards[1]),
             
             ("East Valley - Weaner Steers", "Cattle", "Angus X Friesian", "Weaner Steer", "Male",
-             140, 250.0, 0.8, 1.2, 100, -400, false, 0.0, saleyards[0]),
+             140, 250.0, 0.8, 1.2, 100, -900, false, 0.0, saleyards[0]),
             
             ("West Slope - Yearling Heifers", "Cattle", "Charolais", "Heifer", "Female",
-             110, 320.0, 0.7, 1.0, 110, -350, false, 0.0, saleyards[3]),
+             110, 320.0, 0.7, 1.0, 110, -850, false, 0.0, saleyards[3]),
             
             ("Central Plains - Weaner Bulls", "Cattle", "Murray Grey", "Weaner Bull", "Male",
-             60, 280.0, 0.9, 1.3, 95, -300, false, 0.0, saleyards[4]),
+             60, 280.0, 0.9, 1.3, 95, -800, false, 0.0, saleyards[4]),
             
-            // Cattle - Standard growing herds (4)
+            // Cattle - Standard growing herds (4) - More recent additions through 2024-2025
             ("Upper Meadow - Grown Steers", "Cattle", "Droughtmaster", "Grown Steer", "Male",
-             80, 480.0, 0.65, nil, nil, -250, false, 0.0, saleyards[2]),
+             80, 480.0, 0.65, nil, nil, -700, false, 0.0, saleyards[2]),
             
             ("Lower Field - Yearling Steers", "Cattle", "Limousin", "Yearling Steer", "Male",
-             100, 360.0, 0.85, nil, nil, -200, false, 0.0, saleyards[1]),
+             100, 360.0, 0.85, nil, nil, -550, false, 0.0, saleyards[1]),
             
             ("Hill Top - Weaner Steers", "Cattle", "Santa Gertrudis", "Weaner Steer", "Male",
-             130, 240.0, 1.0, nil, nil, -150, false, 0.0, saleyards[0]),
+             130, 240.0, 1.0, nil, nil, -400, false, 0.0, saleyards[0]),
             
             ("Bottom Paddock - Heifers", "Cattle", "Red Angus", "Heifer", "Female",
-             90, 310.0, 0.75, nil, nil, -100, false, 0.0, saleyards[3]),
+             90, 310.0, 0.75, nil, nil, -250, false, 0.0, saleyards[3]),
             
-            // Sheep herds (3)
+            // Sheep herds (3) - Starting from mid 2023
             ("Green Valley - Merino Breeding Ewes", "Sheep", "Merino", "Breeding Ewe", "Female",
-             500, 65.0, 0.05, nil, nil, -500, true, 0.92, saleyards[0]),
+             500, 65.0, 0.05, nil, nil, -1020, true, 0.92, saleyards[0]),
             
             ("Dry Creek - Poll Dorset Breeding Ewes", "Sheep", "Poll Dorset", "Breeding Ewe", "Female",
-             400, 70.0, 0.06, nil, nil, -400, true, 0.90, saleyards[1]),
+             400, 70.0, 0.06, nil, nil, -980, true, 0.90, saleyards[1]),
             
             ("Sunset Ridge - Merino Wethers", "Sheep", "Merino", "Wether Lamb", "Male",
-             600, 45.0, 0.08, nil, nil, -180, false, 0.0, saleyards[0])
+             600, 45.0, 0.08, nil, nil, -600, false, 0.0, saleyards[0])
         ]
         
         for (index, config) in herdConfigs.enumerated() {
