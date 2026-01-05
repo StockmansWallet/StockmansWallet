@@ -64,8 +64,9 @@ struct Theme {
     static let caption: Font = .caption                     // ~12pt - For metadata and small labels
     
     // MARK: - Spacing
-    // Normalize corners to feel native (12–16pt). Use 16 for cards and surfaces.
-    static let cornerRadius: CGFloat = 16.0
+    // iOS 26 HIG - Corner radii for different component types
+    static let cornerRadius: CGFloat = 16.0        // Standard cards and UI components
+    static let sheetCornerRadius: CGFloat = 32.0   // Sheets, modals, and large panels
     static let cardPadding: CGFloat = 20.0
     static let sectionSpacing: CGFloat = 24.0
 

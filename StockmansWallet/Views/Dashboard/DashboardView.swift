@@ -330,43 +330,59 @@ struct DashboardView: View {
         .padding(.top, -12)
         .padding(.bottom, 100)
         .background(
-            // Debug: Dark panel background with gradient and prominent drop shadow for better separation
+            // Debug: iOS 26 HIG - Panel background using native UnevenRoundedRectangle
+            // Uses sheetCornerRadius (32pt) for large panel surfaces, matching iOS sheet standards
+            // Dark panel with gradient and drop shadow for depth and hierarchy
             ZStack {
-                RoundedTopCornersShape(radius: 24)
-                    .fill(Theme.backgroundColor)
-                    .ignoresSafeArea()
+                // Base background layer
+                UnevenRoundedRectangle(
+                    topLeadingRadius: Theme.sheetCornerRadius,
+                    topTrailingRadius: Theme.sheetCornerRadius,
+                    style: .continuous
+                )
+                .fill(Theme.backgroundColor)
+                .ignoresSafeArea()
                 
-                RoundedTopCornersShape(radius: 24)
-                    .fill(
-                        RadialGradient(
-                            colors: [
-                                Color(hex: "FFA042").opacity(0.15),  // Orange accent
-                                Color(hex: "1E1815").opacity(0)      // Fade to transparent
-                            ],
-                            center: .top,
-                            startRadius: 0,
-                            endRadius: 500
-                        )
+                // Gradient overlay for visual interest
+                UnevenRoundedRectangle(
+                    topLeadingRadius: Theme.sheetCornerRadius,
+                    topTrailingRadius: Theme.sheetCornerRadius,
+                    style: .continuous
+                )
+                .fill(
+                    RadialGradient(
+                        colors: [
+                            Color(hex: "FFA042").opacity(0.15),  // Orange accent from top
+                            Color(hex: "1E1815").opacity(0)      // Fade to transparent
+                        ],
+                        center: .top,
+                        startRadius: 0,
+                        endRadius: 500
                     )
-                    .ignoresSafeArea()
+                )
+                .ignoresSafeArea()
             }
             .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
-            // Debug: Add subtle white highlight stroke at top edge with gradient fade
+            // Debug: Subtle white highlight stroke at top edge for depth
             .overlay(
-                RoundedTopCornersShape(radius: 24)
-                    .stroke(
-                        LinearGradient(
-                            colors: [
-                                Color.white.opacity(0.1),   // White highlight at top
-                                Color.white.opacity(0.1),   // Maintain through corners
-                                Color.white.opacity(0.0)    // Fade to transparent on sides
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        ),
-                        lineWidth: 1
-                    )
-                    .ignoresSafeArea()
+                UnevenRoundedRectangle(
+                    topLeadingRadius: Theme.sheetCornerRadius,
+                    topTrailingRadius: Theme.sheetCornerRadius,
+                    style: .continuous
+                )
+                .stroke(
+                    LinearGradient(
+                        colors: [
+                            Color.white.opacity(0.1),   // White highlight at top
+                            Color.white.opacity(0.1),   // Maintain through corners
+                            Color.white.opacity(0.0)    // Fade to transparent on sides
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    ),
+                    lineWidth: 1
+                )
+                .ignoresSafeArea()
             )
         )
     }
@@ -1605,7 +1621,7 @@ struct SaleyardSelector: View {
             }
             .padding(16)
             .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         }
         .accessibilityLabel("Select saleyard")
         .accessibilityValue(selectedSaleyard ?? "Your selected saleyards")
@@ -1613,43 +1629,4 @@ struct SaleyardSelector: View {
     }
 }
 
-// MARK: - Custom Shape for Rounded Top Corners
-// Debug: Custom shape to create rounded top corners only for the sliding panel
-struct RoundedTopCornersShape: Shape {
-    let radius: CGFloat
-    
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        
-        // Debug: Start from top left corner
-        path.move(to: CGPoint(x: rect.minX, y: rect.minY + radius))
-        
-        // Top left arc
-        path.addArc(center: CGPoint(x: rect.minX + radius, y: rect.minY + radius),
-                    radius: radius,
-                    startAngle: .degrees(180),
-                    endAngle: .degrees(270),
-                    clockwise: false)
-        
-        // Top edge to top right corner
-        path.addLine(to: CGPoint(x: rect.maxX - radius, y: rect.minY))
-        
-        // Top right arc
-        path.addArc(center: CGPoint(x: rect.maxX - radius, y: rect.minY + radius),
-                    radius: radius,
-                    startAngle: .degrees(270),
-                    endAngle: .degrees(0),
-                    clockwise: false)
-        
-        // Right edge to bottom right
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        
-        // Bottom edge to bottom left
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        
-        path.closeSubpath()
-        
-        return path
-    }
-}
 
