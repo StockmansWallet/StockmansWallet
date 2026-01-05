@@ -23,27 +23,23 @@ struct UserTypeSelectionCard: View {
                 Group {
                     if userType == .farmer {
                         // Debug: Use custom Hoof icon from assets
-                        Image("Hoof")
+                        Image("farmer_icon")
                             .resizable()
                             .renderingMode(.template)
                             .aspectRatio(contentMode: .fit)
                             .frame(width: 64, height: 64)
                     } else {
-                        // Debug: Use message bubble with "i" for Advisory
-                        Image(systemName: "message.fill")
-                            .font(.system(size: 64, weight: .medium))
-                            .overlay(
-                                Text("i")
-                                    .font(.system(size: 28, weight: .bold))
-                                    .foregroundStyle(isSelected ? Theme.accent : Theme.secondaryText)
-                                    .offset(y: -4)
-                            )
+                        Image("sprout_icon")
+                            .resizable()
+                            .renderingMode(.template)
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 64, height: 64)
                     }
                 }
                 .foregroundStyle(isSelected ? Theme.accent : Theme.secondaryText)
                 
                 // Type label
-                Text(userType == .farmer ? "Farmer" : "Advisory")
+                Text(userType == .farmer ? "Farmer" : "Advisor")
                     .font(Theme.headline)
                     .foregroundStyle(isSelected ? Theme.accent : Theme.secondaryText)
                     .multilineTextAlignment(.center)
@@ -61,35 +57,6 @@ struct UserTypeSelectionCard: View {
     }
 }
 
-// MARK: - Advisory Sub-Role Icon Component
-// Debug: Informational icons showing different advisory roles (not clickable)
-struct AdvisorySubRoleIcon: View {
-    let icon: String
-    let label: String
-    
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                Circle()
-                    .fill(Theme.cardBackground)
-                    .frame(width: 56, height: 56)
-                
-                Image(systemName: icon)
-                    .font(.system(size: 24, weight: .medium))
-                    .foregroundStyle(Theme.secondaryText)
-            }
-            
-            Text(label)
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondaryText)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.8)
-        }
-        .frame(maxWidth: .infinity)
-    }
-}
-
 struct UserTypeSelectionPage: View {
     @Binding var userPrefs: UserPreferences
     @Binding var currentPage: Int
@@ -102,39 +69,9 @@ struct UserTypeSelectionPage: View {
         selectedUserType != nil
     }
     
-    // Debug: Advisory sub-roles with their icons
-    private let advisorySubRoles: [(icon: String, label: String)] = [
-        ("building.columns.fill", "Banker"),
-        ("checkmark.shield.fill", "Insurer"),
-        ("figure.2", "Livestock\nAgent"),
-        ("doc.text.fill", "Accountant"),
-        ("person.2.fill", "Succession\nPlanner"),
-        ("chart.line.uptrend.xyaxis", "Valuer")
-    ]
-    
     var body: some View {
         // Debug: Custom layout for user type selection page
         VStack(spacing: 0) {
-            // Header with close button
-            HStack {
-                Button(action: {
-                    HapticManager.tap()
-                    // Debug: Close button - implement dismissal if needed
-                }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Theme.primaryText)
-                        .frame(width: Theme.minimumTouchTarget, height: Theme.minimumTouchTarget)
-                        .contentShape(Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel("Close")
-                
-                Spacer()
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 20)
-            
             // Scrollable content
             ScrollView {
                 VStack(spacing: 32) {
@@ -186,7 +123,13 @@ struct UserTypeSelectionPage: View {
                     
                     // Description text based on selection
                     if let userType = selectedUserType {
-                        VStack(spacing: 24) {
+                        VStack(spacing: 16) {
+                            // Heading
+                            Text(userType == .farmer ? "Farmers / Graziers" : "Industry Advisors")
+                                .font(Theme.title3)
+                                .foregroundStyle(Theme.primaryText)
+                                .multilineTextAlignment(.center)
+                            
                             // Description
                             Text(userType == .farmer
                                 ? "Track your livestock as a financial asset.\nSee real-time herd value, performance, and market-driven insights across your operation."
@@ -195,24 +138,9 @@ struct UserTypeSelectionPage: View {
                                 .foregroundStyle(Theme.secondaryText)
                                 .multilineTextAlignment(.center)
                                 .lineSpacing(4)
-                                .padding(.horizontal, 32)
-                                .transition(.opacity.combined(with: .move(edge: .top)))
-                            
-                            // Advisory sub-roles (only shown when Advisory is selected)
-                            if userType == .advisory {
-                                LazyVGrid(columns: [
-                                    GridItem(.flexible()),
-                                    GridItem(.flexible()),
-                                    GridItem(.flexible())
-                                ], spacing: 20) {
-                                    ForEach(advisorySubRoles, id: \.label) { role in
-                                        AdvisorySubRoleIcon(icon: role.icon, label: role.label)
-                                    }
-                                }
-                                .padding(.horizontal, 20)
-                                .transition(.opacity.combined(with: .move(edge: .top)))
-                            }
                         }
+                        .padding(.horizontal, 32)
+                        .transition(.opacity)
                         .animation(.easeInOut(duration: 0.3), value: selectedUserType)
                     }
                 }
