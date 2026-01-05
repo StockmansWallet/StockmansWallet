@@ -95,6 +95,7 @@ final class UserPreferences {
     var dateFormat: String
     var backgroundImageName: String? // Name of selected background image (asset name or custom filename)
     var isCustomBackground: Bool // Debug: True if background is a custom uploaded image
+    var customBackgroundImages: [String] // Debug: Array of custom uploaded image filenames
     
     // MARK: - Dashboard State
     // Debug: Store last known portfolio value for "crypto-style" value reveal on dashboard load
@@ -137,6 +138,7 @@ final class UserPreferences {
         self.dateFormat = "dd/MM/yyyy"
         self.backgroundImageName = "BackgroundDefault" // Default background image
         self.isCustomBackground = false // Debug: Default to built-in asset
+        self.customBackgroundImages = [] // Debug: Start with empty array of custom images
         self.lastPortfolioValue = 0.0 // Debug: Start at 0, will be updated after first calculation
         self.lastPortfolioUpdateDate = nil // Debug: No previous update
     }
