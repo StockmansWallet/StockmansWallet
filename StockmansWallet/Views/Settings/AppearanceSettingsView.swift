@@ -95,3 +95,4 @@ struct AppearanceSettingsView: View {
 // ContentSizeCategory already conforms to CaseIterable in SwiftUI, no extension needed
 
 
+

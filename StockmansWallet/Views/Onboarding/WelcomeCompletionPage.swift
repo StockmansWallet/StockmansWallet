@@ -37,27 +37,11 @@ struct WelcomeCompletionPage: View {
         ) {
             // Debug: Clean success screen with icon, message, and feature highlights
             VStack(spacing: 32) {
-                // Success Icon
-                ZStack {
-                    Circle()
-                        .fill(Theme.accent.opacity(0.15))
-                        .frame(width: 120, height: 120)
-                    
-                    Image("farmer_icon")
-                        .resizable()
-                        .renderingMode(.template)
-                        .foregroundStyle(Theme.accent)
-                        .scaledToFit()
-                        .frame(width: 60, height: 60)
-                }
-                .padding(.top, 40)
-                
+          
+                              
                 // Success Message
                 VStack(spacing: 12) {
-                    Text("Your profile is complete")
-                        .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(Theme.primaryText)
-                        .multilineTextAlignment(.center)
+                
                     
                     Text("Let's choose the right plan to unlock your livestock management dashboard")
                         .font(Theme.body)

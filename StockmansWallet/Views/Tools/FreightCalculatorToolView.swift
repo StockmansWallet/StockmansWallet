@@ -96,3 +96,4 @@ struct FreightCalculatorToolView: View {
 }
 
 
+

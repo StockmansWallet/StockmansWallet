@@ -332,6 +332,179 @@ struct IndicatorRow: View {
     }
 }
 
+// MARK: - Growth & Mortality View (Biological Adjustments)
+// Debug: Shows biological changes affecting herd value - weight gain, mortality, breeding
+struct HerdDynamicsView: View {
+    let herds: [HerdGroup]
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Growth & Mortality")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                Spacer()
+                Image(systemName: "leaf.fill")
+                    .foregroundStyle(Theme.accent)
+            }
+            
+            VStack(alignment: .leading, spacing: 12) {
+                // Weight Gain Impact
+                if let weightGainMetrics = calculateWeightGainMetrics() {
+                    BiologicalMetricRow(
+                        title: "Weight Gain",
+                        subtitle: "\(weightGainMetrics.totalKgGained.formatted(.number.precision(.fractionLength(0)))) kg gained",
+                        value: weightGainMetrics.valueImpact,
+                        trend: .up
+                    )
+                }
+                
+                // Breeding Accrual
+                if let breedingMetrics = calculateBreedingMetrics() {
+                    BiologicalMetricRow(
+                        title: "Breeding Accrual",
+                        subtitle: "\(breedingMetrics.expectedProgeny) expected progeny",
+                        value: breedingMetrics.valueImpact,
+                        trend: .up
+                    )
+                }
+                
+                // Mortality Impact (if any herds have mortality data)
+                if let mortalityMetrics = calculateMortalityMetrics() {
+                    BiologicalMetricRow(
+                        title: "Mortality Impact",
+                        subtitle: "\(mortalityMetrics.projectedLosses.formatted(.number.precision(.fractionLength(1)))) head projected",
+                        value: mortalityMetrics.valueImpact,
+                        trend: .down
+                    )
+                }
+                
+                // Show message if no biological data is available
+                if calculateWeightGainMetrics() == nil && 
+                   calculateBreedingMetrics() == nil && 
+                   calculateMortalityMetrics() == nil {
+                    Text("No biological data tracked")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                        .padding(.vertical, 4)
+                }
+            }
+        }
+        .padding(Theme.cardPadding)
+        .stitchedCard()
+    }
+    
+    // MARK: - Weight Gain Calculations
+    // Debug: Calculate total weight gained across all herds with active DWG
+    private func calculateWeightGainMetrics() -> (totalKgGained: Double, valueImpact: Double)? {
+        let activeHerds = herds.filter { $0.isTrackingWeightGain }
+        guard !activeHerds.isEmpty else { return nil }
+        
+        var totalKgGained: Double = 0
+        
+        for herd in activeHerds {
+            let daysHeld = Double(herd.daysHeld)
+            let weightPerHead = herd.dailyWeightGain * daysHeld
+            let totalWeight = weightPerHead * Double(herd.headCount)
+            totalKgGained += totalWeight
+        }
+        
+        // Debug: Estimate value impact at average market rate (~$4.50/kg)
+        let estimatedValue = totalKgGained * 4.50
+        
+        return (totalKgGained: totalKgGained, valueImpact: estimatedValue)
+    }
+    
+    // MARK: - Breeding Accrual Calculations
+    // Debug: Calculate expected progeny value from pregnant herds
+    private func calculateBreedingMetrics() -> (expectedProgeny: Int, valueImpact: Double)? {
+        let breedingHerds = herds.filter { $0.hasValidBreedingData }
+        guard !breedingHerds.isEmpty else { return nil }
+        
+        var totalExpectedProgeny: Double = 0
+        
+        for herd in breedingHerds {
+            // Debug: Expected progeny = head count × calving rate
+            let expected = Double(herd.headCount) * herd.calvingRate
+            totalExpectedProgeny += expected
+        }
+        
+        // Debug: Estimate value based on species (cattle ~$1200/calf, sheep ~$150/lamb)
+        var estimatedValue: Double = 0
+        for herd in breedingHerds {
+            let progeny = Double(herd.headCount) * herd.calvingRate
+            let valuePerHead = herd.species == "Cattle" ? 1200.0 : 150.0
+            estimatedValue += progeny * valuePerHead
+        }
+        
+        return (expectedProgeny: Int(totalExpectedProgeny), valueImpact: estimatedValue)
+    }
+    
+    // MARK: - Mortality Impact Calculations
+    // Debug: Calculate projected losses from mortality rates
+    private func calculateMortalityMetrics() -> (projectedLosses: Double, valueImpact: Double)? {
+        let herdsWithMortality = herds.filter { ($0.mortalityRate ?? 0) > 0 }
+        guard !herdsWithMortality.isEmpty else { return nil }
+        
+        var totalProjectedLosses: Double = 0
+        var totalValueImpact: Double = 0
+        
+        for herd in herdsWithMortality {
+            guard let annualRate = herd.mortalityRate else { continue }
+            
+            // Debug: Calculate daily mortality rate from annual rate
+            let dailyRate = annualRate / 365.0
+            let daysHeld = Double(herd.daysHeld)
+            
+            // Debug: Projected losses = head count × daily rate × days held
+            let projectedLosses = Double(herd.headCount) * dailyRate * daysHeld
+            totalProjectedLosses += projectedLosses
+            
+            // Debug: Value impact = losses × current weight × avg price
+            let avgWeight = herd.approximateCurrentWeight
+            let avgPrice = 4.50 // Approximate market price per kg
+            totalValueImpact += projectedLosses * avgWeight * avgPrice
+        }
+        
+        return (projectedLosses: totalProjectedLosses, valueImpact: totalValueImpact)
+    }
+}
+
+// MARK: - Biological Metric Row Component
+// Debug: Reusable row component for biological metrics display
+struct BiologicalMetricRow: View {
+    let title: String
+    let subtitle: String
+    let value: Double
+    let trend: PriceTrend
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.primaryText)
+                Text(subtitle)
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            
+            Spacer()
+            
+            HStack(spacing: 6) {
+                Text(value.formatted(.currency(code: "AUD").precision(.fractionLength(0))))
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.primaryText)
+                
+                Image(systemName: trend == .up ? "arrow.up.right" : trend == .down ? "arrow.down.right" : "minus")
+                    .foregroundStyle(trend == .up ? Theme.positiveChange : trend == .down ? Theme.negativeChange : .gray)
+                    .font(.system(size: 14))
+                    .accessibilityHidden(true)
+            }
+        }
+    }
+}
+
 // MARK: - Quick Stats View (Placeholder)
 // Debug: Simplified horizontal stat bar without card - compact layout per user request
 struct QuickStatsView: View {

@@ -297,6 +297,10 @@ struct DashboardView: View {
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Herd performance")
             
+            HerdDynamicsView(herds: herds.filter { !$0.isSold })
+                .padding(.horizontal, Theme.cardPadding)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Growth and mortality")
             
             if !capitalConcentration.isEmpty {
                 CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
