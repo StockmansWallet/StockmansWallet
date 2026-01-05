@@ -44,6 +44,8 @@ struct OnboardingView: View {
                     WelcomeFeaturesPage(
                         onboardingStep: $onboardingStep,
                         showingSignIn: $showingSignIn,
+                        showingTermsPrivacy: $showingTermsPrivacy,
+                        hasAcceptedTerms: $hasAcceptedTerms,
                         // Pass down intro completion so Lottie can start after fade
                         introComplete: introComplete,
                         // Debug: TEMPORARY - Skip onboarding for development (DELETE BEFORE LAUNCH) ⚠️
@@ -146,16 +148,9 @@ struct OnboardingView: View {
             } else if let existing = preferences.first {
                 userPrefs = existing
             }
-            
-            // Debug: Show Terms & Privacy sheet on first launch if not already accepted
-            if !hasAcceptedTerms && !userPrefs.hasCompletedOnboarding {
-                // Small delay to let the view settle
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                    showingTermsPrivacy = true
-                }
-            }
         }
         .sheet(isPresented: $showingTermsPrivacy) {
+            // Debug: Terms & Privacy sheet shown after "Get Started" button (Option 1)
             TermsPrivacySheet(
                 isPresented: $showingTermsPrivacy,
                 hasAccepted: $hasAcceptedTerms

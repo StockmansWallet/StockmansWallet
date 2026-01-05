@@ -16,6 +16,8 @@ enum OnboardingStep {
 struct WelcomeFeaturesPage: View {
     @Binding var onboardingStep: OnboardingView.OnboardingStep
     @Binding var showingSignIn: Bool
+    @Binding var showingTermsPrivacy: Bool // Debug: Show Terms sheet after "Get Started"
+    @Binding var hasAcceptedTerms: Bool // Debug: Track if terms have been accepted
     
     // Start child motion only after parent fade
     var introComplete: Bool = true
@@ -155,7 +157,7 @@ struct WelcomeFeaturesPage: View {
                             HapticManager.tap()
 
                             if step == .landing {
-                                // Transition to features (user initiated)
+                                // Transition to features (user initiated) - preserve logo animation
                                 withAnimation(.spring(response: 0.55, dampingFraction: 0.9)) {
                                     step = .features
                                     // Slightly reduce logo to create hierarchy with text below
@@ -174,7 +176,8 @@ struct WelcomeFeaturesPage: View {
                                     showTiles = true
                                 }
                             } else {
-                                showingSignIn = true
+                                // Debug: Show Terms & Privacy sheet after "Continue" on features page (Option 2)
+                                showingTermsPrivacy = true
                             }
                         } label: {
                             Text(step == .landing ? "Get Started" : "Continue")
@@ -197,6 +200,12 @@ struct WelcomeFeaturesPage: View {
             }
         }
         .ignoresSafeArea(.all)
+        .onChange(of: hasAcceptedTerms) { oldValue, newValue in
+            // Debug: After user accepts terms (from features page), show sign-in
+            if newValue && step == .features {
+                showingSignIn = true
+            }
+        }
     }
 
     private var featureTiles: some View {
