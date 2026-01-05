@@ -306,7 +306,7 @@ struct DashboardView: View {
                 CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
                     .padding(.horizontal, Theme.cardPadding)
                     .accessibilityElement(children: .contain)
-                    .accessibilityLabel("Capital concentration")
+                    .accessibilityLabel("Portfolio mix")
             }
             
             // Debug: Temporary Clear Mock Data button for development
@@ -1275,15 +1275,28 @@ struct PerformanceMetrics {
     let initialValue: Double
 }
 
-// MARK: - Capital Concentration View
+// MARK: - Portfolio Mix View (Category Breakdown with Pie Chart)
+// Debug: Shows category distribution with pie chart and detailed breakdown list
 struct CapitalConcentrationView: View {
     let breakdown: [CapitalConcentrationBreakdown]
     let totalValue: Double
     
+    // Debug: Color palette for pie chart segments (distinct, accessible colors)
+    private let chartColors: [Color] = [
+        Color(red: 0.96, green: 0.49, blue: 0.22), // Orange (accent)
+        Color(red: 0.20, green: 0.60, blue: 0.86), // Blue
+        Color(red: 0.30, green: 0.69, blue: 0.31), // Green
+        Color(red: 0.95, green: 0.61, blue: 0.07), // Amber
+        Color(red: 0.61, green: 0.35, blue: 0.71), // Purple
+        Color(red: 0.91, green: 0.30, blue: 0.24), // Red
+        Color(red: 0.00, green: 0.74, blue: 0.83), // Cyan
+        Color(red: 0.80, green: 0.47, blue: 0.00)  // Dark Orange
+    ]
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Capital Concentration")
+                Text("Portfolio Mix")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
@@ -1292,10 +1305,37 @@ struct CapitalConcentrationView: View {
                     .accessibilityHidden(true)
             }
             
+            // Debug: Pie chart showing category distribution
+            if !breakdown.isEmpty {
+                Chart {
+                    ForEach(Array(breakdown.enumerated()), id: \.element.id) { index, item in
+                        SectorMark(
+                            angle: .value("Value", item.value),
+                            innerRadius: .ratio(0.618), // Golden ratio for elegant donut
+                            angularInset: 2.0 // Small gap between segments
+                        )
+                        .foregroundStyle(chartColors[index % chartColors.count])
+                        .cornerRadius(4)
+                        .accessibilityLabel("\(item.category)")
+                        .accessibilityValue("\(item.percentage.formatted(.number.precision(.fractionLength(1)))) percent")
+                    }
+                }
+                .frame(height: 200)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Category distribution chart")
+            }
+            
+            // Debug: Category list with bars (existing design)
             VStack(alignment: .leading, spacing: 12) {
-                ForEach(Array(breakdown.prefix(5))) { item in
+                ForEach(Array(breakdown.enumerated()), id: \.element.id) { index, item in
                     VStack(alignment: .leading, spacing: 6) {
-                        HStack {
+                        HStack(spacing: 8) {
+                            // Debug: Color indicator matching pie chart
+                            RoundedRectangle(cornerRadius: 3)
+                                .fill(chartColors[index % chartColors.count])
+                                .frame(width: 12, height: 12)
+                                .accessibilityHidden(true)
+                            
                             Text(item.category)
                                 .font(Theme.body)
                                 .foregroundStyle(Theme.primaryText)
@@ -1314,7 +1354,7 @@ struct CapitalConcentrationView: View {
                                     .frame(height: 8)
                                 
                                 RoundedRectangle(cornerRadius: 4)
-                                    .fill(Theme.accent)
+                                    .fill(chartColors[index % chartColors.count])
                                     .frame(width: geometry.size.width * CGFloat(item.percentage / 100), height: 8)
                                     .accessibilityLabel("\(item.category) percentage")
                                     .accessibilityValue("\(item.percentage.formatted(.number.precision(.fractionLength(1)))) percent")
