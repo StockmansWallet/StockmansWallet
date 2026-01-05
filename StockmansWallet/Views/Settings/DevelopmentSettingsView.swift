@@ -19,6 +19,7 @@ struct DevelopmentSettingsView: View {
     var body: some View {
         List {
             Section {
+                // Debug: Keep reset onboarding for testing purposes
                 Button(action: {
                     HapticManager.tap()
                     resetOnboarding()
@@ -38,62 +39,8 @@ struct DevelopmentSettingsView: View {
                 }
                 .listRowBackground(Theme.cardBackground)
                 
-                Button(action: {
-                    HapticManager.tap()
-                    generateMockData()
-                }) {
-                    HStack {
-                        Image(systemName: "chart.bar.fill")
-                            .foregroundStyle(Theme.accent)
-                            .frame(width: 24)
-                        
-                        Text("Generate Mock Data (1 Year)")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.accent)
-                        
-                        Spacer()
-                    }
-                    .padding(.vertical, 4)
-                }
-                .listRowBackground(Theme.cardBackground)
-                
-                Button(action: {
-                    HapticManager.tap()
-                    generate3YearHistoricalData()
-                }) {
-                    HStack {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .foregroundStyle(Theme.accent)
-                            .frame(width: 24)
-                        
-                        Text("Generate 3-Year Historical Data")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.accent)
-                        
-                        Spacer()
-                    }
-                    .padding(.vertical, 4)
-                }
-                .listRowBackground(Theme.cardBackground)
-                
-                Button(action: {
-                    HapticManager.tap()
-                    clearMockData()
-                }) {
-                    HStack {
-                        Image(systemName: "trash.fill")
-                            .foregroundStyle(.red)
-                            .frame(width: 24)
-                        
-                        Text("Clear Mock Data")
-                            .font(Theme.body)
-                            .foregroundStyle(.red)
-                        
-                        Spacer()
-                    }
-                    .padding(.vertical, 4)
-                }
-                .listRowBackground(Theme.cardBackground)
+                // Debug: Mock data generation moved to empty dashboard page for easier access
+                // See EmptyDashboardView for Add/Remove mock data buttons
             }
         }
         .listStyle(.insetGrouped)
@@ -104,43 +51,12 @@ struct DevelopmentSettingsView: View {
         .toolbarBackground(.visible, for: .navigationBar)
     }
     
+    // Debug: Reset onboarding for testing purposes
     @MainActor
     private func resetOnboarding() {
         if let prefs = preferences.first {
             prefs.hasCompletedOnboarding = false
             try? modelContext.save()
-        }
-    }
-    
-    @MainActor
-    private func generateMockData() {
-        Task { @MainActor in
-            await MockDataService.shared.generateCompleteMockData(
-                modelContext: modelContext,
-                preferences: userPrefs
-            )
-            HapticManager.success()
-        }
-    }
-    
-    @MainActor
-    private func generate3YearHistoricalData() {
-        Task { @MainActor in
-            await HistoricalMockDataService.shared.generate3YearHistoricalData(
-                modelContext: modelContext,
-                preferences: userPrefs
-            )
-            NotificationCenter.default.post(name: .dataCleared, object: nil)
-            HapticManager.success()
-        }
-    }
-    
-    @MainActor
-    private func clearMockData() {
-        Task { @MainActor in
-            await MockDataService.shared.clearMockData(modelContext: modelContext)
-            NotificationCenter.default.post(name: .dataCleared, object: nil)
-            HapticManager.success()
         }
     }
 }

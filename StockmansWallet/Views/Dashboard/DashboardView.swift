@@ -59,6 +59,9 @@ struct DashboardView: View {
     @State private var showingAddAssetMenu = false
     @State private var backgroundImageTrigger = false // Debug: Trigger to force view refresh on background change
     
+    // Debug: State for clearing mock data (temporary dev feature)
+    @State private var isClearingMockData = false
+    
     var body: some View {
         NavigationStack {
             mainContentWithModifiers
@@ -284,10 +287,30 @@ struct DashboardView: View {
                     .accessibilityLabel("Capital concentration")
             }
             
-        
-         
-            
-        
+            // Debug: Temporary Clear Mock Data button for development
+            // TODO: Remove this button before production release
+            Button(action: {
+                HapticManager.tap()
+                clearMockData()
+            }) {
+                HStack(spacing: 8) {
+                    if isClearingMockData {
+                        ProgressView()
+                            .tint(.white)
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "trash.fill")
+                    }
+                    Text(isClearingMockData ? "Clearing..." : "Clear Mock Data")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(Theme.DestructiveButtonStyle())
+            .disabled(isClearingMockData)
+            .padding(.horizontal, Theme.cardPadding)
+            .padding(.top, Theme.sectionSpacing)
+            .accessibilityLabel("Clear mock data")
+            .accessibilityHint("Removes all mock data from the dashboard")
         }
         .padding(.top, -12)
         .padding(.bottom, 100)
@@ -649,6 +672,20 @@ struct DashboardView: View {
                 self.updateTimeRangeChange()
                 HapticManager.success()
             }
+        }
+    }
+    
+    // Debug: Clear all mock data (temporary dev feature)
+    // TODO: Remove this function before production release
+    @MainActor
+    private func clearMockData() {
+        isClearingMockData = true
+        Task { @MainActor in
+            await HistoricalMockDataService.shared.clearAllData(modelContext: modelContext)
+            // Debug: Notify dashboard to refresh after data is cleared
+            NotificationCenter.default.post(name: NSNotification.Name("DataCleared"), object: nil)
+            isClearingMockData = false
+            HapticManager.success()
         }
     }
 }
@@ -1376,6 +1413,15 @@ struct PerformanceMetricsView: View {
 // MARK: - Empty Dashboard View
 struct EmptyDashboardView: View {
     @Binding var showingAddAssetMenu: Bool
+    @Environment(\.modelContext) private var modelContext
+    @Query private var preferences: [UserPreferences]
+    
+    // Debug: State for loading indicator during mock data generation
+    @State private var isGeneratingData = false
+    
+    private var userPrefs: UserPreferences {
+        preferences.first ?? UserPreferences()
+    }
     
     var body: some View {
         VStack(spacing: 32) {
@@ -1406,10 +1452,50 @@ struct EmptyDashboardView: View {
             .accessibilityLabel("Add your first herd")
             .accessibilityHint("Opens the asset menu to add a herd.")
             
+            // Debug: Temporary Add Mock Data button for easier development
+            // TODO: Remove this button before production release
+            Button(action: {
+                HapticManager.tap()
+                addMockData()
+            }) {
+                HStack(spacing: 8) {
+                    if isGeneratingData {
+                        ProgressView()
+                            .tint(.white)
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "chart.bar.fill")
+                    }
+                    Text(isGeneratingData ? "Generating..." : "Add Mock Data")
+                }
+                .frame(maxWidth: .infinity)
+            }
+            .buttonStyle(Theme.SecondaryButtonStyle())
+            .disabled(isGeneratingData)
+            .padding(.horizontal, 40)
+            .accessibilityLabel("Add mock demo data")
+            .accessibilityHint("Generates 3 years of historical mock data for testing")
+            
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.backgroundColor.ignoresSafeArea())
+    }
+    
+    // Debug: Add 3-year historical mock data
+    @MainActor
+    private func addMockData() {
+        isGeneratingData = true
+        Task { @MainActor in
+            await HistoricalMockDataService.shared.generate3YearHistoricalData(
+                modelContext: modelContext,
+                preferences: userPrefs
+            )
+            // Debug: Notify dashboard to refresh after data is added
+            NotificationCenter.default.post(name: NSNotification.Name("DataCleared"), object: nil)
+            isGeneratingData = false
+            HapticManager.success()
+        }
     }
 }
 
