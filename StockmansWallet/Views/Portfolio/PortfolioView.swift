@@ -37,15 +37,9 @@ struct PortfolioView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: Theme.sectionSpacing) {
-                            // Debug: Total portfolio value at the top without card container
+                            // Debug: Portfolio stats cards stacked at the top
                             if let summary = portfolioSummary {
-                                TotalPortfolioValueHeader(summary: summary, isLoading: isLoading)
-                                    .padding(.horizontal)
-                            }
-                            
-                            // Debug: Portfolio stats moved above view selector to stay persistent
-                            if let summary = portfolioSummary {
-                                PortfolioStatsCard(summary: summary)
+                                PortfolioStatsCards(summary: summary, isLoading: isLoading)
                                     .padding(.horizontal)
                             }
                             
@@ -341,31 +335,71 @@ struct SpeciesBreakdown {
     var herdCount: Int
 }
 
-// MARK: - Total Portfolio Value Header
-// Debug: Simple header displaying total portfolio value without card container
-struct TotalPortfolioValueHeader: View {
+// MARK: - Portfolio Stats Cards
+// Debug: Stacked cards showing total portfolio value, total head, and active herds
+struct PortfolioStatsCards: View {
     let summary: PortfolioSummary
     let isLoading: Bool
     
     var body: some View {
-        VStack(spacing: 12) {
-            Text("Total Portfolio Value")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondaryText)
+        VStack(spacing: 16) {
+            // Total Portfolio Value Card (full width, prominent)
+            VStack(spacing: 8) {
+                Text("Total Portfolio Value")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                
+                if isLoading {
+                    ProgressView()
+                        .tint(Theme.accent)
+                } else {
+                    Text(summary.totalNetWorth, format: .currency(code: "AUD"))
+                        .font(.system(size: 44, weight: .bold))
+                        .foregroundStyle(.white)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .padding()
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             
-            if isLoading {
-                ProgressView()
-                    .tint(Theme.accent)
-            } else {
-                Text(summary.totalNetWorth, format: .currency(code: "AUD"))
-                    .font(.system(size: 44, weight: .bold))
-                    .foregroundStyle(.white)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+            // Total Head and Active Herds Cards (side by side)
+            HStack(spacing: 16) {
+                // Total Head
+                VStack(spacing: 8) {
+                    Text("Total Head")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    Text("\(summary.totalHeadCount)")
+                        .font(.system(size: 36, weight: .bold))
+                        .foregroundStyle(Theme.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Theme.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                
+                // Active Herds
+                VStack(spacing: 8) {
+                    Text("Active Herds")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    Text("\(summary.activeHerdCount)")
+                        .font(.system(size: 36, weight: .bold))
+                        .foregroundStyle(Theme.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Theme.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 20)
     }
 }
 
@@ -383,48 +417,6 @@ struct PortfolioViewModeSelector: View {
         .pickerStyle(.segmented)
         .onChange(of: selectedView) { _, _ in
             HapticManager.tap()
-        }
-    }
-}
-
-// MARK: - Portfolio Stats Card
-// Debug: Simple stats card with title above numbers, no icons
-struct PortfolioStatsCard: View {
-    let summary: PortfolioSummary
-    
-    var body: some View {
-        HStack(spacing: 16) {
-            // Total Head
-            VStack(spacing: 8) {
-                Text("Total Head")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                Text("\(summary.totalHeadCount)")
-                    .font(.system(size: 36, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            
-            // Active Herds
-            VStack(spacing: 8) {
-                Text("Active Herds")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                Text("\(summary.activeHerdCount)")
-                    .font(.system(size: 36, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .frame(maxWidth: .infinity)
-            .padding()
-            .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 }
