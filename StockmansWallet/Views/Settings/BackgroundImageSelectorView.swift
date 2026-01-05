@@ -141,7 +141,6 @@ struct BackgroundImageSelectorView: View {
                         topTrailingRadius: 32
                     )
                     .fill(Theme.backgroundColor)
-                    .shadow(color: .black.opacity(0.3), radius: 20, y: -5)
                 )
             }
         }
@@ -272,7 +271,7 @@ struct BackgroundImageSelectorView: View {
             }
             .padding(.horizontal, Theme.cardPadding)
         }
-        .frame(height: 140)
+        .frame(height: 200) // Debug: Increased height for portrait thumbnails
     }
     
     /// Debug: Custom image display area
@@ -289,7 +288,7 @@ struct BackgroundImageSelectorView: View {
                     }
                     .padding(.horizontal, Theme.cardPadding)
                 }
-                .frame(height: 140)
+                .frame(height: 200) // Debug: Increased height for portrait thumbnails
             } else {
                 // Debug: Empty state when no custom image
                 VStack(spacing: 12) {
@@ -300,15 +299,13 @@ struct BackgroundImageSelectorView: View {
                     Text("No Custom Image")
                         .font(Theme.headline)
                         .foregroundStyle(.white)
-                        .shadow(color: .black.opacity(0.3), radius: 2)
                     
                     Text("Tap 'Add Photo' below to upload your own image")
                         .font(Theme.caption)
                         .foregroundStyle(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
-                        .shadow(color: .black.opacity(0.3), radius: 2)
                 }
-                .frame(height: 140)
+                .frame(height: 200) // Debug: Increased height for portrait thumbnails
                 .padding(.horizontal, Theme.cardPadding)
             }
             
@@ -343,16 +340,14 @@ struct BackgroundImageSelectorView: View {
             Text("No Background")
                 .font(Theme.headline)
                 .foregroundStyle(.white)
-                .shadow(color: .black.opacity(0.3), radius: 2)
             
             Text("Your dashboard will use the default theme color")
                 .font(Theme.caption)
                 .foregroundStyle(.white.opacity(0.8))
                 .multilineTextAlignment(.center)
-                .shadow(color: .black.opacity(0.3), radius: 2)
         }
         .padding(.horizontal, Theme.cardPadding)
-        .frame(height: 140)
+        .frame(height: 200) // Debug: Increased height to match portrait thumbnails
     }
     
     // MARK: - Initialization
@@ -541,7 +536,7 @@ struct BackgroundImageSelectorView: View {
 }
 
 // MARK: - Background Thumbnail Component
-/// Debug: Landscape thumbnail for carousel (built-in images) - no borders
+/// Debug: Portrait thumbnail for carousel (built-in images) - no borders
 struct BackgroundThumbnail: View {
     let imageName: String
     let isSelected: Bool
@@ -550,19 +545,18 @@ struct BackgroundThumbnail: View {
     
     var body: some View {
         ZStack(alignment: .bottomTrailing) {
-            // Debug: Landscape image thumbnail without border (like mockup)
+            // Debug: Portrait image thumbnail without border - better fills vertical space
             Image(imageName)
                 .resizable()
                 .scaledToFill()
-                .frame(width: 180, height: 120)
+                .frame(width: 140, height: 180)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                .shadow(color: .black.opacity(0.4), radius: 8, y: 4)
             
             // Debug: Selection indicator overlay
             if isSelected {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.clear)
-                    .frame(width: 180, height: 120)
+                    .frame(width: 140, height: 180)
                     .overlay(
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 32))
@@ -588,7 +582,7 @@ struct BackgroundThumbnail: View {
 }
 
 // MARK: - Custom Background Thumbnail Component
-/// Debug: Landscape thumbnail for custom uploaded images - no borders
+/// Debug: Portrait thumbnail for custom uploaded images - no borders
 struct CustomBackgroundThumbnail: View {
     let imageName: String
     let isSelected: Bool
@@ -601,14 +595,13 @@ struct CustomBackgroundThumbnail: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 180, height: 120)
+                    .frame(width: 140, height: 180)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                    .shadow(color: .black.opacity(0.4), radius: 8, y: 4)
             } else {
                 // Debug: Fallback if image can't be loaded
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Theme.cardBackground)
-                    .frame(width: 180, height: 120)
+                    .frame(width: 140, height: 180)
                     .overlay(
                         VStack {
                             Image(systemName: "photo.fill")
@@ -619,14 +612,13 @@ struct CustomBackgroundThumbnail: View {
                                 .foregroundStyle(Theme.secondaryText)
                         }
                     )
-                    .shadow(color: .black.opacity(0.4), radius: 8, y: 4)
             }
             
             // Debug: Selection indicator overlay
             if isSelected {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.clear)
-                    .frame(width: 180, height: 120)
+                    .frame(width: 140, height: 180)
                     .overlay(
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 32))
