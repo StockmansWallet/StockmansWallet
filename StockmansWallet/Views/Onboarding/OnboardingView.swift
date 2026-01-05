@@ -179,6 +179,7 @@ struct OnboardingView: View {
             existing.defaultState = userPrefs.defaultState
             existing.latitude = userPrefs.latitude
             existing.longitude = userPrefs.longitude
+            existing.farmSize = userPrefs.farmSize // Debug: Farm size for subscription tier
             
             // Company fields (Advisory path)
             existing.companyName = userPrefs.companyName

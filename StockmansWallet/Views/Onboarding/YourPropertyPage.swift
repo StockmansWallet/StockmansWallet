@@ -33,13 +33,14 @@ struct YourPropertyPage: View {
     @State private var tempCustomRole = ""
     @State private var isOtherSelected = false
     
-    // Debug: Validation - property name, role, and state are required
+    // Debug: Validation - property name, role, state, and farm size are required
     private var isValid: Bool {
         let hasPropertyName = !(userPrefs.propertyName ?? "").isEmpty
         let hasRole = !(userPrefs.propertyRole ?? "").isEmpty
         let hasState = !userPrefs.defaultState.isEmpty
+        let hasFarmSize = userPrefs.farmSize != nil
         
-        return hasPropertyName && hasRole && hasState
+        return hasPropertyName && hasRole && hasState && hasFarmSize
     }
     
     var body: some View {
@@ -146,6 +147,130 @@ struct YourPropertyPage: View {
                         .buttonStyle(Theme.RowButtonStyle())
                         .accessibilityLabel("Select state")
                         .accessibilityValue(userPrefs.defaultState)
+                    }
+                    .padding(.horizontal, 20)
+                }
+                
+                // Farm Size Section
+                // Debug: Determines subscription tier eligibility (Starter vs Pro)
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Herd Size")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                        .padding(.horizontal, 20)
+                    
+                    VStack(spacing: 12) {
+                        // Less than 100 Head option
+                        Button(action: {
+                            HapticManager.tap()
+                            userPrefs.farmSize = "under100"
+                        }) {
+                            HStack(spacing: 16) {
+                                // Selection indicator
+                                ZStack {
+                                    Circle()
+                                        .strokeBorder(
+                                            userPrefs.farmSize == "under100" ? Theme.accent : Theme.secondaryText.opacity(0.3),
+                                            lineWidth: 2
+                                        )
+                                        .frame(width: 24, height: 24)
+                                    
+                                    if userPrefs.farmSize == "under100" {
+                                        Circle()
+                                            .fill(Theme.accent)
+                                            .frame(width: 12, height: 12)
+                                    }
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Less than 100 Head")
+                                        .font(Theme.body)
+                                        .foregroundStyle(Theme.primaryText)
+                                        .fontWeight(userPrefs.farmSize == "under100" ? .semibold : .regular)
+                                    
+                                    HStack(spacing: 4) {
+                                        Text("Starter Plan")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.positiveChange)
+                                        Text("• Free")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(16)
+                            .background(
+                                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                                    .fill(Theme.cardBackground)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                                    .strokeBorder(
+                                        userPrefs.farmSize == "under100" ? Theme.accent : Color.white.opacity(0.05),
+                                        lineWidth: userPrefs.farmSize == "under100" ? 2 : 1
+                                    )
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Less than 100 head, Starter plan, free")
+                        
+                        // More than 100 Head option
+                        Button(action: {
+                            HapticManager.tap()
+                            userPrefs.farmSize = "over100"
+                        }) {
+                            HStack(spacing: 16) {
+                                // Selection indicator
+                                ZStack {
+                                    Circle()
+                                        .strokeBorder(
+                                            userPrefs.farmSize == "over100" ? Theme.accent : Theme.secondaryText.opacity(0.3),
+                                            lineWidth: 2
+                                        )
+                                        .frame(width: 24, height: 24)
+                                    
+                                    if userPrefs.farmSize == "over100" {
+                                        Circle()
+                                            .fill(Theme.accent)
+                                            .frame(width: 12, height: 12)
+                                    }
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("More than 100 Head")
+                                        .font(Theme.body)
+                                        .foregroundStyle(Theme.primaryText)
+                                        .fontWeight(userPrefs.farmSize == "over100" ? .semibold : .regular)
+                                    
+                                    HStack(spacing: 4) {
+                                        Text("Pro Plan")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.accent)
+                                        Text("• $29.99/month")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                }
+                                
+                                Spacer()
+                            }
+                            .padding(16)
+                            .background(
+                                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                                    .fill(Theme.cardBackground)
+                            )
+                            .overlay(
+                                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                                    .strokeBorder(
+                                        userPrefs.farmSize == "over100" ? Theme.accent : Color.white.opacity(0.05),
+                                        lineWidth: userPrefs.farmSize == "over100" ? 2 : 1
+                                    )
+                            )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("More than 100 head, Pro plan, $29.99 per month")
                     }
                     .padding(.horizontal, 20)
                 }

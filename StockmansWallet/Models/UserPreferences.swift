@@ -60,6 +60,7 @@ final class UserPreferences {
     var defaultState: String // "NSW", "VIC", "QLD", etc.
     var latitude: Double?
     var longitude: Double?
+    var farmSize: String? // Debug: Farm size for subscription tier determination ("under100" or "over100")
     
     // MARK: - Company Information (Advisory Users)
     // Debug: Fields for advisory user onboarding flow
@@ -122,6 +123,7 @@ final class UserPreferences {
         self.defaultState = "QLD" // Debug: Default to QLD as per user request
         self.latitude = nil
         self.longitude = nil
+        self.farmSize = nil // Debug: Set during onboarding to determine subscription tier
         self.companyName = nil
         self.companyType = nil
         self.companyAddress = nil

@@ -59,7 +59,7 @@ struct SettingsView: View {
                 }
                 .listSectionSeparator(.hidden)
                 
-                // MARK: - Section 2: Preferences
+                // MARK: - Section 2: Appearance & Notifications
                 Section {
                     NavigationLink(destination: AppearanceSettingsView()) {
                         SettingsListRow(icon: "paintbrush.fill", title: "Appearance", subtitle: nil)
@@ -70,6 +70,15 @@ struct SettingsView: View {
                         SettingsListRow(icon: "bell.fill", title: "Notifications", subtitle: nil)
                     }
                     .listRowBackground(Theme.cardBackground)
+                }
+                .listSectionSeparator(.hidden)
+                
+                // MARK: - Section 3: Security & Data
+                Section {
+                    NavigationLink(destination: SecuritySettingsView()) {
+                        SettingsListRow(icon: "lock.shield.fill", title: "Security", subtitle: nil)
+                    }
+                    .listRowBackground(Theme.cardBackground)
                     
                     NavigationLink(destination: DataSyncSettingsView()) {
                         SettingsListRow(icon: "arrow.clockwise", title: "Data & Sync", subtitle: nil)
@@ -78,7 +87,16 @@ struct SettingsView: View {
                 }
                 .listSectionSeparator(.hidden)
                 
-                // MARK: - Section 3: Information & Support
+                // MARK: - Section 4: Connected Apps
+                Section {
+                    NavigationLink(destination: ConnectedAppsView()) {
+                        SettingsListRow(icon: "link.circle.fill", title: "Connected Apps", subtitle: nil)
+                    }
+                    .listRowBackground(Theme.cardBackground)
+                }
+                .listSectionSeparator(.hidden)
+                
+                // MARK: - Section 5: Information & Support
                 Section {
                     NavigationLink(destination: SupportView()) {
                         SettingsListRow(icon: "questionmark.circle.fill", title: "Help & Support", subtitle: nil)
@@ -92,7 +110,7 @@ struct SettingsView: View {
                 }
                 .listSectionSeparator(.hidden)
                 
-                // MARK: - Section 4: Dev Tools
+                // MARK: - Section 6: Dev Tools
                 // Debug: Temporary section for development/testing
                 // TODO: Remove this section before production release
                 Section {
