@@ -292,22 +292,10 @@ struct DashboardView: View {
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Saleyard selector")
             
-            QuickStatsView(herds: herds)
-                .padding(.horizontal, Theme.cardPadding)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Quick stats")
-            
-            if let metrics = performanceMetrics {
-                PerformanceMetricsView(metrics: metrics)
-                    .padding(.horizontal, Theme.cardPadding)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel("Performance metrics")
-            }
-            
             MarketPulseView()
                 .padding(.horizontal, Theme.cardPadding)
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel("Market pulse")
+                .accessibilityLabel("Herd performance")
             
             
             if !capitalConcentration.isEmpty {

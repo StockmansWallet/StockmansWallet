@@ -145,22 +145,32 @@ struct TimeRangeSelector: View {
     }
 }
 
-// MARK: - Market Pulse View
+// MARK: - Herd Performance View (Weekly)
+// Debug: Shows weekly performance by herd category with percentage changes
 struct MarketPulseView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var herds: [HerdGroup]
     @Query private var preferences: [UserPreferences]
-    @State private var indicators: [MarketIndicator] = []
+    @State private var categoryPerformance: [HerdCategoryPerformance] = []
     @State private var isLoading = true
+    
+    // Debug: Access ValuationEngine for calculating weekly changes
+    let valuationEngine = ValuationEngine.shared
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Market Pulse")
+                Text("Herd Performance")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
-                Image(systemName: "waveform.path.ecg")
-                    .foregroundStyle(Theme.accent)
+                HStack(spacing: 4) {
+                    Text("7d")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .foregroundStyle(Theme.accent)
+                }
             }
             
             if isLoading {
@@ -168,18 +178,18 @@ struct MarketPulseView: View {
                     .tint(Theme.accent)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding()
-            } else if indicators.isEmpty {
-                Text("No market data available")
+            } else if categoryPerformance.isEmpty {
+                Text("No herd data available")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
                     .padding(.vertical, 8)
             } else {
                 VStack(alignment: .leading, spacing: 12) {
-                    ForEach(indicators) { indicator in
+                    ForEach(categoryPerformance) { performance in
                         IndicatorRow(
-                            title: indicator.name,
-                            value: "$\(indicator.price.formatted(.number.precision(.fractionLength(2))))/kg",
-                            trend: indicator.trend
+                            title: performance.category,
+                            value: "\(performance.percentChange >= 0 ? "+" : "")\(performance.percentChange.formatted(.number.precision(.fractionLength(2))))%",
+                            trend: performance.trend
                         )
                     }
                 }
@@ -188,52 +198,113 @@ struct MarketPulseView: View {
         .padding(Theme.cardPadding)
         .stitchedCard()
         .task {
-            await loadIndicators()
+            await loadCategoryPerformance()
+        }
+        .onChange(of: herds.count) { _, _ in
+            // Debug: Reload when herds change
+            Task {
+                await loadCategoryPerformance()
+            }
         }
     }
     
-    private func loadIndicators() async {
+    // Debug: Calculate weekly performance for each herd category
+    private func loadCategoryPerformance() async {
         isLoading = true
         
-        // TODO: Implement actual MLA API integration
-        try? await Task.sleep(nanoseconds: 300_000_000)
+        let prefs = preferences.first ?? UserPreferences()
+        let activeHerds = herds.filter { !$0.isSold }
         
-        let mockIndicators = [
-            MarketIndicator(
-                id: UUID(),
-                name: "Eastern Young Cattle Indicator",
-                price: 6.45,
-                change: 0.15,
-                trend: .up
-            ),
-            MarketIndicator(
-                id: UUID(),
-                name: "Western Young Cattle Indicator",
-                price: 6.20,
-                change: -0.10,
-                trend: .down
-            ),
-            MarketIndicator(
-                id: UUID(),
-                name: "National Sheep Indicator",
-                price: 8.10,
-                change: 0.25,
-                trend: .up
-            )
-        ]
+        // Debug: Early return if no herds
+        guard !activeHerds.isEmpty else {
+            await MainActor.run {
+                self.categoryPerformance = []
+                self.isLoading = false
+            }
+            return
+        }
+        
+        // Debug: Calculate values for each category
+        let calendar = Calendar.current
+        let now = Date()
+        guard let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) else {
+            await MainActor.run {
+                self.categoryPerformance = []
+                self.isLoading = false
+            }
+            return
+        }
+        
+        // Group herds by category
+        let categoryGroups = Dictionary(grouping: activeHerds) { $0.category }
+        
+        var performances: [HerdCategoryPerformance] = []
+        
+        for (category, categoryHerds) in categoryGroups {
+            // Debug: Calculate current value for category
+            var currentValue: Double = 0.0
+            var weekAgoValue: Double = 0.0
+            
+            for herd in categoryHerds {
+                // Only include herds that existed a week ago
+                guard herd.createdAt <= weekAgo else { continue }
+                
+                let currentValuation = await valuationEngine.calculateHerdValue(
+                    herd: herd,
+                    preferences: prefs,
+                    modelContext: modelContext
+                )
+                
+                let pastValuation = await valuationEngine.calculateHerdValue(
+                    herd: herd,
+                    preferences: prefs,
+                    modelContext: modelContext,
+                    asOfDate: weekAgo
+                )
+                
+                currentValue += currentValuation.netRealizableValue
+                weekAgoValue += pastValuation.netRealizableValue
+            }
+            
+            // Debug: Calculate percentage change
+            guard weekAgoValue > 0 else { continue }
+            
+            let change = currentValue - weekAgoValue
+            let percentChange = (change / weekAgoValue) * 100
+            
+            // Debug: Determine trend based on percentage change threshold
+            let trend: PriceTrend = {
+                if percentChange > 0.1 {
+                    return .up
+                } else if percentChange < -0.1 {
+                    return .down
+                } else {
+                    return .neutral
+                }
+            }()
+            
+            performances.append(HerdCategoryPerformance(
+                category: category,
+                percentChange: percentChange,
+                trend: trend
+            ))
+        }
+        
+        // Debug: Sort by absolute percentage change (largest movements first)
+        performances.sort { abs($0.percentChange) > abs($1.percentChange) }
         
         await MainActor.run {
-            self.indicators = mockIndicators
+            self.categoryPerformance = performances
             self.isLoading = false
         }
     }
 }
 
-struct MarketIndicator: Identifiable {
-    let id: UUID
-    let name: String
-    let price: Double
-    let change: Double
+// Debug: Data model for herd category performance
+struct HerdCategoryPerformance: Identifiable {
+    let id = UUID()
+    let category: String
+    let percentChange: Double
     let trend: PriceTrend
 }
 
