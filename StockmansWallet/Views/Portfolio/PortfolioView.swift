@@ -743,8 +743,8 @@ struct AssetRegisterHeader: View {
 }
 
 // MARK: - Enhanced Herd Card
-// Debug: Redesigned to match sales record card style with orange accents
-// Layout: name/value on top, details below, right-aligned numbers with separate chevron
+// Debug: Clear layout showing all essential herd information
+// Layout: name, headcount, saleyard, weights, prices in logical hierarchy
 struct EnhancedHerdCard: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
@@ -760,64 +760,101 @@ struct EnhancedHerdCard: View {
     var body: some View {
         NavigationLink(destination: HerdDetailView(herd: herd)) {
             VStack(alignment: .leading, spacing: 12) {
-                // Top Row: Name (left, orange) and Chevron (right)
+                // Top Row: Herd Name (left, orange) and Chevron (right)
                 HStack {
                     Text(herd.name)
-                        .font(Theme.headline) // ~17pt - Prominent orange text
-                        .foregroundStyle(Theme.accent) // Orange color for prominent text
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.accent)
                     
                     Spacer()
                     
-                    // Chevron on the top line, separate from numbers
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Theme.secondaryText.opacity(0.6))
                 }
                 
-                // Solid horizontal divider below title
+                // Divider
                 Rectangle()
                     .frame(height: 1)
-                    .foregroundStyle(Theme.separator.opacity(0.15)) // Solid line, more transparent
+                    .foregroundStyle(Theme.separator.opacity(0.15))
                 
-                // Middle Row: Quantity/Type (left, white) and Total Value (right, orange)
-                HStack(alignment: .top) { // Top align so white text and orange number align at their tops
-                    Text("\(herd.headCount) \(herd.breed) \(herd.category)")
-                        .font(Theme.subheadline) // ~15pt - White text, same size as total value, slightly smaller
-                        .foregroundStyle(.white)
+                // Headcount and Total Price Row
+                HStack(alignment: .firstTextBaseline) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Headcount")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Text("\(herd.headCount) head")
+                            .font(Theme.subheadline)
+                            .foregroundStyle(.white)
+                    }
                     
                     Spacer()
                     
-                    if let valuation = valuation {
-                        Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
-                            .font(Theme.subheadline) // ~15pt - Same size as white text, slightly smaller
-                            .foregroundStyle(Theme.accent) // Orange color for total value
-                    } else if isLoading {
-                        ProgressView()
-                            .tint(Theme.accent)
-                            .scaleEffect(0.8)
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text("Total Value")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        
+                        if let valuation = valuation {
+                            Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
+                                .font(Theme.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(Theme.accent)
+                        } else if isLoading {
+                            ProgressView()
+                                .tint(Theme.accent)
+                                .scaleEffect(0.8)
+                        }
                     }
                 }
                 
-                // Bottom Row: Price Source (left, grey) and Combined avg weight + price per kg (right, grey)
+                // Saleyard Row
+                if let saleyard = herd.selectedSaleyard, !saleyard.isEmpty {
+                    HStack(spacing: 6) {
+                        Image(systemName: "building.2")
+                            .font(.system(size: 12))
+                            .foregroundStyle(Theme.secondaryText)
+                        Text(saleyard)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                }
+                
+                // Average Weight and Average Price Row
                 if let valuation = valuation {
-                    HStack {
-                        Text("Price Source: \(valuation.priceSource)")
-                            .font(Theme.caption) // ~12pt - Smallest grey text
-                            .foregroundStyle(Theme.secondaryText) // Grey text
+                    HStack(spacing: 20) {
+                        // Average Weight
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Avg Weight")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            Text("\(Int(valuation.projectedWeight)) kg")
+                                .font(Theme.caption)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.white)
+                        }
                         
-                        Spacer()
-                        
-                        // Average weight and price per kg on same line, separated by slash
-                        Text("\(Int(valuation.projectedWeight)) kg avg / \(valuation.pricePerKg, format: .number.precision(.fractionLength(2))) /kg")
-                            .font(Theme.caption) // ~12pt - Smallest grey text
-                            .foregroundStyle(Theme.secondaryText) // Grey text
+                        // Average Price
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Avg Price")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            Text(valuation.pricePerKg, format: .currency(code: "AUD"))
+                                .font(Theme.caption)
+                                .fontWeight(.medium)
+                                .foregroundStyle(.white)
+                            + Text("/kg")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                        }
                     }
                 }
             }
             .padding(Theme.cardPadding)
         }
         .buttonStyle(PlainButtonStyle())
-        .stitchedCard() // Use standard card styling
+        .stitchedCard()
         .task {
             await loadValuation()
         }
