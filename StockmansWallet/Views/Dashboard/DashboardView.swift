@@ -865,8 +865,6 @@ struct InteractiveChartView: View {
     // Performance: Cache scrubber position to avoid recalculating on every render
     @State private var scrubberPosition: ScrubberPosition?
     
-    private let gridSpacing: CGFloat = 50
-    
     // Debug: Struct to batch scrubber state updates (reduces view updates from 3 to 1)
     private struct ScrubberPosition {
         let date: Date
@@ -972,25 +970,9 @@ struct InteractiveChartView: View {
         return out
     }
     
+    // Debug: Grid removed per user request - clean minimal chart appearance
     private var chartGrid: some View {
-        GeometryReader { geo in
-            let size = geo.size
-            Path { path in
-                var x: CGFloat = 0
-                while x <= size.width {
-                    path.move(to: CGPoint(x: x, y: 0))
-                    path.addLine(to: CGPoint(x: x, y: size.height))
-                    x += gridSpacing
-                }
-                var y: CGFloat = 0
-                while y <= size.height {
-                    path.move(to: CGPoint(x: 0, y: y))
-                    path.addLine(to: CGPoint(x: size.width, y: y))
-                    y += gridSpacing
-                }
-            }
-            .stroke(Theme.primaryText.opacity(0.1), lineWidth: 0.5)
-        }
+        Color.clear
     }
     
     // Performance: Chart content without dimming effect to prevent redraw on every drag event
@@ -1232,7 +1214,21 @@ struct InteractiveChartView: View {
             }
             .frame(height: 200)
             .clipped()
-            .stitchedCard() // No padding - chart content fills to card edges
+            // Debug: Clean minimal chart styling with subtle stroke matching other cards
+            .background(
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                    .fill(Color.white.opacity(0.01))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        Color.white.opacity(0.1),
+                        style: StrokeStyle(
+                            lineWidth: 1,
+                            lineCap: .round
+                        )
+                    )
+            )
             .accessibilityLabel("Portfolio value chart")
             
             ChartDateLabelsView(
