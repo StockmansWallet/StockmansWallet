@@ -175,9 +175,9 @@ struct PropertyCard: View {
                     
                     Spacer()
                     
-                    // Default badge
+                    // Primary badge
                     if property.isDefault {
-                        Text("Default")
+                        Text("Primary")
                             .font(Theme.caption)
                             .fontWeight(.semibold)
                             .foregroundStyle(.white)

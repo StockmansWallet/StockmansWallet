@@ -196,6 +196,42 @@ struct OnboardingView: View {
             existing.myobConnected = userPrefs.myobConnected
         }
         
+        // Debug: Create Property entity from onboarding data for farmers
+        // Check if user is a farmer and has filled out property information
+        if userPrefs.userRole == .farmerGrazier,
+           let propertyName = userPrefs.propertyName,
+           !propertyName.isEmpty {
+            
+            // Debug: Check if a property with this name already exists to avoid duplicates
+            let descriptor = FetchDescriptor<Property>(
+                predicate: #Predicate { $0.propertyName == propertyName }
+            )
+            
+            let existingProperties = (try? modelContext.fetch(descriptor)) ?? []
+            
+            // Debug: Only create if property doesn't already exist
+            if existingProperties.isEmpty {
+                // Debug: Create the primary property from onboarding data
+                let primaryProperty = Property(
+                    propertyName: propertyName,
+                    propertyPIC: userPrefs.propertyPIC,
+                    state: userPrefs.defaultState.isEmpty ? "QLD" : userPrefs.defaultState,
+                    isDefault: true // Mark as primary/default property
+                )
+                
+                // Debug: Set optional fields if available
+                primaryProperty.address = userPrefs.propertyAddress
+                primaryProperty.latitude = userPrefs.latitude
+                primaryProperty.longitude = userPrefs.longitude
+                
+                // Debug: Insert the primary property into SwiftData
+                modelContext.insert(primaryProperty)
+                print("✅ Created primary property: \(propertyName)")
+            } else {
+                print("ℹ️ Property '\(propertyName)' already exists, skipping creation")
+            }
+        }
+        
         try? modelContext.save()
     }
     
@@ -211,6 +247,26 @@ struct OnboardingView: View {
         } else if let existing = preferences.first {
             existing.hasCompletedOnboarding = true
             existing.role = UserRole.farmerGrazier.rawValue
+        }
+        
+        // Debug: Create a test primary property for development
+        let descriptor = FetchDescriptor<Property>(
+            predicate: #Predicate { $0.propertyName == "Test Farm" }
+        )
+        
+        let existingProperties = (try? modelContext.fetch(descriptor)) ?? []
+        
+        // Debug: Only create if property doesn't already exist
+        if existingProperties.isEmpty {
+            let testProperty = Property(
+                propertyName: "Test Farm",
+                propertyPIC: "QTEST1234",
+                state: "QLD",
+                isDefault: true
+            )
+            testProperty.address = "123 Test Road, Test Valley"
+            modelContext.insert(testProperty)
+            print("✅ Created test primary property for dev")
         }
         
         try? modelContext.save()

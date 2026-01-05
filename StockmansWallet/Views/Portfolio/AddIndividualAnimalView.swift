@@ -27,6 +27,9 @@ struct AddIndividualAnimalView: View {
     @State private var joinedDate = Date()
     @State private var calvingRate: Int = 85
     @State private var inCalf = true
+    @State private var controlledBreedingProgram = false
+    @State private var joiningPeriodStart = Date()
+    @State private var joiningPeriodEnd = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
     @State private var selectedSaleyard: String?
     @State private var tagNumber = ""
     @State private var birthDate: Date?
@@ -35,6 +38,7 @@ struct AddIndividualAnimalView: View {
     @State private var categorySearchText = ""
     @State private var showingBreedPicker = false
     @State private var showingCategoryPicker = false
+    @State private var showingSaleyardPicker = false
     
     private let speciesOptions = ["Cattle", "Sheep", "Pig"]
     
@@ -43,10 +47,11 @@ struct AddIndividualAnimalView: View {
         preferences.first ?? UserPreferences()
     }
     
+    // Debug: Determines if category requires breeding-specific step
     private var isBreederCategory: Bool {
         let breederCategories = [
             "Breeding Cow", "Breeding Ewe", "Breeder Sow", "Breeding Doe",
-            "Maiden Ewe (Joined)"
+            "Maiden Ewe (Joined)", "Heifer (Joined)", "First Calf Heifer"
         ]
         return breederCategories.contains(selectedCategory)
     }
@@ -213,6 +218,10 @@ struct AddIndividualAnimalView: View {
                 )
                 .presentationBackground(Theme.sheetBackground)
             }
+            .sheet(isPresented: $showingSaleyardPicker) {
+                AddFlowSaleyardSelectionSheet(selectedSaleyard: $selectedSaleyard)
+                    .presentationBackground(Theme.sheetBackground)
+            }
             .background(Theme.sheetBackground.ignoresSafeArea())
             .simultaneousGesture(
                 TapGesture().onEnded { _ in
@@ -334,58 +343,15 @@ struct AddIndividualAnimalView: View {
     }
     
     // MARK: - Breeders (Conditional)
+    // Debug: Using shared BreedersFormSection component for consistency across flows
     private var breedersContent: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            // Debug: Section header - center aligned and larger font
-            Text("Breeders")
-                .font(Theme.title)
-                .foregroundStyle(Theme.primaryText)
-                .frame(maxWidth: .infinity, alignment: .center)
-            
-            // Debug: Calving rate title outside container matching other field labels
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Calving Rate: \(calvingRate)%")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Slider(value: Binding(
-                    get: { Double(calvingRate) },
-                    set: { calvingRate = Int($0) }
-                ), in: 50...100, step: 1)
-                .padding()
-                .background(Theme.inputFieldBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            }
-            .accessibilityLabel("Calving rate")
-            
-            // Debug: Joined date full width
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Joined Date")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                DatePicker("", selection: $joinedDate, displayedComponents: .date)
-                    .labelsHidden()
-                    .datePickerStyle(.compact)
-                    .padding()
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            }
-            .accessibilityLabel("Joined date")
-            
-            // Debug: In Calf full width
-            VStack(alignment: .leading, spacing: 8) {
-                Text("In Calf")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Toggle("", isOn: $inCalf)
-                    .labelsHidden()
-                    .tint(Theme.positiveChange)
-                    .padding()
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 20)
+        BreedersFormSection(
+            calvingRate: $calvingRate,
+            inCalf: $inCalf,
+            controlledBreedingProgram: $controlledBreedingProgram,
+            joiningPeriodStart: $joiningPeriodStart,
+            joiningPeriodEnd: $joiningPeriodEnd
+        )
     }
     
     // MARK: - Step 2/3: Physical Attributes
@@ -469,21 +435,56 @@ struct AddIndividualAnimalView: View {
     // MARK: - Step 3/4: Additional Details
     private var step3Content: some View {
         VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header - center aligned and larger font
+            Text("Saleyard Selection")
+                .font(Theme.title)
+                .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+            
+            // Debug: Saleyard picker button that opens searchable sheet
             VStack(alignment: .leading, spacing: 8) {
-                Text("Saleyard (Optional)")
+                Text("Saleyard")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 
-                Picker("Saleyard", selection: $selectedSaleyard) {
-                    Text("Use Default").tag(nil as String?)
-                    // Debug: Use filtered saleyards from user preferences
-                    ForEach(userPrefs.filteredSaleyards, id: \.self) { saleyard in
-                        Text(saleyard).tag(saleyard as String?)
+                // Debug: Picker button meets iOS 26 HIG minimum touch target of 44pt height
+                Button(action: {
+                    HapticManager.tap()
+                    showingSaleyardPicker = true
+                }) {
+                    HStack {
+                        Text(selectedSaleyard ?? "Use Default")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.primaryText)
+                        Spacer()
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Theme.secondaryText)
                     }
+                    .padding()
+                    .frame(minHeight: Theme.minimumTouchTarget) // iOS 26 HIG: Minimum 44pt
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                .pickerStyle(.menu)
+                .buttonBorderShape(.roundedRectangle)
+                .accessibilityLabel("Select saleyard")
+            }
+            
+            // Debug: Informative text about valuation engine - placed below picker
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "info.circle.fill")
+                        .foregroundStyle(Theme.accent)
+                        .font(.system(size: 16))
+                        .padding(.top, 2)
+                    
+                    Text("Valuation engine currently derived from this saleyard. You can change it later in Settings.")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
                 .padding()
-                .background(Theme.inputFieldBackground)
+                .background(Theme.accent.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
         }
@@ -561,9 +562,20 @@ struct AddIndividualAnimalView: View {
         
         herd.paddockName = paddockName.isEmpty ? nil : paddockName
         herd.isPregnant = inCalf
-        if herd.isPregnant {
+        
+        // Debug: Set breeding-specific data for breeder categories
+        if isBreederCategory {
             herd.joinedDate = joinedDate
             herd.calvingRate = Double(calvingRate) / 100.0
+            
+            // Debug: Store breeding program info in additionalInfo
+            if controlledBreedingProgram {
+                let formatter = DateFormatter()
+                formatter.dateStyle = .short
+                herd.additionalInfo = "Controlled Breeding: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))"
+            } else {
+                herd.additionalInfo = "Breeding: All year round"
+            }
         }
         
         modelContext.insert(herd)

@@ -229,7 +229,7 @@ struct AddHerdFlowView: View {
                 .presentationBackground(Theme.sheetBackground)
             }
             .sheet(isPresented: $showingSaleyardPicker) {
-                AddHerdSaleyardSelectionSheet(selectedSaleyard: $selectedSaleyard)
+                AddFlowSaleyardSelectionSheet(selectedSaleyard: $selectedSaleyard)
                     .presentationBackground(Theme.sheetBackground)
             }
             .background(Theme.sheetBackground.ignoresSafeArea())
@@ -354,123 +354,15 @@ struct AddHerdFlowView: View {
     }
     
     // MARK: - Breeders (Conditional)
+    // Debug: Using shared BreedersFormSection component for consistency across flows
     private var breedersContent: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            // Debug: Section header - center aligned and larger font
-            Text("Breeders")
-                .font(Theme.title)
-                .foregroundStyle(Theme.primaryText)
-                .frame(maxWidth: .infinity, alignment: .center)
-            
-            // Debug: HIG-compliant slider for calving rate (estimated percentage)
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Calving Rate")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    Spacer()
-                    Text("\(calvingRate)%")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.accent)
-                        .fontWeight(.semibold)
-                }
-                Slider(value: Binding(
-                    get: { Double(calvingRate) },
-                    set: { calvingRate = Int($0) }
-                ), in: 50...100, step: 1)
-                    .tint(Theme.accent)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 8)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .accessibilityLabel("Calving rate")
-                    .accessibilityValue("\(calvingRate) percent")
-            }
-            
-            // Debug: HIG-compliant toggle for In Calf status
-            HStack {
-                Text("In Calf")
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.primaryText)
-                Spacer()
-                Toggle("", isOn: $inCalf)
-                    .labelsHidden()
-                    .tint(Theme.accent)
-            }
-            .padding()
-            .background(Theme.inputFieldBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .accessibilityLabel("In calf status")
-            
-            // Debug: Breeding Program section - controls joining period
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Breeding Program")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                
-                // Debug: Toggle for controlled breeding program
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Controlled Program")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.primaryText)
-                        Text(controlledBreedingProgram ? "Specific joining period" : "Accruing all year round")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                    Spacer()
-                    Toggle("", isOn: $controlledBreedingProgram)
-                        .labelsHidden()
-                        .tint(Theme.accent)
-                }
-                .padding()
-                .background(Theme.inputFieldBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .accessibilityLabel("Controlled breeding program")
-                
-                // Debug: Show joining period date range if controlled program is enabled
-                if controlledBreedingProgram {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Joining Period")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondaryText)
-                        
-                        VStack(spacing: 12) {
-                            // Start date
-                            HStack {
-                                Text("Start")
-                                    .font(Theme.body)
-                                    .foregroundStyle(Theme.secondaryText)
-                                    .frame(width: 60, alignment: .leading)
-                                DatePicker("", selection: $joiningPeriodStart, displayedComponents: .date)
-                                    .labelsHidden()
-                                    .datePickerStyle(.compact)
-                            }
-                            
-                            Divider()
-                                .background(Theme.primaryText.opacity(0.2))
-                            
-                            // End date
-                            HStack {
-                                Text("End")
-                                    .font(Theme.body)
-                                    .foregroundStyle(Theme.secondaryText)
-                                    .frame(width: 60, alignment: .leading)
-                                DatePicker("", selection: $joiningPeriodEnd, displayedComponents: .date)
-                                    .labelsHidden()
-                                    .datePickerStyle(.compact)
-                            }
-                        }
-                        .padding()
-                        .background(Theme.inputFieldBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    }
-                    .accessibilityLabel("Joining period date range")
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 20)
+        BreedersFormSection(
+            calvingRate: $calvingRate,
+            inCalf: $inCalf,
+            controlledBreedingProgram: $controlledBreedingProgram,
+            joiningPeriodStart: $joiningPeriodStart,
+            joiningPeriodEnd: $joiningPeriodEnd
+        )
     }
     
     // MARK: - Step 2
@@ -987,132 +879,5 @@ struct ScrollablePickerSheet: View {
         .onAppear {
             localSearchText = searchText
         }
-    }
-}
-
-// MARK: - Add Herd Saleyard Selection Sheet
-// Debug: HIG-compliant searchable sheet for selecting saleyard during Add Herd flow
-struct AddHerdSaleyardSelectionSheet: View {
-    @Binding var selectedSaleyard: String?
-    @Environment(\.dismiss) private var dismiss
-    @Query private var preferences: [UserPreferences]
-    @State private var searchText = ""
-    
-    // Debug: Get user preferences for filtered saleyards
-    private var userPrefs: UserPreferences {
-        preferences.first ?? UserPreferences()
-    }
-    
-    // Debug: Filter saleyards based on search text and user preferences
-    private var filteredSaleyards: [String] {
-        let enabledSaleyards = userPrefs.filteredSaleyards
-        if searchText.isEmpty {
-            return enabledSaleyards
-        } else {
-            return enabledSaleyards.filter { 
-                $0.localizedCaseInsensitiveContains(searchText) 
-            }
-        }
-    }
-    
-    var body: some View {
-        NavigationStack {
-            List {
-                // Debug: Default option section
-                Section {
-                    Button(action: {
-                        HapticManager.tap()
-                        selectedSaleyard = nil
-                        dismiss()
-                    }) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Use Default")
-                                    .font(Theme.body)
-                                    .foregroundStyle(Theme.primaryText)
-                                
-                                if let defaultSaleyard = userPrefs.defaultSaleyard {
-                                    Text(defaultSaleyard)
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.secondaryText)
-                                }
-                            }
-                            
-                            Spacer()
-                            
-                            if selectedSaleyard == nil {
-                                Image(systemName: "checkmark")
-                                    .foregroundStyle(Theme.accent)
-                                    .font(.system(size: 16, weight: .semibold))
-                            }
-                        }
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .listRowBackground(Color.clear)
-                }
-                
-                // Debug: All saleyards section - filterable by search
-                Section {
-                    ForEach(filteredSaleyards, id: \.self) { saleyard in
-                        Button(action: {
-                            HapticManager.tap()
-                            selectedSaleyard = saleyard
-                            dismiss()
-                        }) {
-                            HStack {
-                                Text(saleyard)
-                                    .font(Theme.body)
-                                    .foregroundStyle(Theme.primaryText)
-                                    .multilineTextAlignment(.leading)
-                                
-                                Spacer()
-                                
-                                if selectedSaleyard == saleyard {
-                                    Image(systemName: "checkmark")
-                                        .foregroundStyle(Theme.accent)
-                                        .font(.system(size: 16, weight: .semibold))
-                                }
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .listRowBackground(Color.clear)
-                    }
-                } header: {
-                    Text("Select Specific Saleyard")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                }
-                
-                // Debug: Show helpful message if no results
-                if filteredSaleyards.isEmpty {
-                    Section {
-                        Text("No saleyards found")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondaryText)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding()
-                    }
-                    .listRowBackground(Color.clear)
-                }
-            }
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search saleyards")
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(Theme.background)
-            .navigationTitle("Select Saleyard")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundStyle(Theme.accent)
-                }
-            }
-        }
-        .presentationDetents([.large])
-        .presentationDragIndicator(.visible)
     }
 }

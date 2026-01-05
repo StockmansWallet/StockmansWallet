@@ -88,13 +88,13 @@ struct PortfolioView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     // Debug: Per iOS HIG - Use .borderedProminent for primary toolbar action
                     // Creates a filled, tinted button that stands out as the main CTA
-                    Button("Add") {
+                    Button("Manage") {
                         HapticManager.tap()
                         showingAddAssetMenu = true
                     }
                     .buttonStyle(.borderedProminent)
                     .tint(Theme.accent)
-                    .accessibilityLabel("Add asset")
+                    .accessibilityLabel("Manage Stock")
                 }
             }
             .toolbarBackground(.clear, for: .navigationBar)
