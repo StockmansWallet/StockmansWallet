@@ -179,7 +179,7 @@ struct DashboardView: View {
                     CustomParallaxImageView(
                         imageName: imageName,
                         intensity: 25,           // Movement amount (20-40)
-                        opacity: 0.2,            // Background opacity
+                        opacity: 0.5,            // Background opacity
                         scale: 0.5,              // Image takes 50% of screen height
                         verticalOffset: -60,     // Move image up to show more middle/lower area
                         blur: 0                  // BG Image Blur radius
@@ -190,7 +190,7 @@ struct DashboardView: View {
                     ParallaxImageView(
                         imageName: imageName,
                         intensity: 25,           // Movement amount (20-40)
-                        opacity: 0.2,            // Background opacity
+                        opacity: 0.5,            // Background opacity
                         scale: 0.5,              // Image takes 50% of screen height
                         verticalOffset: -60,     // Move image up to show more middle/lower area
                         blur: 0                  // BG Image Blur radius
