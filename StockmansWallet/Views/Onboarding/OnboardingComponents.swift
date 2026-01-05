@@ -32,67 +32,28 @@ struct OnboardingPageTemplate<Content: View>: View {
     private let titleSpacing: CGFloat = 8
     
     var body: some View {
-        // Debug: iOS 26 HIG - ScrollView wraps entire page content (header + body) for full-page scrolling
-        // Footer remains pinned using safeAreaInset
-        VStack(spacing: 0) {
+        // Debug: iOS 26 HIG - Content scrolls under back button (standard iOS pattern)
+        ZStack(alignment: .top) {
+            // Scrollable content (extends to top edge, scrolls under back button)
             ScrollView {
                 VStack(spacing: 0) {
-                    // Header (now inside ScrollView for full-page scrolling)
-                    VStack(spacing: headerSpacing) {
-                        HStack {
-                            if showBack && currentPage > 0 {
-                                Button(action: {
-                                    HapticManager.tap()
-                                    withAnimation {
-                                        currentPage = max(0, currentPage - 1)
-                                    }
-                                }) {
-                                    Image(systemName: "chevron.left")
-                                        .font(.system(size: 16, weight: .semibold))
-                                        .foregroundStyle(Theme.primaryText)
-                                        .frame(width: controlSize, height: controlSize)
-                                        .contentShape(Circle())
-                                        .background(
-                                            Circle()
-                                                .fill(Color.clear)
-                                                .frame(width: controlSize, height: controlSize)
-                                                .glassEffect(.regular.interactive(), in: Circle())
-                                        )
-                                }
-                                .buttonStyle(.plain)
-                                .accessibilityLabel("Go back to previous page")
-                            } else {
-                                Color.clear
-                                    .frame(width: controlSize, height: controlSize)
-                                    .accessibilityHidden(true)
-                            }
-                            
-                            Spacer()
-                            
-                            // Right-side placeholder keeps title centered
-                            Color.clear
-                                .frame(width: controlSize, height: controlSize)
-                                .accessibilityHidden(true)
-                        }
-                        .padding(.horizontal, horizontalPadding)
+                    // Header (title and subtitle)
+                    VStack(spacing: 12) {
+                        Text(title)
+                            .font(.system(size: 28, weight: .bold))
+                            .foregroundStyle(Theme.primaryText)
+                            .multilineTextAlignment(.center)
+                            .accessibilityAddTraits(.isHeader)
                         
-                        VStack(spacing: 12) {
-                            Text(title)
-                                .font(.system(size: 28, weight: .bold))
-                                .foregroundStyle(Theme.primaryText)
-                                .multilineTextAlignment(.center)
-                                .accessibilityAddTraits(.isHeader)
-                            
-                            Text(subtitle)
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.secondaryText)
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal, 40)
-                        }
-                        .padding(.horizontal, horizontalPadding)
-                        .padding(.bottom, 32)
+                        Text(subtitle)
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.secondaryText)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 40)
                     }
-                    .padding(.top, 40) // Debug: Updated to match Select User page styling for consistency
+                    .padding(.horizontal, horizontalPadding)
+                    .padding(.bottom, 32)
+                    .padding(.top, 80) // Debug: Top padding to account for back button area
                     
                     // Page content
                     content
@@ -101,6 +62,62 @@ struct OnboardingPageTemplate<Content: View>: View {
                 }
             }
             .scrollDismissesKeyboard(.interactively) // Debug: iOS 16+ - Interactive keyboard dismissal on scroll
+            
+            // Back button overlay - pinned at top (floats above content)
+            VStack(spacing: 0) {
+                HStack {
+                    if showBack && currentPage > 0 {
+                        Button(action: {
+                            HapticManager.tap()
+                            withAnimation {
+                                currentPage = max(0, currentPage - 1)
+                            }
+                        }) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundStyle(Theme.primaryText)
+                                .frame(width: controlSize, height: controlSize)
+                                .contentShape(Circle())
+                                .background(
+                                    Circle()
+                                        .fill(Color.clear)
+                                        .frame(width: controlSize, height: controlSize)
+                                        .glassEffect(.regular.interactive(), in: Circle())
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Go back to previous page")
+                    } else {
+                        Color.clear
+                            .frame(width: controlSize, height: controlSize)
+                            .accessibilityHidden(true)
+                    }
+                    
+                    Spacer()
+                    
+                    // Right-side placeholder keeps spacing consistent
+                    Color.clear
+                        .frame(width: controlSize, height: controlSize)
+                        .accessibilityHidden(true)
+                }
+                .padding(.horizontal, horizontalPadding)
+                .padding(.top, 16)
+                .padding(.bottom, 16)
+                .background(
+                    // Debug: Subtle gradient fade for back button area (content scrolls under)
+                    LinearGradient(
+                        colors: [
+                            Theme.backgroundColor.opacity(0.95),
+                            Theme.backgroundColor.opacity(0)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                    .ignoresSafeArea(edges: .top)
+                )
+                
+                Spacer()
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.backgroundGradient) // Background can be extended by parent if needed
