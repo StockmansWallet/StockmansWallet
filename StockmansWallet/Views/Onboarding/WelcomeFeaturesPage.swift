@@ -15,8 +15,7 @@ enum OnboardingStep {
 
 struct WelcomeFeaturesPage: View {
     @Binding var onboardingStep: OnboardingView.OnboardingStep
-    @Binding var showingSignIn: Bool
-    @Binding var showingTermsPrivacy: Bool // Debug: Show Terms sheet after "Get Started"
+    @Binding var showingTermsPrivacy: Bool // Debug: Show Terms sheet after "Continue"
     @Binding var hasAcceptedTerms: Bool // Debug: Track if terms have been accepted
     
     // Start child motion only after parent fade
@@ -201,9 +200,9 @@ struct WelcomeFeaturesPage: View {
         }
         .ignoresSafeArea(.all)
         .onChange(of: hasAcceptedTerms) { oldValue, newValue in
-            // Debug: After user accepts terms (from features page), show sign-in
+            // Debug: After user accepts terms (from features page), transition to full-screen sign-in
             if newValue && step == .features {
-                showingSignIn = true
+                onboardingStep = .signIn
             }
         }
     }

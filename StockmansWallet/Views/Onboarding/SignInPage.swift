@@ -10,8 +10,6 @@ import AuthenticationServices
 
 struct SignInPage: View {
     @Binding var currentPage: Int
-    @Binding var showingSignIn: Bool
-    @Binding var isSigningIn: Bool
     @Binding var userPrefs: UserPreferences
     var onSignInComplete: (() -> Void)? = nil
     // Debug: Demo sign-in handlers for different methods
@@ -49,8 +47,11 @@ struct SignInPage: View {
     }
     
     var body: some View {
-        // Debug: No background color - let ultraThinMaterial blur through to content behind modal
-        NavigationStack {
+        // Debug: Full-screen page with gradient background (matches onboarding flow)
+        ZStack {
+            Theme.backgroundGradient
+                .ignoresSafeArea()
+            
             ScrollView {
                 VStack(spacing: 32) {
                         // Debug: Improved header with better visual hierarchy
@@ -310,27 +311,10 @@ struct SignInPage: View {
                         .frame(maxWidth: .infinity)
                 }
                 .padding(.horizontal, 24)
+                .padding(.top, 60) // Debug: Add top padding for status bar
                 .padding(.bottom, 40)
             }
-            .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively) // Debug: iOS 26 HIG - Interactive keyboard dismissal on scroll
-            .navigationTitle("")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        HapticManager.tap()
-                        showingSignIn = false
-                    } label: {
-                        Image(systemName: "xmark")
-                            .font(.system(size: 17, weight: .semibold))
-                            .foregroundStyle(Theme.primaryText)
-                    }
-                    .accessibilityLabel("Close")
-                }
-            }
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.dark, for: .navigationBar)
         }
     }
     

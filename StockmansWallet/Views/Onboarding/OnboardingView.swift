@@ -14,8 +14,6 @@ struct OnboardingView: View {
     @State private var onboardingStep: OnboardingStep = .landing // Debug: Start with landing page as before
     @State private var currentPage = 0
     @State private var userPrefs = UserPreferences()
-    @State private var showingSignIn = false
-    @State private var isSigningIn = false
     
     // Debug: Terms & Privacy acceptance (shown before onboarding)
     @State private var showingTermsPrivacy = false
@@ -43,7 +41,6 @@ struct OnboardingView: View {
                 case .landing, .features:
                     WelcomeFeaturesPage(
                         onboardingStep: $onboardingStep,
-                        showingSignIn: $showingSignIn,
                         showingTermsPrivacy: $showingTermsPrivacy,
                         hasAcceptedTerms: $hasAcceptedTerms,
                         // Pass down intro completion so Lottie can start after fade
@@ -54,10 +51,9 @@ struct OnboardingView: View {
                     )
                     
                 case .signIn:
+                    // Debug: Full-screen sign-in page (HIG-compliant for authentication flows)
                     SignInPage(
                         currentPage: $currentPage,
-                        showingSignIn: $showingSignIn,
-                        isSigningIn: $isSigningIn,
                         userPrefs: $userPrefs,
                         onSignInComplete: {
                             onboardingStep = .onboardingPages
@@ -149,32 +145,13 @@ struct OnboardingView: View {
             }
         }
         .sheet(isPresented: $showingTermsPrivacy) {
-            // Debug: Terms & Privacy sheet shown after "Get Started" button (Option 1)
+            // Debug: Terms & Privacy sheet shown after "Continue" on features page
+            // Sheet is appropriate here per HIG - self-contained legal acceptance task
             TermsPrivacySheet(
                 isPresented: $showingTermsPrivacy,
                 hasAccepted: $hasAcceptedTerms
             )
             .interactiveDismissDisabled() // Debug: Must accept terms, can't dismiss
-        }
-        .sheet(isPresented: $showingSignIn) {
-            SignInPage(
-                currentPage: $currentPage,
-                showingSignIn: $showingSignIn,
-                isSigningIn: $isSigningIn,
-                userPrefs: $userPrefs,
-                onSignInComplete: {
-                    onboardingStep = .onboardingPages
-                },
-                // Debug: Demo sign-in handlers
-                onEmailSignIn: demoEmailSignIn,
-                onEmailSignUp: demoEmailSignUp,
-                onAppleSignIn: demoAppleSignIn,
-                onGoogleSignIn: demoGoogleSignIn
-            )
-            // Native sheet with solid background from Theme - follows Apple HIG
-            .presentationBackground(Theme.sheetBackground)
-            .presentationCornerRadius(Theme.cornerRadius * 2)
-            .presentationDragIndicator(.visible)
         }
     }
     
@@ -287,18 +264,11 @@ struct OnboardingView: View {
     private func demoEmailSignUp() {
         HapticManager.tap()
         
-        // Debug: Dismiss sheet if shown as sheet, then navigate to onboarding
-        showingSignIn = false
-        isSigningIn = false
-        
-        // Debug: Delay to ensure sheet dismisses smoothly before navigation
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-            withAnimation {
-                // Debug: Save name/email but DON'T mark onboarding complete
-                // This will trigger the onboarding flow to collect role/property/company info
-                self.onboardingStep = .onboardingPages
-                self.currentPage = 0 // Start at User Type Selection
-            }
+        // Debug: Save name/email already done in SignInPage, now navigate to onboarding
+        // No delay needed - full-screen to full-screen transition is smooth
+        withAnimation {
+            onboardingStep = .onboardingPages
+            currentPage = 0 // Start at User Type Selection
         }
     }
     
