@@ -10,8 +10,8 @@ import SwiftUI
 
 // MARK: - Subscription Tier Enum
 enum SubscriptionTier: String, Codable, CaseIterable {
-    case smallFarmerFree = "Small Farmer"
-    case professionalFarmer = "Professional Farmer"
+    case smallFarmerFree = "Starter"
+    case professionalFarmer = "Pro"
     case advisoryFree = "Advisory User"
     
     var price: String {
@@ -26,9 +26,29 @@ enum SubscriptionTier: String, Codable, CaseIterable {
     var priceDetail: String {
         switch self {
         case .smallFarmerFree, .advisoryFree:
-            return "Forever"
+            return "Up to 100 head of livestock."
         case .professionalFarmer:
             return "Billed monthly or $299/year (save 17%)"
+        }
+    }
+    
+    var description: String {
+        switch self {
+        case .smallFarmerFree:
+            return "Designed to help you get set up and see value quickly."
+        case .professionalFarmer:
+            return "Built for producers managing larger or more complex operations."
+        case .advisoryFree:
+            return "Full access to client management and valuation tools."
+        }
+    }
+    
+    var featuresHeader: String {
+        switch self {
+        case .smallFarmerFree, .advisoryFree:
+            return "Includes"
+        case .professionalFarmer:
+            return "Includes everything in Starter, plus"
         }
     }
     
@@ -36,22 +56,22 @@ enum SubscriptionTier: String, Codable, CaseIterable {
         switch self {
         case .smallFarmerFree:
             return [
-                "Up to 100 head of livestock",
-                "Basic portfolio tracking",
+                "Track up to 100 head of livestock",
+                "Live herd value and basic performance view",
                 "Market price alerts",
-                "Property management (1 property)",
+                "Manage one property",
                 "Standard reports",
                 "Community support"
             ]
         case .professionalFarmer:
             return [
                 "Unlimited livestock tracking",
-                "Advanced portfolio analytics",
-                "Real-time market insights",
-                "Multiple property management",
-                "Premium reports & exports",
+                "Advanced portfolio insights and trends",
+                "Multiple properties and herds",
+                "Real-time market intelligence",
+                "Premium reports and exports",
                 "Freight calculator",
-                "Valuation engine",
+                "Full valuation engine",
                 "Priority support",
                 "API access"
             ]
@@ -69,7 +89,7 @@ enum SubscriptionTier: String, Codable, CaseIterable {
     }
     
     var isRecommended: Bool {
-        self == .professionalFarmer
+        false // Debug: Removed recommended badge
     }
     
     var isFree: Bool {
@@ -113,15 +133,15 @@ struct SubscriptionView: View {
             
             VStack(spacing: 0) {
                 // Header
-                // Debug: Reduced top/bottom padding for more compact layout
+                // Debug: Increased spacing below header for better card positioning
                 headerView
                     .padding(.top, 32)
-                    .padding(.bottom, 20)
+                    .padding(.bottom, 40)
                 
                 // Debug: Use horizontal paging for multiple tiers (iOS HIG pattern), simple card for single tier
                 if availableTiers.count > 1 {
                     // Multiple tiers - horizontal paging (like App Store, iCloud+)
-                    // Debug: Fixed height container for consistent card alignment
+                    // Debug: Responsive height that fills available space
                     TabView(selection: $selectedTier) {
                         ForEach(availableTiers, id: \.self) { tier in
                             SubscriptionTierCard(
@@ -137,14 +157,27 @@ struct SubscriptionView: View {
                             .tag(tier)
                         }
                     }
-                    .tabViewStyle(.page(indexDisplayMode: .always))
-                    .indexViewStyle(.page(backgroundDisplayMode: .always))
-                    .frame(height: 580) // Debug: Fixed height prevents card misalignment
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    .frame(maxHeight: .infinity) // Debug: Responsive height
                     .onChange(of: selectedTier) { _, newValue in
                         HapticManager.tap()
                     }
+                    
+                    // Debug: Page indicator dots below cards
+                    HStack(spacing: 8) {
+                        ForEach(availableTiers, id: \.self) { tier in
+                            Circle()
+                                .fill(selectedTier == tier ? Theme.accent : Theme.secondaryText.opacity(0.3))
+                                .frame(width: 8, height: 8)
+                        }
+                    }
+                    .padding(.top, 16)
+                    .padding(.bottom, 24)
+                    
+                    // Debug: Spacer to push footer down to match other onboarding pages
+                    Spacer()
                 } else {
-                    // Single tier - simple scrollable card
+                    // Single tier - simple scrollable card with responsive height
                     ScrollView {
                         VStack(spacing: 16) {
                             ForEach(availableTiers, id: \.self) { tier in
@@ -159,6 +192,7 @@ struct SubscriptionView: View {
                         .padding(.horizontal, 20)
                         .padding(.bottom, 20)
                     }
+                    .frame(maxHeight: .infinity) // Debug: Responsive height
                 }
                 
                 // Footer with action button
@@ -168,26 +202,18 @@ struct SubscriptionView: View {
     }
     
     // MARK: - Header View
-    // Debug: Consistent styling with other onboarding pages (28pt bold title, Theme.body subtitle)
+    // Debug: Simplified header with title only for more card space
     private var headerView: some View {
         VStack(spacing: 12) {
             Text(userPrefs.userRole == .farmerGrazier ? "Choose Your Plan" : "You're All Set!")
                 .font(.system(size: 28, weight: .bold))
                 .foregroundStyle(Theme.primaryText)
                 .multilineTextAlignment(.center)
-            
-            Text(userPrefs.userRole == .farmerGrazier ? 
-                 "Select the plan that fits your operation" : 
-                 "Your advisory account includes full access")
-                .font(Theme.body)
-                .foregroundStyle(Theme.secondaryText)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
         }
     }
     
     // MARK: - Footer View
-    // Debug: Compact footer with minimal spacing for better vertical balance
+    // Debug: Footer with consistent spacing to match other onboarding pages
     private var footerView: some View {
         VStack(spacing: 8) {
             // Primary action button
@@ -197,7 +223,7 @@ struct SubscriptionView: View {
                 userPrefs.subscriptionTier = selectedTier.rawValue
                 onComplete()
             }) {
-                Text(selectedTier.isFree ? "Continue with Free" : "Start Free Trial")
+                Text(selectedTier.isFree ? "Continue with Starter" : "Start Free Trial")
                     .frame(maxWidth: .infinity)
             }
             .buttonStyle(Theme.PrimaryButtonStyle())
@@ -215,7 +241,13 @@ struct SubscriptionView: View {
                         .font(Theme.caption)
                 }
             }
-            .frame(height: 16) // Debug: Reduced fixed height
+            .frame(height: 16)
+            
+            // Reassurance line
+            Text("No lock-in. Change or cancel anytime.")
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondaryText.opacity(0.8))
+                .padding(.top, 4)
             
             // "I'll decide later" option for farmers
             if userPrefs.userRole == .farmerGrazier && availableTiers.count > 1 {
@@ -233,8 +265,8 @@ struct SubscriptionView: View {
                 .padding(.top, 4)
             }
         }
-        // Debug: Minimal bottom padding to reduce empty space
-        .padding(.bottom, 12)
+        // Debug: Bottom padding to match other onboarding pages
+        .padding(.bottom, 20)
     }
 }
 
@@ -251,16 +283,11 @@ struct SubscriptionTierCard: View {
             ZStack(alignment: .top) {
                 // Main card content with consistent spacing
                 VStack(alignment: .leading, spacing: 12) {
-                    // Debug: Fixed height spacer for badge area to ensure alignment
-                    Spacer()
-                        .frame(height: tier.isRecommended ? 34 : 0)
-                    
                     // Tier name - centered for paginated
                     Text(tier.rawValue)
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(Theme.primaryText)
                         .frame(maxWidth: .infinity, alignment: isPaginated ? .center : .leading)
-                        .padding(.top, tier.isRecommended ? 0 : 34) // Debug: Balance spacing when no badge
                     
                     // Price - centered for paginated
                     VStack(spacing: 2) {
@@ -284,14 +311,28 @@ struct SubscriptionTierCard: View {
                     .frame(maxWidth: .infinity, alignment: isPaginated ? .center : .leading)
                     .padding(.bottom, 8)
                     
+                    // Description
+                    Text(tier.description)
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.primaryText)
+                        .multilineTextAlignment(isPaginated ? .center : .leading)
+                        .frame(maxWidth: .infinity, alignment: isPaginated ? .center : .leading)
+                        .padding(.bottom, 8)
+                    
                     // Divider
                     Rectangle()
                         .fill(Theme.separator.opacity(0.3))
                         .frame(height: 1)
                         .padding(.vertical, 8)
                     
+                    // Features header
+                    Text(tier.featuresHeader)
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                        .padding(.bottom, 4)
+                    
                     // Features list - scrollable for long lists
-                    // Debug: Optimized height for better space usage
+                    // Debug: Responsive height that fills remaining card space
                     ScrollView(showsIndicators: false) {
                         VStack(alignment: .leading, spacing: 10) {
                             ForEach(tier.features, id: \.self) { feature in
@@ -312,29 +353,11 @@ struct SubscriptionTierCard: View {
                         }
                         .padding(.bottom, 8) // Debug: Compact bottom padding
                     }
-                    .frame(maxHeight: isPaginated ? 320 : .infinity) // Debug: Reduced height for better fit
+                    .frame(maxHeight: .infinity) // Debug: Responsive height fills available space
                 }
                 .padding(.horizontal, 20)
                 .padding(.top, 16)
                 .padding(.bottom, 16) // Debug: Balanced bottom padding
-                
-                // Debug: Overlay badge on top - doesn't affect layout
-                if tier.isRecommended {
-                    HStack {
-                        Spacer()
-                        Text("RECOMMENDED FOR YOU")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundStyle(.white)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                Capsule()
-                                    .fill(Theme.accent)
-                            )
-                        Spacer()
-                    }
-                    .padding(.top, 12)
-                }
             }
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius * 1.5, style: .continuous)
@@ -343,8 +366,8 @@ struct SubscriptionTierCard: View {
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius * 1.5, style: .continuous)
                     .strokeBorder(
-                        isPaginated ? Theme.accent.opacity(0.5) : (isSelected ? Theme.accent : Theme.separator.opacity(0.3)),
-                        lineWidth: isPaginated ? 2 : (isSelected ? 2 : 1)
+                        Color.white.opacity(0.05),
+                        lineWidth: 1
                     )
             )
             .shadow(
