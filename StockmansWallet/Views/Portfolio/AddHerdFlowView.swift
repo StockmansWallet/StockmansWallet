@@ -28,18 +28,20 @@ struct AddHerdFlowView: View {
     @State private var mortalityRate = 0
     @State private var calvesAtFootHeadCount = 0
     @State private var calvesAtFootAgeMonths = 0
-    @State private var priceSource = ""
-    @State private var combinedAll = false
+    @State private var selectedSaleyard: String? = nil
     @State private var inCalf = true
     @State private var additionalInfo = ""
     @State private var breedSearchText = ""
     @State private var categorySearchText = ""
     @State private var showingBreedPicker = false
     @State private var showingCategoryPicker = false
-    @State private var showingPriceSourcePicker = false
+    @State private var showingSaleyardPicker = false
     
     @State private var calvingRate = 0
     @State private var joinedDate = Date()
+    @State private var controlledBreedingProgram = false
+    @State private var joiningPeriodStart = Date()
+    @State private var joiningPeriodEnd = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
     
     private let speciesOptions = ["Cattle", "Sheep", "Pigs", "Goats"]
     
@@ -79,12 +81,21 @@ struct AddHerdFlowView: View {
         return categories.filter { $0.localizedCaseInsensitiveContains(categorySearchText) }
     }
     
+    // Debug: Determines if category requires breeding-specific step (calvingRate, joinedDate, inCalf)
     private var isBreederCategory: Bool {
         let breederCategories = [
             "Breeding Cow", "Breeding Ewe", "Breeder Sow", "Breeding Doe",
-            "Maiden Ewe (Joined)"
+            "Maiden Ewe (Joined)", "Heifer (Joined)", "First Calf Heifer"
         ]
         return breederCategories.contains(selectedCategory)
+    }
+    
+    // Debug: Determines if "Calves at Foot" section should be shown in Physical Attributes
+    private var shouldShowCalvesAtFoot: Bool {
+        let calvesAtFootCategories = [
+            "Heifer (Joined)", "First Calf Heifer", "Breeding Cow"
+        ]
+        return calvesAtFootCategories.contains(selectedCategory)
     }
     
     private var totalSteps: Int {
@@ -120,7 +131,7 @@ struct AddHerdFlowView: View {
                     
                     Spacer()
                     
-                    Text("Add Herd / Mob")
+                    Text("Add Herd")
                         .font(Theme.headline)
                         .foregroundStyle(Theme.primaryText)
                         .accessibilityAddTraits(.isHeader)
@@ -217,16 +228,9 @@ struct AddHerdFlowView: View {
                 )
                 .presentationBackground(Theme.sheetBackground)
             }
-            .sheet(isPresented: $showingPriceSourcePicker) {
-                ScrollablePickerSheet(
-                    title: "Select Price Source",
-                    options: ReferenceData.priceSources,
-                    selectedValue: $priceSource,
-                    onSelect: { source in
-                        priceSource = source
-                    }
-                )
-                .presentationBackground(Theme.sheetBackground)
+            .sheet(isPresented: $showingSaleyardPicker) {
+                AddHerdSaleyardSelectionSheet(selectedSaleyard: $selectedSaleyard)
+                    .presentationBackground(Theme.sheetBackground)
             }
             .background(Theme.sheetBackground.ignoresSafeArea())
             .simultaneousGesture(
@@ -358,46 +362,111 @@ struct AddHerdFlowView: View {
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
             
-            // Debug: Calving rate title outside container matching other field labels
+            // Debug: HIG-compliant slider for calving rate (estimated percentage)
             VStack(alignment: .leading, spacing: 8) {
-                Text("Calving Rate: \(calvingRate)%")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
+                HStack {
+                    Text("Calving Rate")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.secondaryText)
+                    Spacer()
+                    Text("\(calvingRate)%")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.accent)
+                        .fontWeight(.semibold)
+                }
                 Slider(value: Binding(
                     get: { Double(calvingRate) },
                     set: { calvingRate = Int($0) }
                 ), in: 50...100, step: 1)
+                    .tint(Theme.accent)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 8)
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .accessibilityLabel("Calving rate")
+                    .accessibilityValue("\(calvingRate) percent")
+            }
+            
+            // Debug: HIG-compliant toggle for In Calf status
+            HStack {
+                Text("In Calf")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.primaryText)
+                Spacer()
+                Toggle("", isOn: $inCalf)
+                    .labelsHidden()
+                    .tint(Theme.accent)
+            }
+            .padding()
+            .background(Theme.inputFieldBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .accessibilityLabel("In calf status")
+            
+            // Debug: Breeding Program section - controls joining period
+            VStack(alignment: .leading, spacing: 12) {
+                Text("Breeding Program")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                
+                // Debug: Toggle for controlled breeding program
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Controlled Program")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.primaryText)
+                        Text(controlledBreedingProgram ? "Specific joining period" : "Accruing all year round")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $controlledBreedingProgram)
+                        .labelsHidden()
+                        .tint(Theme.accent)
+                }
                 .padding()
                 .background(Theme.inputFieldBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            }
-            .accessibilityLabel("Calving rate")
-            
-            // Debug: Joined date full width
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Joined Date")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                DatePicker("", selection: $joinedDate, displayedComponents: .date)
-                    .labelsHidden()
-                    .datePickerStyle(.compact)
-                    .padding()
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            }
-            .accessibilityLabel("Joined date")
-            
-            // Debug: In Calf full width
-            VStack(alignment: .leading, spacing: 8) {
-                Text("In Calf")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Toggle("", isOn: $inCalf)
-                    .labelsHidden()
-                    .tint(Theme.positiveChange)
-                    .padding()
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .accessibilityLabel("Controlled breeding program")
+                
+                // Debug: Show joining period date range if controlled program is enabled
+                if controlledBreedingProgram {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Joining Period")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.secondaryText)
+                        
+                        VStack(spacing: 12) {
+                            // Start date
+                            HStack {
+                                Text("Start")
+                                    .font(Theme.body)
+                                    .foregroundStyle(Theme.secondaryText)
+                                    .frame(width: 60, alignment: .leading)
+                                DatePicker("", selection: $joiningPeriodStart, displayedComponents: .date)
+                                    .labelsHidden()
+                                    .datePickerStyle(.compact)
+                            }
+                            
+                            Divider()
+                                .background(Theme.primaryText.opacity(0.2))
+                            
+                            // End date
+                            HStack {
+                                Text("End")
+                                    .font(Theme.body)
+                                    .foregroundStyle(Theme.secondaryText)
+                                    .frame(width: 60, alignment: .leading)
+                                DatePicker("", selection: $joiningPeriodEnd, displayedComponents: .date)
+                                    .labelsHidden()
+                                    .datePickerStyle(.compact)
+                            }
+                        }
+                        .padding()
+                        .background(Theme.inputFieldBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .accessibilityLabel("Joining period date range")
+                }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -413,20 +482,17 @@ struct AddHerdFlowView: View {
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
             
+            // Debug: HIG-compliant text fields for known numeric values (head count, age)
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Head Count")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
-                    Picker("Head Count", selection: $headCount) {
-                        ForEach(0...5000, id: \.self) { value in
-                            Text("\(value)").tag(value)
-                        }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(height: 80)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    TextField("0", value: $headCount, format: .number)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(AddHerdTextFieldStyle())
+                        .multilineTextAlignment(.center)
+                        .accessibilityLabel("Head count")
                 }
                 .frame(maxWidth: .infinity)
                 
@@ -434,151 +500,143 @@ struct AddHerdFlowView: View {
                     Text("Average Age (mo)")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
-                    Picker("Average Age", selection: $averageAgeMonths) {
-                        ForEach(0...180, id: \.self) { value in
-                            Text("\(value)").tag(value)
-                        }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(height: 80)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    TextField("0", value: $averageAgeMonths, format: .number)
+                        .keyboardType(.numberPad)
+                        .textFieldStyle(AddHerdTextFieldStyle())
+                        .multilineTextAlignment(.center)
+                        .accessibilityLabel("Average age in months")
                 }
                 .frame(maxWidth: .infinity)
             }
             
-            Text("Weight")
-                .font(Theme.headline)
-                .foregroundStyle(Theme.primaryText)
-                .padding(.top, 4)
+
             
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Average (kg)")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    Picker("Average Weight", selection: $averageWeightKg) {
-                        ForEach(weightRange, id: \.self) { value in
-                            Text("\(value)").tag(value)
-                        }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(height: 80)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .frame(maxWidth: .infinity)
-                
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Daily Gain (kg)")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    Picker("Daily Gain", selection: $dailyGainGrams) {
-                        ForEach(0...30, id: \.self) { value in
-                            Text(String(format: "%.1f", Double(value) / 10.0)).tag(value)
-                        }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(height: 80)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .frame(maxWidth: .infinity)
-            }
-            
-            Text("Health")
-                .font(Theme.headline)
-                .foregroundStyle(Theme.primaryText)
-            
+            // Debug: Text field for weight (known measured value)
             VStack(alignment: .leading, spacing: 8) {
-                Text("Mortality Rate")
+                Text("Average Weight (kg)")
                     .font(Theme.body)
                     .foregroundStyle(Theme.secondaryText)
-                Picker("Mortality Rate", selection: $mortalityRate) {
-                    ForEach(0...30, id: \.self) { value in
-                        Text("\(value)").tag(value)
-                    }
-                }
-                .pickerStyle(.wheel)
-                .frame(height: 80)
-                .background(Theme.inputFieldBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                TextField("0", value: $averageWeightKg, format: .number)
+                    .keyboardType(.decimalPad)
+                    .textFieldStyle(AddHerdTextFieldStyle())
+                    .multilineTextAlignment(.center)
+                    .accessibilityLabel("Average weight in kilograms")
             }
             
-            Text("Calves at Foot")
-                .font(Theme.headline)
-                .foregroundStyle(Theme.primaryText)
+            // Debug: HIG-compliant slider for daily gain (estimated value, visual feedback useful)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Daily Weight Gain")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.secondaryText)
+                    Spacer()
+                    Text(String(format: "%.1f kg/day", Double(dailyGainGrams) / 10.0))
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.accent)
+                        .fontWeight(.semibold)
+                }
+                Slider(value: Binding(
+                    get: { Double(dailyGainGrams) },
+                    set: { dailyGainGrams = Int($0) }
+                ), in: 0...30, step: 1)
+                    .tint(Theme.accent)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 8)
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .accessibilityLabel("Daily weight gain")
+                    .accessibilityValue(String(format: "%.1f kilograms per day", Double(dailyGainGrams) / 10.0))
+            }
             
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Head Count")
+
+            
+            // Debug: HIG-compliant slider for mortality rate (estimated percentage, slider is ideal)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Mortality Rate")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
-                    Picker("Calves Head Count", selection: $calvesAtFootHeadCount) {
-                        ForEach(0...5000, id: \.self) { value in
-                            Text("\(value)").tag(value)
-                        }
-                    }
-                    .pickerStyle(.wheel)
-                    .frame(height: 80)
+                    Spacer()
+                    Text("\(mortalityRate)%")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.accent)
+                        .fontWeight(.semibold)
+                }
+                Slider(value: Binding(
+                    get: { Double(mortalityRate) },
+                    set: { mortalityRate = Int($0) }
+                ), in: 0...30, step: 1)
+                    .tint(Theme.accent)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 8)
                     .background(Theme.inputFieldBackground)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .frame(maxWidth: .infinity)
+                    .accessibilityLabel("Mortality rate")
+                    .accessibilityValue("\(mortalityRate) percent")
+            }
+            
+            // Debug: Only show "Calves at Foot" for breeder cattle categories
+            if shouldShowCalvesAtFoot {
+                Text("Calves at Foot")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
                 
-                VStack(alignment: .leading, spacing: 8) {
-                    Text("Average Age (mo)")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    Picker("Calves Average Age", selection: $calvesAtFootAgeMonths) {
-                        ForEach(0...24, id: \.self) { value in
-                            Text("\(value)").tag(value)
-                        }
+                // Debug: Text fields for known calf counts and ages
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Head Count")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.secondaryText)
+                        TextField("0", value: $calvesAtFootHeadCount, format: .number)
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(AddHerdTextFieldStyle())
+                            .multilineTextAlignment(.center)
+                            .accessibilityLabel("Calves head count")
                     }
-                    .pickerStyle(.wheel)
-                    .frame(height: 80)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .frame(maxWidth: .infinity)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Average Age (mo)")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.secondaryText)
+                        TextField("0", value: $calvesAtFootAgeMonths, format: .number)
+                            .keyboardType(.numberPad)
+                            .textFieldStyle(AddHerdTextFieldStyle())
+                            .multilineTextAlignment(.center)
+                            .accessibilityLabel("Calves average age in months")
+                    }
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: .infinity)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 20)
     }
     
-    private var weightRange: [Int] {
-        switch selectedSpecies {
-        case "Cattle":
-            return Array(stride(from: 25, through: 1200, by: 5))
-        case "Sheep":
-            return Array(2...160)
-        case "Goats":
-            return Array(2...140)
-        case "Pigs":
-            return Array(1...350)
-        default:
-            return Array(stride(from: 1, through: 1200, by: 5))
-        }
-    }
-    
     // MARK: - Step 3
     private var step3Content: some View {
         VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header - center aligned and larger font
+            Text("Saleyard Selection")
+                .font(Theme.title)
+                .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+            
+            // Debug: Saleyard picker button that opens searchable sheet
             VStack(alignment: .leading, spacing: 8) {
-                Text("Price Source")
+                Text("Saleyard")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 
                 // Debug: Picker button meets iOS 26 HIG minimum touch target of 44pt height
                 Button(action: {
                     HapticManager.tap()
-                    showingPriceSourcePicker = true
+                    showingSaleyardPicker = true
                 }) {
                     HStack {
-                        Text(priceSource.isEmpty ? "Select Source" : priceSource)
+                        Text(selectedSaleyard ?? "Use Default")
                             .font(Theme.body)
-                            .foregroundStyle(priceSource.isEmpty ? Theme.secondaryText : Theme.primaryText)
+                            .foregroundStyle(Theme.primaryText)
                         Spacer()
                         Image(systemName: "chevron.down")
                             .font(.system(size: 12, weight: .semibold))
@@ -590,18 +648,26 @@ struct AddHerdFlowView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .buttonBorderShape(.roundedRectangle)
-                .accessibilityLabel("Select price source")
+                .accessibilityLabel("Select saleyard")
             }
             
-            Toggle(isOn: $combinedAll) {
-                Text("Combined (All)")
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.primaryText)
+            // Debug: Informative text about valuation engine - placed below picker
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(alignment: .top, spacing: 12) {
+                    Image(systemName: "info.circle.fill")
+                        .foregroundStyle(Theme.accent)
+                        .font(.system(size: 16))
+                        .padding(.top, 2)
+                    
+                    Text("Valuation engine currently derived from this saleyard. You can change it later in Settings.")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding()
+                .background(Theme.accent.opacity(0.1))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
-            .tint(Theme.accent)
-            .padding()
-            .background(Theme.inputFieldBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 20)
@@ -655,6 +721,9 @@ struct AddHerdFlowView: View {
             sex = "Mixed"
         }
         
+        // Debug: Use selectedSaleyard if specified, otherwise fall back to default saleyard
+        let effectiveSaleyard = selectedSaleyard ?? prefs.defaultSaleyard
+        
         let herd = HerdGroup(
             name: herdName,
             species: selectedSpecies,
@@ -666,20 +735,34 @@ struct AddHerdFlowView: View {
             initialWeight: Double(averageWeightKg),
             dailyWeightGain: dailyWeightGain,
             isBreeder: inCalf || selectedCategory.lowercased().contains("breeding"),
-            selectedSaleyard: priceSource == "Saleyard" ? prefs.defaultSaleyard : nil
+            selectedSaleyard: effectiveSaleyard
         )
         
         herd.paddockName = paddockLocation.isEmpty ? nil : paddockLocation
         herd.isPregnant = inCalf
         herd.mortalityRate = Double(mortalityRate) / 100.0
         
+        // Debug: Set breeding-specific data for breeder categories
+        if isBreederCategory {
+            herd.joinedDate = joinedDate
+            herd.calvingRate = Double(calvingRate) / 100.0
+        }
+        
+        // Debug: Additional info for calves at foot and breeding program
         var infoParts: [String] = []
         if !additionalInfo.isEmpty { infoParts.append(additionalInfo) }
         if calvesAtFootHeadCount > 0 {
             infoParts.append("Calves at Foot: \(calvesAtFootHeadCount) head, \(calvesAtFootAgeMonths) months")
         }
-        if combinedAll { infoParts.append("Combined (All): Yes") }
-        if priceSource != "Private Sales" { infoParts.append("Price Source: \(priceSource)") }
+        if isBreederCategory {
+            if controlledBreedingProgram {
+                let formatter = DateFormatter()
+                formatter.dateStyle = .short
+                infoParts.append("Controlled Breeding: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))")
+            } else {
+                infoParts.append("Breeding: All year round")
+            }
+        }
         if !infoParts.isEmpty { herd.additionalInfo = infoParts.joined(separator: " | ") }
         
         modelContext.insert(herd)
@@ -904,5 +987,132 @@ struct ScrollablePickerSheet: View {
         .onAppear {
             localSearchText = searchText
         }
+    }
+}
+
+// MARK: - Add Herd Saleyard Selection Sheet
+// Debug: HIG-compliant searchable sheet for selecting saleyard during Add Herd flow
+struct AddHerdSaleyardSelectionSheet: View {
+    @Binding var selectedSaleyard: String?
+    @Environment(\.dismiss) private var dismiss
+    @Query private var preferences: [UserPreferences]
+    @State private var searchText = ""
+    
+    // Debug: Get user preferences for filtered saleyards
+    private var userPrefs: UserPreferences {
+        preferences.first ?? UserPreferences()
+    }
+    
+    // Debug: Filter saleyards based on search text and user preferences
+    private var filteredSaleyards: [String] {
+        let enabledSaleyards = userPrefs.filteredSaleyards
+        if searchText.isEmpty {
+            return enabledSaleyards
+        } else {
+            return enabledSaleyards.filter { 
+                $0.localizedCaseInsensitiveContains(searchText) 
+            }
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                // Debug: Default option section
+                Section {
+                    Button(action: {
+                        HapticManager.tap()
+                        selectedSaleyard = nil
+                        dismiss()
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Use Default")
+                                    .font(Theme.body)
+                                    .foregroundStyle(Theme.primaryText)
+                                
+                                if let defaultSaleyard = userPrefs.defaultSaleyard {
+                                    Text(defaultSaleyard)
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                }
+                            }
+                            
+                            Spacer()
+                            
+                            if selectedSaleyard == nil {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(Theme.accent)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .listRowBackground(Color.clear)
+                }
+                
+                // Debug: All saleyards section - filterable by search
+                Section {
+                    ForEach(filteredSaleyards, id: \.self) { saleyard in
+                        Button(action: {
+                            HapticManager.tap()
+                            selectedSaleyard = saleyard
+                            dismiss()
+                        }) {
+                            HStack {
+                                Text(saleyard)
+                                    .font(Theme.body)
+                                    .foregroundStyle(Theme.primaryText)
+                                    .multilineTextAlignment(.leading)
+                                
+                                Spacer()
+                                
+                                if selectedSaleyard == saleyard {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(Theme.accent)
+                                        .font(.system(size: 16, weight: .semibold))
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color.clear)
+                    }
+                } header: {
+                    Text("Select Specific Saleyard")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                
+                // Debug: Show helpful message if no results
+                if filteredSaleyards.isEmpty {
+                    Section {
+                        Text("No saleyards found")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.secondaryText)
+                            .frame(maxWidth: .infinity, alignment: .center)
+                            .padding()
+                    }
+                    .listRowBackground(Color.clear)
+                }
+            }
+            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search saleyards")
+            .listStyle(.insetGrouped)
+            .scrollContentBackground(.hidden)
+            .background(Theme.background)
+            .navigationTitle("Select Saleyard")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 }

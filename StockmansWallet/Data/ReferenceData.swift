@@ -85,7 +85,7 @@ struct ReferenceData {
     static let cattleCategories = [
         "Yearling Steer", "Grown Steer", "Yearling Bull", "Weaner Bull",
         "Grown Bull", "Heifer (Unjoined)", "Heifer (Joined)", "First Calf Heifer",
-        "Breeding Cow", "Pregnant Cow", "Lactating Cow", "Dry Cow",
+        "Breeding Cow", "Dry Cow",
         "Weaner Heifer", "Feeder Heifer", "Cull Cow", "Calves", "Slaughter Cattle"
     ]
     
