@@ -40,9 +40,15 @@ struct LottieView: UIViewRepresentable {
             animationView.contentMode = contentMode
             animationView.loopMode = loopMode
             animationView.animationSpeed = speed
+            
+            // Debug: Performance optimizations for smooth 60fps playback
+            animationView.shouldRasterizeWhenIdle = true // Rasterize when not animating
+            animationView.layer.drawsAsynchronously = true // Async drawing for better performance
 
             if let animation = LottieAnimation.named(animationName) {
                 animationView.animation = animation
+                // Debug: Log animation info for debugging
+                print("LottieView: Loaded '\(animationName)' - Duration: \(animation.duration)s, FPS: \(animation.framerate)")
             } else {
                 print("LottieView: Failed to load animation named \(animationName)")
             }

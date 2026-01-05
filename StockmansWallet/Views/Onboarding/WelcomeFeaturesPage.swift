@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Lottie
 
 // MARK: - Welcome + Features Pages
 enum OnboardingStep {
@@ -96,9 +97,11 @@ struct WelcomeFeaturesPage: View {
                                     .scaledToFit()
                                     .accessibilityLabel("Stockman's Wallet")
                             } else {
-                                // Lottie animation layer
+                                // Debug: Lottie animation with optimal settings for smooth playback
                                 LottieView(
                                     animationName: "sw_logoanim",
+                                    loopMode: .playOnce,
+                                    speed: 1.0, // Normal speed for smooth 60fps playback
                                     isPlaying: $playLogo
                                 )
                                 .allowsHitTesting(false)

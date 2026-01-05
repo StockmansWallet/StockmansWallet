@@ -47,13 +47,12 @@ struct SignInPage: View {
     }
     
     var body: some View {
-        // Debug: Full-screen page with gradient background (matches onboarding flow)
+        // Debug: Full-screen static page with gradient background (matches onboarding flow)
         ZStack {
             Theme.backgroundGradient
                 .ignoresSafeArea()
             
-            ScrollView {
-                VStack(spacing: 32) {
+            VStack(spacing: 32) {
                         // Debug: Improved header with better visual hierarchy
                         VStack(spacing: 12) {
                             Text(isSignUp ? "Create Account" : "Welcome Back")
@@ -314,7 +313,7 @@ struct SignInPage: View {
                 .padding(.top, 60) // Debug: Add top padding for status bar
                 .padding(.bottom, 40)
             }
-            .scrollDismissesKeyboard(.interactively) // Debug: iOS 26 HIG - Interactive keyboard dismissal on scroll
+            .frame(maxHeight: .infinity)
         }
     }
     

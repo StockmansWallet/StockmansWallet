@@ -14,13 +14,13 @@ struct Theme {
     static let primaryText = Color("PrimaryText")
     static let secondaryText = Color("SecondaryText")
     static let accent = Color("AccentColor")
-    static let separator = Color("Separator")
     static let destructive = Color("Destructive")
     
     // MARK: - Code-based Colors (not from assets)
     // Debug: Defined in code for maximum flexibility and maintainability
     static let cardBackground = Color.white.opacity(0.03)  // For buttons and UI components
     static let inputFieldBackground = Color.white.opacity(0.03)  // For text fields, pickers, etc.
+    static let separator = Color.white.opacity(0.1)  // Subtle divider lines and borders
     
     // Debug: Custom colors for positive/negative change indicators (total change, percent change, tickers)
     // Rule #0: Single source of truth for green color used throughout change indicators
