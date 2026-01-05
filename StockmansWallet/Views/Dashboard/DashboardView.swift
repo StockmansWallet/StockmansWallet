@@ -759,18 +759,18 @@ struct PortfolioValueCard: View {
             HStack(spacing: 4) {
                 Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
                     .font(.system(size: 10, weight: .regular))
-                    .foregroundStyle(change >= 0 ? .green : .red)
+                    .foregroundStyle(change >= 0 ? Theme.positiveChange : Theme.negativeChange)
                     .accessibilityHidden(true)
                 Text(change, format: .currency(code: "AUD"))
                     .font(.system(size: 11, weight: .regular))
                     .monospacedDigit()
-                    .foregroundStyle(change >= 0 ? .green : .red)
+                    .foregroundStyle(change >= 0 ? Theme.positiveChange : Theme.negativeChange)
                     .accessibilityLabel("Change for selected time range")
                     .accessibilityValue("\(change.formatted(.currency(code: "AUD")))")
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .glassEffect(.regular.interactive().tint((change >= 0 ? Color.green : Color.red).opacity(0.1)), in: Capsule())
+            .glassEffect(.regular.interactive().tint((change >= 0 ? Theme.positiveChange : Theme.negativeChange).opacity(0.1)), in: Capsule())
             .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
             .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)
         }
@@ -1389,7 +1389,7 @@ struct PerformanceMetricsView: View {
                             .foregroundStyle(Theme.secondaryText)
                         Text(metrics.totalChange, format: .currency(code: "AUD"))
                             .font(Theme.title3) // HIG: title3 (20pt) - primary emphasis without overwhelming
-                            .foregroundStyle(metrics.totalChange >= 0 ? .green : .red)
+                            .foregroundStyle(metrics.totalChange >= 0 ? Theme.positiveChange : Theme.negativeChange)
                             .accessibilityLabel("Total change")
                             .accessibilityValue(metrics.totalChange.formatted(.currency(code: "AUD")))
                     }
@@ -1400,7 +1400,7 @@ struct PerformanceMetricsView: View {
                             .foregroundStyle(Theme.secondaryText)
                         Text("\(metrics.percentChange >= 0 ? "+" : "")\(metrics.percentChange, format: .number.precision(.fractionLength(1)))%")
                             .font(Theme.title3) // HIG: title3 (20pt) - primary emphasis without overwhelming
-                            .foregroundStyle(metrics.percentChange >= 0 ? .green : .red)
+                            .foregroundStyle(metrics.percentChange >= 0 ? Theme.positiveChange : Theme.negativeChange)
                             .accessibilityLabel("Percent change")
                             .accessibilityValue("\(metrics.percentChange.formatted(.number.precision(.fractionLength(1)))) percent")
                     }

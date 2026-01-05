@@ -432,7 +432,7 @@ struct NetWorthCard: View {
                     ValueBreakdownRow(
                         label: "Breeding Accrual",
                         value: summary.totalBreedingAccrual,
-                        color: .green
+                        color: Theme.positiveChange
                     )
                 }
                 
@@ -583,10 +583,10 @@ struct PerformanceMetricsCard: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     Text(summary.unrealizedGains, format: .currency(code: "AUD"))
                         .font(Theme.headline)
-                        .foregroundStyle(summary.unrealizedGains >= 0 ? .green : .red)
+                        .foregroundStyle(summary.unrealizedGains >= 0 ? Theme.positiveChange : Theme.negativeChange)
                     Text("\(summary.unrealizedGainsPercent >= 0 ? "+" : "")\(summary.unrealizedGainsPercent, format: .number.precision(.fractionLength(1)))%")
                         .font(Theme.caption)
-                        .foregroundStyle(summary.unrealizedGainsPercent >= 0 ? .green : .red)
+                        .foregroundStyle(summary.unrealizedGainsPercent >= 0 ? Theme.positiveChange : Theme.negativeChange)
                 }
             }
         }

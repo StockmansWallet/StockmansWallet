@@ -21,11 +21,11 @@ struct ChatToolView: View {
                         // Icon
                         ZStack {
                             Circle()
-                                .fill(Color.green.opacity(0.15))
+                                .fill(Theme.positiveChange.opacity(0.15))
                                 .frame(width: 80, height: 80)
                             Image(systemName: "bubble.left.and.bubble.right.fill")
                                 .font(.system(size: 36, weight: .semibold))
-                                .foregroundStyle(.green)
+                                .foregroundStyle(Theme.positiveChange)
                         }
                         .padding(.top, 40)
                         

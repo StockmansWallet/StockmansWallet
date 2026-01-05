@@ -87,7 +87,7 @@ struct AdvisoryHubToolView: View {
                     AdvisorySection(
                         title: "How it works",
                         icon: "gear.badge.checkmark",
-                        iconColor: .green,
+                        iconColor: Theme.positiveChange,
                         items: [
                             "Advisors appear in a searchable list",
                             "Filters help you narrow by role, region, and expertise",

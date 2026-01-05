@@ -95,7 +95,7 @@ struct NotificationsSettingsView: View {
                 NotificationCategoryCard(
                     title: "Industry News",
                     icon: "newspaper.fill",
-                    iconColor: .green,
+                    iconColor: Theme.positiveChange,
                     description: "Updates from trusted industry sources.",
                     isEnabled: $industryNewsEnabled,
                     showOnDashboard: $industryNewsDashboard,
@@ -342,7 +342,7 @@ struct BehaviourRow: View {
         HStack(alignment: .top, spacing: 8) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 12))
-                .foregroundStyle(.green)
+                .foregroundStyle(Theme.positiveChange)
                 .frame(width: 20, alignment: .leading)
                 .padding(.top, 2)
             Text(text)

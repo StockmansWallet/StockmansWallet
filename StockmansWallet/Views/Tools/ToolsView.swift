@@ -73,7 +73,7 @@ struct ToolsView: View {
                             title: "Chat",
                             description: "Get help and support",
                             icon: "bubble.left.and.bubble.right.fill",
-                            iconColor: .green
+                            iconColor: Theme.positiveChange
                         ) {
                             HapticManager.tap()
                             showingChat = true

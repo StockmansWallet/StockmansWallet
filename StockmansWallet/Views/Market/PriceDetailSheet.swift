@@ -87,7 +87,7 @@ struct PriceDetailSheet: View {
                         .font(.system(size: 15))
                         .foregroundStyle(Theme.secondaryText)
                 }
-                .foregroundStyle(categoryPrice.trend == .up ? .green : categoryPrice.trend == .down ? .red : Theme.secondaryText)
+                .foregroundStyle(categoryPrice.trend == .up ? Theme.positiveChange : categoryPrice.trend == .down ? Theme.negativeChange : Theme.secondaryText)
             }
             
             // Details Row
@@ -340,7 +340,7 @@ struct RegionalPriceRow: View {
                 Text("\(regional.change >= 0 ? "+" : "")\(regional.change, format: .number.precision(.fractionLength(2)))")
                     .font(.system(size: 14, weight: .medium))
             }
-            .foregroundStyle(regional.trend == .up ? .green : regional.trend == .down ? .red : Theme.secondaryText)
+            .foregroundStyle(regional.trend == .up ? Theme.positiveChange : regional.trend == .down ? Theme.negativeChange : Theme.secondaryText)
         }
     }
 }

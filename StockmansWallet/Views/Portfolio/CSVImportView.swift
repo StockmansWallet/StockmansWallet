@@ -79,7 +79,7 @@ struct CSVImportView: View {
                                 } else if importStatus == .success {
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.system(size: 48))
-                                        .foregroundStyle(.green)
+                                        .foregroundStyle(Theme.positiveChange)
                                     Text("Successfully imported \(importedCount) animal\(importedCount == 1 ? "" : "s")")
                                         .font(Theme.headline)
                                         .foregroundStyle(Theme.primaryText)

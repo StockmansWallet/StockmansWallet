@@ -158,7 +158,7 @@ struct ProfileView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "lock.shield.fill")
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Theme.positiveChange)
                         Text("Security")
                             .font(Theme.headline)
                             .foregroundStyle(Theme.primaryText)
@@ -170,7 +170,7 @@ struct ProfileView: View {
                     HStack {
                         Image(systemName: "key.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(.green)
+                            .foregroundStyle(Theme.positiveChange)
                             .frame(width: 24)
                         Text("Two-Factor Authentication")
                             .font(Theme.body)
@@ -179,7 +179,7 @@ struct ProfileView: View {
                         Toggle("", isOn: .constant(userPrefs.twoFactorEnabled))
                             .labelsHidden()
                             .disabled(true)
-                            .tint(.green)
+                            .tint(Theme.positiveChange)
                     }
                     
                     ProfileInfoRow(
@@ -364,7 +364,7 @@ struct ConnectionStatusRow: View {
             
             HStack(spacing: 6) {
                 Circle()
-                    .fill(isConnected ? .green : Theme.secondaryText.opacity(0.3))
+                    .fill(isConnected ? Theme.positiveChange : Theme.secondaryText.opacity(0.3))
                     .frame(width: 8, height: 8)
                 Text(isConnected ? "Connected" : "Not connected")
                     .font(Theme.caption)

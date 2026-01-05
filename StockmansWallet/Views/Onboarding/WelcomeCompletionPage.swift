@@ -88,7 +88,7 @@ struct FeatureCheckmark: View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.body)
-                .foregroundStyle(.green)
+                .foregroundStyle(Theme.positiveChange)
             
             Text(text)
                 .font(Theme.body)

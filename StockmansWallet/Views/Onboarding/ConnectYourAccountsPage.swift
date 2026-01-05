@@ -55,7 +55,7 @@ struct ConnectYourAccountsPage: View {
                                 
                                 if userPrefs.xeroConnected {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.green)
+                                        .foregroundStyle(Theme.positiveChange)
                                 } else {
                                     Image(systemName: "chevron.right")
                                         .foregroundStyle(Theme.secondaryText)
@@ -89,7 +89,7 @@ struct ConnectYourAccountsPage: View {
                                 
                                 if userPrefs.myobConnected {
                                     Image(systemName: "checkmark.circle.fill")
-                                        .foregroundStyle(.green)
+                                        .foregroundStyle(Theme.positiveChange)
                                 } else {
                                     Image(systemName: "chevron.right")
                                         .foregroundStyle(Theme.secondaryText)

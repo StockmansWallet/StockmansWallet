@@ -68,7 +68,7 @@ struct AddAssetMenuView: View {
                             
                             // Import CSV
                             AssetMenuRow(
-                                iconColor: .green,
+                                iconColor: Theme.positiveChange,
                                 iconSymbol: "square.and.arrow.down",
                                 title: "Import CSV",
                                 subtitle: "Bulk import from spreadsheet"

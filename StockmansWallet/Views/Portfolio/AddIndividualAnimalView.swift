@@ -373,7 +373,7 @@ struct AddIndividualAnimalView: View {
                     .foregroundStyle(Theme.primaryText)
                 Toggle("", isOn: $inCalf)
                     .labelsHidden()
-                    .tint(.green)
+                    .tint(Theme.positiveChange)
                     .padding()
                     .background(Theme.inputFieldBackground)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

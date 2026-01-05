@@ -267,7 +267,7 @@ struct SubscriptionTierCard: View {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(tier.price)
                                 .font(.system(size: 34, weight: .bold))
-                                .foregroundStyle(tier.isFree ? .green : Theme.accent)
+                                .foregroundStyle(tier.isFree ? Theme.positiveChange : Theme.accent)
                             
                             if !tier.isFree {
                                 Text("/ month")
@@ -298,7 +298,7 @@ struct SubscriptionTierCard: View {
                                 HStack(alignment: .top, spacing: 10) {
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.body)
-                                        .foregroundStyle(tier.isFree ? .green : Theme.accent)
+                                        .foregroundStyle(tier.isFree ? Theme.positiveChange : Theme.accent)
                                         .frame(width: 18)
                                     
                                     Text(feature)

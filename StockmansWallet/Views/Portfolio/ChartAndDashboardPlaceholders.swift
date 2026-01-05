@@ -232,7 +232,7 @@ struct IndicatorRow: View {
                 .font(Theme.body) // HIG: Use body font for consistent hierarchy
                 .foregroundStyle(Theme.primaryText)
             Image(systemName: trend == .up ? "arrow.up.right" : trend == .down ? "arrow.down.right" : "minus")
-                .foregroundStyle(trend == .up ? .green : trend == .down ? .red : .gray)
+                .foregroundStyle(trend == .up ? Theme.positiveChange : trend == .down ? Theme.negativeChange : .gray)
                 .font(.system(size: 14))
                 .accessibilityHidden(true)
         }

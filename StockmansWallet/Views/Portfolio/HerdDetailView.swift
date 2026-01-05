@@ -143,7 +143,7 @@ struct ValuationCard: View {
                
                 
                 if valuation.breedingAccrual > 0 {
-                    ValuationRow(label: "Breeding Accrual", value: valuation.breedingAccrual, color: .green)
+                    ValuationRow(label: "Breeding Accrual", value: valuation.breedingAccrual, color: Theme.positiveChange)
                 }
                 
                 ValuationRow(label: "Gross Value", value: valuation.grossValue, color: Theme.primaryText)

@@ -330,7 +330,7 @@ struct HeroIndicatorCard: View {
                 Text("\(indicator.change >= 0 ? "+" : "")\(indicator.change, format: .number.precision(.fractionLength(2)))")
                     .font(.system(size: 14, weight: .semibold))
             }
-            .foregroundStyle(indicator.trend == .up ? .green : indicator.trend == .down ? .red : Theme.secondaryText)
+            .foregroundStyle(indicator.trend == .up ? Theme.positiveChange : indicator.trend == .down ? Theme.negativeChange : Theme.secondaryText)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(20)
@@ -442,7 +442,7 @@ struct CleanPriceCard: View {
                     Text("\(price.change >= 0 ? "+" : "")\(price.change, format: .number.precision(.fractionLength(2)))")
                         .font(.system(size: 13, weight: .semibold))
                 }
-                .foregroundStyle(price.trend == .up ? .green : price.trend == .down ? .red : Theme.secondaryText)
+                .foregroundStyle(price.trend == .up ? Theme.positiveChange : price.trend == .down ? Theme.negativeChange : Theme.secondaryText)
             }
             .padding(20)
             .frame(height: 180)
@@ -555,9 +555,9 @@ struct InsightCard: View {
     
     private var sentimentColor: Color {
         switch commentary.sentiment {
-        case .positive: return .green
+        case .positive: return Theme.positiveChange
         case .neutral: return .gray
-        case .negative: return .red
+        case .negative: return Theme.negativeChange
         }
     }
 }
