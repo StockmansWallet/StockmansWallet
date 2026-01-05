@@ -3,11 +3,12 @@
 //  StockmansWallet
 //
 //  Detailed view of a single herd with valuation and management options
-//  Debug: Uses @Observable pattern for ValuationEngine
+//  Debug: Optimized layout with chart and efficient data organization
 //
 
 import SwiftUI
 import SwiftData
+import Charts
 
 struct HerdDetailView: View {
     @Environment(\.modelContext) private var modelContext
@@ -21,77 +22,52 @@ struct HerdDetailView: View {
     @State private var isLoading = true
     
     var body: some View {
-        // Debug: Background image removed for cleaner design
         ScrollView {
-            VStack(spacing: Theme.sectionSpacing) {
-                // Herd Header (without card for cleaner design)
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text(herd.name)
-                                .font(Theme.title)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            Text("\(herd.headCount) head • \(herd.breed) \(herd.category)")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.primaryText.opacity(0.7))
-                        }
-                        
-                        Spacer()
-                        
-                        // Debug: Display SOLD badge if applicable
-                        if herd.isSold {
-                            Text("SOLD")
-                                .font(Theme.caption)
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(.red)
-                                .clipShape(Capsule())
-                        }
-                    }
-                }
-                .padding(.horizontal)
-                    
-                    // Current Valuation
-                    if let valuation = valuation {
-                        ValuationCard(valuation: valuation)
-                            .padding(.horizontal)
-                    } else if isLoading {
-                        ProgressView()
-                            .tint(Theme.accent)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    }
-                    
-                    // Herd Information
-                    HerdInfoCard(herd: herd)
+            VStack(spacing: 20) {
+                // Debug: Total value card with herd name at the very top
+                if let valuation = valuation {
+                    TotalValueCard(herd: herd, valuation: valuation)
                         .padding(.horizontal)
-                    
-                    // Breeding Information (if applicable)
-                    if herd.isBreeder {
-                        BreedingInfoCard(herd: herd)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Location Information
-                    if let paddock = herd.paddockName {
-                        LocationCard(paddock: paddock, saleyard: herd.selectedSaleyard)
-                            .padding(.horizontal)
-                    }
+                } else if isLoading {
+                    ProgressView()
+                        .tint(Theme.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                }
+                
+                // Debug: Weight Growth Chart for visual insight
+                if herd.dailyWeightGain > 0, let valuation = valuation {
+                    WeightGrowthChart(herd: herd, projectedWeight: valuation.projectedWeight)
+                        .padding(.horizontal)
+                }
+                
+                // Debug: Primary valuation metrics
+                if let valuation = valuation {
+                    PrimaryMetricsCard(herd: herd, valuation: valuation)
+                        .padding(.horizontal)
+                }
+                
+                // Debug: Consolidated herd details - all key info in one card
+                HerdDetailsCard(herd: herd, valuation: valuation)
+                    .padding(.horizontal)
+                
+                // Debug: Breeding info only if applicable
+                if herd.isBreeder {
+                    BreedingDetailsCard(herd: herd)
+                        .padding(.horizontal)
+                }
             }
-            // Prevent width expansion from any child view.
             .frame(maxWidth: .infinity)
             .padding(.bottom, 100)
         }
         .scrollContentBackground(.hidden)
-        .background(Theme.backgroundColor) // Debug: Use theme background color
-        .navigationTitle(herd.name)
+        .background(Theme.backgroundGradient)
+        .navigationTitle("Herd Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 NavigationLink(destination: EditHerdView(herd: herd)) {
-                    Image(systemName: "pencil")
+                    Text("Edit")
                         .foregroundStyle(Theme.accent)
                 }
             }
@@ -116,66 +92,134 @@ struct HerdDetailView: View {
     }
 }
 
-// MARK: - Valuation Card
-struct ValuationCard: View {
+// MARK: - Total Value Card
+// Debug: Prominent total value display with herd name at the top
+struct TotalValueCard: View {
+    let herd: HerdGroup
     let valuation: HerdValuation
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Current Valuation")
-                .font(Theme.headline)
-                .foregroundStyle(Theme.primaryText)
+        VStack(spacing: 12) {
+            // Debug: Herd name centered and smaller
+            HStack {
+                Spacer()
+                Text(herd.name)
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                
+                // Debug: SOLD badge inline with name if applicable
+                if herd.isSold {
+                    Text("SOLD")
+                        .font(Theme.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background(.red)
+                        .clipShape(Capsule())
+                }
+                Spacer()
+            }
             
-            VStack(spacing: 12) {
-                HStack {
-                    Text("Net Realizable Value")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.primaryText.opacity(0.8))
-                    Spacer()
-                    Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
-                        .font(Theme.title)
-                        .foregroundStyle(Theme.accent)
-                }
-                
-                Divider()
-                    .background(Theme.primaryText.opacity(0.3))
-                
-               
-                
-                if valuation.breedingAccrual > 0 {
-                    ValuationRow(label: "Breeding Accrual", value: valuation.breedingAccrual, color: Theme.positiveChange)
-                }
-                
-                ValuationRow(label: "Gross Value", value: valuation.grossValue, color: Theme.primaryText)
-                
-                ValuationRow(label: "Mortality Deduction", value: -valuation.mortalityDeduction, color: .orange)
-                
-               
-                
-                Divider()
-                    .background(Theme.primaryText.opacity(0.3))
-                
-                HStack {
-                    Text("Price Source")
+            // Debug: Total value without label
+            Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
+                .font(.system(size: 44, weight: .bold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+        }
+        .frame(maxWidth: .infinity)
+        .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+// MARK: - Weight Growth Chart
+// Debug: Visual representation of weight gain over time
+struct WeightGrowthChart: View {
+    let herd: HerdGroup
+    let projectedWeight: Double
+    
+    // Debug: Generate weight progression data points
+    private var weightData: [WeightDataPoint] {
+        let daysHeld = herd.daysHeld
+        let startWeight = herd.initialWeight
+        let dwg = herd.dailyWeightGain
+        
+        // Generate data points for the chart
+        var points: [WeightDataPoint] = []
+        let intervals = min(daysHeld, 30) // Show up to 30 data points
+        let step = max(1, daysHeld / intervals)
+        
+        for day in stride(from: 0, through: daysHeld, by: step) {
+            let weight = startWeight + (dwg * Double(day))
+            let date = Calendar.current.date(byAdding: .day, value: day, to: herd.createdAt) ?? herd.createdAt
+            points.append(WeightDataPoint(date: date, weight: weight))
+        }
+        
+        return points
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Weight Growth")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Text("\(Int(herd.initialWeight)) → \(Int(projectedWeight)) kg")
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.primaryText.opacity(0.7))
-                    Spacer()
-                    Text(valuation.priceSource)
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.primaryText.opacity(0.8))
+                        .foregroundStyle(Theme.secondaryText)
                 }
+                Spacer()
+                Text("+\(Int(projectedWeight - herd.initialWeight)) kg")
+                    .font(Theme.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Theme.positiveChange)
+            }
+            
+            // Debug: Simple line chart showing weight progression
+            Chart(weightData) { point in
+                LineMark(
+                    x: .value("Date", point.date),
+                    y: .value("Weight", point.weight)
+                )
+                .foregroundStyle(Theme.accent)
+                .lineStyle(StrokeStyle(lineWidth: 2))
                 
-                HStack {
-                    Text("Price per kg")
+                AreaMark(
+                    x: .value("Date", point.date),
+                    y: .value("Weight", point.weight)
+                )
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [Theme.accent.opacity(0.3), Theme.accent.opacity(0.05)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            }
+            .frame(height: 120)
+            .chartYAxis {
+                AxisMarks(position: .leading) { value in
+                    AxisGridLine()
+                        .foregroundStyle(Theme.separator.opacity(0.3))
+                    AxisValueLabel()
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.primaryText.opacity(0.7))
-                    Spacer()
-                    Text("\(valuation.pricePerKg, format: .number.precision(.fractionLength(2))) $/kg")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.primaryText.opacity(0.8))
+                        .foregroundStyle(Theme.secondaryText)
                 }
-                
-               
+            }
+            .chartXAxis {
+                AxisMarks { value in
+                    AxisGridLine()
+                        .foregroundStyle(Theme.separator.opacity(0.3))
+                    AxisValueLabel(format: .dateTime.month().day())
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
             }
         }
         .padding(Theme.cardPadding)
@@ -183,55 +227,182 @@ struct ValuationCard: View {
     }
 }
 
-struct ValuationRow: View {
+struct WeightDataPoint: Identifiable {
+    let id = UUID()
+    let date: Date
+    let weight: Double
+}
+
+// MARK: - Primary Metrics Card
+// Debug: Key valuation metrics in compact layout
+struct PrimaryMetricsCard: View {
+    let herd: HerdGroup
+    let valuation: HerdValuation
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            // Header
+            HStack {
+                Text("Key Metrics")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                Spacer()
+            }
+            
+            // Key metrics in grid layout
+            HStack(spacing: 16) {
+                VStack(spacing: 4) {
+                    Text("Price/kg")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    // Debug: iOS 26 - Use attributed string for mixed styling
+                    Text("\(valuation.pricePerKg, format: .currency(code: "AUD"))/kg")
+                        .font(Theme.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                }
+                .frame(maxWidth: .infinity)
+                
+                Divider()
+                    .frame(height: 40)
+                    .background(Theme.separator.opacity(0.3))
+                
+                VStack(spacing: 4) {
+                    Text("Avg Weight")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    // Debug: iOS 26 - Use string interpolation instead of Text concatenation
+                    Text("\(Int(valuation.projectedWeight)) kg")
+                        .font(Theme.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                }
+                .frame(maxWidth: .infinity)
+                
+                Divider()
+                    .frame(height: 40)
+                    .background(Theme.separator.opacity(0.3))
+                
+                VStack(spacing: 4) {
+                    Text("Per Head")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    Text(valuation.netRealizableValue / Double(herd.headCount), format: .currency(code: "AUD"))
+                        .font(Theme.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(.white)
+                }
+                .frame(maxWidth: .infinity)
+            }
+            
+            // Debug: Show herd's specific saleyard
+            HStack {
+                Image(systemName: "building.2")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.secondaryText)
+                Text(herd.selectedSaleyard ?? "No saleyard selected")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+            }
+        }
+        .padding(Theme.cardPadding)
+        .stitchedCard()
+    }
+}
+
+// MARK: - Herd Details Card
+// Debug: Organized herd information into logical sections
+struct HerdDetailsCard: View {
+    let herd: HerdGroup
+    let valuation: HerdValuation?
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 20) {
+            Text("Herd Details")
+                .font(Theme.headline)
+                .foregroundStyle(Theme.primaryText)
+            
+            // Debug: Organized into clear sections for better readability
+            
+            // Physical Attributes Section
+            VStack(alignment: .leading, spacing: 8) {
+                SectionHeader(title: "Physical Attributes")
+                DetailRow(label: "Species", value: herd.species)
+                DetailRow(label: "Breed", value: herd.breed)
+                DetailRow(label: "Category", value: herd.category)
+                DetailRow(label: "Sex", value: herd.sex)
+                DetailRow(label: "Age", value: "\(herd.ageMonths) months")
+            }
+            
+            Divider()
+                .background(Theme.separator.opacity(0.3))
+            
+            // Herd Size & Location Section
+            VStack(alignment: .leading, spacing: 8) {
+                SectionHeader(title: "Herd Size & Location")
+                DetailRow(label: "Headcount", value: "\(herd.headCount) head")
+                if let paddock = herd.paddockName, !paddock.isEmpty {
+                    DetailRow(label: "Paddock", value: paddock)
+                }
+            }
+            
+            Divider()
+                .background(Theme.separator.opacity(0.3))
+            
+            // Weight Tracking Section
+            VStack(alignment: .leading, spacing: 8) {
+                SectionHeader(title: "Weight Tracking")
+                DetailRow(label: "Initial Weight", value: "\(Int(herd.initialWeight)) kg")
+                DetailRow(label: "Daily Weight Gain", value: String(format: "%.2f kg/day", herd.dailyWeightGain))
+            }
+            
+            Divider()
+                .background(Theme.separator.opacity(0.3))
+            
+            // Timeline Section
+            VStack(alignment: .leading, spacing: 8) {
+                SectionHeader(title: "Timeline")
+                DetailRow(label: "Days Held", value: "\(herd.daysHeld) days")
+                DetailRow(label: "Created", value: herd.createdAt.formatted(date: .abbreviated, time: .omitted))
+            }
+        }
+        .padding(Theme.cardPadding)
+        .stitchedCard()
+    }
+}
+
+struct SectionHeader: View {
+    let title: String
+    
+    var body: some View {
+        Text(title)
+            .font(Theme.caption)
+            .fontWeight(.semibold)
+            .foregroundStyle(Theme.secondaryText)
+            .textCase(.uppercase)
+    }
+}
+
+struct DetailRow: View {
     let label: String
-    let value: Double
-    let color: Color
+    let value: String
     
     var body: some View {
         HStack {
             Text(label)
                 .font(Theme.body)
-                .foregroundStyle(Theme.primaryText.opacity(0.8))
+                .foregroundStyle(Theme.secondaryText)
             Spacer()
-            Text(value, format: .currency(code: "AUD"))
-                .font(Theme.headline)
-                .foregroundStyle(color)
-        }
-    }
-}
-
-// MARK: - Herd Info Card
-struct HerdInfoCard: View {
-    let herd: HerdGroup
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Herd Information")
-                .font(Theme.headline)
+            Text(value)
+                .font(Theme.body)
                 .foregroundStyle(Theme.primaryText)
-            
-            VStack(spacing: 12) {
-                InfoRow(label: "Species", value: herd.species)
-                InfoRow(label: "Breed", value: herd.breed)
-                InfoRow(label: "Category", value: herd.category)
-                InfoRow(label: "Sex", value: herd.sex)
-                InfoRow(label: "Age", value: "\(herd.ageMonths) months")
-                InfoRow(label: "Head Count", value: "\(herd.headCount)")
-                InfoRow(label: "Initial Weight", value: "\(Int(herd.initialWeight)) kg")
-                InfoRow(label: "Daily Weight Gain", value: String(format: "%.2f kg/day", herd.dailyWeightGain))
-                InfoRow(label: "Created", value: herd.createdAt.formatted(date: .abbreviated, time: .omitted))
-            }
         }
-        .padding(Theme.cardPadding)
-        .stitchedCard()
     }
 }
 
-// InfoRow is defined in ReportsView.swift
-
-// MARK: - Breeding Info Card
-struct BreedingInfoCard: View {
+// MARK: - Breeding Details Card
+// Debug: Breeding information only shown when relevant
+struct BreedingDetailsCard: View {
     let herd: HerdGroup
     
     var body: some View {
@@ -240,49 +411,42 @@ struct BreedingInfoCard: View {
                 .font(Theme.headline)
                 .foregroundStyle(Theme.primaryText)
             
-            VStack(spacing: 12) {
-                InfoRow(label: "Breeding Stock", value: "Yes")
-                InfoRow(label: "Pregnant", value: herd.isPregnant ? "Yes" : "No")
-                InfoRow(label: "Calving Rate", value: "\(Int(herd.calvingRate * 100))%")
+            VStack(spacing: 8) {
+                DetailRow(label: "Pregnant", value: herd.isPregnant ? "Yes" : "No")
+                DetailRow(label: "Calving Rate", value: "\(Int(herd.calvingRate * 100))%")
                 
                 if let joinedDate = herd.joinedDate {
-                    InfoRow(label: "Joined Date", value: joinedDate.formatted(date: .abbreviated, time: .omitted))
+                    DetailRow(label: "Joined Date", value: joinedDate.formatted(date: .abbreviated, time: .omitted))
                     
                     if herd.isPregnant {
                         let daysSinceJoined = Calendar.current.dateComponents([.day], from: joinedDate, to: Date()).day ?? 0
                         let cycleLength = herd.species == "Cattle" ? 283 : 150
                         let daysRemaining = max(0, cycleLength - daysSinceJoined)
                         
-                        InfoRow(label: "Days Since Joined", value: "\(daysSinceJoined)")
-                        InfoRow(label: "Days Until Calving", value: "\(daysRemaining)")
+                        DetailRow(label: "Days Since Joined", value: "\(daysSinceJoined)")
+                        DetailRow(label: "Est. Days to Calving", value: "\(daysRemaining)")
+                        
+                        // Progress bar for pregnancy
+                        GeometryReader { geometry in
+                            ZStack(alignment: .leading) {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Theme.primaryText.opacity(0.1))
+                                    .frame(height: 6)
+                                
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Theme.accent)
+                                    .frame(
+                                        width: geometry.size.width * CGFloat(daysSinceJoined) / CGFloat(cycleLength),
+                                        height: 6
+                                    )
+                            }
+                        }
+                        .frame(height: 6)
                     }
                 }
                 
                 if let lactationStatus = herd.lactationStatus {
-                    InfoRow(label: "Lactation Status", value: lactationStatus)
-                }
-            }
-        }
-        .padding(Theme.cardPadding)
-        .stitchedCard()
-    }
-}
-
-// MARK: - Location Card
-struct LocationCard: View {
-    let paddock: String
-    let saleyard: String?
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Location")
-                .font(Theme.headline)
-                .foregroundStyle(Theme.primaryText)
-            
-            VStack(spacing: 12) {
-                InfoRow(label: "Paddock", value: paddock)
-                if let saleyard = saleyard {
-                    InfoRow(label: "Saleyard", value: saleyard)
+                    DetailRow(label: "Lactation", value: lactationStatus)
                 }
             }
         }
