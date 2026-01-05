@@ -31,6 +31,8 @@ struct DashboardView: View {
     @State private var isLoading = true
     @State private var loadError: String? = nil
     @State private var timeRange: TimeRange = .all
+    @State private var customStartDate: Date?
+    @State private var customEndDate: Date?
     @State private var capitalConcentration: [CapitalConcentrationBreakdown] = []
     @State private var unrealizedGains: Double = 0.0
     @State private var totalCostToCarry: Double = 0.0
@@ -57,6 +59,7 @@ struct DashboardView: View {
     @State private var selectedSaleyard: String? = nil
     
     @State private var showingAddAssetMenu = false
+    @State private var showingCustomDatePicker = false
     @State private var backgroundImageTrigger = false // Debug: Trigger to force view refresh on background change
     
     // Debug: State for clearing mock data (temporary dev feature)
@@ -129,6 +132,13 @@ struct DashboardView: View {
                 AddAssetMenuView(isPresented: $showingAddAssetMenu)
                     .transition(.move(edge: .trailing))
                     .presentationBackground(Theme.sheetBackground)
+            }
+            .sheet(isPresented: $showingCustomDatePicker) {
+                CustomDateRangeSheet(
+                    startDate: $customStartDate,
+                    endDate: $customEndDate,
+                    timeRange: $timeRange
+                )
             }
             .background(Theme.backgroundColor.ignoresSafeArea())
     }
@@ -265,7 +275,12 @@ struct DashboardView: View {
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityHint("Drag your finger across the chart to explore values over time.")
             
-            TimeRangeSelector(timeRange: $timeRange)
+            TimeRangeSelector(
+                timeRange: $timeRange,
+                customStartDate: $customStartDate,
+                customEndDate: $customEndDate,
+                showingCustomDatePicker: $showingCustomDatePicker
+            )
                 .padding(.horizontal, Theme.cardPadding)
                 .padding(.top, -Theme.sectionSpacing)
                 .accessibilityElement(children: .contain)
@@ -370,20 +385,26 @@ struct DashboardView: View {
         guard !valuationHistory.isEmpty else { return [] }
         let calendar = Calendar.current
         let now = Date()
-        let cutoffDate: Date
         
         switch timeRange {
+        case .custom:
+            // Debug: Filter by custom date range if set
+            guard let startDate = customStartDate, let endDate = customEndDate else {
+                return valuationHistory
+            }
+            return valuationHistory.filter { $0.date >= startDate && $0.date <= endDate }
         case .week:
-            cutoffDate = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+            let cutoffDate = calendar.date(byAdding: .day, value: -7, to: now) ?? now
+            return valuationHistory.filter { $0.date >= cutoffDate }
         case .month:
-            cutoffDate = calendar.date(byAdding: .month, value: -1, to: now) ?? now
+            let cutoffDate = calendar.date(byAdding: .month, value: -1, to: now) ?? now
+            return valuationHistory.filter { $0.date >= cutoffDate }
         case .year:
-            cutoffDate = calendar.date(byAdding: .year, value: -1, to: now) ?? now
+            let cutoffDate = calendar.date(byAdding: .year, value: -1, to: now) ?? now
+            return valuationHistory.filter { $0.date >= cutoffDate }
         case .all:
             return valuationHistory
         }
-        
-        return valuationHistory.filter { $0.date >= cutoffDate }
     }
     
     // Debug: Calculate change based on selected time range (like CoinSpot)
@@ -840,6 +861,7 @@ struct AnimatedCurrencyValue: View {
 
 // MARK: - Interactive Chart View
 enum TimeRange: String, CaseIterable {
+    case custom = "Custom"
     case week = "Week"
     case month = "Month"
     case year = "Year"
@@ -901,32 +923,6 @@ struct InteractiveChartView: View {
         return (before, after)
     }
     
-    private var timeRangeSelector: some View {
-        HStack {
-            Spacer()
-            HStack(spacing: 8) {
-                ForEach(TimeRange.allCases, id: \.self) { range in
-                    Button(action: {
-                        HapticManager.tap()
-                        timeRange = range
-                    }) {
-                        Text(range.rawValue)
-                            .font(Theme.caption)
-                            .foregroundStyle(timeRange == range ? Theme.accent : Theme.secondaryText)
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 6)
-                            .background(
-                                timeRange == range ? Theme.accent.opacity(0.15) : Color.clear
-                            )
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                    }
-                    .buttonBorderShape(.roundedRectangle)
-                    .accessibilityLabel("Show \(range.rawValue) range")
-                }
-            }
-            Spacer()
-        }
-    }
     
     // Performance: Single gradient definition - no dynamic changes during scrubbing
     private var fullOpacityGradient: LinearGradient {
@@ -945,6 +941,9 @@ struct InteractiveChartView: View {
         
         let epsilon: TimeInterval
         switch range {
+        case .custom:
+            // Debug: No edge extension for custom range - show exact selected dates
+            return sorted
         case .week, .month:
             epsilon = 60 * 60 * 12
         case .year:
@@ -1735,6 +1734,122 @@ struct SaleyardSelectionSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+    }
+}
+
+// MARK: - Custom Date Range Sheet
+// Debug: HIG-compliant sheet for selecting custom date range with graphical date pickers
+struct CustomDateRangeSheet: View {
+    @Binding var startDate: Date?
+    @Binding var endDate: Date?
+    @Binding var timeRange: TimeRange
+    @Environment(\.dismiss) private var dismiss
+    
+    // Debug: Local state for date pickers, initialized with existing values or defaults
+    @State private var tempStartDate: Date
+    @State private var tempEndDate: Date
+    
+    init(startDate: Binding<Date?>, endDate: Binding<Date?>, timeRange: Binding<TimeRange>) {
+        self._startDate = startDate
+        self._endDate = endDate
+        self._timeRange = timeRange
+        
+        // Debug: Initialize with existing dates or reasonable defaults
+        let calendar = Calendar.current
+        let now = Date()
+        let defaultStart = calendar.date(byAdding: .month, value: -1, to: now) ?? now
+        
+        _tempStartDate = State(initialValue: startDate.wrappedValue ?? defaultStart)
+        _tempEndDate = State(initialValue: endDate.wrappedValue ?? now)
+    }
+    
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    DatePicker(
+                        "Start Date",
+                        selection: $tempStartDate,
+                        displayedComponents: [.date]
+                    )
+                    .datePickerStyle(.graphical)
+                } header: {
+                    Text("From")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                
+                Section {
+                    DatePicker(
+                        "End Date",
+                        selection: $tempEndDate,
+                        in: tempStartDate...,
+                        displayedComponents: [.date]
+                    )
+                    .datePickerStyle(.graphical)
+                } header: {
+                    Text("To")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                
+                Section {
+                    // Debug: Show date range summary
+                    HStack {
+                        Image(systemName: "calendar")
+                            .foregroundStyle(Theme.accent)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Selected Range")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            Text(dateRangeSummary)
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.primaryText)
+                        }
+                    }
+                    .padding(.vertical, 8)
+                }
+            }
+            .navigationTitle("Custom Date Range")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.secondaryText)
+                }
+                
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Apply") {
+                        HapticManager.tap()
+                        // Debug: Apply selected dates and set time range to custom
+                        startDate = tempStartDate
+                        endDate = tempEndDate
+                        timeRange = .custom
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                    .fontWeight(.semibold)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.backgroundColor)
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+    
+    // Debug: Format date range as readable string
+    private var dateRangeSummary: String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .none
+        
+        let days = Calendar.current.dateComponents([.day], from: tempStartDate, to: tempEndDate).day ?? 0
+        
+        return "\(formatter.string(from: tempStartDate)) - \(formatter.string(from: tempEndDate)) (\(days + 1) days)"
     }
 }
 

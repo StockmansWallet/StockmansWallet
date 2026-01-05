@@ -98,6 +98,19 @@ struct ChartDateLabelsView: View {
 // MARK: - Time Range Selector (Placeholder)
 struct TimeRangeSelector: View {
     @Binding var timeRange: TimeRange
+    @Binding var customStartDate: Date?
+    @Binding var customEndDate: Date?
+    @Binding var showingCustomDatePicker: Bool
+    
+    // Debug: Format custom date range for button label (e.g., "Jan 1 - Feb 15")
+    private var customDateRangeLabel: String {
+        guard let start = customStartDate, let end = customEndDate else {
+            return "Custom"
+        }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+    }
     
     var body: some View {
         HStack(spacing: 8) {
@@ -105,9 +118,17 @@ struct TimeRangeSelector: View {
             ForEach(TimeRange.allCases, id: \.self) { range in
                 Button {
                     HapticManager.tap()
-                    timeRange = range
+                    // Debug: Custom range opens date picker sheet instead of direct selection
+                    if range == .custom {
+                        showingCustomDatePicker = true
+                    } else {
+                        timeRange = range
+                    }
                 } label: {
-                    Text(range.rawValue)
+                    // Debug: Show condensed dates when custom range is active
+                    Text(range == .custom && timeRange == .custom && customStartDate != nil && customEndDate != nil 
+                        ? customDateRangeLabel 
+                        : range.rawValue)
                         .font(Theme.caption)
                         .foregroundStyle(timeRange == range ? Theme.accent : Theme.secondaryText)
                         .padding(.horizontal, 12)
@@ -117,6 +138,7 @@ struct TimeRangeSelector: View {
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
+                .accessibilityLabel(range == .custom ? "Custom date range" : "Show \(range.rawValue) range")
             }
             Spacer()
         }
