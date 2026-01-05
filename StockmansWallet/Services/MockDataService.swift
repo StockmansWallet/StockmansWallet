@@ -54,6 +54,45 @@ class MockDataService {
             modelContext.insert(herd)
         }
         
+        // Debug: Generate individual tagged animals for testing searchable list
+        let individualAnimals: [(name: String, breed: String, category: String, weight: Double, dwg: Double, paddock: String, tagInfo: String)] = [
+            ("Bessie #A123", "Angus", "Breeding Cow", 580.0, 0.2, "North Paddock", "NLIS: 982000123456789"),
+            ("Bull #B456", "Angus", "Breeding Cow", 920.0, 0.3, "North Paddock", "NLIS: 982000234567890"),
+            ("Daisy #C789", "Angus", "Breeding Cow", 550.0, 0.2, "North Paddock", "NLIS: 982000345678901"),
+            ("Rex #D012", "Hereford", "Yearling Steer", 420.0, 0.9, "South Paddock", "NLIS: 982000456789012"),
+            ("Max #E345", "Hereford", "Yearling Steer", 395.0, 0.8, "South Paddock", "NLIS: 982000567890123"),
+            ("Duke #F678", "Angus X Friesian", "Weaner Steer", 265.0, 1.1, "East Paddock", "NLIS: 982000678901234"),
+            ("Rusty #G901", "Angus X Friesian", "Weaner Steer", 248.0, 1.0, "East Paddock", "NLIS: 982000789012345"),
+            ("Blaze #H234", "Charolais", "Grown Steer", 485.0, 0.7, "West Paddock", "NLIS: 982000890123456"),
+            ("Thunder #I567", "Charolais", "Grown Steer", 470.0, 0.6, "West Paddock", "NLIS: 982000901234567"),
+            ("Rosie #J890", "Murray Grey", "Heifer", 340.0, 0.8, "Central Paddock", "NLIS: 982001012345678"),
+        ]
+        
+        for animal in individualAnimals {
+            let startDate = calendar.date(byAdding: .day, value: -90, to: Date()) ?? Date()
+            
+            let individual = HerdGroup(
+                name: animal.name,
+                species: "Cattle",
+                breed: animal.breed,
+                sex: animal.category.contains("Cow") || animal.category.contains("Heifer") ? "Female" : "Male",
+                category: animal.category,
+                ageMonths: animal.category.contains("Weaner") ? 8 : animal.category.contains("Yearling") ? 18 : 36,
+                headCount: 1, // Debug: Individual animal
+                initialWeight: animal.weight,
+                dailyWeightGain: animal.dwg,
+                isBreeder: animal.category.contains("Breeding") || animal.category.contains("Heifer"),
+                selectedSaleyard: preferences.defaultSaleyard
+            )
+            
+            individual.createdAt = startDate
+            individual.updatedAt = startDate
+            individual.paddockName = animal.paddock
+            individual.additionalInfo = animal.tagInfo
+            
+            modelContext.insert(individual)
+        }
+        
         // Note: Sales records would need to be linked to actual herd IDs
         // This is a simplified version - sales records generation can be added later
         

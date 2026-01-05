@@ -30,6 +30,7 @@ struct EditHerdView: View {
     @State private var calvingRate: Double
     @State private var selectedSaleyard: String?
     @State private var paddockName: String
+    @State private var useCreationDateForWeight: Bool
     
     private let speciesOptions = ["Cattle", "Sheep", "Pig"]
     
@@ -76,6 +77,7 @@ struct EditHerdView: View {
         _calvingRate = State(initialValue: herd.calvingRate)
         _selectedSaleyard = State(initialValue: herd.selectedSaleyard)
         _paddockName = State(initialValue: herd.paddockName ?? "")
+        _useCreationDateForWeight = State(initialValue: herd.useCreationDateForWeight)
     }
     
     var body: some View {
@@ -221,6 +223,30 @@ struct EditHerdView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             }
                             
+                            // Debug: Weight gain calculation method toggle
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Weight Gain Calculation")
+                                    .font(Theme.headline)
+                                    .foregroundStyle(Theme.primaryText)
+                                
+                                Toggle(isOn: $useCreationDateForWeight) {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Calculate from creation date")
+                                            .font(Theme.body)
+                                            .foregroundStyle(Theme.primaryText)
+                                        Text(useCreationDateForWeight 
+                                             ? "Weight calculated from entry date (\(herd.createdAt.formatted(date: .abbreviated, time: .omitted)))"
+                                             : "Weight calculated from today's date (dynamic)")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                }
+                                .tint(Theme.accent)
+                                .padding()
+                                .background(Theme.inputFieldBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            }
+                            
                             VStack(alignment: .leading, spacing: 12) {
                                 Text("Age (months)")
                                     .font(Theme.headline)
@@ -360,6 +386,7 @@ struct EditHerdView: View {
         herd.headCount = headCount
         herd.initialWeight = initialWeight
         herd.dailyWeightGain = dailyWeightGain
+        herd.useCreationDateForWeight = useCreationDateForWeight
         herd.isBreeder = isBreeder
         herd.isPregnant = isBreeder && isPregnant
         herd.calvingRate = calvingRate

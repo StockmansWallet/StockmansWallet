@@ -31,6 +31,7 @@ final class HerdGroup {
     var dailyWeightGain: Double // kg/day (DWG)
     var dwgChangeDate: Date? // Date when DWG was last changed
     var previousDWG: Double? // Previous DWG value for split calculation
+    var useCreationDateForWeight: Bool // If true, calculate weight from creation date; if false, from today
     
     // MARK: - Breeding Status
     var isBreeder: Bool
@@ -85,6 +86,7 @@ final class HerdGroup {
         self.dailyWeightGain = dailyWeightGain
         self.dwgChangeDate = nil
         self.previousDWG = nil
+        self.useCreationDateForWeight = false // Default: calculate from today
         self.isBreeder = isBreeder
         self.isPregnant = false
         self.joinedDate = nil

@@ -20,6 +20,7 @@ struct HerdDetailView: View {
     
     @State private var valuation: HerdValuation?
     @State private var isLoading = true
+    @State private var showingAnimalsList = false
     
     var body: some View {
         ScrollView {
@@ -56,6 +57,33 @@ struct HerdDetailView: View {
                     BreedingDetailsCard(herd: herd)
                         .padding(.horizontal)
                 }
+                
+                // Debug: Button to open searchable animal list sheet
+                Button {
+                    HapticManager.tap()
+                    showingAnimalsList = true
+                } label: {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("View Individual Animals")
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
+                            Text("Browse all individually tagged animals")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                        }
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                    }
+                    .padding(Theme.cardPadding)
+                }
+                .buttonStyle(PlainButtonStyle())
+                .stitchedCard()
+                .padding(.horizontal)
             }
             .frame(maxWidth: .infinity)
             .padding(.bottom, 100)
@@ -71,6 +99,12 @@ struct HerdDetailView: View {
                         .foregroundStyle(Theme.accent)
                 }
             }
+        }
+        .sheet(isPresented: $showingAnimalsList) {
+            AnimalListSheet(herd: herd)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Theme.sheetBackground)
         }
         .task {
             await loadValuation()
@@ -397,6 +431,217 @@ struct DetailRow: View {
                 .font(Theme.body)
                 .foregroundStyle(Theme.primaryText)
         }
+    }
+}
+
+// MARK: - Animal List Sheet
+// Debug: Searchable sheet showing actual animals from database
+struct AnimalListSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext) private var modelContext
+    
+    let herd: HerdGroup
+    
+    @State private var searchText = ""
+    
+    // Debug: Query all individual animals (HerdGroups with headCount = 1)
+    @Query(sort: \HerdGroup.name) private var allHerds: [HerdGroup]
+    
+    private var allIndividualAnimals: [HerdGroup] {
+        allHerds.filter { $0.headCount == 1 && !$0.isSold }
+    }
+    
+    private var relatedAnimals: [HerdGroup] {
+        // Debug: For now, show ALL individual animals to verify they exist
+        // TODO: Re-enable filtering once confirmed animals are in database
+        // allIndividualAnimals.filter { animal in
+        //     animal.species == herd.species &&
+        //     animal.breed == herd.breed &&
+        //     animal.category == herd.category
+        // }
+        return allIndividualAnimals
+    }
+    
+    private var filteredAnimals: [HerdGroup] {
+        if searchText.isEmpty {
+            return relatedAnimals
+        }
+        return relatedAnimals.filter { animal in
+            animal.name.localizedCaseInsensitiveContains(searchText) ||
+            (animal.additionalInfo?.localizedCaseInsensitiveContains(searchText) ?? false)
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            VStack(spacing: 0) {
+                // Debug: Search bar at the top
+                HStack(spacing: 12) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(Theme.secondaryText)
+                        .font(.system(size: 16))
+                    
+                    TextField("Search by name or tag...", text: $searchText)
+                        .textFieldStyle(.plain)
+                        .foregroundStyle(Theme.primaryText)
+                        .autocorrectionDisabled()
+                    
+                    if !searchText.isEmpty {
+                        Button {
+                            searchText = ""
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(Theme.secondaryText)
+                                .font(.system(size: 16))
+                        }
+                    }
+                }
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .padding(.horizontal)
+                .padding(.vertical, 12)
+                
+                // Debug: Results count with debug info
+                HStack {
+                    Text("\(filteredAnimals.count) of \(allIndividualAnimals.count) total individual animals")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    Spacer()
+                }
+                .padding(.horizontal)
+                .padding(.bottom, 8)
+                
+                // Debug: Scrollable list of animals
+                ScrollView {
+                    LazyVStack(spacing: 12) {
+                        ForEach(filteredAnimals) { animal in
+                            IndividualAnimalRow(animal: animal)
+                        }
+                        
+                        if filteredAnimals.isEmpty {
+                            VStack(spacing: 16) {
+                                Image(systemName: searchText.isEmpty ? "tag.slash" : "magnifyingglass")
+                                    .font(.system(size: 48))
+                                    .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                                
+                                if searchText.isEmpty {
+                                    Text("No Individual Animals Found")
+                                        .font(Theme.headline)
+                                        .foregroundStyle(Theme.primaryText)
+                                    
+                                    VStack(spacing: 8) {
+                                        Text("Total herds in database: \(allHerds.count)")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                        Text("Individual animals (headCount=1): \(allIndividualAnimals.count)")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                        
+                                        if allIndividualAnimals.isEmpty {
+                                            Text("Go to Settings → Generate Mock Data to create individual animals")
+                                                .font(Theme.caption)
+                                                .foregroundStyle(Theme.accent)
+                                                .multilineTextAlignment(.center)
+                                                .padding(.top, 8)
+                                        }
+                                    }
+                                    .padding(.horizontal)
+                                } else {
+                                    Text("No animals match your search")
+                                        .font(Theme.headline)
+                                        .foregroundStyle(Theme.primaryText)
+                                    
+                                    Text("Try adjusting your search terms")
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                }
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 60)
+                        }
+                    }
+                    .padding(.horizontal)
+                    .padding(.bottom, 100)
+                }
+                .background(Theme.backgroundGradient.ignoresSafeArea())
+            }
+            .background(Theme.backgroundGradient.ignoresSafeArea())
+            .navigationTitle("Animals in \(herd.name)")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Individual Animal Row
+// Debug: Row displaying individual animal details from database
+struct IndividualAnimalRow: View {
+    let animal: HerdGroup
+    
+    var body: some View {
+        NavigationLink(destination: HerdDetailView(herd: animal)) {
+            HStack(spacing: 12) {
+                // Tag icon
+                ZStack {
+                    Circle()
+                        .fill(Theme.accent.opacity(0.2))
+                        .frame(width: 44, height: 44)
+                    
+                    Image(systemName: "tag.fill")
+                        .font(.system(size: 16))
+                        .foregroundStyle(Theme.accent)
+                }
+                
+                // Animal info
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(animal.name)
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    
+                    HStack(spacing: 8) {
+                        Text(animal.breed)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        
+                        Text("•")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        
+                        Text("\(Int(animal.currentWeight)) kg")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        
+                        if let paddock = animal.paddockName, !paddock.isEmpty {
+                            Text("•")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            Text(paddock)
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                        }
+                    }
+                }
+                
+                Spacer()
+                
+                // Chevron
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(Theme.secondaryText.opacity(0.6))
+            }
+            .padding(Theme.cardPadding)
+        }
+        .buttonStyle(PlainButtonStyle())
+        .stitchedCard()
     }
 }
 
