@@ -188,6 +188,7 @@ struct UserTypeSelectionPage: View {
                 }
                 .buttonStyle(Theme.PrimaryButtonStyle())
                 .disabled(!isValid)
+                .opacity(isValid ? 1.0 : 0.5) // Debug: Visual feedback for disabled state
                 .padding(.horizontal, 20)
                 .padding(.bottom, 20)
                 .accessibilityLabel("Continue to next page")

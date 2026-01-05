@@ -20,9 +20,9 @@ struct WelcomeCompletionPage: View {
     // Debug: Personalized greeting
     private var greeting: String {
         if let firstName = userPrefs.firstName, !firstName.isEmpty {
-            return "Welcome aboard, \(firstName)!"
+            return "Welcome, \(firstName)!"
         }
-        return "Welcome aboard!"
+        return "Welcome!"
     }
     
     var body: some View {
@@ -43,9 +43,12 @@ struct WelcomeCompletionPage: View {
                         .fill(Theme.accent.opacity(0.15))
                         .frame(width: 120, height: 120)
                     
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 60, weight: .regular))
+                    Image("farmer_icon")
+                        .resizable()
+                        .renderingMode(.template)
                         .foregroundStyle(Theme.accent)
+                        .scaledToFit()
+                        .frame(width: 60, height: 60)
                 }
                 .padding(.top, 40)
                 
