@@ -88,7 +88,7 @@ struct UserTypeSelectionPage: View {
                             .foregroundStyle(Theme.primaryText)
                             .multilineTextAlignment(.center)
                         
-                        Text("Each account type unlocks tools and features specific to how you work with livestock data, valuations, and reports.")
+                        Text("Stockman's Wallet has two different account types. Each account unlocks tools and views specific to your role. Choose the option that best matches how you work with livestock value and reporting.")
                             .font(Theme.body)
                             .foregroundStyle(Theme.secondaryText)
                             .multilineTextAlignment(.center)
@@ -104,7 +104,7 @@ struct UserTypeSelectionPage: View {
                             isSelected: selectedUserType == .farmer,
                             action: {
                                 HapticManager.tap()
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(.easeInOut(duration: 0.3)) {
                                     selectedUserType = .farmer
                                     // Debug: Set user role to Farmer/Grazier
                                     userPrefs.userRole = .farmerGrazier
@@ -117,7 +117,7 @@ struct UserTypeSelectionPage: View {
                             isSelected: selectedUserType == .advisory,
                             action: {
                                 HapticManager.tap()
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(.easeInOut(duration: 0.3)) {
                                     selectedUserType = .advisory
                                     // Debug: Clear specific role - will be selected on next page
                                     userPrefs.userRole = nil
@@ -146,8 +146,8 @@ struct UserTypeSelectionPage: View {
                                 .lineSpacing(4)
                         }
                         .padding(.horizontal, 32)
+                        .id(userType) // Debug: Force SwiftUI to treat each selection as a separate view
                         .transition(.opacity)
-                        .animation(.easeInOut(duration: 0.3), value: selectedUserType)
                     }
                 }
                 .padding(.bottom, 32)
