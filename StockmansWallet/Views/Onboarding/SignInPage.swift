@@ -14,6 +14,11 @@ struct SignInPage: View {
     @Binding var isSigningIn: Bool
     @Binding var userPrefs: UserPreferences
     var onSignInComplete: (() -> Void)? = nil
+    // Debug: Demo sign-in handlers for different methods
+    var onEmailSignIn: (() -> Void)? = nil // Existing users → Dashboard
+    var onEmailSignUp: (() -> Void)? = nil // New users → Onboarding
+    var onAppleSignIn: (() -> Void)? = nil
+    var onGoogleSignIn: (() -> Void)? = nil
     @State private var email = ""
     @State private var password = ""
     @State private var isSignUp = false
@@ -64,39 +69,7 @@ struct SignInPage: View {
                         .frame(maxWidth: .infinity)
                         .padding(.top, 24)
                         
-                        // Debug: Social sign-in priority (modern iOS pattern)
-                        VStack(spacing: 12) {
-                            // Apple Sign In - Custom styled button (required first per HIG)
-                            CustomAppleSignInButton {
-                                HapticManager.tap()
-                                advanceDemoSignIn()
-                            }
-                            .accessibilityLabel("Continue with Apple")
-                            
-                            // Google Sign In - Custom styled button
-                            CustomGoogleSignInButton {
-                                HapticManager.tap()
-                                advanceDemoSignIn()
-                            }
-                            .accessibilityLabel("Continue with Google")
-                        }
-                        
-                        // Divider
-                        HStack(spacing: 16) {
-                            Rectangle()
-                                .fill(Theme.separator)
-                                .frame(height: 1)
-                            
-                            Text("Or")
-                                .font(.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                            
-                            Rectangle()
-                                .fill(Theme.separator)
-                                .frame(height: 1)
-                        }
-                        
-                        // Debug: iOS 26 HIG - Email/password form with proper keyboard navigation
+                        // Debug: Email/password form with proper keyboard navigation
                         VStack(spacing: 14) {
                             if isSignUp {
                                 TextField("First Name", text: $firstName)
@@ -231,10 +204,20 @@ struct SignInPage: View {
                             }
                         }
                         
-                        // Primary Action
+                        // Primary Action - Email/Password Sign In
                         Button {
                             HapticManager.tap()
-                            advanceDemoSignIn()
+                            // Debug: Save name/email from sign-up form to userPrefs
+                            if isSignUp {
+                                userPrefs.firstName = firstName
+                                userPrefs.lastName = lastName
+                                userPrefs.email = email
+                                // Debug: Demo - New user goes through onboarding
+                                onEmailSignUp?()
+                            } else {
+                                // Debug: Demo - Existing user goes to dashboard
+                                onEmailSignIn?()
+                            }
                         } label: {
                             Text(isSignUp ? "Create Account" : "Sign In")
                                 .frame(maxWidth: .infinity)
@@ -242,6 +225,40 @@ struct SignInPage: View {
                         .buttonStyle(Theme.PrimaryButtonStyle())
                         .disabled(!canProceed)
                         .opacity(canProceed ? 1.0 : 0.6)
+                        
+                        // Divider
+                        HStack(spacing: 16) {
+                            Rectangle()
+                                .fill(Theme.separator)
+                                .frame(height: 1)
+                            
+                            Text("Or")
+                                .font(.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            Rectangle()
+                                .fill(Theme.separator)
+                                .frame(height: 1)
+                        }
+                        
+                        // Debug: Social sign-in options
+                        VStack(spacing: 12) {
+                            // Apple Sign In - Custom styled button (required first per HIG)
+                            // Debug: Demo - Apple goes to Farmer dashboard
+                            CustomAppleSignInButton {
+                                HapticManager.tap()
+                                onAppleSignIn?()
+                            }
+                            .accessibilityLabel("Continue with Apple")
+                            
+                            // Google Sign In - Custom styled button
+                            // Debug: Demo - Google goes to Advisor dashboard
+                            CustomGoogleSignInButton {
+                                HapticManager.tap()
+                                onGoogleSignIn?()
+                            }
+                            .accessibilityLabel("Continue with Google")
+                        }
                         
                         // Debug: Prominent mode toggle
                         Button {
@@ -317,10 +334,4 @@ struct SignInPage: View {
         }
     }
     
-    private func advanceDemoSignIn() {
-        isSigningIn = false
-        showingSignIn = false
-        currentPage = 0
-        onSignInComplete?()
-    }
 }

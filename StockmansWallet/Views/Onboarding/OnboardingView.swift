@@ -61,15 +61,20 @@ struct OnboardingView: View {
                         userPrefs: $userPrefs,
                         onSignInComplete: {
                             onboardingStep = .onboardingPages
-                        }
+                        },
+                        // Debug: Demo sign-in handlers
+                        onEmailSignIn: demoEmailSignIn,
+                        onEmailSignUp: demoEmailSignUp,
+                        onAppleSignIn: demoAppleSignIn,
+                        onGoogleSignIn: demoGoogleSignIn
                     )
                     
                 case .onboardingPages:
-                    // Debug: Branching onboarding flow based on user role (5 pages total)
-                    // Green Path (Farmer): UserType → AboutYou → Property → Welcome → Subscription (5 pages)
-                    // Pink Path (Advisory): UserType → AboutYou → Company → Welcome → Subscription (5 pages)
+                    // Debug: Branching onboarding flow based on user role (4 pages total)
+                    // Green Path (Farmer): UserType → Property → Welcome → Subscription (4 pages)
+                    // Pink Path (Advisory): UserType → Company → Welcome → Subscription (4 pages)
                     // Welcome & Subscription pages are SHARED between both paths
-                    // Security/Privacy moved to Terms sheet (shown before onboarding)
+                    // Name/email collected in Sign Up, Security/Privacy in Terms sheet
                     Group {
                         switch currentPage {
                         case 0:
@@ -79,13 +84,7 @@ struct OnboardingView: View {
                                 currentPage: $currentPage
                             )
                         case 1:
-                            // Second page: About You (both paths)
-                            AboutYouPage(
-                                userPrefs: $userPrefs,
-                                currentPage: $currentPage
-                            )
-                        case 2:
-                            // Third page: Branch based on user role
+                            // Second page: Branch based on user role
                             if userPrefs.userRole == .farmerGrazier {
                                 // Green Path: Property Information
                                 YourPropertyPage(
@@ -99,15 +98,15 @@ struct OnboardingView: View {
                                     currentPage: $currentPage
                                 )
                             }
-                        case 3:
-                            // Fourth page: Welcome/Completion (SHARED - both paths)
+                        case 2:
+                            // Third page: Welcome/Completion (SHARED - both paths)
                             // Debug: Celebrates completion before subscription selection
                             WelcomeCompletionPage(
                                 userPrefs: $userPrefs,
                                 currentPage: $currentPage
                             )
-                        case 4:
-                            // Fifth page: Subscription/Pricing (SHARED - final page)
+                        case 3:
+                            // Fourth page: Subscription/Pricing (SHARED - final page)
                             SubscriptionView(
                                 userPrefs: $userPrefs,
                                 onComplete: saveAndComplete
@@ -143,9 +142,9 @@ struct OnboardingView: View {
             }
         }
         .onAppear {
-            if preferences.isEmpty {
-                modelContext.insert(userPrefs)
-            } else if let existing = preferences.first {
+            // Debug: Load existing preferences or prepare to create new ones
+            // Don't insert yet - let the sign-in handlers do that
+            if let existing = preferences.first {
                 userPrefs = existing
             }
         }
@@ -165,7 +164,12 @@ struct OnboardingView: View {
                 userPrefs: $userPrefs,
                 onSignInComplete: {
                     onboardingStep = .onboardingPages
-                }
+                },
+                // Debug: Demo sign-in handlers
+                onEmailSignIn: demoEmailSignIn,
+                onEmailSignUp: demoEmailSignUp,
+                onAppleSignIn: demoAppleSignIn,
+                onGoogleSignIn: demoGoogleSignIn
             )
             // Native sheet with solid background from Theme - follows Apple HIG
             .presentationBackground(Theme.sheetBackground)
@@ -248,6 +252,92 @@ struct OnboardingView: View {
             existing.hasCompletedOnboarding = true
             existing.role = UserRole.livestockAgent.rawValue
         }
+        
+        try? modelContext.save()
+    }
+    
+    // MARK: - Demo Sign-In Methods (TEMPORARY - DELETE BEFORE LAUNCH) ⚠️
+    
+    // Debug: Demo Email/Password sign-in - Existing user goes to Farmer dashboard
+    // In production, this would authenticate against backend
+    private func demoEmailSignIn() {
+        HapticManager.tap()
+        
+        // Debug: Get or create the user preferences object
+        let prefsToUpdate: UserPreferences
+        if let existing = preferences.first {
+            prefsToUpdate = existing
+        } else {
+            prefsToUpdate = userPrefs
+            modelContext.insert(prefsToUpdate)
+        }
+        
+        // Debug: Mark as completed - existing user goes straight to dashboard
+        prefsToUpdate.hasCompletedOnboarding = true
+        prefsToUpdate.role = UserRole.farmerGrazier.rawValue // Default to farmer for demo
+        prefsToUpdate.firstName = userPrefs.firstName
+        prefsToUpdate.lastName = userPrefs.lastName
+        prefsToUpdate.email = userPrefs.email
+        
+        try? modelContext.save()
+    }
+    
+    // Debug: Demo Email/Password sign-up - New user goes through onboarding
+    // In production, this would create account on backend then show onboarding
+    private func demoEmailSignUp() {
+        HapticManager.tap()
+        
+        // Debug: Dismiss sheet if shown as sheet, then navigate to onboarding
+        showingSignIn = false
+        isSigningIn = false
+        
+        // Debug: Delay to ensure sheet dismisses smoothly before navigation
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+            withAnimation {
+                // Debug: Save name/email but DON'T mark onboarding complete
+                // This will trigger the onboarding flow to collect role/property/company info
+                self.onboardingStep = .onboardingPages
+                self.currentPage = 0 // Start at User Type Selection
+            }
+        }
+    }
+    
+    // Debug: Demo Apple sign-in - Goes to Farmer dashboard
+    private func demoAppleSignIn() {
+        HapticManager.tap()
+        
+        // Debug: Get or create the user preferences object
+        let prefsToUpdate: UserPreferences
+        if let existing = preferences.first {
+            prefsToUpdate = existing
+        } else {
+            prefsToUpdate = userPrefs
+            modelContext.insert(prefsToUpdate)
+        }
+        
+        // Debug: Update the preferences with Apple sign-in data
+        prefsToUpdate.hasCompletedOnboarding = true
+        prefsToUpdate.role = UserRole.farmerGrazier.rawValue // Set as farmer for demo
+        
+        try? modelContext.save()
+    }
+    
+    // Debug: Demo Google sign-in - Goes to Advisor dashboard
+    private func demoGoogleSignIn() {
+        HapticManager.tap()
+        
+        // Debug: Get or create the user preferences object
+        let prefsToUpdate: UserPreferences
+        if let existing = preferences.first {
+            prefsToUpdate = existing
+        } else {
+            prefsToUpdate = userPrefs
+            modelContext.insert(prefsToUpdate)
+        }
+        
+        // Debug: Update the preferences with Google sign-in data
+        prefsToUpdate.hasCompletedOnboarding = true
+        prefsToUpdate.role = UserRole.livestockAgent.rawValue // Set as advisor for demo
         
         try? modelContext.save()
     }

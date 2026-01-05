@@ -47,9 +47,9 @@ struct YourPropertyPage: View {
             title: "Primary Property",
             subtitle: "Tell us about your primary property",
             currentPage: $currentPage,
-            nextPage: 3,
+            nextPage: 2,
             isValid: isValid,
-            totalPages: 5 // Debug: Farmer path has 5 pages (Security moved to Terms sheet)
+            totalPages: 4 // Debug: Farmer path has 4 pages (About You removed, captured in Sign Up)
         ) {
             // Debug: iOS 26 HIG - Organized layout with proper keyboard navigation and section groupings
             VStack(spacing: 24) {

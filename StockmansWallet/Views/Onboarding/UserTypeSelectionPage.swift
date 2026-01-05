@@ -159,9 +159,9 @@ struct UserTypeSelectionPage: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             // Footer section
             VStack(spacing: 16) {
-                // Debug: Progress dots - updated to show full onboarding flow (5 pages total)
+                // Debug: Progress dots - updated to show full onboarding flow (4 pages total)
                 HStack(spacing: 8) {
-                    ForEach(0..<5, id: \.self) { index in
+                    ForEach(0..<4, id: \.self) { index in
                         Circle()
                             .fill(index == 0 ? Theme.accent : Theme.secondaryText.opacity(0.3))
                             .frame(width: 8, height: 8)
@@ -169,7 +169,7 @@ struct UserTypeSelectionPage: View {
                     }
                 }
                 .padding(.top, 16)
-                .accessibilityLabel("Page 1 of 5")
+                .accessibilityLabel("Page 1 of 4")
                 
                 // Next button
                 Button(action: {

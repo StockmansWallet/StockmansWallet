@@ -12,9 +12,9 @@ struct WelcomeCompletionPage: View {
     @Binding var userPrefs: UserPreferences
     @Binding var currentPage: Int
     
-    // Debug: Both paths have 5 pages (Security moved to Terms sheet)
+    // Debug: Both paths have 4 pages (About You removed, captured in Sign Up)
     private var totalPages: Int {
-        5
+        4
     }
     
     // Debug: Personalized greeting
@@ -30,7 +30,7 @@ struct WelcomeCompletionPage: View {
             title: greeting,
             subtitle: "You're all set to get started",
             currentPage: $currentPage,
-            nextPage: 4, // Next: Subscription page (now page 4 instead of 5)
+            nextPage: 3, // Next: Subscription page (now page 3 after removing About You)
             showBack: false, // Debug: No back button on success page
             isValid: true,
             totalPages: totalPages

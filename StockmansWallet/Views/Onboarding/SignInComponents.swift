@@ -32,7 +32,7 @@ struct CustomAppleSignInButton: View {
             .frame(height: Theme.buttonHeight)
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1.5) // Debug: Subtle semi-transparent stroke
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1) // Debug: Subtle semi-transparent stroke
                     .background(
                         RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                             .fill(Color.white.opacity(0.05))
@@ -102,7 +102,7 @@ struct CustomGoogleSignInButton: View {
             .frame(height: Theme.buttonHeight)
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .stroke(Color.white.opacity(0.3), lineWidth: 1.5) // Debug: Subtle semi-transparent stroke
+                    .stroke(Color.white.opacity(0.1), lineWidth: 1) // Debug: Subtle semi-transparent stroke
                     .background(
                         RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                             .fill(Color.white.opacity(0.05))
