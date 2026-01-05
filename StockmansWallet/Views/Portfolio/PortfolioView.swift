@@ -37,6 +37,12 @@ struct PortfolioView: View {
                 } else {
                     ScrollView {
                         VStack(spacing: Theme.sectionSpacing) {
+                            // Debug: Total portfolio value at the top without card container
+                            if let summary = portfolioSummary {
+                                TotalPortfolioValueHeader(summary: summary, isLoading: isLoading)
+                                    .padding(.horizontal)
+                            }
+                            
                             // Debug: Portfolio stats moved above view selector to stay persistent
                             if let summary = portfolioSummary {
                                 PortfolioStatsCard(summary: summary)
@@ -72,10 +78,9 @@ struct PortfolioView: View {
                         .accessibilityAddTraits(.isHeader)
                 }
                 
-                // Debug: Per Apple HIG - ToolbarItemGroup for unrelated actions renders as separate buttons
-                // No shared background, icons sit directly on nav bar material
-                // Buttons match title color (primaryText) for visual consistency
-                ToolbarItemGroup(placement: .navigationBarTrailing) {
+                // Debug: Per Apple HIG - Search (secondary action) on left, Add (primary action) on right
+                // This creates clear visual hierarchy and follows iOS conventions
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button {
                         HapticManager.tap()
                         showingSearchPanel = true
@@ -84,7 +89,9 @@ struct PortfolioView: View {
                             .foregroundStyle(Theme.primaryText)
                     }
                     .accessibilityLabel("Search assets")
-                    
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         HapticManager.tap()
                         showingAddAssetMenu = true
@@ -104,7 +111,7 @@ struct PortfolioView: View {
             }
             .sheet(isPresented: $showingSearchPanel) {
                 PortfolioSearchPanel(herds: herds)
-                    .presentationDetents([.medium, .large])
+                    .presentationDetents([.large])
                     .presentationDragIndicator(.visible)
                     .presentationBackground(Theme.sheetBackground)
             }
@@ -125,9 +132,6 @@ struct PortfolioView: View {
     private var overviewContent: some View {
         Group {
             if let summary = portfolioSummary {
-                NetWorthCard(summary: summary, isLoading: isLoading)
-                    .padding(.horizontal)
-                
                 // Debug: Asset Breakdown moved above Capital Concentration per user request
                 AssetBreakdownCard(summary: summary)
                     .padding(.horizontal)
@@ -334,6 +338,34 @@ struct SpeciesBreakdown {
     var totalValue: Double
     var headCount: Int
     var herdCount: Int
+}
+
+// MARK: - Total Portfolio Value Header
+// Debug: Simple header displaying total portfolio value without card container
+struct TotalPortfolioValueHeader: View {
+    let summary: PortfolioSummary
+    let isLoading: Bool
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Total Portfolio Value")
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondaryText)
+            
+            if isLoading {
+                ProgressView()
+                    .tint(Theme.accent)
+            } else {
+                Text(summary.totalNetWorth, format: .currency(code: "AUD"))
+                    .font(.system(size: 44, weight: .bold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 20)
+    }
 }
 
 // MARK: - View Mode Selector
