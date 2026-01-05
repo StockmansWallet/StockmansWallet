@@ -306,7 +306,7 @@ struct DashboardView: View {
                 CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
                     .padding(.horizontal, Theme.cardPadding)
                     .accessibilityElement(children: .contain)
-                    .accessibilityLabel("Portfolio mix")
+                    .accessibilityLabel("Herd composition")
             }
             
             // Debug: Temporary Clear Mock Data button for development
@@ -1275,28 +1275,28 @@ struct PerformanceMetrics {
     let initialValue: Double
 }
 
-// MARK: - Portfolio Mix View (Category Breakdown with Pie Chart)
+// MARK: - Herd Composition View (Category Breakdown with Pie Chart)
 // Debug: Shows category distribution with pie chart and detailed breakdown list
 struct CapitalConcentrationView: View {
     let breakdown: [CapitalConcentrationBreakdown]
     let totalValue: Double
     
-    // Debug: Color palette for pie chart segments (distinct, accessible colors)
+    // Debug: Color palette for pie chart segments (darker earthy, muted tones)
     private let chartColors: [Color] = [
-        Color(red: 0.96, green: 0.49, blue: 0.22), // Orange (accent)
-        Color(red: 0.20, green: 0.60, blue: 0.86), // Blue
-        Color(red: 0.30, green: 0.69, blue: 0.31), // Green
-        Color(red: 0.95, green: 0.61, blue: 0.07), // Amber
-        Color(red: 0.61, green: 0.35, blue: 0.71), // Purple
-        Color(red: 0.91, green: 0.30, blue: 0.24), // Red
-        Color(red: 0.00, green: 0.74, blue: 0.83), // Cyan
-        Color(red: 0.80, green: 0.47, blue: 0.00)  // Dark Orange
+        Color(red: 0.70, green: 0.45, blue: 0.30), // Dark terracotta
+        Color(red: 0.45, green: 0.55, blue: 0.65), // Muted blue
+        Color(red: 0.50, green: 0.60, blue: 0.45), // Dark sage
+        Color(red: 0.75, green: 0.63, blue: 0.40), // Dark sand
+        Color(red: 0.60, green: 0.50, blue: 0.63), // Deep lavender
+        Color(red: 0.70, green: 0.50, blue: 0.45), // Brick rose
+        Color(red: 0.45, green: 0.63, blue: 0.63), // Deep teal
+        Color(red: 0.67, green: 0.57, blue: 0.43)  // Dark tan
     ]
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Portfolio Mix")
+                Text("Herd Composition")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
