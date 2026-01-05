@@ -856,7 +856,7 @@ struct InteractiveChartView: View {
     let onValueChange: (Double, Double) -> Void
     
     @State private var scrubberX: CGFloat?
-    @State private var chartRevealProgress: CGFloat = 0.0
+    @State private var chartOpacity: Double = 0.0
     
     // Performance optimization: Cache sorted data to avoid sorting on every drag event (60fps)
     // This dramatically improves scrubbing performance by sorting once instead of 60 times/second
@@ -941,7 +941,8 @@ struct InteractiveChartView: View {
     
     private func edgeExtendedData(for data: [ValuationDataPoint], in range: TimeRange) -> [ValuationDataPoint] {
         guard !data.isEmpty else { return data }
-        let sorted = Array(data.sorted { $1.date > $0.date }.reversed())
+        // Debug: Sort data chronologically (oldest to newest)
+        let sorted = data.sorted { $0.date < $1.date }
         let first = sorted[0]
         
         let epsilon: TimeInterval
@@ -951,9 +952,12 @@ struct InteractiveChartView: View {
         case .year:
             epsilon = 60 * 60 * 24
         case .all:
-            return data
+            // Debug: Return sorted data to ensure chronological order
+            return sorted
         }
         
+        // Debug: Create leading edge point before the first data point
+        // This extends the chart line to the left edge for better visual appearance
         let leading = ValuationDataPoint(
             date: first.date.addingTimeInterval(-epsilon),
             value: first.value,
@@ -961,7 +965,9 @@ struct InteractiveChartView: View {
             breedingAccrual: first.breedingAccrual
         )
         
-        var out = data
+        // Debug: Use sorted data (not original unsorted data) to prevent line jumping
+        // This ensures the chart draws lines in chronological order
+        var out = sorted
         out.insert(leading, at: 0)
         return out
     }
@@ -1080,11 +1086,9 @@ struct InteractiveChartView: View {
                     chartGrid
                     
                     chartContent()
-                        .mask(
-                            Rectangle()
-                                .frame(width: geometry.size.width * chartRevealProgress)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        )
+                        // Debug: Simple fade-in animation (no rendering artifacts like mask had)
+                        // Smooth opacity transition prevents jarring "pop" on load
+                        .opacity(chartOpacity)
                         .chartOverlay { proxy in
                             GeometryReader { geo in
                                 Rectangle()
@@ -1243,12 +1247,12 @@ struct InteractiveChartView: View {
             // Performance: Initialize sorted data cache for smooth scrubbing
             sortedData = data.sorted { $0.date < $1.date }
             
-            chartRevealProgress = 0
+            // Debug: Fade in chart smoothly (respects reduce motion accessibility setting)
             if UIAccessibility.isReduceMotionEnabled {
-                chartRevealProgress = 1.0
+                chartOpacity = 1.0
             } else {
-                withAnimation(.easeInOut(duration: 1.2)) {
-                    chartRevealProgress = 1.0
+                withAnimation(.easeIn(duration: 0.6)) {
+                    chartOpacity = 1.0
                 }
             }
         }
@@ -1256,12 +1260,13 @@ struct InteractiveChartView: View {
             // Performance: Update sorted data cache when data changes
             sortedData = data.sorted { $0.date < $1.date }
             
-            chartRevealProgress = 0
+            // Debug: Fade in chart when data updates
+            chartOpacity = 0.0
             if UIAccessibility.isReduceMotionEnabled {
-                chartRevealProgress = 1.0
+                chartOpacity = 1.0
             } else {
-                withAnimation(.easeInOut(duration: 1.2)) {
-                    chartRevealProgress = 1.0
+                withAnimation(.easeIn(duration: 0.6)) {
+                    chartOpacity = 1.0
                 }
             }
         }
