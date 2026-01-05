@@ -168,7 +168,7 @@ struct BackgroundImageSelectorView: View {
                 CustomParallaxImageView(
                     imageName: imageName,
                     intensity: 25,           // Movement amount (20-40)
-                    opacity: 0.8,            // Higher opacity for preview visibility
+                    opacity: 0.9,            // Higher opacity for preview visibility
                     scale: 0.5,              // Image takes 50% of screen height
                     verticalOffset: -60,     // Move image up to show more middle/lower area
                     blur: 0                  // No blur
@@ -178,7 +178,7 @@ struct BackgroundImageSelectorView: View {
                 ParallaxImageView(
                     imageName: imageName,
                     intensity: 25,           // Movement amount (20-40)
-                    opacity: 0.8,            // Higher opacity for preview visibility
+                    opacity: 0.9,            // Higher opacity for preview visibility
                     scale: 0.5,              // Image takes 50% of screen height
                     verticalOffset: -60,     // Move image up to show more middle/lower area
                     blur: 0                  // No blur
@@ -252,7 +252,7 @@ struct BackgroundImageSelectorView: View {
             }
             .padding(.horizontal, Theme.cardPadding)
         }
-        .frame(height: 200) // Debug: Increased height for portrait thumbnails
+        .frame(height: 300) // Debug: Increased height for larger portrait thumbnails
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Background images")
         .accessibilityHint("Swipe to browse available background images")
@@ -273,7 +273,7 @@ struct BackgroundImageSelectorView: View {
                     }
                     .padding(.horizontal, Theme.cardPadding)
                 }
-                .frame(height: 200) // Debug: Increased height for portrait thumbnails
+                .frame(height: 300) // Debug: Increased height for larger portrait thumbnails
             } else {
                 // Debug: Empty state when no custom image
                 VStack(spacing: 12) {
@@ -291,7 +291,7 @@ struct BackgroundImageSelectorView: View {
                         .foregroundStyle(.white.opacity(0.8))
                         .multilineTextAlignment(.center)
                 }
-                .frame(height: 200) // Debug: Increased height for portrait thumbnails
+                .frame(height: 300) // Debug: Increased height for larger portrait thumbnails
                 .padding(.horizontal, Theme.cardPadding)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("No custom image. Tap 'Add Photo' below to upload your own image")
@@ -342,7 +342,7 @@ struct BackgroundImageSelectorView: View {
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal, Theme.cardPadding)
-        .frame(height: 200) // Debug: Increased height to match portrait thumbnails
+        .frame(height: 300) // Debug: Increased height to match larger portrait thumbnails
         .accessibilityElement(children: .combine)
         .accessibilityLabel("No background selected. Your dashboard will use the default theme color")
         .accessibilityAddTraits(.isStaticText)
@@ -547,24 +547,24 @@ struct BackgroundThumbnail: View {
             Image(imageName)
                 .resizable()
                 .scaledToFill()
-                .frame(width: 140, height: 180)
+                .frame(width: 200, height: 280)
                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             
             // Debug: Selection indicator overlay
             if isSelected {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.clear)
-                    .frame(width: 140, height: 180)
+                    .frame(width: 200, height: 280)
                     .overlay(
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 32))
+                            .font(.system(size: 40))
                             .foregroundStyle(Theme.accent)
                             .background(
                                 Circle()
                                     .fill(.black.opacity(0.5))
-                                    .frame(width: 28, height: 28)
+                                    .frame(width: 36, height: 36)
                             )
-                            .padding(8)
+                            .padding(10)
                         , alignment: .bottomTrailing
                     )
             }
@@ -595,17 +595,17 @@ struct CustomBackgroundThumbnail: View {
                 Image(uiImage: image)
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 140, height: 180)
+                    .frame(width: 200, height: 280)
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             } else {
                 // Debug: Fallback if image can't be loaded
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Theme.cardBackground)
-                    .frame(width: 140, height: 180)
+                    .frame(width: 200, height: 280)
                     .overlay(
                         VStack {
                             Image(systemName: "photo.fill")
-                                .font(.system(size: 30))
+                                .font(.system(size: 50))
                                 .foregroundStyle(Theme.secondaryText)
                             Text("Custom")
                                 .font(Theme.caption)
@@ -618,17 +618,17 @@ struct CustomBackgroundThumbnail: View {
             if isSelected {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color.clear)
-                    .frame(width: 140, height: 180)
+                    .frame(width: 200, height: 280)
                     .overlay(
                         Image(systemName: "checkmark.circle.fill")
-                            .font(.system(size: 32))
+                            .font(.system(size: 40))
                             .foregroundStyle(Theme.accent)
                             .background(
                                 Circle()
                                     .fill(.black.opacity(0.5))
-                                    .frame(width: 28, height: 28)
+                                    .frame(width: 36, height: 36)
                             )
-                            .padding(8)
+                            .padding(10)
                         , alignment: .bottomTrailing
                     )
             }
