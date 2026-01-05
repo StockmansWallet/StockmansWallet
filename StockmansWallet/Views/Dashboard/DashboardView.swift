@@ -363,27 +363,6 @@ struct DashboardView: View {
                 .ignoresSafeArea()
             }
             .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
-            // Debug: Subtle white highlight stroke at top edge for depth
-            .overlay(
-                UnevenRoundedRectangle(
-                    topLeadingRadius: Theme.sheetCornerRadius,
-                    topTrailingRadius: Theme.sheetCornerRadius,
-                    style: .continuous
-                )
-                .stroke(
-                    LinearGradient(
-                        colors: [
-                            Color.white.opacity(0.1),   // White highlight at top
-                            Color.white.opacity(0.1),   // Maintain through corners
-                            Color.white.opacity(0.0)    // Fade to transparent on sides
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    ),
-                    lineWidth: 1
-                )
-                .ignoresSafeArea()
-            )
         )
     }
     
