@@ -55,6 +55,8 @@ final class UserPreferences {
     // MARK: - Property Localization (Farmer/Grazier)
     var propertyName: String?
     var propertyPIC: String? // Property Identification Code
+    var propertyRole: String? // User's role on the property (Owner, Manager, etc.)
+    var propertyAddress: String? // Full property address
     var defaultState: String // "NSW", "VIC", "QLD", etc.
     var latitude: Double?
     var longitude: Double?
@@ -114,6 +116,8 @@ final class UserPreferences {
         self.appsComplianceAccepted = false
         self.propertyName = nil
         self.propertyPIC = nil
+        self.propertyRole = nil
+        self.propertyAddress = nil
         self.defaultState = "QLD" // Debug: Default to QLD as per user request
         self.latitude = nil
         self.longitude = nil

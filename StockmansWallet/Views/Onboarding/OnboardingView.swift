@@ -193,6 +193,8 @@ struct OnboardingView: View {
             // Property fields (Farmer path)
             existing.propertyName = userPrefs.propertyName
             existing.propertyPIC = userPrefs.propertyPIC
+            existing.propertyRole = userPrefs.propertyRole
+            existing.propertyAddress = userPrefs.propertyAddress
             existing.defaultState = userPrefs.defaultState
             existing.latitude = userPrefs.latitude
             existing.longitude = userPrefs.longitude
