@@ -47,7 +47,12 @@ The chart scrubbing animation was laggy during user interaction, failing to main
 - **Impact:** Additional animation calculations during the gesture
 - **Solution:** Removed scale/opacity animations, using simple position updates only
 
-### 5. **Redundant Position Calculations**
+### 5. **Portfolio Value Animation During Scrubbing**
+- **Issue:** `.numericText()` animation was running on every scrubbing update (60fps)
+- **Impact:** Animation interpolation calculations added overhead during continuous gesture
+- **Solution:** Conditional animation - instant updates while scrubbing, animate only on release
+
+### 6. **Redundant Position Calculations**
 - **Issue:** Scrubber position calculated multiple times per render cycle
 - **Impact:** Wasted CPU cycles on duplicate geometry calculations
 - **Solution:** Cached position in `ScrubberPosition` struct
@@ -139,6 +144,28 @@ Text(position.date, format: .dateTime.day(.twoDigits).month(.abbreviated).year()
     .animation(.none, value: position.xPosition)
 ```
 
+### 5. Portfolio Value Animation Strategy
+**Rationale:** Apple's .numericText() is beautiful but expensive - only use it when finger lifts.
+
+```swift
+// ✅ AFTER: Conditional animation based on scrubbing state
+Text(formattedValue.whole)
+    .font(.system(size: 50, weight: .bold))
+    .monospacedDigit()
+    .foregroundStyle(.white)
+    .tracking(-2)
+    .fixedSize()
+    // Performance: While finger down → instant updates (.identity)
+    // When finger lifts → beautiful rolling animation (.numericText)
+    .contentTransition(isScrubbing ? .identity : .numericText(countsDown: isDecreasing))
+    .animation(isScrubbing ? .none : .default, value: formattedValue.whole)
+```
+
+**Key Insight:** This gives you:
+- Zero lag during scrubbing (instant text updates)
+- Clean, Apple-feeling transition when gesture ends
+- Best of both worlds: performance + polish
+
 ### 5. Optimized Scrubber Overlay
 **Rationale:** Use cached position to avoid redundant calculations and batch GPU operations.
 
@@ -194,11 +221,40 @@ private var dimmedGradient: LinearGradient { ... }
 
 ## 📊 Performance Improvements
 
+### Before vs After Behavior:
+
+**Before:**
+```
+User drags finger →
+  Chart redraws (60fps) 😢
+  + 4 separate state updates 😢
+  + Implicit animations 😢
+  + Date pill scale/opacity animating 😢
+  + Portfolio value .numericText() animating 😢
+= Laggy, stuttering experience
+```
+
+**After:**
+```
+User drags finger →
+  Chart static (no redraw) ✅
+  + 1 batched state update ✅
+  + No animations (.none) ✅
+  + Date pill instant position ✅
+  + Portfolio value instant text ✅
+= Buttery smooth 60fps
+
+User lifts finger →
+  Beautiful .numericText() rolling animation ✨
+= Apple-quality polish
+```
+
 ### Expected Results:
 1. **60fps during scrubbing** - No frame drops or stuttering
 2. **Reduced CPU usage** - ~40-60% reduction in CPU load during interaction
-3. **Instant response** - No animation lag or delay
-4. **Smooth transitions** - Natural feeling interaction matching iOS native apps
+3. **Instant response** - No animation lag or delay during gesture
+4. **Beautiful ending** - Satisfying .numericText() animation when finger lifts
+5. **Smooth transitions** - Natural feeling interaction matching iOS native apps
 
 ### Metrics to Measure:
 Use Xcode Instruments to verify:
@@ -344,6 +400,7 @@ Use Xcode Instruments to verify:
 - [x] Implemented ScrubberPosition cache
 - [x] Batched state updates with withAnimation(.none)
 - [x] Simplified date pill (removed scale/opacity animations)
+- [x] Conditional portfolio value animation (instant during scrub, .numericText on release)
 - [x] Optimized scrubber overlay with cached position
 - [x] Removed unused state variables
 - [x] Cleaned up unused gradient definitions

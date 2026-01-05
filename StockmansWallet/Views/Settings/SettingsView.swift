@@ -61,6 +61,11 @@ struct SettingsView: View {
                 .listSectionSeparator(.hidden)
                 
                 Section {
+                    
+                    NavigationLink(destination: AppearanceSettingsView()) {
+                        SettingsListRow(icon: "paintbrush.fill", title: "Appearance", subtitle: nil)
+                    }
+                    .listRowBackground(Theme.cardBackground)
                     NavigationLink(destination: NotificationsSettingsView()) {
                         SettingsListRow(icon: "bell.fill", title: "Notifications", subtitle: nil)
                     }
@@ -71,10 +76,7 @@ struct SettingsView: View {
                     }
                     .listRowBackground(Theme.cardBackground)
                     
-                    NavigationLink(destination: AppearanceSettingsView()) {
-                        SettingsListRow(icon: "paintbrush.fill", title: "Appearance", subtitle: nil)
-                    }
-                    .listRowBackground(Theme.cardBackground)
+                
                 }
                 .listSectionSeparator(.hidden)
                 

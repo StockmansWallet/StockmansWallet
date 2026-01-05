@@ -161,36 +161,39 @@ struct DashboardView: View {
     @ViewBuilder
     private var dashboardContentView: some View {
         let userPrefs = preferences.first ?? UserPreferences()
-        let backgroundImageName = userPrefs.backgroundImageName ?? "BackgroundDefault"
+        let backgroundImageName = userPrefs.backgroundImageName
         // Debug: Force view update when backgroundImageTrigger changes
         let _ = backgroundImageTrigger
-        let _ = print("🖼️ DashboardView: Rendering with background=\(backgroundImageName), isCustom=\(userPrefs.isCustomBackground), trigger=\(backgroundImageTrigger)")
+        let _ = print("🖼️ DashboardView: Rendering with background=\(backgroundImageName ?? "none"), isCustom=\(userPrefs.isCustomBackground), trigger=\(backgroundImageTrigger)")
         
         ZStack(alignment: .top) {
             // Debug: Background image with parallax effect (like iOS home screen wallpapers)
             // Uses user's selected background from preferences (built-in or custom)
-            if userPrefs.isCustomBackground {
-                // Debug: Load custom background from document directory
-                CustomParallaxImageView(
-                    imageName: backgroundImageName,
-                    intensity: 25,           // Movement amount (20-40)
-                    opacity: 0.2,            // Background opacity
-                    scale: 0.5,              // Image takes 50% of screen height
-                    verticalOffset: -60,     // Move image up to show more middle/lower area
-                    blur: 0                  // BG Image Blur radius
-                )
-                .id("custom_\(backgroundImageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
-            } else {
-                // Debug: Load built-in background from Assets
-                ParallaxImageView(
-                    imageName: backgroundImageName,
-                    intensity: 25,           // Movement amount (20-40)
-                    opacity: 0.2,            // Background opacity
-                    scale: 0.5,              // Image takes 50% of screen height
-                    verticalOffset: -60,     // Move image up to show more middle/lower area
-                    blur: 0                  // BG Image Blur radius
-                )
-                .id("builtin_\(backgroundImageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
+            // Only show background if backgroundImageName is not nil
+            if let imageName = backgroundImageName {
+                if userPrefs.isCustomBackground {
+                    // Debug: Load custom background from document directory
+                    CustomParallaxImageView(
+                        imageName: imageName,
+                        intensity: 25,           // Movement amount (20-40)
+                        opacity: 0.2,            // Background opacity
+                        scale: 0.5,              // Image takes 50% of screen height
+                        verticalOffset: -60,     // Move image up to show more middle/lower area
+                        blur: 0                  // BG Image Blur radius
+                    )
+                    .id("custom_\(imageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
+                } else {
+                    // Debug: Load built-in background from Assets
+                    ParallaxImageView(
+                        imageName: imageName,
+                        intensity: 25,           // Movement amount (20-40)
+                        opacity: 0.2,            // Background opacity
+                        scale: 0.5,              // Image takes 50% of screen height
+                        verticalOffset: -60,     // Move image up to show more middle/lower area
+                        blur: 0                  // BG Image Blur radius
+                    )
+                    .id("builtin_\(imageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
+                }
             }
             
             // Debug: Fixed portfolio value - stays in place while content scrolls over it
@@ -669,7 +672,8 @@ struct PortfolioValueCard: View {
             // Debug: Always show the number - never hide it with ProgressView
             // Use pulsing effect (isUpdating) to indicate loading instead
             AnimatedCurrencyValue(
-                value: value
+                value: value,
+                isScrubbing: isScrubbing
             )
                 .padding(.bottom, 8)
                 // Debug: Pulse/glow effect during value update (crypto-style)
@@ -708,9 +712,10 @@ struct PortfolioValueCard: View {
 }
 
 // MARK: - Animated Currency Value with Native iOS Animation
-// Uses pure SwiftUI .contentTransition(.numericText()) - no custom timing or hacks
+// Performance: Zero lag during scrubbing, beautiful .numericText() animation on release
 struct AnimatedCurrencyValue: View {
     let value: Double
+    let isScrubbing: Bool
     @State private var previousValue: Double = 0.0
     
     // Performance: Reuse formatter instead of creating new one on every render
@@ -745,16 +750,16 @@ struct AnimatedCurrencyValue: View {
                 .padding(.trailing, 8)
                 .accessibilityHidden(true)
             
-            // Native iOS animation - .contentTransition(.numericText()) handles everything automatically
-            // Trust Apple's implementation to handle rapid updates smoothly at 60fps
+            // Performance: While finger is down (isScrubbing) → instant updates, no animation
+            // When finger lifts → beautiful .numericText() rolling animation
             Text(formattedValue.whole)
                 .font(.system(size: 50, weight: .bold))
                 .monospacedDigit()
                 .foregroundStyle(.white)
                 .tracking(-2)
                 .fixedSize()
-                .contentTransition(.numericText(countsDown: isDecreasing))
-                .animation(.default, value: formattedValue.whole)
+                .contentTransition(isScrubbing ? .identity : .numericText(countsDown: isDecreasing))
+                .animation(isScrubbing ? .none : .default, value: formattedValue.whole)
             
             Text(".")
                 .font(.system(size: 18, weight: .bold))
@@ -768,8 +773,8 @@ struct AnimatedCurrencyValue: View {
                 .foregroundStyle(.white.opacity(0.6))
                 .tracking(-1)
                 .fixedSize()
-                .contentTransition(.numericText(countsDown: isDecreasing))
-                .animation(.default, value: formattedValue.decimal)
+                .contentTransition(isScrubbing ? .identity : .numericText(countsDown: isDecreasing))
+                .animation(isScrubbing ? .none : .default, value: formattedValue.decimal)
         }
         // Padding gives the digit rolling animation room to render without clipping
         .padding(.vertical, 8)

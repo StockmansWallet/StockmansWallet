@@ -168,7 +168,8 @@ class HistoricalMockDataService {
         let totalDays = min(days, 1095) // Max 3 years
         
         // Base price trend: Peak in late 2022/early 2023, significant dip in 2023, then recovery
-        let basePrice = 7.50 // Peak price in early 2023 (EYCI was around $7.50/kg)
+        // Debug: Base price adjusted by 45% reduction (×0.55) for realistic market values
+        let basePrice = 4.13 // Adjusted from 7.50 (×0.55) - Peak price in early 2023
         
         for dayOffset in (0..<totalDays).reversed() {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: endDate) else { continue }
@@ -219,7 +220,8 @@ class HistoricalMockDataService {
             
             // Calculate final price
             let adjustedPrice = basePrice * (1.0 + trend + seasonal + weeklyVolatility + dailyVolatility)
-            let finalPrice = max(4.5, min(9.5, adjustedPrice)) // Clamp between $4.50-$9.50/kg
+            // Debug: Price clamps adjusted by 45% reduction (×0.55) for realistic ranges
+            let finalPrice = max(2.48, min(5.23, adjustedPrice)) // Clamp between $2.48-$5.23/kg (adjusted from $4.50-$9.50)
             
             // Generate prices for each category
             for category in categories {

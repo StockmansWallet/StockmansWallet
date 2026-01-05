@@ -66,7 +66,8 @@ class MockDataService {
         let categories = ["Feeder Steer", "Yearling Steer", "Breeding Cow", "Weaner Steer"]
         
         // Generate prices for the past year (daily)
-        var basePrice = 6.50
+        // Debug: Base price adjusted by 45% reduction (×0.55) for realistic market values
+        var basePrice = 3.58 // Adjusted from 6.50 (×0.55)
         let volatility = 0.15 // 15% volatility
         
         for dayOffset in (0..<365).reversed() {
@@ -75,7 +76,8 @@ class MockDataService {
             // Simulate price movement with some trend
             let trend = sin(Double(dayOffset) / 365.0 * 2 * .pi) * 0.3 // Seasonal trend
             let random = (Double.random(in: -1...1) * volatility)
-            basePrice = max(4.0, min(9.0, basePrice + trend + random))
+            // Debug: Price clamps adjusted by 45% reduction (×0.55) for realistic ranges
+            basePrice = max(2.20, min(4.95, basePrice + trend + random)) // Adjusted from 4.0-9.0 (×0.55)
             
             for category in categories {
                 // Category-specific price adjustments

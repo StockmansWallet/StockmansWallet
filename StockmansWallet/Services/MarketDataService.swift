@@ -19,6 +19,7 @@ class MarketDataService {
     
     // MARK: - National Indicators
     // Debug: Major market indicators (EYCI, WYCI, NSI, etc.)
+    // Debug: All values reduced by 45% (multiplied by 0.55) to reflect more realistic market conditions
     func fetchNationalIndicators() async -> [NationalIndicator] {
         // Simulate network delay
         try? await Task.sleep(nanoseconds: 300_000_000)
@@ -27,32 +28,32 @@ class MarketDataService {
             NationalIndicator(
                 name: "Eastern Young Cattle Indicator",
                 abbreviation: "EYCI",
-                value: 645.50,
-                change: 8.20,
+                value: 355.03, // Adjusted from 645.50 (×0.55)
+                change: 4.51, // Adjusted from 8.20 (×0.55)
                 trend: .up,
                 unit: "¢/kg cwt"
             ),
             NationalIndicator(
                 name: "Western Young Cattle Indicator",
                 abbreviation: "WYCI",
-                value: 620.30,
-                change: -4.50,
+                value: 341.17, // Adjusted from 620.30 (×0.55)
+                change: -2.48, // Adjusted from -4.50 (×0.55)
                 trend: .down,
                 unit: "¢/kg cwt"
             ),
             NationalIndicator(
                 name: "National Sheep Indicator",
                 abbreviation: "NSI",
-                value: 810.00,
-                change: 5.20,
+                value: 445.50, // Adjusted from 810.00 (×0.55)
+                change: 2.86, // Adjusted from 5.20 (×0.55)
                 trend: .up,
                 unit: "¢/kg cwt"
             ),
             NationalIndicator(
                 name: "National Heavy Lamb Indicator",
                 abbreviation: "NHLI",
-                value: 875.50,
-                change: 12.30,
+                value: 481.53, // Adjusted from 875.50 (×0.55)
+                change: 6.77, // Adjusted from 12.30 (×0.55)
                 trend: .up,
                 unit: "¢/kg cwt"
             )
@@ -175,12 +176,13 @@ class MarketDataService {
     // MARK: - Private Helper Methods
     
     private func cattlePrices(saleyard: String?, state: String?) -> [CategoryPrice] {
+        // Debug: All cattle prices reduced by 45% (×0.55) for realistic market values
         return [
             CategoryPrice(
                 category: "Feeder Steer",
                 livestockType: .cattle,
-                price: 6.45,
-                change: 0.15,
+                price: 3.55, // Adjusted from 6.45 (×0.55)
+                change: 0.08, // Adjusted from 0.15 (×0.55)
                 trend: .up,
                 weightRange: "300-400kg",
                 source: saleyard ?? "National Average"
@@ -188,8 +190,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Yearling Steer",
                 livestockType: .cattle,
-                price: 6.80,
-                change: -0.10,
+                price: 3.74, // Adjusted from 6.80 (×0.55)
+                change: -0.06, // Adjusted from -0.10 (×0.55)
                 trend: .down,
                 weightRange: "400-500kg",
                 source: saleyard ?? "National Average"
@@ -197,8 +199,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Grown Steer",
                 livestockType: .cattle,
-                price: 6.15,
-                change: -0.05,
+                price: 3.38, // Adjusted from 6.15 (×0.55)
+                change: -0.03, // Adjusted from -0.05 (×0.55)
                 trend: .down,
                 weightRange: "500-600kg",
                 source: saleyard ?? "National Average"
@@ -206,8 +208,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Breeding Cow",
                 livestockType: .cattle,
-                price: 4.20,
-                change: 0.05,
+                price: 2.31, // Adjusted from 4.20 (×0.55)
+                change: 0.03, // Adjusted from 0.05 (×0.55)
                 trend: .up,
                 weightRange: "450-550kg",
                 source: saleyard ?? "National Average"
@@ -215,8 +217,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Heifer",
                 livestockType: .cattle,
-                price: 6.30,
-                change: 0.12,
+                price: 3.47, // Adjusted from 6.30 (×0.55)
+                change: 0.07, // Adjusted from 0.12 (×0.55)
                 trend: .up,
                 weightRange: "350-450kg",
                 source: saleyard ?? "National Average"
@@ -224,8 +226,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Weaner Steer",
                 livestockType: .cattle,
-                price: 7.20,
-                change: 0.25,
+                price: 3.96, // Adjusted from 7.20 (×0.55)
+                change: 0.14, // Adjusted from 0.25 (×0.55)
                 trend: .up,
                 weightRange: "200-300kg",
                 source: saleyard ?? "National Average"
@@ -234,12 +236,13 @@ class MarketDataService {
     }
     
     private func sheepPrices(saleyard: String?, state: String?) -> [CategoryPrice] {
+        // Debug: All sheep prices reduced by 45% (×0.55) for realistic market values
         return [
             CategoryPrice(
                 category: "Heavy Lamb",
                 livestockType: .sheep,
-                price: 8.75,
-                change: 0.32,
+                price: 4.81, // Adjusted from 8.75 (×0.55)
+                change: 0.18, // Adjusted from 0.32 (×0.55)
                 trend: .up,
                 weightRange: "22-26kg",
                 source: saleyard ?? "National Average"
@@ -247,8 +250,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Trade Lamb",
                 livestockType: .sheep,
-                price: 8.20,
-                change: 0.15,
+                price: 4.51, // Adjusted from 8.20 (×0.55)
+                change: 0.08, // Adjusted from 0.15 (×0.55)
                 trend: .up,
                 weightRange: "18-22kg",
                 source: saleyard ?? "National Average"
@@ -256,8 +259,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Merino Wether",
                 livestockType: .sheep,
-                price: 7.50,
-                change: -0.08,
+                price: 4.13, // Adjusted from 7.50 (×0.55)
+                change: -0.04, // Adjusted from -0.08 (×0.55)
                 trend: .down,
                 weightRange: "50-60kg",
                 source: saleyard ?? "National Average"
@@ -265,8 +268,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Breeding Ewe",
                 livestockType: .sheep,
-                price: 6.80,
-                change: 0.10,
+                price: 3.74, // Adjusted from 6.80 (×0.55)
+                change: 0.06, // Adjusted from 0.10 (×0.55)
                 trend: .up,
                 weightRange: "45-55kg",
                 source: saleyard ?? "National Average"
@@ -275,12 +278,13 @@ class MarketDataService {
     }
     
     private func pigPrices(saleyard: String?, state: String?) -> [CategoryPrice] {
+        // Debug: All pig prices reduced by 45% (×0.55) for realistic market values
         return [
             CategoryPrice(
                 category: "Baconer",
                 livestockType: .pigs,
-                price: 3.85,
-                change: 0.05,
+                price: 2.12, // Adjusted from 3.85 (×0.55)
+                change: 0.03, // Adjusted from 0.05 (×0.55)
                 trend: .up,
                 weightRange: "70-85kg",
                 source: "Processor Average"
@@ -288,8 +292,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Porker",
                 livestockType: .pigs,
-                price: 3.95,
-                change: 0.08,
+                price: 2.17, // Adjusted from 3.95 (×0.55)
+                change: 0.04, // Adjusted from 0.08 (×0.55)
                 trend: .up,
                 weightRange: "60-70kg",
                 source: "Processor Average"
@@ -297,8 +301,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Grower Pig",
                 livestockType: .pigs,
-                price: 4.20,
-                change: -0.02,
+                price: 2.31, // Adjusted from 4.20 (×0.55)
+                change: -0.01, // Adjusted from -0.02 (×0.55)
                 trend: .down,
                 weightRange: "30-50kg",
                 source: "Private Sale Average"
@@ -307,12 +311,13 @@ class MarketDataService {
     }
     
     private func goatPrices(saleyard: String?, state: String?) -> [CategoryPrice] {
+        // Debug: All goat prices reduced by 45% (×0.55) for realistic market values
         return [
             CategoryPrice(
                 category: "Rangeland Goat",
                 livestockType: .goats,
-                price: 7.80,
-                change: 0.20,
+                price: 4.29, // Adjusted from 7.80 (×0.55)
+                change: 0.11, // Adjusted from 0.20 (×0.55)
                 trend: .up,
                 weightRange: "20-30kg",
                 source: saleyard ?? "National Average"
@@ -320,8 +325,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Breeding Doe",
                 livestockType: .goats,
-                price: 6.50,
-                change: 0.15,
+                price: 3.58, // Adjusted from 6.50 (×0.55)
+                change: 0.08, // Adjusted from 0.15 (×0.55)
                 trend: .up,
                 weightRange: "35-45kg",
                 source: saleyard ?? "National Average"
@@ -329,8 +334,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Capretto",
                 livestockType: .goats,
-                price: 9.20,
-                change: -0.10,
+                price: 5.06, // Adjusted from 9.20 (×0.55)
+                change: -0.06, // Adjusted from -0.10 (×0.55)
                 trend: .down,
                 weightRange: "8-12kg",
                 source: "Processor Average"
@@ -339,23 +344,24 @@ class MarketDataService {
     }
     
     private func getBasePrice(category: String, livestockType: LivestockType) -> Double {
+        // Debug: All base prices reduced by 45% (×0.55) for realistic market values
         switch livestockType {
         case .cattle:
-            if category.contains("Weaner") { return 7.20 }
-            if category.contains("Feeder") { return 6.45 }
-            if category.contains("Yearling") { return 6.80 }
-            if category.contains("Heifer") { return 6.30 }
-            return 6.15
+            if category.contains("Weaner") { return 3.96 } // Adjusted from 7.20
+            if category.contains("Feeder") { return 3.55 } // Adjusted from 6.45
+            if category.contains("Yearling") { return 3.74 } // Adjusted from 6.80
+            if category.contains("Heifer") { return 3.47 } // Adjusted from 6.30
+            return 3.38 // Adjusted from 6.15
         case .sheep:
-            if category.contains("Heavy") { return 8.75 }
-            if category.contains("Trade") { return 8.20 }
-            return 7.50
+            if category.contains("Heavy") { return 4.81 } // Adjusted from 8.75
+            if category.contains("Trade") { return 4.51 } // Adjusted from 8.20
+            return 4.13 // Adjusted from 7.50
         case .pigs:
-            return 3.95
+            return 2.17 // Adjusted from 3.95
         case .goats:
-            if category.contains("Capretto") { return 9.20 }
-            if category.contains("Rangeland") { return 7.80 }
-            return 6.50
+            if category.contains("Capretto") { return 5.06 } // Adjusted from 9.20
+            if category.contains("Rangeland") { return 4.29 } // Adjusted from 7.80
+            return 3.58 // Adjusted from 6.50
         }
     }
 }
