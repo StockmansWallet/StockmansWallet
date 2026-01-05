@@ -15,6 +15,16 @@ struct AboutYouPage: View {
     @State private var showPassword = false
     @State private var showConfirmPassword = false
     
+    // Debug: iOS 26 HIG - Focus state for proper keyboard navigation between fields
+    @FocusState private var focusedField: Field?
+    
+    // Debug: Enum to track which field is focused for keyboard navigation
+    private enum Field: Hashable {
+        case firstName
+        case lastName
+        case email
+    }
+    
     // Debug: Both paths now have 6 pages (includes Subscription screen)
     private var totalPages: Int {
         6
@@ -63,56 +73,69 @@ struct AboutYouPage: View {
             isValid: validationState,
             totalPages: totalPages
         ) {
-            // Debug: Organized form layout following HIG - clear hierarchy and spacing
-            VStack(spacing: 20) {
-                // Personal Information Section
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Personal Information")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                        .padding(.horizontal, 20)
-                    
-                    VStack(spacing: 16) {
-                        TextField("First Name", text: Binding(
-                            get: { userPrefs.firstName ?? "" },
-                            set: { 
-                                userPrefs.firstName = $0.isEmpty ? nil : $0
-                                // Debug: Force view update when value changes
-                            }
-                        ))
-                        .textFieldStyle(OnboardingTextFieldStyle())
-                        .textContentType(.givenName)
-                        .autocapitalization(.words)
-                        .accessibilityLabel("First name")
-                        
-                        TextField("Last Name", text: Binding(
-                            get: { userPrefs.lastName ?? "" },
-                            set: { 
-                                userPrefs.lastName = $0.isEmpty ? nil : $0
-                                // Debug: Force view update when value changes
-                            }
-                        ))
-                        .textFieldStyle(OnboardingTextFieldStyle())
-                        .textContentType(.familyName)
-                        .autocapitalization(.words)
-                        .accessibilityLabel("Last name")
-                        
-                        TextField("Email", text: Binding(
-                            get: { userPrefs.email ?? "" },
-                            set: { 
-                                userPrefs.email = $0.isEmpty ? nil : $0
-                                // Debug: Force view update when value changes
-                            }
-                        ))
-                        .textFieldStyle(OnboardingTextFieldStyle())
-                        .keyboardType(.emailAddress)
-                        .textContentType(.emailAddress)
-                        .autocapitalization(.none)
-                        .autocorrectionDisabled()
-                        .accessibilityLabel("Email address")
+            // Debug: iOS 26 HIG - Organized form layout with proper keyboard navigation
+            // All content is scrollable as part of the template's ScrollView
+            VStack(spacing: 24) {
+                // Personal Information Fields
+                // Debug: Removed section heading per user request - cleaner UI
+                VStack(spacing: 16) {
+                    TextField("First Name", text: Binding(
+                        get: { userPrefs.firstName ?? "" },
+                        set: { 
+                            userPrefs.firstName = $0.isEmpty ? nil : $0
+                            // Debug: Force view update when value changes
+                        }
+                    ))
+                    .textFieldStyle(OnboardingTextFieldStyle())
+                    .textContentType(.givenName)
+                    .autocapitalization(.words)
+                    .submitLabel(.next) // Debug: iOS 26 HIG - Proper return key label
+                    .focused($focusedField, equals: .firstName)
+                    .onSubmit {
+                        // Debug: iOS 26 HIG - Move to next field on return
+                        focusedField = .lastName
                     }
-                    .padding(.horizontal, 20)
+                    .accessibilityLabel("First name")
+                    
+                    TextField("Last Name", text: Binding(
+                        get: { userPrefs.lastName ?? "" },
+                        set: { 
+                            userPrefs.lastName = $0.isEmpty ? nil : $0
+                            // Debug: Force view update when value changes
+                        }
+                    ))
+                    .textFieldStyle(OnboardingTextFieldStyle())
+                    .textContentType(.familyName)
+                    .autocapitalization(.words)
+                    .submitLabel(.next) // Debug: iOS 26 HIG - Proper return key label
+                    .focused($focusedField, equals: .lastName)
+                    .onSubmit {
+                        // Debug: iOS 26 HIG - Move to next field on return
+                        focusedField = .email
+                    }
+                    .accessibilityLabel("Last name")
+                    
+                    TextField("Email", text: Binding(
+                        get: { userPrefs.email ?? "" },
+                        set: { 
+                            userPrefs.email = $0.isEmpty ? nil : $0
+                            // Debug: Force view update when value changes
+                        }
+                    ))
+                    .textFieldStyle(OnboardingTextFieldStyle())
+                    .keyboardType(.emailAddress)
+                    .textContentType(.emailAddress)
+                    .autocapitalization(.none)
+                    .autocorrectionDisabled()
+                    .submitLabel(.done) // Debug: iOS 26 HIG - Done label for last field
+                    .focused($focusedField, equals: .email)
+                    .onSubmit {
+                        // Debug: iOS 26 HIG - Dismiss keyboard on last field
+                        focusedField = nil
+                    }
+                    .accessibilityLabel("Email address")
                 }
+                .padding(.horizontal, 20)
                 
                 // Security Section - Disabled in demo mode
                 VStack(alignment: .leading, spacing: 12) {

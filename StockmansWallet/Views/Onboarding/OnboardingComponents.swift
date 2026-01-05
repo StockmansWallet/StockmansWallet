@@ -32,72 +32,75 @@ struct OnboardingPageTemplate<Content: View>: View {
     private let titleSpacing: CGFloat = 8
     
     var body: some View {
+        // Debug: iOS 26 HIG - ScrollView wraps entire page content (header + body) for full-page scrolling
+        // Footer remains pinned using safeAreaInset
         VStack(spacing: 0) {
-            // Header
-            VStack(spacing: headerSpacing) {
-                HStack {
-                    if showBack && currentPage > 0 {
-                        Button(action: {
-                            HapticManager.tap()
-                            withAnimation {
-                                currentPage = max(0, currentPage - 1)
-                            }
-                        }) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 16, weight: .semibold))
-                                .foregroundStyle(Theme.primaryText)
-                                .frame(width: controlSize, height: controlSize)
-                                .contentShape(Circle())
-                                .background(
-                                    Circle()
-                                        .fill(Color.clear)
-                                        .frame(width: controlSize, height: controlSize)
-                                        .glassEffect(.regular.interactive(), in: Circle())
-                                )
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Go back to previous page")
-                    } else {
-                        Color.clear
-                            .frame(width: controlSize, height: controlSize)
-                            .accessibilityHidden(true)
-                    }
-                    
-                    Spacer()
-                    
-                    // Right-side placeholder keeps title centered
-                    Color.clear
-                        .frame(width: controlSize, height: controlSize)
-                        .accessibilityHidden(true)
-                }
-                .padding(.horizontal, horizontalPadding)
-                
-                VStack(spacing: 12) {
-                    Text(title)
-                        .font(.system(size: 28, weight: .bold))
-                        .foregroundStyle(Theme.primaryText)
-                        .multilineTextAlignment(.center)
-                        .accessibilityAddTraits(.isHeader)
-                    
-                    Text(subtitle)
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 40)
-                }
-                .padding(.horizontal, horizontalPadding)
-                .padding(.bottom, 32)
-            }
-            .padding(.top, 40) // Debug: Updated to match Select User page styling for consistency
-            
-            // Scrollable content
-            // Debug: iOS 16+ - Interactive keyboard dismissal on scroll (official HIG behavior)
             ScrollView {
-                content
-                    .padding(.top, 8)
-                    .padding(.bottom, 8)
+                VStack(spacing: 0) {
+                    // Header (now inside ScrollView for full-page scrolling)
+                    VStack(spacing: headerSpacing) {
+                        HStack {
+                            if showBack && currentPage > 0 {
+                                Button(action: {
+                                    HapticManager.tap()
+                                    withAnimation {
+                                        currentPage = max(0, currentPage - 1)
+                                    }
+                                }) {
+                                    Image(systemName: "chevron.left")
+                                        .font(.system(size: 16, weight: .semibold))
+                                        .foregroundStyle(Theme.primaryText)
+                                        .frame(width: controlSize, height: controlSize)
+                                        .contentShape(Circle())
+                                        .background(
+                                            Circle()
+                                                .fill(Color.clear)
+                                                .frame(width: controlSize, height: controlSize)
+                                                .glassEffect(.regular.interactive(), in: Circle())
+                                        )
+                                }
+                                .buttonStyle(.plain)
+                                .accessibilityLabel("Go back to previous page")
+                            } else {
+                                Color.clear
+                                    .frame(width: controlSize, height: controlSize)
+                                    .accessibilityHidden(true)
+                            }
+                            
+                            Spacer()
+                            
+                            // Right-side placeholder keeps title centered
+                            Color.clear
+                                .frame(width: controlSize, height: controlSize)
+                                .accessibilityHidden(true)
+                        }
+                        .padding(.horizontal, horizontalPadding)
+                        
+                        VStack(spacing: 12) {
+                            Text(title)
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(Theme.primaryText)
+                                .multilineTextAlignment(.center)
+                                .accessibilityAddTraits(.isHeader)
+                            
+                            Text(subtitle)
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.secondaryText)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 40)
+                        }
+                        .padding(.horizontal, horizontalPadding)
+                        .padding(.bottom, 32)
+                    }
+                    .padding(.top, 40) // Debug: Updated to match Select User page styling for consistency
+                    
+                    // Page content
+                    content
+                        .padding(.top, 8)
+                        .padding(.bottom, 8)
+                }
             }
-            .scrollDismissesKeyboard(.interactively)
+            .scrollDismissesKeyboard(.interactively) // Debug: iOS 16+ - Interactive keyboard dismissal on scroll
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Theme.backgroundGradient) // Background can be extended by parent if needed

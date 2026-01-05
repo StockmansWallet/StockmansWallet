@@ -23,6 +23,18 @@ struct SignInPage: View {
     @State private var showPassword = false
     @State private var showConfirmPassword = false
     
+    // Debug: iOS 26 HIG - Focus state for proper keyboard navigation between fields
+    @FocusState private var focusedField: Field?
+    
+    // Debug: Enum to track which field is focused for keyboard navigation
+    private enum Field: Hashable {
+        case firstName
+        case lastName
+        case email
+        case password
+        case confirmPassword
+    }
+    
     private var canProceed: Bool {
         if isSignUp {
             return !firstName.isEmpty && !lastName.isEmpty && !email.isEmpty && !password.isEmpty && password == confirmPassword && email.contains("@")
@@ -84,18 +96,30 @@ struct SignInPage: View {
                                 .frame(height: 1)
                         }
                         
-                        // Debug: Email/password form with individual field styling
+                        // Debug: iOS 26 HIG - Email/password form with proper keyboard navigation
                         VStack(spacing: 14) {
                             if isSignUp {
                                 TextField("First Name", text: $firstName)
                                     .textFieldStyle(SignInTextFieldStyle())
                                     .textContentType(.givenName)
                                     .autocapitalization(.words)
+                                    .submitLabel(.next) // Debug: iOS 26 HIG - Proper return key label
+                                    .focused($focusedField, equals: .firstName)
+                                    .onSubmit {
+                                        // Debug: iOS 26 HIG - Move to next field on return
+                                        focusedField = .lastName
+                                    }
                                 
                                 TextField("Last Name", text: $lastName)
                                     .textFieldStyle(SignInTextFieldStyle())
                                     .textContentType(.familyName)
                                     .autocapitalization(.words)
+                                    .submitLabel(.next) // Debug: iOS 26 HIG - Proper return key label
+                                    .focused($focusedField, equals: .lastName)
+                                    .onSubmit {
+                                        // Debug: iOS 26 HIG - Move to next field on return
+                                        focusedField = .email
+                                    }
                             }
                             
                             TextField("Email", text: $email)
@@ -104,6 +128,12 @@ struct SignInPage: View {
                                 .textContentType(.emailAddress)
                                 .autocapitalization(.none)
                                 .autocorrectionDisabled()
+                                .submitLabel(.next) // Debug: iOS 26 HIG - Proper return key label
+                                .focused($focusedField, equals: .email)
+                                .onSubmit {
+                                    // Debug: iOS 26 HIG - Move to next field on return
+                                    focusedField = .password
+                                }
                             
                             // Debug: Password field with integrated eye icon overlay
                             ZStack(alignment: .trailing) {
@@ -111,9 +141,29 @@ struct SignInPage: View {
                                     if showPassword {
                                         TextField("Password", text: $password)
                                             .textContentType(.password)
+                                            .submitLabel(isSignUp ? .next : .done) // Debug: iOS 26 HIG - Conditional label
+                                            .focused($focusedField, equals: .password)
+                                            .onSubmit {
+                                                // Debug: iOS 26 HIG - Navigate based on mode
+                                                if isSignUp {
+                                                    focusedField = .confirmPassword
+                                                } else {
+                                                    focusedField = nil
+                                                }
+                                            }
                                     } else {
                                         SecureField("Password", text: $password)
                                             .textContentType(.password)
+                                            .submitLabel(isSignUp ? .next : .done) // Debug: iOS 26 HIG - Conditional label
+                                            .focused($focusedField, equals: .password)
+                                            .onSubmit {
+                                                // Debug: iOS 26 HIG - Navigate based on mode
+                                                if isSignUp {
+                                                    focusedField = .confirmPassword
+                                                } else {
+                                                    focusedField = nil
+                                                }
+                                            }
                                     }
                                 }
                                 .textFieldStyle(SignInTextFieldStyle())
@@ -139,9 +189,21 @@ struct SignInPage: View {
                                         if showConfirmPassword {
                                             TextField("Confirm Password", text: $confirmPassword)
                                                 .textContentType(.newPassword)
+                                                .submitLabel(.done) // Debug: iOS 26 HIG - Done label for last field
+                                                .focused($focusedField, equals: .confirmPassword)
+                                                .onSubmit {
+                                                    // Debug: iOS 26 HIG - Dismiss keyboard on last field
+                                                    focusedField = nil
+                                                }
                                         } else {
                                             SecureField("Confirm Password", text: $confirmPassword)
                                                 .textContentType(.newPassword)
+                                                .submitLabel(.done) // Debug: iOS 26 HIG - Done label for last field
+                                                .focused($focusedField, equals: .confirmPassword)
+                                                .onSubmit {
+                                                    // Debug: iOS 26 HIG - Dismiss keyboard on last field
+                                                    focusedField = nil
+                                                }
                                         }
                                     }
                                     .textFieldStyle(SignInTextFieldStyle())
@@ -234,6 +296,7 @@ struct SignInPage: View {
                 .padding(.bottom, 40)
             }
             .scrollContentBackground(.hidden)
+            .scrollDismissesKeyboard(.interactively) // Debug: iOS 26 HIG - Interactive keyboard dismissal on scroll
             .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

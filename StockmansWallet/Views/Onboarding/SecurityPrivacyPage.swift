@@ -25,15 +25,11 @@ struct SecurityPrivacyPage: View {
             isValid: isValid,
             totalPages: 6 // Debug: SHARED page - both paths have 6 pages (includes Subscription)
         ) {
-            // Debug: Organized layout following HIG - clear sections with proper spacing
+            // Debug: iOS 26 HIG - Organized layout with cleaner UI (removed section headings)
             VStack(spacing: 24) {
-                // Security Settings Section
+                // Security Settings
+                // Debug: Removed "Security Settings" heading - cleaner UI
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Security Settings")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                        .padding(.horizontal, 20)
-                    
                     VStack(spacing: 12) {
                         // Two-Factor Authentication Toggle
                         Toggle(isOn: $userPrefs.twoFactorEnabled) {
@@ -62,13 +58,9 @@ struct SecurityPrivacyPage: View {
                     .padding(.horizontal, 20)
                 }
                 
-                // Privacy & Compliance Section
+                // Privacy & Compliance
+                // Debug: Removed "Privacy & Compliance" heading - cleaner UI
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Privacy & Compliance")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                        .padding(.horizontal, 20)
-                    
                     // Match inner content padding with the card above (16), but no card here
                     VStack(spacing: 8) {
                         HStack(alignment: .top, spacing: 12) {

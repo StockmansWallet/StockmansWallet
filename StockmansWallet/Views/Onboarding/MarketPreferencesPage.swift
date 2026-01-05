@@ -12,6 +12,9 @@ struct MarketPreferencesPage: View {
     @Binding var currentPage: Int
     @State private var searchText = ""
     
+    // Debug: iOS 26 HIG - Focus state for search field keyboard management
+    @FocusState private var isSearchFocused: Bool
+    
     private var filteredSaleyards: [String] {
         if searchText.isEmpty {
             return ReferenceData.saleyards
@@ -32,15 +35,11 @@ struct MarketPreferencesPage: View {
             nextPage: 5,
             isValid: isValid
         ) {
-            // Debug: Organized layout following HIG - clear sections with proper spacing
+            // Debug: iOS 26 HIG - Organized layout with cleaner UI (removed section headings)
             VStack(spacing: 24) {
-                // Saleyard Selection Section
+                // Saleyard Selection
+                // Debug: Removed "Primary Reference Saleyard" heading - cleaner UI
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Primary Reference Saleyard")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                        .padding(.horizontal, 20)
-                    
                     VStack(spacing: 0) {
                         // Debug: iOS 26 HIG - Search field uses Theme.buttonHeight for consistency
                         HStack(spacing: 12) {
@@ -50,6 +49,12 @@ struct MarketPreferencesPage: View {
                             TextField("Search saleyards...", text: $searchText)
                                 .font(Theme.body)
                                 .foregroundStyle(Theme.primaryText)
+                                .submitLabel(.search) // Debug: iOS 26 HIG - Proper return key label for search
+                                .focused($isSearchFocused)
+                                .onSubmit {
+                                    // Debug: iOS 26 HIG - Dismiss keyboard when search submitted
+                                    isSearchFocused = false
+                                }
                                 .accessibilityLabel("Search saleyards")
                         }
                         .padding(.horizontal, 16)
@@ -123,13 +128,9 @@ struct MarketPreferencesPage: View {
                     }
                 }
                 
-                // Logistics Options Section
+                // Logistics Options
+                // Debug: Removed "Logistics Options" heading - cleaner UI
                 VStack(alignment: .leading, spacing: 12) {
-                    Text("Logistics Options")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                        .padding(.horizontal, 20)
-                    
                     Toggle(isOn: $userPrefs.truckItEnabled) {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(spacing: 12) {
