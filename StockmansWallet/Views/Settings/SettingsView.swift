@@ -28,6 +28,7 @@ struct SettingsView: View {
     var body: some View {
         NavigationStack {
             List {
+                // MARK: - Section 1: User
                 Section {
                     NavigationLink(destination: ProfileView()) {
                         SettingsListRow(
@@ -49,15 +50,22 @@ struct SettingsView: View {
                         }
                         .listRowBackground(Theme.cardBackground)
                     }
+                    
+                    // Debug: Saleyards settings with dollarsign.bank.building icon
+                    NavigationLink(destination: SaleyardsSettingsView()) {
+                        SettingsListRow(icon: "dollarsign.bank.building", title: "Saleyards", subtitle: nil)
+                    }
+                    .listRowBackground(Theme.cardBackground)
                 }
                 .listSectionSeparator(.hidden)
                 
+                // MARK: - Section 2: Preferences
                 Section {
-                    
                     NavigationLink(destination: AppearanceSettingsView()) {
                         SettingsListRow(icon: "paintbrush.fill", title: "Appearance", subtitle: nil)
                     }
                     .listRowBackground(Theme.cardBackground)
+                    
                     NavigationLink(destination: NotificationsSettingsView()) {
                         SettingsListRow(icon: "bell.fill", title: "Notifications", subtitle: nil)
                     }
@@ -67,37 +75,24 @@ struct SettingsView: View {
                         SettingsListRow(icon: "arrow.clockwise", title: "Data & Sync", subtitle: nil)
                     }
                     .listRowBackground(Theme.cardBackground)
-                    
-                
                 }
                 .listSectionSeparator(.hidden)
                 
+                // MARK: - Section 3: Information & Support
                 Section {
-                    NavigationLink(destination: AboutView()) {
-                        SettingsListRow(icon: "info.circle.fill", title: "About Stockman's Wallet", subtitle: nil)
-                    }
-                    .listRowBackground(Theme.cardBackground)
-                    
                     NavigationLink(destination: SupportView()) {
                         SettingsListRow(icon: "questionmark.circle.fill", title: "Help & Support", subtitle: nil)
                     }
                     .listRowBackground(Theme.cardBackground)
-                }
-                .listSectionSeparator(.hidden)
-                
-                Section {
-                    NavigationLink(destination: PrivacyPolicyView()) {
-                        SettingsListRow(icon: "hand.raised.fill", title: "Privacy Policy", subtitle: nil)
-                    }
-                    .listRowBackground(Theme.cardBackground)
                     
-                    NavigationLink(destination: TermsOfServiceView()) {
-                        SettingsListRow(icon: "doc.text.fill", title: "Terms of Service", subtitle: nil)
+                    NavigationLink(destination: AboutView()) {
+                        SettingsListRow(icon: "info.circle.fill", title: "About Stockman's Wallet", subtitle: nil)
                     }
                     .listRowBackground(Theme.cardBackground)
                 }
                 .listSectionSeparator(.hidden)
                 
+                // MARK: - Section 4: Dev Tools
                 // Debug: Temporary section for development/testing
                 // TODO: Remove this section before production release
                 Section {

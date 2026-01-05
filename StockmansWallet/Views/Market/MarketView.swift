@@ -21,6 +21,11 @@ struct MarketView: View {
     @State private var showingMarketInsights = false
     @State private var selectedPriceForDetail: CategoryPrice?
     
+    // Debug: Get user preferences for filtered saleyards
+    private var userPrefs: UserPreferences {
+        preferences.first ?? UserPreferences()
+    }
+    
     var body: some View {
         NavigationStack {
             ScrollView {
@@ -185,7 +190,8 @@ struct MarketView: View {
                         
                         Divider()
                         
-                        ForEach(ReferenceData.saleyards.prefix(10), id: \.self) { yard in
+                        // Debug: Use filtered saleyards from user preferences (show first 10)
+                        ForEach(userPrefs.filteredSaleyards.prefix(10), id: \.self) { yard in
                             Button(yard) {
                                 Task { await viewModel.selectSaleyard(yard) }
                             }

@@ -359,6 +359,7 @@ struct AddPropertyView: View {
 struct EditPropertyView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @Query private var preferences: [UserPreferences]
     
     let property: Property
     
@@ -369,10 +370,13 @@ struct EditPropertyView: View {
     @State private var address: String
     @State private var acreage: String
     @State private var defaultSaleyard: String
-    @State private var mortalityRate: Double
-    @State private var calvingRate: Double
     
     @State private var showingDeleteAlert = false
+    
+    // Debug: Get user preferences for filtered saleyards
+    private var userPrefs: UserPreferences {
+        preferences.first ?? UserPreferences()
+    }
     
     init(property: Property) {
         self.property = property
@@ -383,8 +387,6 @@ struct EditPropertyView: View {
         _address = State(initialValue: property.address ?? "")
         _acreage = State(initialValue: property.acreage.map { String($0) } ?? "")
         _defaultSaleyard = State(initialValue: property.defaultSaleyard ?? "")
-        _mortalityRate = State(initialValue: property.mortalityRate)
-        _calvingRate = State(initialValue: property.calvingRate)
     }
     
     var body: some View {
@@ -410,49 +412,11 @@ struct EditPropertyView: View {
                 Section("Market Preferences") {
                     Picker("Default Saleyard", selection: $defaultSaleyard) {
                         Text("Select...").tag("")
-                        ForEach(ReferenceData.saleyards, id: \.self) { saleyard in
+                        // Debug: Use filtered saleyards from user preferences
+                        ForEach(userPrefs.filteredSaleyards, id: \.self) { saleyard in
                             Text(saleyard).tag(saleyard)
                         }
                     }
-                }
-                .listRowBackground(Theme.cardBackground)
-                
-                Section {
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Mortality Rate")
-                                .font(Theme.body)
-                            Spacer()
-                            Text("\(Int(mortalityRate * 100))%")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.secondaryText)
-                        }
-                        Slider(value: $mortalityRate, in: 0...0.2, step: 0.005)
-                            .tint(Theme.accent)
-                            .accessibilityLabel("Mortality rate")
-                            .accessibilityValue("\(Int(mortalityRate * 100)) percent")
-                    }
-                    .padding(.vertical, 4)
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack {
-                            Text("Calving Rate")
-                                .font(Theme.body)
-                            Spacer()
-                            Text("\(Int(calvingRate * 100))%")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.secondaryText)
-                        }
-                        Slider(value: $calvingRate, in: 0.5...1.0, step: 0.01)
-                            .tint(Theme.accent)
-                            .accessibilityLabel("Calving rate")
-                            .accessibilityValue("\(Int(calvingRate * 100)) percent")
-                    }
-                    .padding(.vertical, 4)
-                } header: {
-                    Text("Livestock Preferences")
-                } footer: {
-                    Text("These rates will be used as defaults for herds on this property.")
                 }
                 .listRowBackground(Theme.cardBackground)
                 
@@ -511,8 +475,6 @@ struct EditPropertyView: View {
         property.address = address.isEmpty ? nil : address
         property.acreage = Double(acreage)
         property.defaultSaleyard = defaultSaleyard.isEmpty ? nil : defaultSaleyard
-        property.mortalityRate = mortalityRate
-        property.calvingRate = calvingRate
         
         property.markUpdated()
         try? modelContext.save()

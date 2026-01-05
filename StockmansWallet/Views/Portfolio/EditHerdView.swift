@@ -34,6 +34,11 @@ struct EditHerdView: View {
     
     private let speciesOptions = ["Cattle", "Sheep", "Pig"]
     
+    // Debug: Get user preferences for filtered saleyards
+    private var userPrefs: UserPreferences {
+        preferences.first ?? UserPreferences()
+    }
+    
     private var breedOptions: [String] {
         switch selectedSpecies {
         case "Cattle":
@@ -287,7 +292,8 @@ struct EditHerdView: View {
                                     .foregroundStyle(Theme.primaryText)
                                 Picker("Saleyard", selection: $selectedSaleyard) {
                                     Text("Use Default").tag(nil as String?)
-                                    ForEach(ReferenceData.saleyards, id: \.self) { saleyard in
+                                    // Debug: Use filtered saleyards from user preferences
+                                    ForEach(userPrefs.filteredSaleyards, id: \.self) { saleyard in
                                         Text(saleyard).tag(saleyard as String?)
                                     }
                                 }

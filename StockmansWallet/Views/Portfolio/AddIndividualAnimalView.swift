@@ -38,6 +38,11 @@ struct AddIndividualAnimalView: View {
     
     private let speciesOptions = ["Cattle", "Sheep", "Pig"]
     
+    // Debug: Get user preferences for filtered saleyards
+    private var userPrefs: UserPreferences {
+        preferences.first ?? UserPreferences()
+    }
+    
     private var isBreederCategory: Bool {
         let breederCategories = [
             "Breeding Cow", "Breeding Ewe", "Breeder Sow", "Breeding Doe",
@@ -471,7 +476,8 @@ struct AddIndividualAnimalView: View {
                 
                 Picker("Saleyard", selection: $selectedSaleyard) {
                     Text("Use Default").tag(nil as String?)
-                    ForEach(ReferenceData.saleyards, id: \.self) { saleyard in
+                    // Debug: Use filtered saleyards from user preferences
+                    ForEach(userPrefs.filteredSaleyards, id: \.self) { saleyard in
                         Text(saleyard).tag(saleyard as String?)
                     }
                 }

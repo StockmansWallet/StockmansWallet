@@ -76,7 +76,8 @@ struct LivestockPreferencesDetailView: View {
                 .sheet(isPresented: $showSaleyardSheet) {
                     SaleyardSearchSheet(
                         title: "Select Saleyard",
-                        allOptions: ReferenceData.saleyards,
+                        // Debug: Use filtered saleyards from user preferences
+                        allOptions: persistedPrefs.filteredSaleyards,
                         selected: $selectedSaleyard,
                         searchText: $saleyardSearch,
                         onSelect: { yard in

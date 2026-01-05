@@ -1639,14 +1639,21 @@ struct SaleyardSelector: View {
 struct SaleyardSelectionSheet: View {
     @Binding var selectedSaleyard: String?
     @Environment(\.dismiss) private var dismiss
+    @Query private var preferences: [UserPreferences]
     @State private var searchText = ""
     
-    // Debug: Filter saleyards based on search text
+    // Debug: Get user preferences for filtered saleyards
+    private var userPrefs: UserPreferences {
+        preferences.first ?? UserPreferences()
+    }
+    
+    // Debug: Filter saleyards based on search text and user preferences
     private var filteredSaleyards: [String] {
+        let enabledSaleyards = userPrefs.filteredSaleyards
         if searchText.isEmpty {
-            return ReferenceData.saleyards
+            return enabledSaleyards
         } else {
-            return ReferenceData.saleyards.filter { 
+            return enabledSaleyards.filter { 
                 $0.localizedCaseInsensitiveContains(searchText) 
             }
         }

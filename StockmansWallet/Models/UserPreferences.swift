@@ -76,6 +76,7 @@ final class UserPreferences {
     var defaultSaleyard: String?
     var region: String?
     var truckItEnabled: Bool
+    var enabledSaleyards: [String] // Debug: Array of saleyard names that user has enabled (empty = all enabled)
     
     // MARK: - Financial Ecosystem
     var xeroConnected: Bool
@@ -129,6 +130,7 @@ final class UserPreferences {
         self.defaultSaleyard = nil
         self.region = nil
         self.truckItEnabled = false
+        self.enabledSaleyards = [] // Debug: Empty array means all saleyards enabled by default
         self.xeroConnected = false
         self.myobConnected = false
         self.defaultMortalityRate = 0.05 // 5% annual
@@ -156,6 +158,15 @@ final class UserPreferences {
         set {
             role = newValue?.rawValue
         }
+    }
+    
+    // Debug: Get filtered list of enabled saleyards
+    // Returns all saleyards if enabledSaleyards is empty (default behavior)
+    var filteredSaleyards: [String] {
+        if enabledSaleyards.isEmpty {
+            return ReferenceData.saleyards // All saleyards enabled by default
+        }
+        return enabledSaleyards
     }
 }
 
