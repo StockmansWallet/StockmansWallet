@@ -62,8 +62,8 @@ struct BackgroundImageSelectorView: View {
         ZStack(alignment: .top) {
             // Debug: Background preview with dashboard-style parallax settings
             // Force view to update when preferences change
-            let userPrefs = preferences.first ?? UserPreferences()
-            let _ = print("🖼️ BackgroundSelector: Rendering with background=\(userPrefs.backgroundImageName ?? "nil"), isCustom=\(userPrefs.isCustomBackground)")
+            let currentPrefs = preferences.first ?? UserPreferences()
+            let _ = print("🖼️ BackgroundSelector: Rendering with background=\(currentPrefs.backgroundImageName ?? "nil"), isCustom=\(currentPrefs.isCustomBackground)")
             
             backgroundPreview
                 .id("\(previewImageName ?? "none")_\(previewIsCustom)") // Debug: Force recreation when background changes
@@ -93,6 +93,8 @@ struct BackgroundImageSelectorView: View {
                     .padding(.top, 32)
                     .padding(.horizontal, Theme.cardPadding)
                     .padding(.bottom, 12) // Debug: Reduced spacing before carousel
+                    .accessibilityElement(children: .combine)
+                    .accessibilityLabel("Personalise your dashboard. Select one of the default images or upload your own.")
                     
                     // Debug: Image carousel or custom upload UI
                     contentForSelectedMode
@@ -100,32 +102,25 @@ struct BackgroundImageSelectorView: View {
                     
                     Spacer()
                     
-                    // Debug: Add Photo button (only shown in Custom mode)
+                    // Debug: Add Photo button (only shown in Custom mode) - iOS native PhotosPicker
                     if selectedMode == .custom {
-                        Button(action: {
-                            HapticManager.tap()
-                            showingImagePicker = true
-                        }) {
-                            HStack {
-                                Image(systemName: "photo.badge.plus")
-                                    .font(.system(size: 20))
-                                Text("Add Photo")
-                                    .font(Theme.headline)
-                            }
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .frame(height: Theme.buttonHeight)
-                            .background(Color.white.opacity(0.1))
-                            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-                        }
-                        .padding(.horizontal, Theme.cardPadding)
-                        .padding(.bottom, 16)
-                        .photosPicker(
-                            isPresented: $showingImagePicker,
+                        PhotosPicker(
                             selection: $selectedImageItem,
                             matching: .images
-                        )
+                        ) {
+                            Label("Add Photo", systemImage: "photo.badge.plus")
+                                .font(Theme.headline)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: Theme.buttonHeight)
+                                .background(Color.white.opacity(0.1))
+                                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, Theme.cardPadding)
+                        .padding(.bottom, 16)
                         .accessibilityLabel("Add photo from library")
+                        .accessibilityHint("Opens your photo library to select a custom background image")
                     }
                     
                     // Debug: Mode selector tabs (Default/Custom/None)
@@ -173,7 +168,7 @@ struct BackgroundImageSelectorView: View {
                 CustomParallaxImageView(
                     imageName: imageName,
                     intensity: 25,           // Movement amount (20-40)
-                    opacity: 0.5,            // Higher opacity for preview visibility
+                    opacity: 0.8,            // Higher opacity for preview visibility
                     scale: 0.5,              // Image takes 50% of screen height
                     verticalOffset: -60,     // Move image up to show more middle/lower area
                     blur: 0                  // No blur
@@ -183,7 +178,7 @@ struct BackgroundImageSelectorView: View {
                 ParallaxImageView(
                     imageName: imageName,
                     intensity: 25,           // Movement amount (20-40)
-                    opacity: 0.5,            // Higher opacity for preview visibility
+                    opacity: 0.8,            // Higher opacity for preview visibility
                     scale: 0.5,              // Image takes 50% of screen height
                     verticalOffset: -60,     // Move image up to show more middle/lower area
                     blur: 0                  // No blur
@@ -198,45 +193,30 @@ struct BackgroundImageSelectorView: View {
     
     // MARK: - Mode Selector
     
-    /// Debug: Three-tab selector at bottom (Default/Custom/None)
+    /// Debug: Native iOS segmented control for mode selection (HIG compliant)
+    @ViewBuilder
     private var modeSelector: some View {
-        HStack(spacing: 0) {
+        Picker("Background Mode", selection: $selectedMode) {
             ForEach(BackgroundMode.allCases, id: \.self) { mode in
-                Button(action: {
-                    HapticManager.selection()
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        selectedMode = mode
-                    }
-                    
-                    // Debug: Update and save when switching modes
-                    if mode == .none {
-                        removeBackground()
-                    } else if mode == .defaultImages {
-                        // Set to first default image if none selected or was custom
-                        if previewImageName == nil || previewIsCustom {
-                            selectBuiltInBackground(builtInBackgrounds[0])
-                        }
-                    }
-                }) {
-                    Text(mode.rawValue)
-                        .font(Theme.headline)
-                        .foregroundStyle(selectedMode == mode ? .white : .white.opacity(0.6))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 44)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(selectedMode == mode ? Color.white.opacity(0.15) : Color.clear)
-                        )
-                }
-                .accessibilityLabel("\(mode.rawValue) mode")
-                .accessibilityAddTraits(selectedMode == mode ? [.isSelected] : [])
+                Text(mode.rawValue)
+                    .tag(mode)
             }
         }
-        .padding(4)
-        .background(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color.black.opacity(0.3))
-        )
+        .pickerStyle(.segmented)
+        .onChange(of: selectedMode) { oldValue, newValue in
+            // Debug: Haptic feedback on selection change
+            HapticManager.selection()
+            
+            // Debug: Update and save when switching modes
+            if newValue == .none {
+                removeBackground()
+            } else if newValue == .defaultImages {
+                // Set to first default image if none selected or was custom
+                if previewImageName == nil || previewIsCustom {
+                    selectBuiltInBackground(builtInBackgrounds[0])
+                }
+            }
+        }
     }
     
     // MARK: - Content for Selected Mode
@@ -255,6 +235,7 @@ struct BackgroundImageSelectorView: View {
     }
     
     /// Debug: Horizontal scrolling carousel of default background images
+    @ViewBuilder
     private var defaultImagesCarousel: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 16) {
@@ -272,9 +253,13 @@ struct BackgroundImageSelectorView: View {
             .padding(.horizontal, Theme.cardPadding)
         }
         .frame(height: 200) // Debug: Increased height for portrait thumbnails
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Background images")
+        .accessibilityHint("Swipe to browse available background images")
     }
     
     /// Debug: Custom image display area
+    @ViewBuilder
     private var customUploadUI: some View {
         VStack(spacing: 12) {
             // Debug: Show current custom image if exists
@@ -295,6 +280,7 @@ struct BackgroundImageSelectorView: View {
                     Image(systemName: "photo")
                         .font(.system(size: 48))
                         .foregroundStyle(.white.opacity(0.6))
+                        .accessibilityHidden(true)
                     
                     Text("No Custom Image")
                         .font(Theme.headline)
@@ -307,6 +293,9 @@ struct BackgroundImageSelectorView: View {
                 }
                 .frame(height: 200) // Debug: Increased height for portrait thumbnails
                 .padding(.horizontal, Theme.cardPadding)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("No custom image. Tap 'Add Photo' below to upload your own image")
+                .accessibilityAddTraits(.isStaticText)
             }
             
             // Debug: Upload progress or error
@@ -319,6 +308,9 @@ struct BackgroundImageSelectorView: View {
                         .foregroundStyle(.white.opacity(0.9))
                 }
                 .padding(.horizontal, Theme.cardPadding)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel("Uploading image")
+                .accessibilityAddTraits(.updatesFrequently)
             }
             
             if let error = uploadError {
@@ -326,16 +318,19 @@ struct BackgroundImageSelectorView: View {
                     .font(Theme.caption)
                     .foregroundStyle(.red)
                     .padding(.horizontal, Theme.cardPadding)
+                    .accessibilityAddTraits(.isStaticText)
             }
         }
     }
     
     /// Debug: Empty state for "None" mode
+    @ViewBuilder
     private var noneUI: some View {
         VStack(spacing: 12) {
             Image(systemName: "photo.slash")
                 .font(.system(size: 48))
                 .foregroundStyle(.white.opacity(0.6))
+                .accessibilityHidden(true)
             
             Text("No Background")
                 .font(Theme.headline)
@@ -348,6 +343,9 @@ struct BackgroundImageSelectorView: View {
         }
         .padding(.horizontal, Theme.cardPadding)
         .frame(height: 200) // Debug: Increased height to match portrait thumbnails
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel("No background selected. Your dashboard will use the default theme color")
+        .accessibilityAddTraits(.isStaticText)
     }
     
     // MARK: - Initialization
@@ -575,9 +573,11 @@ struct BackgroundThumbnail: View {
         .onTapGesture {
             onSelect()
         }
+        .accessibilityElement(children: .combine)
         .accessibilityLabel("Background image \(imageName)")
-        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-        .accessibilityHint("Double tap to preview this background")
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : [.isButton])
+        .accessibilityHint(isSelected ? "Currently selected" : "Double tap to select this background")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
 }
 
@@ -637,9 +637,11 @@ struct CustomBackgroundThumbnail: View {
         .onTapGesture {
             onSelect()
         }
+        .accessibilityElement(children: .combine)
         .accessibilityLabel("Custom background image")
-        .accessibilityAddTraits(isSelected ? [.isSelected] : [])
-        .accessibilityHint("Double tap to preview this background")
+        .accessibilityAddTraits(isSelected ? [.isSelected, .isButton] : [.isButton])
+        .accessibilityHint(isSelected ? "Currently selected" : "Double tap to select this background")
+        .accessibilityValue(isSelected ? "Selected" : "Not selected")
     }
     
     /// Debug: Load custom image from document directory
