@@ -74,6 +74,12 @@ struct UserTypeSelectionPage: View {
         VStack(spacing: 0) {
             // Scrollable content
             ScrollView {
+                // Top spacing to replace removed header
+                Color.clear
+                    .frame(height: 40)
+                    .accessibilityHidden(true)
+                
+
                 VStack(spacing: 32) {
                     // Title and subtitle
                     VStack(spacing: 12) {
