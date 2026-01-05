@@ -1554,29 +1554,18 @@ struct ErrorStateView: View {
 }
 
 // MARK: - Saleyard Selector
-// Debug: Dropdown menu to filter portfolio valuations by specific saleyard prices
+// Debug: HIG-compliant searchable sheet for saleyard selection (31+ items)
 // Default (nil) uses each herd's configured saleyard, otherwise overrides all herds
 struct SaleyardSelector: View {
     @Binding var selectedSaleyard: String?
+    @State private var showingSaleyardSheet = false
     
     var body: some View {
-        Menu {
-            // Debug: Default option - uses the saleyards configured in each herd
-            Button("Your Selected Saleyards") {
-                HapticManager.tap()
-                selectedSaleyard = nil
-            }
-            
-            Divider()
-            
-            // Debug: Show all available saleyards from reference data for comparison
-            ForEach(ReferenceData.saleyards, id: \.self) { saleyard in
-                Button(saleyard) {
-                    HapticManager.tap()
-                    selectedSaleyard = saleyard
-                }
-            }
-        } label: {
+        // Debug: Tappable card that opens searchable sheet (HIG pattern for long lists)
+        Button(action: {
+            HapticManager.tap()
+            showingSaleyardSheet = true
+        }) {
             HStack {
                 Image(systemName: "mappin.circle.fill")
                     .foregroundStyle(Theme.accent)
@@ -1594,7 +1583,7 @@ struct SaleyardSelector: View {
                 
                 Spacer()
                 
-                Image(systemName: "chevron.up.chevron.down")
+                Image(systemName: "chevron.right")
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundStyle(Theme.secondaryText)
             }
@@ -1602,9 +1591,149 @@ struct SaleyardSelector: View {
             .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         }
+        .buttonStyle(.plain) // Debug: Prevent button highlight, keep custom styling
+        .sheet(isPresented: $showingSaleyardSheet) {
+            SaleyardSelectionSheet(selectedSaleyard: $selectedSaleyard)
+        }
         .accessibilityLabel("Select saleyard")
         .accessibilityValue(selectedSaleyard ?? "Your selected saleyards")
-        .accessibilityHint("Filter portfolio valuations by saleyard prices. Default uses each herd's configured saleyard.")
+        .accessibilityHint("Opens sheet to filter portfolio valuations by saleyard prices")
+    }
+}
+
+// MARK: - Saleyard Selection Sheet
+// Debug: HIG-compliant searchable sheet for selecting from 31+ saleyards
+// Follows iOS patterns: search bar, grouped list, clear selection action
+struct SaleyardSelectionSheet: View {
+    @Binding var selectedSaleyard: String?
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+    
+    // Debug: Filter saleyards based on search text
+    private var filteredSaleyards: [String] {
+        if searchText.isEmpty {
+            return ReferenceData.saleyards
+        } else {
+            return ReferenceData.saleyards.filter { 
+                $0.localizedCaseInsensitiveContains(searchText) 
+            }
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                // Debug: Default option section - always visible at top
+                Section {
+                    Button(action: {
+                        HapticManager.tap()
+                        selectedSaleyard = nil
+                        dismiss()
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Your Selected Saleyards")
+                                    .font(Theme.body)
+                                    .foregroundStyle(Theme.primaryText)
+                                Text("Uses each herd's configured saleyard")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                            }
+                            
+                            Spacer()
+                            
+                            if selectedSaleyard == nil {
+                                Image(systemName: "checkmark")
+                                    .foregroundStyle(Theme.accent)
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .listRowBackground(Color.clear) // Debug: Remove default list row background
+                } header: {
+                    Text("Default")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                
+                // Debug: All saleyards section - filterable by search
+                Section {
+                    ForEach(filteredSaleyards, id: \.self) { saleyard in
+                        Button(action: {
+                            HapticManager.tap()
+                            selectedSaleyard = saleyard
+                            dismiss()
+                        }) {
+                            HStack {
+                                Text(saleyard)
+                                    .font(Theme.body)
+                                    .foregroundStyle(Theme.primaryText)
+                                    .multilineTextAlignment(.leading)
+                                
+                                Spacer()
+                                
+                                if selectedSaleyard == saleyard {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(Theme.accent)
+                                        .font(.system(size: 16, weight: .semibold))
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color.clear) // Debug: Remove default list row background
+                    }
+                } header: {
+                    Text("Compare with Specific Saleyard")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                
+                // Debug: Show helpful message if no results
+                if filteredSaleyards.isEmpty {
+                    Section {
+                        VStack(spacing: 12) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 40))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                            
+                            Text("No saleyards found")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            Text("Try a different search term")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
+                        .listRowBackground(Color.clear) // Debug: Remove default list row background
+                    }
+                }
+            }
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Search saleyards"
+            )
+            .navigationTitle("Select Saleyard")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.backgroundColor)
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 }
 
