@@ -40,47 +40,44 @@ struct WelcomeFeaturesPage: View {
             
             // TEMPORARY: Dev skip buttons for Farmer/Advisor testing (DELETE BEFORE LAUNCH) ⚠️
             VStack {
-                HStack(spacing: 8) {
+                HStack(spacing: 12) {
                     Spacer()
                     
-                    // Debug: Skip as Farmer - goes to farmer dashboard
+                    // Debug: Skip as Farmer - goes to farmer dashboard (no icon, stroke style)
                     Button(action: {
                         HapticManager.tap()
                         onSkipAsFarmer?()
                     }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "figure.walk")
-                                .font(.system(size: 10))
-                            Text("Farmer")
-                                .font(.caption2)
-                        }
-                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.green.opacity(0.15))
-                        .clipShape(Capsule())
+                        Text("Farmer")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(
+                                Capsule()
+                                    .strokeBorder(Theme.secondaryText.opacity(0.3), lineWidth: 1)
+                            )
                     }
                     
-                    // Debug: Skip as Advisor - goes to advisory dashboard
+                    // Debug: Skip as Advisor - goes to advisory dashboard (no icon, stroke style)
                     Button(action: {
                         HapticManager.tap()
                         onSkipAsAdvisor?()
                     }) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "briefcase.fill")
-                                .font(.system(size: 10))
-                            Text("Advisor")
-                                .font(.caption2)
-                        }
-                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color.blue.opacity(0.15))
-                        .clipShape(Capsule())
+                        Text("Advisor")
+                            .font(.caption2)
+                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 7)
+                            .background(
+                                Capsule()
+                                    .strokeBorder(Theme.secondaryText.opacity(0.3), lineWidth: 1)
+                            )
                     }
+                    
+                    Spacer()
                 }
                 .padding(.top, 50)
-                .padding(.trailing, 20)
                 Spacer()
             }
 

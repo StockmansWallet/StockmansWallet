@@ -29,14 +29,6 @@ struct SettingsView: View {
         NavigationStack {
             List {
                 Section {
-                    NavigationLink(destination: DevelopmentSettingsView()) {
-                        SettingsListRow(icon: "wrench.and.screwdriver.fill", title: "Development", subtitle: nil)
-                    }
-                    .listRowBackground(Theme.cardBackground)
-                }
-                .listSectionSeparator(.hidden)
-                
-                Section {
                     NavigationLink(destination: ProfileView()) {
                         SettingsListRow(
                             icon: "person.circle.fill",
@@ -106,6 +98,30 @@ struct SettingsView: View {
                 }
                 .listSectionSeparator(.hidden)
                 
+                // Debug: Temporary section for development/testing
+                // TODO: Remove this section before production release
+                Section {
+                    Button(action: {
+                        HapticManager.tap()
+                        goToLandingPage()
+                    }) {
+                        HStack {
+                            Image(systemName: "arrow.counterclockwise.circle.fill")
+                                .foregroundStyle(Theme.accent)
+                                .frame(width: 24)
+                            
+                            Text("Go to Landing Page")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.accent)
+                            
+                            Spacer()
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .listRowBackground(Theme.cardBackground)
+                }
+                .listSectionSeparator(.hidden)
+                
                 Section {
                     AppVersionFooter()
                         .listRowBackground(Color.clear)
@@ -136,6 +152,16 @@ struct SettingsView: View {
         if preferences.first == nil {
             let prefs = UserPreferences()
             modelContext.insert(prefs)
+            try? modelContext.save()
+        }
+    }
+    
+    // Debug: Reset to landing page for testing during development
+    // TODO: Remove this function before production release
+    @MainActor
+    private func goToLandingPage() {
+        if let prefs = preferences.first {
+            prefs.hasCompletedOnboarding = false
             try? modelContext.save()
         }
     }
