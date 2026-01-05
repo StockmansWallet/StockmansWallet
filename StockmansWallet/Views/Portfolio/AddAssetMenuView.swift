@@ -39,6 +39,18 @@ struct AddAssetMenuView: View {
                         // Individual Option Buttons
                         VStack(spacing: 16) {
                             
+                            // Debug: Add Herd first as it's the more common action
+                            // Add Herd / Mob
+                            AssetMenuRow(
+                                iconColor: Theme.accent,
+                                iconSymbol: "plus.app",
+                                customImageName: "cattle_tags",
+                                title: "Add Herd",
+                                subtitle: "Record a new herd"
+                            ) {
+                                HapticManager.tap()
+                                showingAddHerd = true
+                            }
                             
                             // Add Individual
                             AssetMenuRow(
@@ -50,19 +62,6 @@ struct AddAssetMenuView: View {
                             ) {
                                 HapticManager.tap()
                                 showingAddIndividual = true
-                            }
-                            
-                            
-                            // Add Herd / Mob
-                            AssetMenuRow(
-                                iconColor: Theme.accent,
-                                iconSymbol: "plus.app",
-                                customImageName: "cattle_tags",
-                                title: "Add Herd",
-                                subtitle: "Record a new herd"
-                            ) {
-                                HapticManager.tap()
-                                showingAddHerd = true
                             }
                             
                             
