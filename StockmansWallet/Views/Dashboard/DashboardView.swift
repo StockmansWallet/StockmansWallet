@@ -275,19 +275,73 @@ struct DashboardView: View {
     @ViewBuilder
     private var contentPanel: some View {
         VStack(spacing: Theme.sectionSpacing) {
-            InteractiveChartView(
-                data: filteredHistory,
-                selectedDate: $selectedDate,
-                selectedValue: $selectedValue,
-                isScrubbing: $isScrubbing,
-                timeRange: $timeRange,
-                baseValue: baseValue,
-                onValueChange: { newValue, change in
-                    portfolioChange = change
+            // Debug: Show placeholder when insufficient data (< 2 points), otherwise show chart
+            if filteredHistory.count < 2 {
+                // Debug: Empty state for new portfolios - matches InteractiveChartView structure exactly
+                VStack(spacing: 0) {
+                    // Debug: Space for date hover pill (matches InteractiveChartView)
+                    Color.clear
+                        .frame(height: 32)
+                    
+                    // Debug: Main chart area placeholder
+                    VStack(spacing: 10) {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Theme.accent.opacity(0.6))
+                        
+                        Text("New Portfolio")
+                            .font(Theme.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Theme.primaryText)
+                        
+                        Text("Your portfolio is brand new! As time passes and your herd data accumulates, this chart will automatically populate with historical valuation data.")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 24)
+                            .lineLimit(4)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 200)
+                    .clipped()
+                    .background(
+                        RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                            .fill(Color.white.opacity(0.01))
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                            .strokeBorder(
+                                Color.white.opacity(0.1),
+                                style: StrokeStyle(
+                                    lineWidth: 1,
+                                    lineCap: .round
+                                )
+                            )
+                    )
+                    
+                    // Debug: Space for chart date labels (matches InteractiveChartView)
+                    Color.clear
+                        .frame(height: 32)
+                        .padding(.top, 10)
                 }
-            )
-            .padding(.horizontal, Theme.cardPadding)
-            .accessibilityHint("Drag your finger across the chart to explore values over time.")
+                .padding(.horizontal, Theme.cardPadding)
+                .accessibilityLabel("Chart placeholder")
+                .accessibilityHint("This chart will populate as your portfolio data accumulates over time.")
+            } else {
+                InteractiveChartView(
+                    data: filteredHistory,
+                    selectedDate: $selectedDate,
+                    selectedValue: $selectedValue,
+                    isScrubbing: $isScrubbing,
+                    timeRange: $timeRange,
+                    baseValue: baseValue,
+                    onValueChange: { newValue, change in
+                        portfolioChange = change
+                    }
+                )
+                .padding(.horizontal, Theme.cardPadding)
+                .accessibilityHint("Drag your finger across the chart to explore values over time.")
+            }
             
             TimeRangeSelector(
                 timeRange: $timeRange,
