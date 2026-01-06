@@ -21,13 +21,14 @@ struct AddHerdFlowView: View {
     @State private var selectedSpecies = "Cattle"
     @State private var selectedBreed = ""
     @State private var selectedCategory = ""
-    @State private var headCount = 0
-    @State private var averageAgeMonths = 0
-    @State private var averageWeightKg = 300
+    // Debug: Optional numeric values for friction-free input (HIG: Forms & Data Entry - empty fields)
+    @State private var headCount: Int? = nil
+    @State private var averageAgeMonths: Int? = nil
+    @State private var averageWeightKg: Int? = nil
     @State private var dailyGainGrams = 0
     @State private var mortalityRate = 0
-    @State private var calvesAtFootHeadCount = 0
-    @State private var calvesAtFootAgeMonths = 0
+    @State private var calvesAtFootHeadCount: Int? = nil
+    @State private var calvesAtFootAgeMonths: Int? = nil
     @State private var selectedSaleyard: String? = nil
     @State private var inCalf = true
     @State private var additionalInfo = ""
@@ -374,13 +375,13 @@ struct AddHerdFlowView: View {
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
             
-            // Debug: HIG-compliant text fields for known numeric values (head count, age)
+            // Debug: HIG-compliant text fields with empty placeholders for friction-free input
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Head Count")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
-                    TextField("0", value: $headCount, format: .number)
+                    TextField("", value: $headCount, format: .number)
                         .keyboardType(.numberPad)
                         .textFieldStyle(AddHerdTextFieldStyle())
                         .multilineTextAlignment(.center)
@@ -392,7 +393,7 @@ struct AddHerdFlowView: View {
                     Text("Average Age (mo)")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
-                    TextField("0", value: $averageAgeMonths, format: .number)
+                    TextField("", value: $averageAgeMonths, format: .number)
                         .keyboardType(.numberPad)
                         .textFieldStyle(AddHerdTextFieldStyle())
                         .multilineTextAlignment(.center)
@@ -403,12 +404,12 @@ struct AddHerdFlowView: View {
             
 
             
-            // Debug: Text field for weight (known measured value)
+            // Debug: Text field for weight with empty placeholder for friction-free input
             VStack(alignment: .leading, spacing: 8) {
                 Text("Average Weight (kg)")
                     .font(Theme.body)
                     .foregroundStyle(Theme.secondaryText)
-                TextField("0", value: $averageWeightKg, format: .number)
+                TextField("", value: $averageWeightKg, format: .number)
                     .keyboardType(.decimalPad)
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .multilineTextAlignment(.center)
@@ -473,13 +474,13 @@ struct AddHerdFlowView: View {
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 
-                // Debug: Text fields for known calf counts and ages
+                // Debug: Text fields with empty placeholders for friction-free input
                 HStack(spacing: 16) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Head Count")
                             .font(Theme.body)
                             .foregroundStyle(Theme.secondaryText)
-                        TextField("0", value: $calvesAtFootHeadCount, format: .number)
+                        TextField("", value: $calvesAtFootHeadCount, format: .number)
                             .keyboardType(.numberPad)
                             .textFieldStyle(AddHerdTextFieldStyle())
                             .multilineTextAlignment(.center)
@@ -491,7 +492,7 @@ struct AddHerdFlowView: View {
                         Text("Average Age (mo)")
                             .font(Theme.body)
                             .foregroundStyle(Theme.secondaryText)
-                        TextField("0", value: $calvesAtFootAgeMonths, format: .number)
+                        TextField("", value: $calvesAtFootAgeMonths, format: .number)
                             .keyboardType(.numberPad)
                             .textFieldStyle(AddHerdTextFieldStyle())
                             .multilineTextAlignment(.center)
@@ -566,6 +567,7 @@ struct AddHerdFlowView: View {
     }
     
     // MARK: - Validation
+    // Debug: Updated validation to handle optional numeric fields
     private var isStepValid: Bool {
         switch currentStep {
         case 1:
@@ -574,11 +576,11 @@ struct AddHerdFlowView: View {
             if isBreederCategory {
                 return true
             } else {
-                return headCount > 0 && averageWeightKg > 0
+                return (headCount ?? 0) > 0 && (averageWeightKg ?? 0) > 0
             }
         case 3:
             if isBreederCategory {
-                return headCount > 0 && averageWeightKg > 0
+                return (headCount ?? 0) > 0 && (averageWeightKg ?? 0) > 0
             } else {
                 return true
             }
@@ -595,6 +597,11 @@ struct AddHerdFlowView: View {
         
         let prefs = preferences.first ?? UserPreferences()
         let dailyWeightGain = Double(dailyGainGrams) / 1000.0
+        
+        // Debug: Safely unwrap optional numeric values with sensible defaults
+        let finalHeadCount = headCount ?? 1
+        let finalAgeMonths = averageAgeMonths ?? 0
+        let finalWeightKg = averageWeightKg ?? 300
         
         let sex: String
         if selectedCategory.lowercased().contains("steer")
@@ -624,9 +631,9 @@ struct AddHerdFlowView: View {
             breed: selectedBreed,
             sex: sex,
             category: selectedCategory,
-            ageMonths: averageAgeMonths,
-            headCount: headCount,
-            initialWeight: Double(averageWeightKg),
+            ageMonths: finalAgeMonths,
+            headCount: finalHeadCount,
+            initialWeight: Double(finalWeightKg),
             dailyWeightGain: dailyWeightGain,
             isBreeder: inCalf || selectedCategory.lowercased().contains("breeding"),
             selectedSaleyard: effectiveSaleyard
@@ -648,8 +655,8 @@ struct AddHerdFlowView: View {
         // Debug: Additional info for calves at foot and breeding program
         var infoParts: [String] = []
         if !additionalInfo.isEmpty { infoParts.append(additionalInfo) }
-        if calvesAtFootHeadCount > 0 {
-            infoParts.append("Calves at Foot: \(calvesAtFootHeadCount) head, \(calvesAtFootAgeMonths) months")
+        if let calvesCount = calvesAtFootHeadCount, let calvesAge = calvesAtFootAgeMonths, calvesCount > 0 {
+            infoParts.append("Calves at Foot: \(calvesCount) head, \(calvesAge) months")
         }
         if isBreederCategory {
             if controlledBreedingProgram {
