@@ -758,11 +758,15 @@ struct EnhancedHerdCard: View {
     @State private var isLoading = true
     
     var body: some View {
-        NavigationLink(destination: HerdDetailView(herd: herd)) {
+        // Debug: Capture herd ID early to avoid potential SwiftData access issues in NavigationLink
+        let herdId = herd.id
+        let herdName = herd.name
+        
+        NavigationLink(destination: HerdDetailView(herdId: herdId)) {
             VStack(alignment: .leading, spacing: 12) {
                 // Top Row: Herd Name (left, orange) and Chevron (right)
                 HStack {
-                    Text(herd.name)
+                    Text(herdName)
                         .font(Theme.headline)
                         .foregroundStyle(Theme.accent)
                     
@@ -1194,13 +1198,22 @@ struct SearchResultCard: View {
     }
     
     var body: some View {
-        NavigationLink(destination: HerdDetailView(herd: herd)) {
+        // Debug: Capture herd properties early to avoid SwiftData access issues
+        let herdId = herd.id
+        let herdName = herd.name
+        let herdHeadCount = herd.headCount
+        let herdBreed = herd.breed
+        let herdCategory = herd.category
+        let herdPaddock = herd.paddockName
+        let herdInfo = herd.additionalInfo
+        
+        NavigationLink(destination: HerdDetailView(herdId: herdId)) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 6) {
                         // Name with tag indicator
                         HStack(spacing: 8) {
-                            Text(herd.name)
+                            Text(herdName)
                                 .font(Theme.headline)
                                 .foregroundStyle(Theme.primaryText)
                             
@@ -1212,12 +1225,12 @@ struct SearchResultCard: View {
                         }
                         
                         // Details
-                        Text("\(herd.headCount) head • \(herd.breed) \(herd.category)")
+                        Text("\(herdHeadCount) head • \(herdBreed) \(herdCategory)")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                         
                         // Paddock location
-                        if let paddock = herd.paddockName, !paddock.isEmpty {
+                        if let paddock = herdPaddock, !paddock.isEmpty {
                             HStack(spacing: 4) {
                                 Image(systemName: "map.fill")
                                     .font(.system(size: 10))
@@ -1229,7 +1242,7 @@ struct SearchResultCard: View {
                         }
                         
                         // Additional info (may contain NLIS/tag details)
-                        if let info = herd.additionalInfo, !info.isEmpty {
+                        if let info = herdInfo, !info.isEmpty {
                             Text(info)
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.secondaryText)

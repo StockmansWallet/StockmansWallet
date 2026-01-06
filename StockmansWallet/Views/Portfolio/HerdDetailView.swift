@@ -13,115 +13,189 @@ import Charts
 struct HerdDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
+    @Query private var allHerds: [HerdGroup]
     
     // Debug: Use 'let' with @Observable instead of @StateObject
     let valuationEngine = ValuationEngine.shared
-    let herd: HerdGroup
+    
+    // Debug: Pass herd ID instead of object to avoid SwiftData context issues
+    let herdId: UUID
     
     @State private var valuation: HerdValuation?
     @State private var isLoading = true
     @State private var showingAnimalsList = false
     
+    // Debug: Fetch herd from current context using ID - safest SwiftData pattern
+    private var herd: HerdGroup? {
+        let foundHerd = allHerds.first(where: { $0.id == herdId })
+        // Debug: Log if herd not found to help diagnose issues
+        if foundHerd == nil {
+            print("⚠️ HerdDetailView: Herd with ID \(herdId) not found in context")
+            print("   Total herds in context: \(allHerds.count)")
+        }
+        return foundHerd
+    }
+    
+    // Convenience initializer for backward compatibility
+    init(herd: HerdGroup) {
+        self.herdId = herd.id
+    }
+    
+    // Primary initializer using herd ID
+    init(herdId: UUID) {
+        self.herdId = herdId
+    }
+    
     var body: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                // Debug: Total value card with herd name at the very top
-                if let valuation = valuation {
-                    TotalValueCard(herd: herd, valuation: valuation)
-                        .padding(.horizontal)
-                } else if isLoading {
-                    ProgressView()
-                        .tint(Theme.accent)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                }
-                
-                // Debug: Weight Growth Chart for visual insight
-                if herd.dailyWeightGain > 0, let valuation = valuation {
-                    WeightGrowthChart(herd: herd, projectedWeight: valuation.projectedWeight)
-                        .padding(.horizontal)
-                }
-                
-                // Debug: Primary valuation metrics
-                if let valuation = valuation {
-                    PrimaryMetricsCard(herd: herd, valuation: valuation)
-                        .padding(.horizontal)
-                }
-                
-                // Debug: Consolidated herd details - all key info in one card
-                HerdDetailsCard(herd: herd, valuation: valuation)
-                    .padding(.horizontal)
-                
-                // Debug: Breeding info only if applicable
-                if herd.isBreeder {
-                    BreedingDetailsCard(herd: herd)
-                        .padding(.horizontal)
-                }
-                
-                // Debug: Button to open searchable animal list sheet
-                Button {
-                    HapticManager.tap()
-                    showingAnimalsList = true
-                } label: {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("View Individual Animals")
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
-                            Text("Browse all individually tagged animals")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                        }
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(Theme.secondaryText.opacity(0.6))
+        // Debug: Guard against nil herd to prevent crashes from stale SwiftData references
+        if let activeHerd = herd {
+            ScrollView {
+                VStack(spacing: 20) {
+                    // Debug: Total value card with herd name at the very top
+                    if let valuation = valuation {
+                        TotalValueCard(herd: activeHerd, valuation: valuation)
+                            .padding(.horizontal)
+                    } else if isLoading {
+                        ProgressView()
+                            .tint(Theme.accent)
+                            .frame(maxWidth: .infinity)
+                            .padding()
                     }
-                    .padding(Theme.cardPadding)
+                    
+                    // Debug: Weight Growth Chart for visual insight
+                    // Safe access to herd properties with optional binding
+                    if !isLoading, activeHerd.dailyWeightGain > 0, let valuation = valuation {
+                        WeightGrowthChart(herd: activeHerd, projectedWeight: valuation.projectedWeight)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Debug: Primary valuation metrics
+                    if let valuation = valuation {
+                        PrimaryMetricsCard(herd: activeHerd, valuation: valuation)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Debug: Consolidated herd details - all key info in one card
+                    if !isLoading {
+                        HerdDetailsCard(herd: activeHerd, valuation: valuation)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Debug: Breeding info only if applicable
+                    if !isLoading, activeHerd.isBreeder {
+                        BreedingDetailsCard(herd: activeHerd)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Debug: Button to open searchable animal list sheet
+                    if !isLoading {
+                        Button {
+                            HapticManager.tap()
+                            showingAnimalsList = true
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("View Individual Animals")
+                                        .font(Theme.headline)
+                                        .foregroundStyle(Theme.primaryText)
+                                    Text("Browse all individually tagged animals")
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                }
+                                
+                                Spacer()
+                                
+                                Image(systemName: "chevron.right")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                            }
+                            .padding(Theme.cardPadding)
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .stitchedCard()
+                        .padding(.horizontal)
+                    }
                 }
-                .buttonStyle(PlainButtonStyle())
-                .stitchedCard()
-                .padding(.horizontal)
+                .frame(maxWidth: .infinity)
+                .padding(.bottom, 100)
             }
-            .frame(maxWidth: .infinity)
-            .padding(.bottom, 100)
-        }
-        .scrollContentBackground(.hidden)
-        .background(Theme.backgroundGradient)
-        .navigationTitle("Herd Details")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarTrailing) {
-                NavigationLink(destination: EditHerdView(herd: herd)) {
-                    Text("Edit")
-                        .foregroundStyle(Theme.accent)
+            .scrollContentBackground(.hidden)
+            .background(Theme.backgroundGradient)
+            .navigationTitle("Herd Details")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    NavigationLink(destination: EditHerdView(herd: activeHerd)) {
+                        Text("Edit")
+                            .foregroundStyle(Theme.accent)
+                    }
                 }
             }
-        }
-        .sheet(isPresented: $showingAnimalsList) {
-            AnimalListSheet(herd: herd)
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(Theme.sheetBackground)
-        }
-        .task {
-            await loadValuation()
+            .sheet(isPresented: $showingAnimalsList) {
+                AnimalListSheet(herd: activeHerd)
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.visible)
+                    .presentationBackground(Theme.sheetBackground)
+            }
+            .task {
+                await loadValuation()
+            }
+        } else {
+            // Debug: Show error if herd can't be found in context
+            VStack(spacing: 16) {
+                Image(systemName: "exclamationmark.triangle")
+                    .font(.system(size: 48))
+                    .foregroundStyle(.red)
+                
+                Text("Herd Not Found")
+                    .font(Theme.title)
+                    .foregroundStyle(Theme.primaryText)
+                
+                Text("This herd may have been deleted or is no longer available.")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Theme.backgroundGradient)
         }
     }
     
     private func loadValuation() async {
+        print("🔄 HerdDetailView: Starting loadValuation for herd ID: \(herdId)")
         await MainActor.run { isLoading = true }
+        
+        // Debug: Fetch herd from current context to avoid stale references
+        guard let activeHerd = await MainActor.run(body: { herd }) else {
+            print("❌ HerdDetailView: Failed to find herd in context")
+            await MainActor.run {
+                self.isLoading = false
+            }
+            return
+        }
+        
+        print("✅ HerdDetailView: Found herd: \(activeHerd.name)")
+        
         let prefs = preferences.first ?? UserPreferences()
-        let calculatedValuation = await valuationEngine.calculateHerdValue(
-            herd: herd,
-            preferences: prefs,
-            modelContext: modelContext
-        )
-        await MainActor.run {
-            self.valuation = calculatedValuation
-            self.isLoading = false
+        
+        do {
+            print("🔄 HerdDetailView: Calculating valuation...")
+            let calculatedValuation = await valuationEngine.calculateHerdValue(
+                herd: activeHerd,
+                preferences: prefs,
+                modelContext: modelContext
+            )
+            print("✅ HerdDetailView: Valuation calculated: \(calculatedValuation.netRealizableValue)")
+            await MainActor.run {
+                self.valuation = calculatedValuation
+                self.isLoading = false
+            }
+        } catch {
+            print("❌ HerdDetailView: Error calculating valuation: \(error)")
+            await MainActor.run {
+                self.isLoading = false
+            }
         }
     }
 }
@@ -178,10 +252,13 @@ struct WeightGrowthChart: View {
     let projectedWeight: Double
     
     // Debug: Generate weight progression data points
+    // Access all herd properties at once to avoid multiple SwiftData accesses
     private var weightData: [WeightDataPoint] {
+        // Debug: Capture herd properties safely in one go
         let daysHeld = herd.daysHeld
         let startWeight = herd.initialWeight
         let dwg = herd.dailyWeightGain
+        let createdDate = herd.createdAt
         
         // Generate data points for the chart
         var points: [WeightDataPoint] = []
@@ -190,7 +267,7 @@ struct WeightGrowthChart: View {
         
         for day in stride(from: 0, through: daysHeld, by: step) {
             let weight = startWeight + (dwg * Double(day))
-            let date = Calendar.current.date(byAdding: .day, value: day, to: herd.createdAt) ?? herd.createdAt
+            let date = Calendar.current.date(byAdding: .day, value: day, to: createdDate) ?? createdDate
             points.append(WeightDataPoint(date: date, weight: weight))
         }
         
@@ -587,7 +664,14 @@ struct IndividualAnimalRow: View {
     let animal: HerdGroup
     
     var body: some View {
-        NavigationLink(destination: HerdDetailView(herd: animal)) {
+        // Debug: Capture animal properties early to avoid SwiftData access issues
+        let animalId = animal.id
+        let animalName = animal.name
+        let animalBreed = animal.breed
+        let animalWeight = animal.currentWeight
+        let animalPaddock = animal.paddockName
+        
+        NavigationLink(destination: HerdDetailView(herdId: animalId)) {
             HStack(spacing: 12) {
                 // Tag icon
                 ZStack {
@@ -602,12 +686,12 @@ struct IndividualAnimalRow: View {
                 
                 // Animal info
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(animal.name)
+                    Text(animalName)
                         .font(Theme.headline)
                         .foregroundStyle(Theme.primaryText)
                     
                     HStack(spacing: 8) {
-                        Text(animal.breed)
+                        Text(animalBreed)
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                         
@@ -615,11 +699,11 @@ struct IndividualAnimalRow: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                         
-                        Text("\(Int(animal.currentWeight)) kg")
+                        Text("\(Int(animalWeight)) kg")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                         
-                        if let paddock = animal.paddockName, !paddock.isEmpty {
+                        if let paddock = animalPaddock, !paddock.isEmpty {
                             Text("•")
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.secondaryText)

@@ -8,7 +8,8 @@
 import Foundation
 
 // MARK: - Valuation Data Point (for charts like DashboardView)
-struct ValuationDataPoint: Identifiable, Hashable {
+// Debug: Made Codable to support chart data caching for instant display
+struct ValuationDataPoint: Identifiable, Hashable, Codable {
     let id: UUID
     let date: Date
     let value: Double

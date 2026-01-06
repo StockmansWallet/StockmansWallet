@@ -105,6 +105,7 @@ final class UserPreferences {
     // Debug: Store last known portfolio value for "crypto-style" value reveal on dashboard load
     var lastPortfolioValue: Double // Last calculated portfolio value
     var lastPortfolioUpdateDate: Date? // When the value was last updated
+    var lastChartData: Data? // Debug: Cached chart history as JSON for instant display
     
     init() {
         self.id = UUID()
@@ -149,6 +150,7 @@ final class UserPreferences {
         self.customBackgroundImages = [] // Debug: Start with empty array of custom images
         self.lastPortfolioValue = 0.0 // Debug: Start at 0, will be updated after first calculation
         self.lastPortfolioUpdateDate = nil // Debug: No previous update
+        self.lastChartData = nil // Debug: No cached chart data initially
     }
     
     // Helper to get/set role as enum
