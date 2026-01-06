@@ -343,9 +343,9 @@ struct PortfolioStatsCards: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // Debug: Total Portfolio Value - no background for cleaner look
+            // Debug: Total Value - simplified title, no background for cleaner look
             VStack(spacing: 8) {
-                Text("Total Portfolio Value")
+                Text("Total Value")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
                 
@@ -363,36 +363,42 @@ struct PortfolioStatsCards: View {
             .frame(maxWidth: .infinity)
             .padding()
             
-            // Debug: Total Head and Active Herds - no backgrounds for cleaner look
-            HStack(spacing: 16) {
+            // Debug: Combined stats card with horizontal layout for cleaner, more compact design
+            HStack(spacing: 24) {
                 // Total Head
-                VStack(spacing: 8) {
+                HStack(spacing: 8) {
                     Text("Total Head")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                     Text("\(summary.totalHeadCount)")
-                        .font(.system(size: 36, weight: .bold))
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
+                .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // Divider
+                Rectangle()
+                    .fill(Theme.separator.opacity(0.3))
+                    .frame(width: 1, height: 30)
                 
                 // Active Herds
-                VStack(spacing: 8) {
+                HStack(spacing: 8) {
                     Text("Active Herds")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                     Text("\(summary.activeHerdCount)")
-                        .font(.system(size: 36, weight: .bold))
+                        .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
                 }
-                .frame(maxWidth: .infinity)
-                .padding()
+                .frame(maxWidth: .infinity, alignment: .trailing)
             }
+            .padding()
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
     }
 }

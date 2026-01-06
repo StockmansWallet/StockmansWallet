@@ -62,6 +62,12 @@ struct HerdDetailView: View {
                             .padding()
                     }
                     
+                    // Debug: Horizontal stats card for herd type and head count
+                    if !isLoading {
+                        HerdStatsCard(herd: activeHerd)
+                            .padding(.horizontal)
+                    }
+                    
                     // Debug: Weight Growth Chart for visual insight
                     // Pass data directly to avoid SwiftData access issues
                     if !isLoading, let valuation = valuation, activeHerd.dailyWeightGain > 0 {
@@ -241,6 +247,50 @@ struct TotalValueCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
+    }
+}
+
+// MARK: - Herd Stats Card
+// Debug: Horizontal card showing species and total head - matches Portfolio page styling
+struct HerdStatsCard: View {
+    let herd: HerdGroup
+    
+    var body: some View {
+        HStack(spacing: 24) {
+            // Species
+            HStack(spacing: 8) {
+                Text("Species")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                Text(herd.species)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            // Vertical divider - using Rectangle like Portfolio page
+            Rectangle()
+                .fill(Theme.separator.opacity(0.3))
+                .frame(width: 1, height: 30)
+            
+            // Total Head
+            HStack(spacing: 8) {
+                Text("Total Head")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                Text("\(herd.headCount)")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+            }
+            .frame(maxWidth: .infinity, alignment: .trailing)
+        }
+        .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 
