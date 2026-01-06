@@ -385,8 +385,6 @@ struct SecondaryFilterButton: View {
     
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: icon)
-                .font(.system(size: 13))
             Text(title)
                 .font(.system(size: 14, weight: .medium))
                 .lineLimit(1)
