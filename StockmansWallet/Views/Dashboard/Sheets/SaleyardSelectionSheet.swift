@@ -2,16 +2,14 @@
 //  SaleyardSelectionSheet.swift
 //  StockmansWallet
 //
-//  Shared reusable component for saleyard selection in Add Herd and Add Individual flows
-//  Debug: Single source of truth for saleyard picker
+//  HIG-compliant searchable sheet for selecting from 31+ saleyards
+//  Follows iOS patterns: search bar, grouped list, clear selection action
 //
 
 import SwiftUI
 import SwiftData
 
-// MARK: - Add Flow Saleyard Selection Sheet
-// Debug: HIG-compliant searchable sheet for selecting saleyard during add herd/animal flows
-struct AddFlowSaleyardSelectionSheet: View {
+struct SaleyardSelectionSheet: View {
     @Binding var selectedSaleyard: String?
     @Environment(\.dismiss) private var dismiss
     @Query private var preferences: [UserPreferences]
@@ -37,7 +35,7 @@ struct AddFlowSaleyardSelectionSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                // Debug: Default option section
+                // Debug: Default option section - always visible at top
                 Section {
                     Button(action: {
                         HapticManager.tap()
@@ -46,15 +44,12 @@ struct AddFlowSaleyardSelectionSheet: View {
                     }) {
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
-                                Text("Use Default")
+                                Text("Your Selected Saleyards")
                                     .font(Theme.body)
                                     .foregroundStyle(Theme.primaryText)
-                                
-                                if let defaultSaleyard = userPrefs.defaultSaleyard {
-                                    Text(defaultSaleyard)
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.secondaryText)
-                                }
+                                Text("Uses each herd's configured saleyard")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
                             }
                             
                             Spacer()
@@ -68,7 +63,11 @@ struct AddFlowSaleyardSelectionSheet: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
-                    .listRowBackground(Color.clear)
+                    .listRowBackground(Color.clear) // Debug: Remove default list row background
+                } header: {
+                    Text("Default")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
                 }
                 
                 // Debug: All saleyards section - filterable by search
@@ -96,10 +95,10 @@ struct AddFlowSaleyardSelectionSheet: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .listRowBackground(Color.clear)
+                        .listRowBackground(Color.clear) // Debug: Remove default list row background
                     }
                 } header: {
-                    Text("Select Specific Saleyard")
+                    Text("Compare with Specific Saleyard")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                 }
@@ -107,32 +106,50 @@ struct AddFlowSaleyardSelectionSheet: View {
                 // Debug: Show helpful message if no results
                 if filteredSaleyards.isEmpty {
                     Section {
-                        Text("No saleyards found")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondaryText)
-                            .frame(maxWidth: .infinity, alignment: .center)
-                            .padding()
+                        VStack(spacing: 12) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 40))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                            
+                            Text("No saleyards found")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            Text("Try a different search term")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
+                        .listRowBackground(Color.clear) // Debug: Remove default list row background
                     }
-                    .listRowBackground(Color.clear)
                 }
             }
-            .searchable(text: $searchText, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search saleyards")
-            .listStyle(.insetGrouped)
-            .scrollContentBackground(.hidden)
-            .background(Theme.background)
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Search saleyards"
+            )
             .navigationTitle("Select Saleyard")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
+                ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
+                        HapticManager.tap()
                         dismiss()
                     }
                     .foregroundStyle(Theme.accent)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.backgroundColor)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
     }
+}
+
+#Preview {
+    SaleyardSelectionSheet(selectedSaleyard: .constant("Wagga Wagga"))
 }
 

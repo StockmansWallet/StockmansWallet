@@ -250,7 +250,7 @@ struct AddHerdFlowView: View {
                 .presentationBackground(Theme.sheetBackground)
             }
             .sheet(isPresented: $showingSaleyardPicker) {
-                AddFlowSaleyardSelectionSheet(selectedSaleyard: $selectedSaleyard)
+                SaleyardSelectionSheet(selectedSaleyard: $selectedSaleyard)
                     .presentationBackground(Theme.sheetBackground)
             }
             .background(Theme.sheetBackground.ignoresSafeArea())
