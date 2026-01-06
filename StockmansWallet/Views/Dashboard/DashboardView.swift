@@ -488,25 +488,9 @@ struct DashboardView: View {
     }
     
     // Debug: Value reveal - show last value, hold with pulse, then transition to new value
-    // Only triggers when value has changed (new herd, sold animal, app launch, etc.)
+    // NOTE: Caller should check if value changed before calling this function
     // Uses simple SwiftUI numeric text animation (same as chart scrubbing)
     private func updateDisplayValueWithDelay(newValue: Double, lastValue: Double) async {
-        #if DEBUG
-        print("💰 updateDisplayValueWithDelay: lastValue=\(lastValue), newValue=\(newValue), diff=\(abs(newValue - lastValue))")
-        #endif
-        
-        // Debug: Check if value has actually changed (threshold of $1 to avoid floating point issues)
-        guard abs(newValue - lastValue) > 1.0 else {
-            #if DEBUG
-            print("💰 No significant change, updating immediately")
-            #endif
-            // No significant change, update immediately
-            await MainActor.run {
-                displayValue = newValue
-            }
-            return
-        }
-        
         #if DEBUG
         print("💰 Step 1: Showing last value \(lastValue)")
         #endif
@@ -519,15 +503,15 @@ struct DashboardView: View {
         try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
         
         #if DEBUG
-        print("💰 Step 2: Starting pulse/glow and holding for 2 seconds...")
+        print("💰 Step 2: Starting pulse/glow and holding for 1.5 seconds...")
         #endif
         // Debug: Enable glow while holding at old value
         await MainActor.run {
             isUpdatingValue = true
         }
         
-        // Debug: Hold at old value for 2 seconds with pulse/glow
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        // Debug: Hold at old value for 1.5 seconds with pulse/glow (reduced from 2s for faster UX)
+        try? await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
         
         #if DEBUG
         print("💰 Step 3: Stopping pulse before value changes")
@@ -648,7 +632,7 @@ struct DashboardView: View {
         await MainActor.run {
             self.isLoading = true
             self.loadError = nil
-            self.valuationHistory = []
+            // Debug: Don't clear valuationHistory - keep showing cached data while refreshing
         }
         
         // Debug: Fetch preferences and active herds
@@ -778,21 +762,36 @@ struct DashboardView: View {
         
         HapticManager.tap()
         
-        // Debug: Crypto-style value reveal - run in parallel so it doesn't block chart loading
+        // Debug: Crypto-style value reveal - but only if value actually changed significantly
+        // Check difference before starting animation to avoid unnecessary delays
+        let valueDifference = abs(valuations - lastKnownValue)
         #if DEBUG
-        print("💰 Starting value animation in parallel with chart loading")
+        print("💰 Value difference: $\(valueDifference) (lastKnown: $\(lastKnownValue), new: $\(valuations))")
         #endif
-        Task {
+        
+        if valueDifference > 1.0 {
+            // Debug: Run animation (blocks chart loading intentionally for better UX)
+            #if DEBUG
+            print("💰 Running value animation (significant change detected)")
+            #endif
             await updateDisplayValueWithDelay(newValue: valuations, lastValue: lastKnownValue)
-            
-            // Debug: Save new portfolio value to preferences AFTER animation completes
+        } else {
+            // Debug: No significant change, update immediately
+            #if DEBUG
+            print("💰 Updating value immediately (no significant change)")
+            #endif
             await MainActor.run {
-                prefs.lastPortfolioValue = valuations
-                prefs.lastPortfolioUpdateDate = Date()
-                #if DEBUG
-                print("💰 Saved new portfolio value to preferences: \(valuations)")
-                #endif
+                self.displayValue = valuations
             }
+        }
+        
+        // Debug: Save new portfolio value to preferences after value update
+        await MainActor.run {
+            prefs.lastPortfolioValue = valuations
+            prefs.lastPortfolioUpdateDate = Date()
+            #if DEBUG
+            print("💰 Saved new portfolio value to preferences: \(valuations)")
+            #endif
         }
         
         // Debug: Progressive chart loading for faster perceived performance
@@ -835,12 +834,28 @@ struct DashboardView: View {
     }
     
     // Debug: Progressive historical data loading for faster chart appearance
-    // Phase 1: Current value only (instant)
-    // Phase 2: Last 30 days (fast - most relevant data)
-    // Phase 3: Full history (background - complete picture)
+    // Phase 1: Current value only (instant) - only if no cached data
+    // Phase 2: Full history (background - complete picture)
     private func loadHistoricalDataProgressively(activeHerds: [HerdGroup], prefs: UserPreferences, portfolioValue: Double) async {
-        // Debug: Simplified - just load full history directly
-        // Cached data is already showing, we're just refreshing in background
+        // Debug: If no chart data visible, add today's point immediately for instant feedback
+        let hasVisibleData = await MainActor.run { !self.valuationHistory.isEmpty }
+        
+        if !hasVisibleData {
+            #if DEBUG
+            print("📊 No visible data - adding current value immediately")
+            #endif
+            // Debug: Add today's value immediately so chart appears instantly
+            await MainActor.run {
+                self.valuationHistory = [ValuationDataPoint(
+                    date: Date(),
+                    value: portfolioValue,
+                    physicalValue: portfolioValue,
+                    breedingAccrual: self.unrealizedGains
+                )]
+            }
+        }
+        
+        // Debug: Now load full history (will replace the single point or cached data)
         #if DEBUG
         print("📊 Loading full historical data...")
         #endif
