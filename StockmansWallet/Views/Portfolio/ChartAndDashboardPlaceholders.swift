@@ -359,10 +359,10 @@ struct HerdDynamicsView: View {
                     )
                 }
                 
-                // Breeding Accrual
+                // Calf Accrual
                 if let breedingMetrics = calculateBreedingMetrics() {
                     BiologicalMetricRow(
-                        title: "Breeding Accrual",
+                        title: "Calf Accrual",
                         subtitle: "\(breedingMetrics.expectedProgeny) expected progeny",
                         value: breedingMetrics.valueImpact,
                         trend: .up
