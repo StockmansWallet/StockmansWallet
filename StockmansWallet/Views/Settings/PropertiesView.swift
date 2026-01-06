@@ -24,7 +24,17 @@ struct PropertiesView: View {
         }
     }
     
+    // Debug: Separate real and simulated properties
+    private var realProperties: [Property] {
+        properties.filter { !$0.isSimulated }
+    }
+    
+    private var simulatedProperties: [Property] {
+        properties.filter { $0.isSimulated }
+    }
+    
     @State private var showingAddProperty = false
+    @State private var showingAddSimulatedProperty = false
     @State private var selectedProperty: Property?
     
     var body: some View {
@@ -70,44 +80,132 @@ struct PropertiesView: View {
                 .padding(.horizontal)
                 .padding(.top)
                 
-                // Debug: Properties list
-                if properties.isEmpty {
-                    // Empty state
-                    VStack(spacing: 16) {
-                        Image(systemName: "building.2.crop.circle")
-                            .font(.system(size: 60))
-                            .foregroundStyle(Theme.secondaryText.opacity(0.5))
-                        
-                        Text("No Properties Added")
-                            .font(Theme.headline)
+                // Debug: Real Properties Section
+                VStack(alignment: .leading, spacing: 12) {
+                    // Section header
+                    HStack {
+                        Text("Real Properties")
+                            .font(Theme.subheadline)
+                            .fontWeight(.semibold)
                             .foregroundStyle(Theme.primaryText)
-                        
-                        Text("Add your first property to get started managing your farm details and preferences.")
+                        Spacer()
+                        Text("\(realProperties.count)")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
-                            .multilineTextAlignment(.center)
-                            .padding(.horizontal, 32)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 40)
                     .padding(.horizontal)
-                } else {
-                    VStack(spacing: 12) {
-                        ForEach(properties) { property in
-                            PropertyCard(
-                                property: property,
-                                onTap: {
-                                    HapticManager.tap()
-                                    selectedProperty = property
-                                },
-                                onSetDefault: {
-                                    HapticManager.success()
-                                    setDefaultProperty(property)
-                                }
-                            )
+                    
+                    // Real properties list
+                    if realProperties.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "building.2.crop.circle")
+                                .font(.system(size: 40))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                            
+                            Text("No Real Properties")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
                         }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 32)
+                    } else {
+                        VStack(spacing: 12) {
+                            ForEach(realProperties) { property in
+                                PropertyCard(
+                                    property: property,
+                                    onTap: {
+                                        HapticManager.tap()
+                                        selectedProperty = property
+                                    },
+                                    onSetDefault: {
+                                        HapticManager.success()
+                                        setDefaultProperty(property)
+                                    }
+                                )
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                }
+                
+                // Debug: Simulated Properties Section
+                VStack(alignment: .leading, spacing: 12) {
+                    // Section header
+                    HStack {
+                        HStack(spacing: 6) {
+                            Image(systemName: "flask.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Theme.accent)
+                            Text("Simulated Properties")
+                                .font(Theme.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(Theme.primaryText)
+                        }
+                        Spacer()
+                        Text("\(simulatedProperties.count)")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
                     }
                     .padding(.horizontal)
+                    
+                    // Simulated properties list
+                    if simulatedProperties.isEmpty {
+                        VStack(spacing: 12) {
+                            Image(systemName: "flask")
+                                .font(.system(size: 40))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                            
+                            Text("No Simulated Properties")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            Text("Add test properties for development and experimentation")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 32)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 32)
+                    } else {
+                        VStack(spacing: 12) {
+                            ForEach(simulatedProperties) { property in
+                                PropertyCard(
+                                    property: property,
+                                    onTap: {
+                                        HapticManager.tap()
+                                        selectedProperty = property
+                                    },
+                                    onSetDefault: {
+                                        HapticManager.success()
+                                        setDefaultProperty(property)
+                                    }
+                                )
+                            }
+                        }
+                        .padding(.horizontal)
+                    }
+                    
+                    // Debug: Add Simulated Property button
+                    Button {
+                        HapticManager.tap()
+                        showingAddSimulatedProperty = true
+                    } label: {
+                        HStack {
+                            Image(systemName: "plus.circle.fill")
+                                .font(.system(size: 16, weight: .semibold))
+                            Text("Add Simulated Property")
+                                .font(Theme.body)
+                                .fontWeight(.semibold)
+                        }
+                        .foregroundStyle(Theme.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Theme.accent.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                    .padding(.horizontal)
+                    .padding(.top, 8)
                 }
             }
             .padding(.bottom, 100)
@@ -117,7 +215,10 @@ struct PropertiesView: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
         .sheet(isPresented: $showingAddProperty) {
-            AddPropertyView()
+            AddPropertyView(isSimulated: false)
+        }
+        .sheet(isPresented: $showingAddSimulatedProperty) {
+            AddPropertyView(isSimulated: true)
         }
         .sheet(item: $selectedProperty) { property in
             EditPropertyView(property: property)
@@ -155,15 +256,29 @@ struct PropertyCard: View {
                             Circle()
                                 .fill(Theme.accent.opacity(0.15))
                                 .frame(width: 44, height: 44)
-                            Image(systemName: "building.2.fill")
+                            // Debug: Different icons for real vs simulated properties
+                            Image(systemName: property.isSimulated ? "flask.fill" : "building.2.fill")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(Theme.accent)
                         }
                         
                         VStack(alignment: .leading, spacing: 2) {
-                            Text(property.propertyName)
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
+                            HStack(spacing: 6) {
+                                Text(property.propertyName)
+                                    .font(Theme.headline)
+                                    .foregroundStyle(Theme.primaryText)
+                                
+                                // Debug: Simulated badge
+                                if property.isSimulated {
+                                    Text("SIMULATED")
+                                        .font(.system(size: 9, weight: .bold))
+                                        .foregroundStyle(Theme.accent)
+                                        .padding(.horizontal, 6)
+                                        .padding(.vertical, 2)
+                                        .background(Theme.accent.opacity(0.1))
+                                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                                }
+                            }
                             
                             if let pic = property.propertyPIC {
                                 Text("PIC: \(pic)")
@@ -262,11 +377,13 @@ struct PropertyDetailRow: View {
 }
 
 // MARK: - Add Property View
-// Debug: Sheet for adding a new property
+// Debug: Sheet for adding a new property (real or simulated)
 struct AddPropertyView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query private var allProperties: [Property]
+    
+    let isSimulated: Bool // Debug: Whether this is a simulated property
     
     @State private var propertyName = ""
     @State private var propertyPIC = ""
@@ -279,6 +396,27 @@ struct AddPropertyView: View {
     var body: some View {
         NavigationStack {
             Form {
+                // Debug: Show simulated property notice
+                if isSimulated {
+                    Section {
+                        HStack(spacing: 12) {
+                            Image(systemName: "flask.fill")
+                                .foregroundStyle(Theme.accent)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Simulated Property")
+                                    .font(Theme.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(Theme.primaryText)
+                                Text("For testing and development purposes only")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(Theme.secondaryText)
+                            }
+                        }
+                        .padding(.vertical, 4)
+                    }
+                    .listRowBackground(Theme.accent.opacity(0.1))
+                }
+                
                 Section("Property Details") {
                     TextField("Property Name", text: $propertyName)
                     TextField("PIC (optional)", text: $propertyPIC)
@@ -305,7 +443,7 @@ struct AddPropertyView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient)
-            .navigationTitle("Add Property")
+            .navigationTitle(isSimulated ? "Add Simulated Property" : "Add Property")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -327,13 +465,14 @@ struct AddPropertyView: View {
         }
     }
     
-    // Debug: Add the new property
+    // Debug: Add the new property (real or simulated)
     private func addProperty() {
         let property = Property(
             propertyName: propertyName,
             propertyPIC: propertyPIC.isEmpty ? nil : propertyPIC,
             state: state,
-            isDefault: isDefault || allProperties.isEmpty // First property is always default
+            isDefault: isDefault || allProperties.isEmpty, // First property is always default
+            isSimulated: isSimulated
         )
         
         property.region = region.isEmpty ? nil : region

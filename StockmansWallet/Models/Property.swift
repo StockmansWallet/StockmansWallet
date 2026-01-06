@@ -20,6 +20,7 @@ final class Property {
     var propertyName: String
     var propertyPIC: String? // Property Identification Code
     var isDefault: Bool // Primary/default property
+    var isSimulated: Bool // Debug: Simulated/test property for development
     
     // MARK: - Location
     var state: String // "NSW", "VIC", "QLD", etc.
@@ -51,7 +52,8 @@ final class Property {
         propertyName: String,
         propertyPIC: String? = nil,
         state: String = "QLD",
-        isDefault: Bool = false
+        isDefault: Bool = false,
+        isSimulated: Bool = false
     ) {
         self.id = UUID()
         self.createdAt = Date()
@@ -60,6 +62,7 @@ final class Property {
         self.propertyPIC = propertyPIC
         self.state = state
         self.isDefault = isDefault
+        self.isSimulated = isSimulated
         self.region = nil
         self.address = nil
         self.latitude = nil
