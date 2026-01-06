@@ -38,11 +38,14 @@ struct SignInPage: View {
         case confirmPassword
     }
     
+    // Debug: Demo/Dev mode - simplified validation without password requirements
     private var canProceed: Bool {
         if isSignUp {
-            return !firstName.isEmpty && !lastName.isEmpty && !email.isEmpty && !password.isEmpty && password == confirmPassword && email.contains("@")
+            // Debug: For sign up, only require name and valid email (no password for demo)
+            return !firstName.isEmpty && !lastName.isEmpty && !email.isEmpty && email.contains("@")
         } else {
-            return !email.isEmpty && !password.isEmpty
+            // Debug: For sign in, only require email (no password for demo)
+            return !email.isEmpty
         }
     }
     
@@ -61,7 +64,7 @@ struct SignInPage: View {
                                 .multilineTextAlignment(.center)
                                 .accessibilityAddTraits(.isHeader)
                             
-                            Text(isSignUp ? "Get started with Stockman's Wallet" : "Sign in to manage your livestock portfolio")
+                            Text(isSignUp ? "Get started with Stockman's Wallet (Demo Mode - No password required)" : "Sign in to manage your livestock portfolio")
                                 .font(.body)
                                 .foregroundStyle(Theme.secondaryText)
                                 .multilineTextAlignment(.center)
@@ -90,7 +93,7 @@ struct SignInPage: View {
                                     .submitLabel(.next) // Debug: iOS 26 HIG - Proper return key label
                                     .focused($focusedField, equals: .lastName)
                                     .onSubmit {
-                                        // Debug: iOS 26 HIG - Move to next field on return
+                                        // Debug: Demo - Move to email (last field in sign up)
                                         focusedField = .email
                                     }
                             }
@@ -101,80 +104,33 @@ struct SignInPage: View {
                                 .textContentType(.emailAddress)
                                 .autocapitalization(.none)
                                 .autocorrectionDisabled()
-                                .submitLabel(.next) // Debug: iOS 26 HIG - Proper return key label
+                                .submitLabel(.done) // Debug: Demo - Email is now the last field for sign up
                                 .focused($focusedField, equals: .email)
                                 .onSubmit {
-                                    // Debug: iOS 26 HIG - Move to next field on return
-                                    focusedField = .password
+                                    // Debug: Demo - Dismiss keyboard after email for sign up
+                                    focusedField = nil
                                 }
                             
-                            // Debug: Password field with integrated eye icon overlay
-                            ZStack(alignment: .trailing) {
-                                Group {
-                                    if showPassword {
-                                        TextField("Password", text: $password)
-                                            .textContentType(.password)
-                                            .submitLabel(isSignUp ? .next : .done) // Debug: iOS 26 HIG - Conditional label
-                                            .focused($focusedField, equals: .password)
-                                            .onSubmit {
-                                                // Debug: iOS 26 HIG - Navigate based on mode
-                                                if isSignUp {
-                                                    focusedField = .confirmPassword
-                                                } else {
-                                                    focusedField = nil
-                                                }
-                                            }
-                                    } else {
-                                        SecureField("Password", text: $password)
-                                            .textContentType(.password)
-                                            .submitLabel(isSignUp ? .next : .done) // Debug: iOS 26 HIG - Conditional label
-                                            .focused($focusedField, equals: .password)
-                                            .onSubmit {
-                                                // Debug: iOS 26 HIG - Navigate based on mode
-                                                if isSignUp {
-                                                    focusedField = .confirmPassword
-                                                } else {
-                                                    focusedField = nil
-                                                }
-                                            }
-                                    }
-                                }
-                                .textFieldStyle(SignInTextFieldStyle())
-                                
-                                Button {
-                                    HapticManager.tap()
-                                    showPassword.toggle()
-                                } label: {
-                                    Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
-                                        .font(.system(size: 16))
-                                        .foregroundStyle(Theme.secondaryText)
-                                        .frame(width: 44, height: 44)
-                                        .contentShape(Rectangle())
-                                }
-                                .accessibilityLabel(showPassword ? "Hide password" : "Show password")
-                                .padding(.trailing, 8)
-                            }
-                            
-                            if isSignUp {
-                                // Debug: Confirm password with integrated eye icon overlay
+                            // Debug: Password fields hidden for demo/dev - users can sign up with just name and email
+                            // TODO: Re-enable for production by removing this condition
+                            if !isSignUp {
+                                // Debug: Password field only shown for sign in (kept for demo purposes)
                                 ZStack(alignment: .trailing) {
                                     Group {
-                                        if showConfirmPassword {
-                                            TextField("Confirm Password", text: $confirmPassword)
-                                                .textContentType(.newPassword)
-                                                .submitLabel(.done) // Debug: iOS 26 HIG - Done label for last field
-                                                .focused($focusedField, equals: .confirmPassword)
+                                        if showPassword {
+                                            TextField("Password", text: $password)
+                                                .textContentType(.password)
+                                                .submitLabel(.done)
+                                                .focused($focusedField, equals: .password)
                                                 .onSubmit {
-                                                    // Debug: iOS 26 HIG - Dismiss keyboard on last field
                                                     focusedField = nil
                                                 }
                                         } else {
-                                            SecureField("Confirm Password", text: $confirmPassword)
-                                                .textContentType(.newPassword)
-                                                .submitLabel(.done) // Debug: iOS 26 HIG - Done label for last field
-                                                .focused($focusedField, equals: .confirmPassword)
+                                            SecureField("Password", text: $password)
+                                                .textContentType(.password)
+                                                .submitLabel(.done)
+                                                .focused($focusedField, equals: .password)
                                                 .onSubmit {
-                                                    // Debug: iOS 26 HIG - Dismiss keyboard on last field
                                                     focusedField = nil
                                                 }
                                         }
@@ -183,23 +139,16 @@ struct SignInPage: View {
                                     
                                     Button {
                                         HapticManager.tap()
-                                        showConfirmPassword.toggle()
+                                        showPassword.toggle()
                                     } label: {
-                                        Image(systemName: showConfirmPassword ? "eye.slash.fill" : "eye.fill")
+                                        Image(systemName: showPassword ? "eye.slash.fill" : "eye.fill")
                                             .font(.system(size: 16))
                                             .foregroundStyle(Theme.secondaryText)
                                             .frame(width: 44, height: 44)
                                             .contentShape(Rectangle())
                                     }
-                                    .accessibilityLabel(showConfirmPassword ? "Hide password" : "Show password")
+                                    .accessibilityLabel(showPassword ? "Hide password" : "Show password")
                                     .padding(.trailing, 8)
-                                }
-                                
-                                if !password.isEmpty && password != confirmPassword {
-                                    Text("Passwords do not match")
-                                        .font(.caption)
-                                        .foregroundStyle(.red)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
                                 }
                             }
                         }

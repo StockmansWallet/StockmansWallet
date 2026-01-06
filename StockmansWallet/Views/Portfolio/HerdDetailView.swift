@@ -63,10 +63,16 @@ struct HerdDetailView: View {
                     }
                     
                     // Debug: Weight Growth Chart for visual insight
-                    // Safe access to herd properties with optional binding
-                    if !isLoading, activeHerd.dailyWeightGain > 0, let valuation = valuation {
-                        WeightGrowthChart(herd: activeHerd, projectedWeight: valuation.projectedWeight)
-                            .padding(.horizontal)
+                    // Pass data directly to avoid SwiftData access issues
+                    if !isLoading, let valuation = valuation, activeHerd.dailyWeightGain > 0 {
+                        WeightGrowthChart(
+                            initialWeight: activeHerd.initialWeight,
+                            dailyWeightGain: activeHerd.dailyWeightGain,
+                            daysHeld: activeHerd.daysHeld,
+                            createdAt: activeHerd.createdAt,
+                            projectedWeight: valuation.projectedWeight
+                        )
+                        .padding(.horizontal)
                     }
                     
                     // Debug: Primary valuation metrics
@@ -175,27 +181,22 @@ struct HerdDetailView: View {
             return
         }
         
-        print("✅ HerdDetailView: Found herd: \(activeHerd.name)")
+        // Debug: Log herd details safely
+        let herdName = activeHerd.name
+        print("✅ HerdDetailView: Found herd: \(herdName)")
         
         let prefs = preferences.first ?? UserPreferences()
         
-        do {
-            print("🔄 HerdDetailView: Calculating valuation...")
-            let calculatedValuation = await valuationEngine.calculateHerdValue(
-                herd: activeHerd,
-                preferences: prefs,
-                modelContext: modelContext
-            )
-            print("✅ HerdDetailView: Valuation calculated: \(calculatedValuation.netRealizableValue)")
-            await MainActor.run {
-                self.valuation = calculatedValuation
-                self.isLoading = false
-            }
-        } catch {
-            print("❌ HerdDetailView: Error calculating valuation: \(error)")
-            await MainActor.run {
-                self.isLoading = false
-            }
+        print("🔄 HerdDetailView: Calculating valuation...")
+        let calculatedValuation = await valuationEngine.calculateHerdValue(
+            herd: activeHerd,
+            preferences: prefs,
+            modelContext: modelContext
+        )
+        print("✅ HerdDetailView: Valuation calculated: \(calculatedValuation.netRealizableValue)")
+        await MainActor.run {
+            self.valuation = calculatedValuation
+            self.isLoading = false
         }
     }
 }
@@ -247,18 +248,21 @@ struct TotalValueCard: View {
 
 // MARK: - Weight Growth Chart
 // Debug: Visual representation of weight gain over time
+// Pass data directly instead of HerdGroup object to avoid SwiftData access issues
 struct WeightGrowthChart: View {
-    let herd: HerdGroup
+    let initialWeight: Double
+    let dailyWeightGain: Double
+    let daysHeld: Int
+    let createdAt: Date
     let projectedWeight: Double
     
-    // Debug: Generate weight progression data points
-    // Access all herd properties at once to avoid multiple SwiftData accesses
+    // Debug: Generate weight progression data points from passed-in data
     private var weightData: [WeightDataPoint] {
-        // Debug: Capture herd properties safely in one go
-        let daysHeld = herd.daysHeld
-        let startWeight = herd.initialWeight
-        let dwg = herd.dailyWeightGain
-        let createdDate = herd.createdAt
+        // Debug: Guard against division by zero for newly created herds
+        guard daysHeld > 0 else {
+            // Return just the starting point for brand new herds
+            return [WeightDataPoint(date: createdAt, weight: initialWeight)]
+        }
         
         // Generate data points for the chart
         var points: [WeightDataPoint] = []
@@ -266,8 +270,8 @@ struct WeightGrowthChart: View {
         let step = max(1, daysHeld / intervals)
         
         for day in stride(from: 0, through: daysHeld, by: step) {
-            let weight = startWeight + (dwg * Double(day))
-            let date = Calendar.current.date(byAdding: .day, value: day, to: createdDate) ?? createdDate
+            let weight = initialWeight + (dailyWeightGain * Double(day))
+            let date = Calendar.current.date(byAdding: .day, value: day, to: createdAt) ?? createdAt
             points.append(WeightDataPoint(date: date, weight: weight))
         }
         
@@ -281,12 +285,12 @@ struct WeightGrowthChart: View {
                     Text("Weight Growth")
                         .font(Theme.headline)
                         .foregroundStyle(Theme.primaryText)
-                    Text("\(Int(herd.initialWeight)) → \(Int(projectedWeight)) kg")
+                    Text("\(Int(initialWeight)) → \(Int(projectedWeight)) kg")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                 }
                 Spacer()
-                Text("+\(Int(projectedWeight - herd.initialWeight)) kg")
+                Text("+\(Int(projectedWeight - initialWeight)) kg")
                     .font(Theme.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.positiveChange)

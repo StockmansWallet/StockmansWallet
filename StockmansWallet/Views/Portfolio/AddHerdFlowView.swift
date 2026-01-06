@@ -591,6 +591,8 @@ struct AddHerdFlowView: View {
     
     // MARK: - Save Herd
     private func saveHerd() {
+        print("💾 AddHerdFlowView: Starting saveHerd()")
+        
         let prefs = preferences.first ?? UserPreferences()
         let dailyWeightGain = Double(dailyGainGrams) / 1000.0
         
@@ -630,6 +632,9 @@ struct AddHerdFlowView: View {
             selectedSaleyard: effectiveSaleyard
         )
         
+        print("💾 AddHerdFlowView: Created herd object with ID: \(herd.id)")
+        print("   Name: \(herd.name), HeadCount: \(herd.headCount), Species: \(herd.species)")
+        
         herd.paddockName = paddockLocation.isEmpty ? nil : paddockLocation
         herd.isPregnant = inCalf
         herd.mortalityRate = Double(mortalityRate) / 100.0
@@ -657,15 +662,26 @@ struct AddHerdFlowView: View {
         }
         if !infoParts.isEmpty { herd.additionalInfo = infoParts.joined(separator: " | ") }
         
+        // Debug: Insert into model context
+        print("💾 AddHerdFlowView: Inserting herd into modelContext")
         modelContext.insert(herd)
         
         do {
+            // Debug: Save and ensure the context is properly flushed
+            print("💾 AddHerdFlowView: Attempting to save modelContext")
             try modelContext.save()
-            HapticManager.success()
-            dismiss()
+            print("✅ AddHerdFlowView: Successfully saved herd with ID: \(herd.id)")
+            
+            // Debug: Small delay to ensure SwiftData propagates the save
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 second delay
+                HapticManager.success()
+                dismiss()
+            }
         } catch {
             HapticManager.error()
-            print("Error saving herd: \(error)")
+            print("❌ AddHerdFlowView: Error saving herd: \(error)")
+            print("   Error details: \(error.localizedDescription)")
         }
     }
 }
