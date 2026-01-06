@@ -64,7 +64,16 @@ struct MainTabView: View {
             
             ToolsView()
                 .tabItem {
-                    Label("Tools", systemImage: "hammer.fill")
+                    Label {
+                        Text("Tools")
+                    } icon: {
+                        Image("tools_icon")
+                            .renderingMode(.template)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 24, height: 24)
+                            .padding(2)
+                    }
                 }
                 .accessibilityLabel("Tools tab")
             
@@ -103,7 +112,16 @@ struct MainTabView: View {
             
             ToolsView()
                 .tabItem {
-                    Label("Tools", systemImage: "hammer.fill")
+                    Label {
+                        Text("Tools")
+                    } icon: {
+                        Image("tools_icon")
+                            .renderingMode(.template)
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                            .frame(width: 24, height: 24)
+                            .padding(2)
+                    }
                 }
                 .accessibilityLabel("Tools tab")
             
@@ -137,3 +155,4 @@ struct MainTabView: View {
         UITabBar.appearance().isTranslucent = true
     }
 }
+

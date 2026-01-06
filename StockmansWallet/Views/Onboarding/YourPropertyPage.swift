@@ -533,8 +533,10 @@ struct YourPropertyPage: View {
                         Circle()
                             .fill(Theme.accent.opacity(0.15))
                             .frame(width: 44, height: 44)
-                        Image(systemName: "building.2.fill")
-                            .font(.system(size: 18, weight: .semibold))
+                        Image("property_icon")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: 20, height: 20)
                             .foregroundStyle(Theme.accent)
                     }
                     
@@ -586,8 +588,10 @@ struct YourPropertyPage: View {
                                 Circle()
                                     .fill(Theme.secondaryText.opacity(0.15))
                                     .frame(width: 44, height: 44)
-                                Image(systemName: "building.2.fill")
-                                    .font(.system(size: 18, weight: .semibold))
+                                Image("property_icon")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20)
                                     .foregroundStyle(Theme.secondaryText)
                             }
                             

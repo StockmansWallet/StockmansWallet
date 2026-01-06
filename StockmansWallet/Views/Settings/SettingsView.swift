@@ -33,8 +33,8 @@ struct SettingsView: View {
                     NavigationLink(destination: ProfileView()) {
                         SettingsListRow(
                             icon: "person.circle.fill",
-                            title: "Profile",
-                            subtitle: userPrefs.firstName != nil ? "\(userPrefs.firstName!) \(userPrefs.lastName ?? "")" : nil
+                            title: "Your Profile",
+                            subtitle: nil
                         )
                     }
                     .listRowBackground(Theme.cardBackground)
@@ -43,9 +43,10 @@ struct SettingsView: View {
                     if isFarmer {
                         NavigationLink(destination: PropertiesView()) {
                             SettingsListRow(
-                                icon: "building.2.fill",
-                                title: "Properties",
-                                subtitle: "Manage your farms and preferences"
+                                icon: "property_icon",
+                                title: "Your Properties",
+                                subtitle: nil,
+                                isCustomIcon: true
                             )
                         }
                         .listRowBackground(Theme.cardBackground)

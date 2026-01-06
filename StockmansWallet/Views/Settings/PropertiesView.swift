@@ -42,18 +42,7 @@ struct PropertiesView: View {
             VStack(spacing: Theme.sectionSpacing) {
                 // Debug: Header section
                 VStack(alignment: .leading, spacing: 12) {
-                    HStack {
-                        Image(systemName: "building.2.fill")
-                            .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(Theme.accent)
-                        Text("Properties")
-                            .font(Theme.title)
-                            .foregroundStyle(Theme.primaryText)
-                    }
-                    
-                    Text("Manage your farm properties and their individual preferences.")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
+              
                     
                     Button {
                         HapticManager.tap()
@@ -98,8 +87,10 @@ struct PropertiesView: View {
                     // Real properties list
                     if realProperties.isEmpty {
                         VStack(spacing: 12) {
-                            Image(systemName: "building.2.crop.circle")
-                                .font(.system(size: 40))
+                            Image("property_icon")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 40, height: 40)
                                 .foregroundStyle(Theme.secondaryText.opacity(0.5))
                             
                             Text("No Real Properties")
@@ -211,7 +202,7 @@ struct PropertiesView: View {
             .padding(.bottom, 100)
         }
         .background(Theme.backgroundGradient.ignoresSafeArea())
-        .navigationTitle("Properties")
+        .navigationTitle("Your Properties")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
         .sheet(isPresented: $showingAddProperty) {
@@ -225,17 +216,29 @@ struct PropertiesView: View {
         }
     }
     
-    // Debug: Set a property as the default
+    // Debug: Set a property as the default/primary
     private func setDefaultProperty(_ property: Property) {
-        // Remove default status from all properties
-        for prop in properties {
+        // Debug: Only real properties can be primary
+        guard !property.isSimulated else {
+            print("⚠️ Cannot set simulated property as primary")
+            return
+        }
+        
+        // Debug: Remove default status from ALL properties (use allProperties, not filtered)
+        for prop in allProperties {
             prop.isDefault = false
         }
-        // Set this property as default
+        
+        // Debug: Set this property as default/primary
         property.isDefault = true
         property.markUpdated()
         
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+            print("✅ Set \(property.propertyName) as primary property")
+        } catch {
+            print("❌ Error saving primary property: \(error)")
+        }
     }
 }
 
@@ -257,9 +260,17 @@ struct PropertyCard: View {
                                 .fill(Theme.accent.opacity(0.15))
                                 .frame(width: 44, height: 44)
                             // Debug: Different icons for real vs simulated properties
-                            Image(systemName: property.isSimulated ? "flask.fill" : "building.2.fill")
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Theme.accent)
+                            if property.isSimulated {
+                                Image(systemName: "flask.fill")
+                                    .font(.system(size: 18, weight: .semibold))
+                                    .foregroundStyle(Theme.accent)
+                            } else {
+                                Image("property_icon")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 20, height: 20)
+                                    .foregroundStyle(Theme.accent)
+                            }
                         }
                         
                         VStack(alignment: .leading, spacing: 2) {
@@ -310,12 +321,30 @@ struct PropertyCard: View {
                 Divider()
                     .background(Theme.separator)
                 
-                // Property details
+                // Property details with inline "Set as Primary" button
                 VStack(spacing: 8) {
-                    PropertyDetailRow(
-                        icon: "location.fill",
-                        text: property.locationDescription
-                    )
+                    // Location row with optional "Set as Primary" button
+                    HStack {
+                        PropertyDetailRow(
+                            icon: "location.fill",
+                            text: property.locationDescription
+                        )
+                        
+                        Spacer()
+                        
+                        // Set as Primary button (only show if not already default AND not simulated)
+                        if !property.isDefault && !property.isSimulated {
+                            Button {
+                                HapticManager.tap()
+                                onSetDefault()
+                            } label: {
+                                Text("Set as Primary")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.accent)
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                     
                     if let saleyard = property.defaultSaleyard {
                         PropertyDetailRow(
@@ -330,23 +359,6 @@ struct PropertyCard: View {
                             text: "\(Int(acreage)) acres"
                         )
                     }
-                }
-                
-                // Set default button (only show if not already default)
-                if !property.isDefault {
-                    Button {
-                        HapticManager.tap()
-                        onSetDefault()
-                    } label: {
-                        HStack {
-                            Image(systemName: "star.fill")
-                                .font(.system(size: 12))
-                            Text("Set as Default")
-                                .font(Theme.caption)
-                        }
-                        .foregroundStyle(Theme.accent)
-                    }
-                    .buttonStyle(.plain)
                 }
             }
             .padding(Theme.cardPadding)
@@ -467,11 +479,22 @@ struct AddPropertyView: View {
     
     // Debug: Add the new property (real or simulated)
     private func addProperty() {
+        // Debug: Determine if this should be primary
+        let shouldBePrimary: Bool
+        if isSimulated {
+            // Simulated properties can never be primary
+            shouldBePrimary = false
+        } else {
+            // Real properties: make primary if user selected OR if no real properties exist
+            let existingRealProperties = allProperties.filter { !$0.isSimulated }
+            shouldBePrimary = isDefault || existingRealProperties.isEmpty
+        }
+        
         let property = Property(
             propertyName: propertyName,
             propertyPIC: propertyPIC.isEmpty ? nil : propertyPIC,
             state: state,
-            isDefault: isDefault || allProperties.isEmpty, // First property is always default
+            isDefault: shouldBePrimary,
             isSimulated: isSimulated
         )
         
@@ -481,15 +504,22 @@ struct AddPropertyView: View {
             property.acreage = acreageValue
         }
         
-        // If setting as default, remove default from other properties
+        // Debug: If setting as primary, remove primary from all other properties
         if property.isDefault {
             for existingProp in allProperties {
                 existingProp.isDefault = false
             }
+            print("✅ Set \(property.propertyName) as primary property")
         }
         
         modelContext.insert(property)
-        try? modelContext.save()
+        
+        do {
+            try modelContext.save()
+            print("✅ Added new property: \(property.propertyName) (Primary: \(property.isDefault), Simulated: \(property.isSimulated))")
+        } catch {
+            print("❌ Error adding property: \(error)")
+        }
     }
 }
 
@@ -499,6 +529,7 @@ struct EditPropertyView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
+    @Query private var allProperties: [Property]
     
     let property: Property
     
@@ -509,6 +540,7 @@ struct EditPropertyView: View {
     @State private var address: String
     @State private var acreage: String
     @State private var defaultSaleyard: String
+    @State private var isPrimary: Bool
     
     @State private var showingDeleteAlert = false
     
@@ -526,6 +558,7 @@ struct EditPropertyView: View {
         _address = State(initialValue: property.address ?? "")
         _acreage = State(initialValue: property.acreage.map { String($0) } ?? "")
         _defaultSaleyard = State(initialValue: property.defaultSaleyard ?? "")
+        _isPrimary = State(initialValue: property.isDefault)
     }
     
     var body: some View {
@@ -558,6 +591,17 @@ struct EditPropertyView: View {
                     }
                 }
                 .listRowBackground(Theme.cardBackground)
+                
+                // Debug: Primary property toggle (only for real properties, not simulated)
+                if !property.isSimulated {
+                    Section {
+                        Toggle("Set as Primary Property", isOn: $isPrimary)
+                    } footer: {
+                        Text("Your primary property is used as the default for new herds and preferences. Only one property can be primary.")
+                            .font(Theme.caption)
+                    }
+                    .listRowBackground(Theme.cardBackground)
+                }
                 
                 Section {
                     Button(role: .destructive) {
@@ -615,14 +659,66 @@ struct EditPropertyView: View {
         property.acreage = Double(acreage)
         property.defaultSaleyard = defaultSaleyard.isEmpty ? nil : defaultSaleyard
         
+        // Debug: Handle primary property status
+        if isPrimary != property.isDefault {
+            if isPrimary {
+                // Debug: User wants to make this property primary
+                // Unset all other properties first
+                for prop in allProperties where prop.id != property.id {
+                    prop.isDefault = false
+                }
+                property.isDefault = true
+                print("✅ Set \(property.propertyName) as primary property")
+            } else {
+                // Debug: User wants to remove primary status
+                // Only allow if there's at least one other real property that can be primary
+                let otherRealProperties = allProperties.filter { !$0.isSimulated && $0.id != property.id }
+                if !otherRealProperties.isEmpty {
+                    property.isDefault = false
+                    // Debug: Optionally set first other real property as primary
+                    if let firstOther = otherRealProperties.first {
+                        firstOther.isDefault = true
+                        print("✅ Moved primary status to \(firstOther.propertyName)")
+                    }
+                } else {
+                    // Debug: Can't unset primary if this is the only real property
+                    print("⚠️ Cannot unset primary - this is the only real property")
+                    isPrimary = true // Reset toggle
+                }
+            }
+        }
+        
         property.markUpdated()
-        try? modelContext.save()
+        
+        do {
+            try modelContext.save()
+            print("✅ Property saved successfully")
+        } catch {
+            print("❌ Error saving property: \(error)")
+        }
     }
     
     // Debug: Delete the property
     private func deleteProperty() {
+        // Debug: If deleting primary property, move primary status to another real property
+        if property.isDefault {
+            let otherRealProperties = allProperties.filter { 
+                !$0.isSimulated && $0.id != property.id 
+            }
+            if let newPrimary = otherRealProperties.first {
+                newPrimary.isDefault = true
+                print("✅ Moved primary status to \(newPrimary.propertyName) before deletion")
+            }
+        }
+        
         modelContext.delete(property)
-        try? modelContext.save()
+        
+        do {
+            try modelContext.save()
+            print("✅ Property deleted successfully")
+        } catch {
+            print("❌ Error deleting property: \(error)")
+        }
     }
 }
 
