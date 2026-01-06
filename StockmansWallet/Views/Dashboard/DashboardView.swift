@@ -41,12 +41,16 @@ struct DashboardView: View {
     // Debug: Crypto-style value reveal - show last known value briefly before updating
     @State private var displayValue: Double = 0.0 {
         didSet {
+            #if DEBUG
             print("💰 displayValue changed: \(oldValue) → \(displayValue)")
+            #endif
         }
     }
     @State private var isUpdatingValue: Bool = false {
         didSet {
+            #if DEBUG
             print("💰 isUpdatingValue changed: \(oldValue) → \(isUpdatingValue)")
+            #endif
         }
     }
     
@@ -71,6 +75,10 @@ struct DashboardView: View {
     @State private var lastRefreshDate: Date? = nil // Track when data was last refreshed
     private let refreshThreshold: TimeInterval = 300 // 5 minutes - only refresh if older
     
+    
+    // Performance: Race condition prevention - ensures only one data load at a time
+    private let loadCoordinator = LoadCoordinator()
+    
     var body: some View {
         NavigationStack {
             mainContentWithModifiers
@@ -86,12 +94,21 @@ struct DashboardView: View {
         
         contentWithNav
             .task {
+                // Performance: .task automatically cancels when view disappears
                 // Debug: Smart loading - like Coinbase/production apps
                 // Only load if: first time, or data is stale (>5 min old)
                 await loadDataIfNeeded(force: false)
             }
+            .onDisappear {
+                // Performance: .task's automatic cancellation will stop ongoing work
+                // LoadCoordinator prevents race conditions if multiple loads overlap
+                #if DEBUG
+                print("📊 DashboardView disappeared - task will auto-cancel")
+                #endif
+            }
             .refreshable {
                 // Debug: Explicit user pull-to-refresh always forces reload
+                // LoadCoordinator automatically cancels previous load before starting new one
                 await loadDataIfNeeded(force: true)
             }
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DataCleared"))) { _ in
@@ -108,9 +125,13 @@ struct DashboardView: View {
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("BackgroundImageChanged"))) { _ in
                 // Debug: Toggle state to force view refresh when background image changes
                 Task { @MainActor in
+                    #if DEBUG
                     print("🖼️ DashboardView: Background image changed notification received")
+                    #endif
                     backgroundImageTrigger.toggle()
+                    #if DEBUG
                     print("🖼️ DashboardView: backgroundImageTrigger is now \(backgroundImageTrigger)")
+                    #endif
                 }
             }
             .onChange(of: herds.count) { _, _ in
@@ -428,11 +449,15 @@ struct DashboardView: View {
     // Only triggers when value has changed (new herd, sold animal, app launch, etc.)
     // Uses simple SwiftUI numeric text animation (same as chart scrubbing)
     private func updateDisplayValueWithDelay(newValue: Double, lastValue: Double) async {
+        #if DEBUG
         print("💰 updateDisplayValueWithDelay: lastValue=\(lastValue), newValue=\(newValue), diff=\(abs(newValue - lastValue))")
+        #endif
         
         // Debug: Check if value has actually changed (threshold of $1 to avoid floating point issues)
         guard abs(newValue - lastValue) > 1.0 else {
+            #if DEBUG
             print("💰 No significant change, updating immediately")
+            #endif
             // No significant change, update immediately
             await MainActor.run {
                 displayValue = newValue
@@ -440,7 +465,9 @@ struct DashboardView: View {
             return
         }
         
+        #if DEBUG
         print("💰 Step 1: Showing last value \(lastValue)")
+        #endif
         // Debug: Show last known value first
         await MainActor.run {
             displayValue = lastValue
@@ -449,7 +476,9 @@ struct DashboardView: View {
         // Debug: Small delay to ensure the UI renders with the old value
         try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
         
+        #if DEBUG
         print("💰 Step 2: Starting pulse/glow and holding for 2 seconds...")
+        #endif
         // Debug: Enable glow while holding at old value
         await MainActor.run {
             isUpdatingValue = true
@@ -458,7 +487,9 @@ struct DashboardView: View {
         // Debug: Hold at old value for 2 seconds with pulse/glow
         try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
         
+        #if DEBUG
         print("💰 Step 3: Stopping pulse before value changes")
+        #endif
         // Debug: Turn off pulsing BEFORE the number changes (per user requirement)
         await MainActor.run {
             withAnimation(.easeOut(duration: 0.3)) {
@@ -469,78 +500,107 @@ struct DashboardView: View {
         // Debug: Brief delay to let the glow fade out
         try? await Task.sleep(nanoseconds: 300_000_000) // 0.3 seconds
         
+        #if DEBUG
         print("💰 Step 4: Transitioning from \(lastValue) to \(newValue) using native SwiftUI animation")
+        #endif
         // Debug: Simple value transition - SwiftUI's numericText animation handles the smooth transition
         await MainActor.run {
             displayValue = newValue
         }
         
+        #if DEBUG
         print("💰 Animation complete!")
+        #endif
     }
     
     // Debug: Async data loading with proper error handling
     // Debug: Smart data loading - Coinbase/production app pattern
     // Only loads when necessary: first time, stale data, or forced refresh
+    // Performance: Uses LoadCoordinator to prevent race conditions from concurrent triggers
     private func loadDataIfNeeded(force: Bool) async {
-        // Debug: Check if we need to load data
-        let needsRefresh = await MainActor.run {
-            // Force refresh (user pull-to-refresh, data changed)
-            if force {
-                print("📊 Force refresh requested")
-                return true
-            }
-            
-            // First time loading
-            if !hasLoadedData {
-                print("📊 First time loading - will load cache then refresh if stale")
-                return true
-            }
-            
-            // Check if data is stale (>5 minutes old)
-            if let lastRefresh = lastRefreshDate {
-                let timeSinceRefresh = Date().timeIntervalSince(lastRefresh)
-                if timeSinceRefresh > refreshThreshold {
-                    print("📊 Data is stale (\(Int(timeSinceRefresh))s old), refreshing...")
+        // Performance: Wrap in coordinator to prevent concurrent loads
+        do {
+            try await loadCoordinator.execute {
+                // Debug: Check if we need to load data
+                let needsRefresh = await MainActor.run {
+                    // Force refresh (user pull-to-refresh, data changed)
+                    if force {
+                        #if DEBUG
+                        print("📊 Force refresh requested")
+                        #endif
+                        return true
+                    }
+                    
+                    // First time loading
+                    if !self.hasLoadedData {
+                        #if DEBUG
+                        print("📊 First time loading - will load cache then refresh if stale")
+                        #endif
+                        return true
+                    }
+                    
+                    // Check if data is stale (>5 minutes old)
+                    if let lastRefresh = self.lastRefreshDate {
+                        let timeSinceRefresh = Date().timeIntervalSince(lastRefresh)
+                        if timeSinceRefresh > self.refreshThreshold {
+                            #if DEBUG
+                            print("📊 Data is stale (\(Int(timeSinceRefresh))s old), refreshing...")
+                            #endif
+                            return true
+                        } else {
+                            #if DEBUG
+                            print("📊 Data is fresh (\(Int(timeSinceRefresh))s old), skipping reload")
+                            #endif
+                            return false
+                        }
+                    }
+                    
+                    // No last refresh date, needs refresh
                     return true
-                } else {
-                    print("📊 Data is fresh (\(Int(timeSinceRefresh))s old), skipping reload")
-                    return false
+                }
+                
+                guard needsRefresh else {
+                    #if DEBUG
+                    print("📊 Skipping reload - data is fresh")
+                    #endif
+                    return
+                }
+                
+                // Debug: First time only - load cached data immediately
+                if !self.hasLoadedData {
+                    await MainActor.run {
+                        let prefs = self.preferences.first ?? UserPreferences()
+                        self.displayValue = prefs.lastPortfolioValue
+                        #if DEBUG
+                        print("💰 Initial displayValue set to: \(self.displayValue)")
+                        #endif
+                        
+                        // Load cached chart data immediately for instant display
+                        self.loadCachedChartData()
+                    }
+                }
+                
+                // Debug: Now load fresh data
+                await self.loadValuations()
+                
+                // Debug: Mark as loaded and update timestamp
+                await MainActor.run {
+                    self.hasLoadedData = true
+                    self.lastRefreshDate = Date()
                 }
             }
-            
-            // No last refresh date, needs refresh
-            return true
-        }
-        
-        guard needsRefresh else {
-            print("📊 Skipping reload - data is fresh")
-            return
-        }
-        
-        // Debug: First time only - load cached data immediately
-        if !hasLoadedData {
-            await MainActor.run {
-                let prefs = preferences.first ?? UserPreferences()
-                displayValue = prefs.lastPortfolioValue
-                print("💰 Initial displayValue set to: \(displayValue)")
-                
-                // Load cached chart data immediately for instant display
-                loadCachedChartData()
-            }
-        }
-        
-        // Debug: Now load fresh data
-        await loadValuations()
-        
-        // Debug: Mark as loaded and update timestamp
-        await MainActor.run {
-            hasLoadedData = true
-            lastRefreshDate = Date()
+        } catch {
+            // Race condition resolved by coordinator - previous load was cancelled
+            #if DEBUG
+            print("📊 Load operation error (expected if cancelled): \(error)")
+            #endif
         }
     }
     
     private func loadValuations() async {
+        #if DEBUG
         print("💰 loadValuations() called")
+        #endif
         await MainActor.run {
             self.isLoading = true
             self.loadError = nil
@@ -675,7 +735,9 @@ struct DashboardView: View {
         HapticManager.tap()
         
         // Debug: Crypto-style value reveal - run in parallel so it doesn't block chart loading
+        #if DEBUG
         print("💰 Starting value animation in parallel with chart loading")
+        #endif
         Task {
             await updateDisplayValueWithDelay(newValue: valuations, lastValue: lastKnownValue)
             
@@ -683,7 +745,9 @@ struct DashboardView: View {
             await MainActor.run {
                 prefs.lastPortfolioValue = valuations
                 prefs.lastPortfolioUpdateDate = Date()
+                #if DEBUG
                 print("💰 Saved new portfolio value to preferences: \(valuations)")
+                #endif
             }
         }
         
@@ -699,13 +763,17 @@ struct DashboardView: View {
               let cachedData = prefs.lastChartData,
               let decoded = try? JSONDecoder().decode([ValuationDataPoint].self, from: cachedData),
               !decoded.isEmpty else {
+            #if DEBUG
             print("📊 No cached chart data available")
+            #endif
             return
         }
         
         // Debug: Show last known chart data immediately
         self.valuationHistory = decoded
+        #if DEBUG
         print("📊 Loaded cached chart data: \(decoded.count) points from \(prefs.lastPortfolioUpdateDate?.formatted() ?? "unknown")")
+        #endif
     }
     
     // Debug: Cache chart data for instant display on next launch
@@ -717,7 +785,9 @@ struct DashboardView: View {
         }
         
         prefs.lastChartData = encoded
+        #if DEBUG
         print("📊 Cached chart data: \(data.count) points for next session")
+        #endif
     }
     
     // Debug: Progressive historical data loading for faster chart appearance
@@ -727,11 +797,14 @@ struct DashboardView: View {
     private func loadHistoricalDataProgressively(activeHerds: [HerdGroup], prefs: UserPreferences, portfolioValue: Double) async {
         // Debug: Simplified - just load full history directly
         // Cached data is already showing, we're just refreshing in background
+        #if DEBUG
         print("📊 Loading full historical data...")
+        #endif
         await loadFullHistory(activeHerds: activeHerds, prefs: prefs, endDate: Date())
     }
     
     // Debug: Load complete historical data (up to 3 years)
+    // Performance: Now cancellable to prevent wasted CPU when user navigates away
     private func loadFullHistory(activeHerds: [HerdGroup], prefs: UserPreferences, endDate: Date) async {
         let calendar = Calendar.current
         let startDate = Date(timeIntervalSince1970: 1672531200) // Jan 1, 2023
@@ -746,6 +819,17 @@ struct DashboardView: View {
         // Debug: Load all historical data with appropriate granularity
         // Daily for last 7 days, weekly for older data
         for dayOffset in (0..<totalDays).reversed() {
+            // Performance: Check if task was cancelled (user navigated away, new data load started, etc.)
+            // This prevents wasting CPU on calculations that won't be displayed
+            do {
+                try Task.checkCancellation()
+            } catch {
+                #if DEBUG
+                print("📊 Historical data load cancelled at day \(dayOffset)/\(totalDays)")
+                #endif
+                return
+            }
+            
             // Debug: Skip non-week days for data older than 7 days (optimization)
             if dayOffset > 7 && dayOffset % 7 != 0 {
                 continue
@@ -805,7 +889,9 @@ struct DashboardView: View {
             
             HapticManager.success()
             
+            #if DEBUG
             print("📊 Full history loaded: \(history.count) data points")
+            #endif
         }
     }
     
@@ -983,414 +1069,8 @@ struct AnimatedCurrencyValue: View {
     }
 }
 
-// MARK: - Interactive Chart View
-enum TimeRange: String, CaseIterable {
-    case custom = "Custom"
-    case week = "Week"
-    case month = "Month"
-    case year = "Year"
-    case all = "All"
-}
-
-struct InteractiveChartView: View {
-    let data: [ValuationDataPoint]
-    @Binding var selectedDate: Date?
-    @Binding var selectedValue: Double?
-    @Binding var isScrubbing: Bool
-    @Binding var timeRange: TimeRange
-    let baseValue: Double
-    let onValueChange: (Double, Double) -> Void
-    
-    @State private var scrubberX: CGFloat?
-    @State private var chartOpacity: Double = 0.0
-    
-    // Performance optimization: Cache sorted data to avoid sorting on every drag event (60fps)
-    // This dramatically improves scrubbing performance by sorting once instead of 60 times/second
-    @State private var sortedData: [ValuationDataPoint] = []
-    
-    // Performance: Cache scrubber position to avoid recalculating on every render
-    @State private var scrubberPosition: ScrubberPosition?
-    
-    // Debug: Struct to batch scrubber state updates (reduces view updates from 3 to 1)
-    private struct ScrubberPosition {
-        let date: Date
-        let value: Double
-        let xPosition: CGFloat
-    }
-    
-    // Performance: Binary search for fast data point lookup during scrubbing (O(log n) vs O(n))
-    private func findSurroundingPoints(for date: Date, in sorted: [ValuationDataPoint]) -> (before: ValuationDataPoint?, after: ValuationDataPoint?) {
-        guard !sorted.isEmpty else { return (nil, nil) }
-        
-        // Binary search to find insertion point
-        var left = 0
-        var right = sorted.count - 1
-        
-        while left <= right {
-            let mid = (left + right) / 2
-            let midDate = sorted[mid].date
-            
-            if midDate < date {
-                left = mid + 1
-            } else if midDate > date {
-                right = mid - 1
-            } else {
-                // Exact match
-                return (sorted[mid], mid + 1 < sorted.count ? sorted[mid + 1] : nil)
-            }
-        }
-        
-        // left is now the insertion point
-        let before = right >= 0 ? sorted[right] : nil
-        let after = left < sorted.count ? sorted[left] : nil
-        
-        return (before, after)
-    }
-    
-    
-    // Performance: Single gradient definition - no dynamic changes during scrubbing
-    private var fullOpacityGradient: LinearGradient {
-        LinearGradient(
-            colors: [Theme.accent.opacity(0.3), Theme.accent.opacity(0.0)],
-            startPoint: .top,
-            endPoint: .bottom
-        )
-    }
-    
-    private func edgeExtendedData(for data: [ValuationDataPoint], in range: TimeRange) -> [ValuationDataPoint] {
-        guard !data.isEmpty else { return data }
-        // Debug: Sort data chronologically (oldest to newest)
-        let sorted = data.sorted { $0.date < $1.date }
-        let first = sorted[0]
-        
-        let epsilon: TimeInterval
-        switch range {
-        case .custom:
-            // Debug: No edge extension for custom range - show exact selected dates
-            return sorted
-        case .week, .month:
-            epsilon = 60 * 60 * 12
-        case .year:
-            epsilon = 60 * 60 * 24
-        case .all:
-            // Debug: Return sorted data to ensure chronological order
-            return sorted
-        }
-        
-        // Debug: Create leading edge point before the first data point
-        // This extends the chart line to the left edge for better visual appearance
-        let leading = ValuationDataPoint(
-            date: first.date.addingTimeInterval(-epsilon),
-            value: first.value,
-            physicalValue: first.physicalValue,
-            breedingAccrual: first.breedingAccrual
-        )
-        
-        // Debug: Use sorted data (not original unsorted data) to prevent line jumping
-        // This ensures the chart draws lines in chronological order
-        var out = sorted
-        out.insert(leading, at: 0)
-        return out
-    }
-    
-    // Debug: Grid removed per user request - clean minimal chart appearance
-    private var chartGrid: some View {
-        Color.clear
-    }
-    
-    // Performance: Chart content without dimming effect to prevent redraw on every drag event
-    // Apple HIG: Charts should respond immediately without lag - dimming causes full chart redraw at 60fps
-    private func chartContent() -> some View {
-        let renderData = edgeExtendedData(for: data, in: timeRange)
-        let yRange = valueRange(data: data)
-        let xRange = dataRange(data: renderData)
-        
-        return Chart {
-            // Debug: Removed opacity changes that triggered chart redraw on every drag event
-            // This is the #1 performance issue - changing opacity forces full chart re-render
-            ForEach(renderData) { point in
-                LineMark(
-                    x: .value("Date", point.date),
-                    y: .value("Value", point.value)
-                )
-                .foregroundStyle(Theme.accent)
-                .interpolationMethod(.monotone)
-                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .butt, lineJoin: .round))
-            }
-            
-            ForEach(renderData) { point in
-                AreaMark(
-                    x: .value("Date", point.date),
-                    yStart: .value("Value", yRange.lowerBound),
-                    yEnd: .value("Value", point.value)
-                )
-                .foregroundStyle(fullOpacityGradient)
-                .interpolationMethod(.monotone)
-            }
-        }
-        .chartXAxis(.hidden)
-        .chartYAxis(.hidden)
-        .chartXScale(domain: xRange, range: .plotDimension(padding: 0))
-        .chartYScale(domain: yRange, range: .plotDimension(padding: 0))
-        .chartPlotStyle { plotArea in
-            plotArea
-                .padding(.horizontal, 0)
-                .padding(.vertical, 0)
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .accessibilityLabel("Portfolio value chart")
-    }
-    
-    // Performance: Simplified date pill without scale/opacity animations during scrubbing
-    // Apple HIG: Avoid animating elements during continuous gestures for 60fps
-    private var dateHoverPill: some View {
-        Group {
-            if isScrubbing, let position = scrubberPosition {
-                GeometryReader { geometry in
-                    // Debug: Date pill with fully rounded capsule shape and subtle orange tint
-                    // Performance: No scale/opacity animations - just fade in/out on start/end
-                    Text(position.date, format: .dateTime.day(.twoDigits).month(.abbreviated).year())
-                        .font(.system(size: 11, weight: .regular))
-                        .monospacedDigit()
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .glassEffect(.regular.interactive().tint(Theme.accent.opacity(0.15)), in: Capsule())
-                        .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
-                        .offset(x: {
-                            // Performance: Calculate offset once per position update
-                            let pillWidth: CGFloat = 100
-                            let pillOffset = position.xPosition - (pillWidth / 2)
-                            return max(0, min(pillOffset, geometry.size.width - pillWidth))
-                        }())
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .accessibilityLabel("Selected date")
-                        .accessibilityValue(position.date.formatted(date: .abbreviated, time: .omitted))
-                        // Performance: No animations during scrubbing - instant updates for 60fps
-                        .animation(.none, value: position.date)
-                        .animation(.none, value: position.xPosition)
-                }
-                .frame(height: 32)
-                // Performance: Fade in pill when scrubbing starts
-                .transition(.opacity)
-            } else {
-                // Performance: Keep space reserved to prevent layout shifts
-                Color.clear
-                    .frame(height: 32)
-            }
-        }
-    }
-    
-    var body: some View {
-        VStack(spacing: 0) {
-            dateHoverPill
-                .padding(.bottom, 0)
-            
-            GeometryReader { geometry in
-                ZStack {
-                    chartGrid
-                    
-                    chartContent()
-                        // Debug: Simple fade-in animation (no rendering artifacts like mask had)
-                        // Smooth opacity transition prevents jarring "pop" on load
-                        .opacity(chartOpacity)
-                        .chartOverlay { proxy in
-                            GeometryReader { geo in
-                                Rectangle()
-                                    .fill(.clear)
-                                    .contentShape(Rectangle())
-                                    .gesture(
-                                        DragGesture(minimumDistance: 0)
-                                            .onChanged { value in
-                                                // Performance: Early exit if no data
-                                                guard !data.isEmpty else { return }
-                                                
-                                                // Performance: Set scrubbing state once at start of gesture
-                                                if !isScrubbing {
-                                                    isScrubbing = true
-                                                }
-                                                
-                                                let location = value.location
-                                                
-                                                // Performance: Get date from chart position
-                                                guard let date: Date = proxy.value(atX: location.x),
-                                                      let plotFrameAnchor = proxy.plotFrame else {
-                                                    return
-                                                }
-                                                
-                                                let plotFrame = geo[plotFrameAnchor]
-                                                let sorted = sortedData
-                                                
-                                                // Performance: Calculate scrubber position once, then batch update
-                                                let position: ScrubberPosition
-                                                
-                                                // Handle edge cases: before first or after last data point
-                                                if let first = sorted.first, date <= first.date {
-                                                    let xPlot = proxy.position(forX: first.date) ?? location.x
-                                                    position = ScrubberPosition(
-                                                        date: first.date,
-                                                        value: first.value,
-                                                        xPosition: plotFrame.origin.x + xPlot
-                                                    )
-                                                } else if let last = sorted.last, date >= last.date {
-                                                    let xPlot = proxy.position(forX: last.date) ?? location.x
-                                                    position = ScrubberPosition(
-                                                        date: last.date,
-                                                        value: last.value,
-                                                        xPosition: plotFrame.origin.x + xPlot
-                                                    )
-                                                } else {
-                                                    // Performance: Binary search for surrounding points (O(log n))
-                                                    let (before, after) = findSurroundingPoints(for: date, in: sorted)
-                                                    
-                                                    if let b = before, let a = after {
-                                                        // Linear interpolation between data points
-                                                        let timeDiff = a.date.timeIntervalSince(b.date)
-                                                        let timeFromB = date.timeIntervalSince(b.date)
-                                                        let t = timeDiff > 0 ? timeFromB / timeDiff : 0.0
-                                                        let interpolatedValue = b.value + (a.value - b.value) * t
-                                                        
-                                                        // Calculate x position
-                                                        let xPos: CGFloat
-                                                        if let xPlot = proxy.position(forX: date) {
-                                                            xPos = plotFrame.origin.x + xPlot
-                                                        } else if let xB = proxy.position(forX: b.date),
-                                                                  let xA = proxy.position(forX: a.date) {
-                                                            let xInterp = xB + (xA - xB) * CGFloat(t)
-                                                            xPos = plotFrame.origin.x + xInterp
-                                                        } else {
-                                                            xPos = location.x
-                                                        }
-                                                        
-                                                        position = ScrubberPosition(
-                                                            date: date,
-                                                            value: interpolatedValue,
-                                                            xPosition: xPos
-                                                        )
-                                                    } else {
-                                                        // Fallback: shouldn't happen with binary search
-                                                        return
-                                                    }
-                                                }
-                                                
-                                                // Performance: Single transaction to batch all state updates
-                                                // This reduces view updates from 4 separate updates to 1
-                                                withAnimation(.none) { // No implicit animations during scrubbing
-                                                    scrubberPosition = position
-                                                    selectedDate = position.date
-                                                    selectedValue = position.value
-                                                    scrubberX = position.xPosition
-                                                }
-                                            }
-                                            .onEnded { _ in
-                                                // Performance: Batch state reset with animation
-                                                withAnimation(.easeOut(duration: 0.2)) {
-                                                    isScrubbing = false
-                                                    scrubberPosition = nil
-                                                }
-                                                // Performance: Separate state updates that don't need animation
-                                                selectedDate = nil
-                                                selectedValue = nil
-                                                scrubberX = nil
-                                                onValueChange(baseValue, 0)
-                                            }
-                                    )
-                                
-                                // Performance: Only render scrubber when actively scrubbing
-                                // Use cached position to avoid recalculating on every render
-                                if isScrubbing,
-                                   let position = scrubberPosition,
-                                   let xInPlot = proxy.position(forX: position.date),
-                                   let yInPlot = proxy.position(forY: position.value),
-                                   let plotFrameAnchor = proxy.plotFrame {
-                                    
-                                    let plotFrame = geo[plotFrameAnchor]
-                                    let x = plotFrame.origin.x + xInPlot
-                                    let y = plotFrame.origin.y + yInPlot
-                                    
-                                    // Performance: Use Group with .drawingGroup() to batch GPU operations
-                                    // Apple HIG: Minimize render passes for smooth 60fps interaction
-                                    Group {
-                                        // Vertical scrubber line
-                                        Path { p in
-                                            p.move(to: CGPoint(x: x, y: plotFrame.minY))
-                                            p.addLine(to: CGPoint(x: x, y: plotFrame.maxY))
-                                        }
-                                        .stroke(.white.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
-                                        
-                                        // Scrubber dot at data point
-                                        Circle()
-                                            .fill(.white)
-                                            .frame(width: 12, height: 12)
-                                            .shadow(color: Theme.accent.opacity(1), radius: 6)
-                                            .shadow(color: Theme.accent.opacity(0.4), radius: 12)
-                                            .position(x: x, y: y)
-                                            .accessibilityHidden(true)
-                                    }
-                                    // Performance: drawingGroup() renders all elements as single texture
-                                    // Critical for 60fps scrubbing performance
-                                    .drawingGroup()
-                                }
-                            }
-                        }
-                }
-            }
-            .frame(height: 200)
-            .clipped()
-            // Debug: Clean minimal chart styling with subtle stroke matching other cards
-            .background(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .fill(Color.white.opacity(0.01))
-            )
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        Color.white.opacity(0.1),
-                        style: StrokeStyle(
-                            lineWidth: 1,
-                            lineCap: .round
-                        )
-                    )
-            )
-            .accessibilityLabel("Portfolio value chart")
-            
-            ChartDateLabelsView(
-                data: data,
-                timeRange: timeRange
-            )
-            .padding(.horizontal, Theme.cardPadding)
-            .padding(.top, 10)
-            .padding(.bottom, 4)
-        }
-        .onAppear {
-            // Performance: Initialize sorted data cache for smooth scrubbing
-            sortedData = data.sorted { $0.date < $1.date }
-            
-            // Debug: Fade in chart smoothly (respects reduce motion accessibility setting)
-            if UIAccessibility.isReduceMotionEnabled {
-                chartOpacity = 1.0
-            } else {
-                withAnimation(.easeIn(duration: 0.6)) {
-                    chartOpacity = 1.0
-                }
-            }
-        }
-        .onChange(of: data.count) { _, _ in
-            // Performance: Update sorted data cache when data changes
-            sortedData = data.sorted { $0.date < $1.date }
-            
-            // Debug: Fade in chart when data updates
-            chartOpacity = 0.0
-            if UIAccessibility.isReduceMotionEnabled {
-                chartOpacity = 1.0
-            } else {
-                withAnimation(.easeIn(duration: 0.6)) {
-                    chartOpacity = 1.0
-                }
-            }
-        }
-    }
-}
+// MARK: - InteractiveChartView is now in separate file
+// See: InteractiveChartView.swift (~400 lines extracted for better maintainability)
 
 // MARK: - Data Models
 struct CapitalConcentrationBreakdown: Identifiable {

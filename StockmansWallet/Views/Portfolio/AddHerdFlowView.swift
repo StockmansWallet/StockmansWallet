@@ -44,9 +44,27 @@ struct AddHerdFlowView: View {
     @State private var joiningPeriodStart = Date()
     @State private var joiningPeriodEnd = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
     
+    
+    // Performance: Cache filtered options to prevent expensive recomputation on every view update
+    // Old approach: computed properties ran switch + filter on EVERY keystroke
+    // New approach: only update when dependencies (species, search text) actually change
+    @State private var cachedBreedOptions: [String] = []
+    @State private var cachedCategoryOptions: [String] = []
+    
     private let speciesOptions = ["Cattle", "Sheep", "Pigs", "Goats"]
     
+    // Performance: Now returns cached value instead of recomputing
     private var breedOptions: [String] {
+        cachedBreedOptions
+    }
+    
+    // Performance: Now returns cached value instead of recomputing
+    private var categoryOptions: [String] {
+        cachedCategoryOptions
+    }
+    
+    // Debug: Helper to compute breed options (called only when dependencies change)
+    private func computeBreedOptions() -> [String] {
         let breeds: [String]
         switch selectedSpecies {
         case "Cattle":
@@ -64,7 +82,8 @@ struct AddHerdFlowView: View {
         return breeds.filter { $0.localizedCaseInsensitiveContains(breedSearchText) }
     }
     
-    private var categoryOptions: [String] {
+    // Debug: Helper to compute category options (called only when dependencies change)
+    private func computeCategoryOptions() -> [String] {
         let categories: [String]
         switch selectedSpecies {
         case "Cattle":
@@ -81,6 +100,7 @@ struct AddHerdFlowView: View {
         if categorySearchText.isEmpty { return categories }
         return categories.filter { $0.localizedCaseInsensitiveContains(categorySearchText) }
     }
+    
     
     // Debug: Determines if category requires breeding-specific step (calvingRate, joinedDate, inCalf)
     private var isBreederCategory: Bool {
@@ -239,6 +259,33 @@ struct AddHerdFlowView: View {
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
             )
+            // Performance: Initialize cached options on appear
+            .onAppear {
+                cachedBreedOptions = computeBreedOptions()
+                cachedCategoryOptions = computeCategoryOptions()
+                #if DEBUG
+                print("📋 AddHerdFlowView: Initialized cached options (breeds: \(cachedBreedOptions.count), categories: \(cachedCategoryOptions.count))")
+                #endif
+            }
+            // Performance: Update breed options only when dependencies change
+            .onChange(of: selectedSpecies) { _, _ in
+                cachedBreedOptions = computeBreedOptions()
+                cachedCategoryOptions = computeCategoryOptions()
+                // Reset breed and category when species changes
+                selectedBreed = ""
+                selectedCategory = ""
+                #if DEBUG
+                print("📋 Species changed to \(selectedSpecies), updated options")
+                #endif
+            }
+            // Performance: Update breed options only when search text changes
+            .onChange(of: breedSearchText) { _, _ in
+                cachedBreedOptions = computeBreedOptions()
+            }
+            // Performance: Update category options only when search text changes
+            .onChange(of: categorySearchText) { _, _ in
+                cachedCategoryOptions = computeCategoryOptions()
+            }
         }
     }
     

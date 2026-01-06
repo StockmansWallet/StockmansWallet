@@ -228,3 +228,5 @@ struct ConnectedAppCard: View {
     }
 }
 
+
+

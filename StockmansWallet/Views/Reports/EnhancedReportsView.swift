@@ -147,3 +147,5 @@ struct ReportTypeCard: View {
     }
 }
 
+
+

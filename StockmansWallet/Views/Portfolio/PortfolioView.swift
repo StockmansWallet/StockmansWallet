@@ -24,6 +24,9 @@ struct PortfolioView: View {
     @State private var isLoading = true
     @State private var selectedView: PortfolioViewMode = .overview
     
+    // Performance: Task cancellation - prevent wasted CPU when user navigates away
+    @State private var loadingTask: Task<Void, Never>? = nil
+    
     enum PortfolioViewMode: String, CaseIterable {
         case overview = "Overview"
         case assets = "Assets"
@@ -111,10 +114,23 @@ struct PortfolioView: View {
                     .presentationBackground(Theme.sheetBackground)
             }
             .task {
-                await loadPortfolioSummary()
+                // Performance: Store task so it can be cancelled on view disappear
+                loadingTask = Task {
+                    await loadPortfolioSummary()
+                }
+            }
+            .onDisappear {
+                // Performance: Cancel any in-progress data loading to save CPU/battery
+                loadingTask?.cancel()
+                loadingTask = nil
+                #if DEBUG
+                print("📊 PortfolioView disappeared - cancelled loading task")
+                #endif
             }
             .onChange(of: herds.count) { _, _ in
-                Task {
+                // Performance: Cancel previous task before starting new one
+                loadingTask?.cancel()
+                loadingTask = Task {
                     await loadPortfolioSummary()
                 }
             }
@@ -182,6 +198,14 @@ struct PortfolioView: View {
         let results = await withTaskGroup(of: (herdId: UUID, valuation: HerdValuation).self) { group in
             var out: [(herdId: UUID, valuation: HerdValuation)] = []
             for herd in activeHerds {
+                // Performance: Check if task was cancelled before adding more work
+                if Task.isCancelled {
+                    #if DEBUG
+                    print("📊 Portfolio valuation cancelled - skipping remaining herds")
+                    #endif
+                    break
+                }
+                
                 let herdId = herd.id
                 let persistentId = herd.persistentModelID
                 group.addTask { @MainActor [modelContext] in

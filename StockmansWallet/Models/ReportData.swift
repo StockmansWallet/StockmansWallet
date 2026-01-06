@@ -76,3 +76,5 @@ struct FarmComparisonData: Identifiable {
     let valuePerHead: Double
 }
 
+
+
