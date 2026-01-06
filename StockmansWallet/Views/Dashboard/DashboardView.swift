@@ -62,6 +62,9 @@ struct DashboardView: View {
     @State private var lastRefreshDate: Date? = nil // Track when data was last refreshed
     private let refreshThreshold: TimeInterval = 300 // 5 minutes - only refresh if older
     
+    // Debug: Track if we need to show animation on next load (dopamine hit)
+    @State private var shouldAnimateValue = false
+    
     
     // Performance: Race condition prevention - ensures only one data load at a time
     private let loadCoordinator = LoadCoordinator()
@@ -84,6 +87,10 @@ struct DashboardView: View {
                 // Performance: .task automatically cancels when view disappears
                 // Debug: Smart loading - like Coinbase/production apps
                 // Only load if: first time, or data is stale (>5 min old)
+                
+                // Debug: User is viewing dashboard - prepare for dopamine hit animation
+                shouldAnimateValue = true
+                
                 await loadDataIfNeeded(force: false)
             }
             .onDisappear {
@@ -92,10 +99,21 @@ struct DashboardView: View {
                 #if DEBUG
                 print("📊 DashboardView disappeared - task will auto-cancel")
                 #endif
+                
+                // Debug: Save current portfolio value when leaving dashboard
+                // This ensures next visit shows old value → new value animation for dopamine hit
+                let prefs = preferences.first ?? UserPreferences()
+                prefs.lastPortfolioValue = portfolioValue
+                prefs.lastPortfolioUpdateDate = Date()
+                #if DEBUG
+                print("💰 Saved portfolio value on disappear: \(portfolioValue)")
+                #endif
             }
             .refreshable {
                 // Debug: Explicit user pull-to-refresh always forces reload
                 // LoadCoordinator automatically cancels previous load before starting new one
+                // Don't animate on pull-to-refresh - user is just refreshing, not expecting dopamine hit
+                shouldAnimateValue = false
                 await loadDataIfNeeded(force: true)
             }
             .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DataCleared"))) { _ in
@@ -122,8 +140,17 @@ struct DashboardView: View {
                 }
             }
             .onChange(of: herds.count) { _, _ in
-                // Debug: Herd count changed - force reload
+                // Debug: Herd count changed - user added/removed herd, show dopamine hit animation
                 Task {
+                    await MainActor.run {
+                        // Debug: Reset display value to last saved before recalculating
+                        let prefs = self.preferences.first ?? UserPreferences()
+                        self.displayValue = prefs.lastPortfolioValue
+                        self.shouldAnimateValue = true
+                        #if DEBUG
+                        print("💰 Herd count changed - reset display to \(self.displayValue), animation enabled")
+                        #endif
+                    }
                     await loadDataIfNeeded(force: true)
                 }
             }
@@ -138,7 +165,9 @@ struct DashboardView: View {
             .onChange(of: selectedSaleyard) { _, _ in
                 // Debug: Saleyard changed - force reload for new prices
                 // This allows comparing portfolio value across different saleyards
+                // Don't animate - user is comparing prices, not adding assets
                 Task {
+                    shouldAnimateValue = false
                     await loadDataIfNeeded(force: true)
                 }
             }
@@ -594,18 +623,25 @@ struct DashboardView: View {
                     return
                 }
                 
-                // Debug: First time only - load cached data immediately
-                if isFirstLoad {
-                    await MainActor.run {
-                        let prefs = self.preferences.first ?? UserPreferences()
+                // Debug: Prepare for animation - always show cached value first when animation flag is set
+                await MainActor.run {
+                    let prefs = self.preferences.first ?? UserPreferences()
+                    
+                    // Only reset displayValue if we haven't already (onChange might have done it)
+                    if self.shouldAnimateValue && self.displayValue != prefs.lastPortfolioValue {
                         self.displayValue = prefs.lastPortfolioValue
                         #if DEBUG
-                        print("💰 Initial displayValue set to: \(self.displayValue)")
+                        print("💰 Animation mode: displayValue set to cached \(self.displayValue)")
                         #endif
-                        
-                        // Load cached chart data immediately for instant display
-                        self.loadCachedChartData()
+                    } else if isFirstLoad {
+                        self.displayValue = prefs.lastPortfolioValue
+                        #if DEBUG
+                        print("💰 First load: displayValue set to cached \(self.displayValue)")
+                        #endif
                     }
+                    
+                    // Load cached chart data immediately for instant display
+                    self.loadCachedChartData()
                 }
                 
                 // Debug: Now load fresh data
@@ -762,40 +798,47 @@ struct DashboardView: View {
         
         HapticManager.tap()
         
-        // Debug: Crypto-style value reveal - but only if value actually changed significantly
-        // Check difference before starting animation to avoid unnecessary delays
+        // Debug: Dopamine hit animation - run in PARALLEL so chart loads instantly
         let valueDifference = abs(valuations - lastKnownValue)
+        let shouldAnimate = await MainActor.run { self.shouldAnimateValue }
+        
         #if DEBUG
-        print("💰 Value difference: $\(valueDifference) (lastKnown: $\(lastKnownValue), new: $\(valuations))")
+        print("💰 Value difference: $\(valueDifference) (lastKnown: $\(lastKnownValue), new: $\(valuations)), shouldAnimate: \(shouldAnimate)")
         #endif
         
-        if valueDifference > 1.0 {
-            // Debug: Run animation (blocks chart loading intentionally for better UX)
+        if shouldAnimate && valueDifference > 1.0 {
+            // Debug: Run dopamine hit animation in parallel - doesn't block chart loading
             #if DEBUG
-            print("💰 Running value animation (significant change detected)")
+            print("💰 Starting dopamine hit animation in parallel: $\(lastKnownValue) → $\(valuations)")
             #endif
-            await updateDisplayValueWithDelay(newValue: valuations, lastValue: lastKnownValue)
+            Task {
+                await updateDisplayValueWithDelay(newValue: valuations, lastValue: lastKnownValue)
+                
+                // Debug: Animation complete - disable flag until next view appearance
+                await MainActor.run {
+                    self.shouldAnimateValue = false
+                }
+            }
         } else {
-            // Debug: No significant change, update immediately
+            // Debug: No animation needed - update immediately
             #if DEBUG
-            print("💰 Updating value immediately (no significant change)")
+            if !shouldAnimate {
+                print("💰 Updating immediately (animation disabled)")
+            } else {
+                print("💰 Updating immediately (no significant change)")
+            }
             #endif
             await MainActor.run {
                 self.displayValue = valuations
+                self.shouldAnimateValue = false
             }
         }
         
-        // Debug: Save new portfolio value to preferences after value update
-        await MainActor.run {
-            prefs.lastPortfolioValue = valuations
-            prefs.lastPortfolioUpdateDate = Date()
-            #if DEBUG
-            print("💰 Saved new portfolio value to preferences: \(valuations)")
-            #endif
-        }
+        // Debug: DON'T save portfolio value here - only save when user leaves dashboard (onDisappear)
+        // This ensures every return to dashboard shows old → new value animation for dopamine hit
         
-        // Debug: Progressive chart loading for faster perceived performance
-        // Phase 1: Show current value immediately (instant chart appearance)
+        // Debug: Chart loading runs immediately in parallel with value animation
+        // Chart shows instantly while the big number animates independently
         await loadHistoricalDataProgressively(activeHerds: activeHerds, prefs: prefs, portfolioValue: valuations)
     }
     
