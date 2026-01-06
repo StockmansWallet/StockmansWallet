@@ -868,11 +868,7 @@ struct EnhancedHerdCard: View {
                             Text("Avg Price")
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.secondaryText)
-                            Text(valuation.pricePerKg, format: .currency(code: "AUD"))
-                                .font(Theme.caption)
-                                .fontWeight(.medium)
-                                .foregroundStyle(.white)
-                            + Text("/kg")
+                            Text("\(valuation.pricePerKg, format: .currency(code: "AUD"))/kg")
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.secondaryText)
                         }

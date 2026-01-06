@@ -39,21 +39,8 @@ struct DashboardView: View {
     @State private var performanceMetrics: PerformanceMetrics?
     
     // Debug: Crypto-style value reveal - show last known value briefly before updating
-    @State private var displayValue: Double = 0.0 {
-        didSet {
-            #if DEBUG
-            print("💰 displayValue changed: \(oldValue) → \(displayValue)")
-            #endif
-        }
-    }
-    @State private var isUpdatingValue: Bool = false {
-        didSet {
-            #if DEBUG
-            print("💰 isUpdatingValue changed: \(oldValue) → \(isUpdatingValue)")
-            #endif
-        }
-    }
-    
+    @State private var displayValue: Double = 0.0
+    @State private var isUpdatingValue: Bool = false
     // Debug: Dynamic change values for each time range (like CoinSpot)
     @State private var timeRangeChange: Double = 0.0
     
@@ -204,7 +191,6 @@ struct DashboardView: View {
         let backgroundImageName = userPrefs.backgroundImageName
         // Debug: Force view update when backgroundImageTrigger changes
         let _ = backgroundImageTrigger
-        let _ = print("🖼️ DashboardView: Rendering with background=\(backgroundImageName ?? "none"), isCustom=\(userPrefs.isCustomBackground), trigger=\(backgroundImageTrigger)")
         
         ZStack(alignment: .top) {
             // Debug: Background image with parallax effect (like iOS home screen wallpapers)
@@ -337,6 +323,7 @@ struct DashboardView: View {
                     .accessibilityLabel("Herd composition")
             }
             
+            #if DEBUG
             // Debug: Temporary Clear Mock Data button for development
             // TODO: Remove this button before production release
             Button(action: {
@@ -361,6 +348,7 @@ struct DashboardView: View {
             .padding(.top, Theme.sectionSpacing)
             .accessibilityLabel("Clear mock data")
             .accessibilityHint("Removes all mock data from the dashboard")
+            #endif
         }
         .padding(.top, -12)
         .padding(.bottom, 100)
@@ -522,21 +510,23 @@ struct DashboardView: View {
         do {
             try await loadCoordinator.execute {
                 // Debug: Check if we need to load data
-                let needsRefresh = await MainActor.run {
+                let (needsRefresh, isFirstLoad) = await MainActor.run {
+                    let isFirst = !self.hasLoadedData
+                    
                     // Force refresh (user pull-to-refresh, data changed)
                     if force {
                         #if DEBUG
                         print("📊 Force refresh requested")
                         #endif
-                        return true
+                        return (true, isFirst)
                     }
                     
                     // First time loading
-                    if !self.hasLoadedData {
+                    if isFirst {
                         #if DEBUG
                         print("📊 First time loading - will load cache then refresh if stale")
                         #endif
-                        return true
+                        return (true, isFirst)
                     }
                     
                     // Check if data is stale (>5 minutes old)
@@ -546,17 +536,17 @@ struct DashboardView: View {
                             #if DEBUG
                             print("📊 Data is stale (\(Int(timeSinceRefresh))s old), refreshing...")
                             #endif
-                            return true
+                            return (true, isFirst)
                         } else {
                             #if DEBUG
                             print("📊 Data is fresh (\(Int(timeSinceRefresh))s old), skipping reload")
                             #endif
-                            return false
+                            return (false, isFirst)
                         }
                     }
                     
                     // No last refresh date, needs refresh
-                    return true
+                    return (true, isFirst)
                 }
                 
                 guard needsRefresh else {
@@ -567,7 +557,7 @@ struct DashboardView: View {
                 }
                 
                 // Debug: First time only - load cached data immediately
-                if !self.hasLoadedData {
+                if isFirstLoad {
                     await MainActor.run {
                         let prefs = self.preferences.first ?? UserPreferences()
                         self.displayValue = prefs.lastPortfolioValue

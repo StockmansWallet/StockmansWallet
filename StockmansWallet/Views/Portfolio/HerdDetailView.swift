@@ -178,8 +178,8 @@ struct HerdDetailView: View {
         print("🔄 HerdDetailView: Starting loadValuation for herd ID: \(herdId)")
         await MainActor.run { isLoading = true }
         
-        // Debug: Fetch herd from current context to avoid stale references
-        guard let activeHerd = await MainActor.run(body: { herd }) else {
+        // Debug: Check if herd exists in current context
+        guard let activeHerd = herd else {
             print("❌ HerdDetailView: Failed to find herd in context")
             await MainActor.run {
                 self.isLoading = false
