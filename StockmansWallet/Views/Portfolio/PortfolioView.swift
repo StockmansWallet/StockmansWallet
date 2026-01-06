@@ -343,7 +343,7 @@ struct PortfolioStatsCards: View {
     
     var body: some View {
         VStack(spacing: 16) {
-            // Total Portfolio Value Card (full width, prominent)
+            // Debug: Total Portfolio Value - no background for cleaner look
             VStack(spacing: 8) {
                 Text("Total Portfolio Value")
                     .font(Theme.caption)
@@ -362,10 +362,8 @@ struct PortfolioStatsCards: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             
-            // Total Head and Active Herds Cards (side by side)
+            // Debug: Total Head and Active Herds - no backgrounds for cleaner look
             HStack(spacing: 16) {
                 // Total Head
                 VStack(spacing: 8) {
@@ -380,8 +378,6 @@ struct PortfolioStatsCards: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 
                 // Active Herds
                 VStack(spacing: 8) {
@@ -396,8 +392,6 @@ struct PortfolioStatsCards: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
         }
     }

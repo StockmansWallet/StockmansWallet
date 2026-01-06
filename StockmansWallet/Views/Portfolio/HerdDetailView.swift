@@ -202,7 +202,7 @@ struct HerdDetailView: View {
 }
 
 // MARK: - Total Value Card
-// Debug: Prominent total value display with herd name at the top
+// Debug: Prominent total value display with herd name at the top - no background for cleaner look
 struct TotalValueCard: View {
     let herd: HerdGroup
     let valuation: HerdValuation
@@ -241,8 +241,6 @@ struct TotalValueCard: View {
         }
         .frame(maxWidth: .infinity)
         .padding()
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 
@@ -301,7 +299,7 @@ struct WeightGrowthChart: View {
             
             // Debug: Show empty state message OR chart depending on data availability
             if daysHeld < 2 {
-                // Debug: Empty state for newly created herds with minimal data
+                // Debug: Empty state for newly created herds - no background to avoid doubling up
                 VStack(spacing: 10) {
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.system(size: 32))
@@ -321,8 +319,6 @@ struct WeightGrowthChart: View {
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 20)
-                .background(Theme.inputFieldBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             } else {
                 // Debug: Show chart when there's meaningful data to display
                 Chart(weightData) { point in
