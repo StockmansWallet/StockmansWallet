@@ -280,60 +280,89 @@ struct WeightGrowthChart: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Weight Growth")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                    Text("\(Int(initialWeight)) → \(Int(projectedWeight)) kg")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
+            // Debug: Only show weight header when there's meaningful data (not brand new)
+            if daysHeld >= 2 {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Weight Growth")
+                            .font(Theme.headline)
+                            .foregroundStyle(Theme.primaryText)
+                        Text("\(Int(initialWeight)) → \(Int(projectedWeight)) kg")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    Spacer()
+                    Text("+\(Int(projectedWeight - initialWeight)) kg")
+                        .font(Theme.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Theme.positiveChange)
                 }
-                Spacer()
-                Text("+\(Int(projectedWeight - initialWeight)) kg")
-                    .font(Theme.subheadline)
-                    .fontWeight(.semibold)
-                    .foregroundStyle(Theme.positiveChange)
             }
             
-            // Debug: Simple line chart showing weight progression
-            Chart(weightData) { point in
-                LineMark(
-                    x: .value("Date", point.date),
-                    y: .value("Weight", point.weight)
-                )
-                .foregroundStyle(Theme.accent)
-                .lineStyle(StrokeStyle(lineWidth: 2))
-                
-                AreaMark(
-                    x: .value("Date", point.date),
-                    y: .value("Weight", point.weight)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Theme.accent.opacity(0.3), Theme.accent.opacity(0.05)],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-            }
-            .frame(height: 120)
-            .chartYAxis {
-                AxisMarks(position: .leading) { value in
-                    AxisGridLine()
-                        .foregroundStyle(Theme.separator.opacity(0.3))
-                    AxisValueLabel()
+            // Debug: Show empty state message OR chart depending on data availability
+            if daysHeld < 2 {
+                // Debug: Empty state for newly created herds with minimal data
+                VStack(spacing: 10) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 32))
+                        .foregroundStyle(Theme.accent.opacity(0.6))
+                    
+                    Text("New Herd")
+                        .font(Theme.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Theme.primaryText)
+                    
+                    Text("This herd is brand new, so there's no historical data to show yet. Your weight growth chart will populate automatically over the coming days.")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .lineLimit(3)
                 }
-            }
-            .chartXAxis {
-                AxisMarks { value in
-                    AxisGridLine()
-                        .foregroundStyle(Theme.separator.opacity(0.3))
-                    AxisValueLabel(format: .dateTime.month().day())
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            } else {
+                // Debug: Show chart when there's meaningful data to display
+                Chart(weightData) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("Weight", point.weight)
+                    )
+                    .foregroundStyle(Theme.accent)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    
+                    AreaMark(
+                        x: .value("Date", point.date),
+                        y: .value("Weight", point.weight)
+                    )
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Theme.accent.opacity(0.3), Theme.accent.opacity(0.05)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                }
+                .frame(height: 120)
+                .chartYAxis {
+                    AxisMarks(position: .leading) { value in
+                        AxisGridLine()
+                            .foregroundStyle(Theme.separator.opacity(0.3))
+                        AxisValueLabel()
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks { value in
+                        AxisGridLine()
+                            .foregroundStyle(Theme.separator.opacity(0.3))
+                        AxisValueLabel(format: .dateTime.month().day())
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
                 }
             }
         }

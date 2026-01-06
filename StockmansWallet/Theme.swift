@@ -179,8 +179,7 @@ struct SquircleCard: ViewModifier {
     }
 }
 
-// MARK: - New Card Style with Stitching Effect
-// Debug: iOS 26 HIG - Card design with subtle dashed border (stitching effect) and shadow
+// MARK: - Card Style
 struct StitchedCard: ViewModifier {
     var showShadow: Bool = true
     
@@ -188,12 +187,12 @@ struct StitchedCard: ViewModifier {
         content
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .fill(Color.black.opacity(0))
+                    .fill(Color.white.opacity(0.02))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                     .strokeBorder(
-                        Color.white.opacity(0.1),
+                        Color.white.opacity(0),
                         style: StrokeStyle(
                             lineWidth: 1,
                             lineCap: .round,
