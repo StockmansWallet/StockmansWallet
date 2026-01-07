@@ -62,16 +62,13 @@ struct SignInPage: View {
                         .multilineTextAlignment(.center)
                         .accessibilityAddTraits(.isHeader)
                     
-                    Text("Tell us a bit about yourself")
-                        .font(.body)
-                        .foregroundStyle(Theme.secondaryText)
-                        .multilineTextAlignment(.center)
+        
                     
                     // Debug: Beta disclaimer badge
                     HStack(spacing: 8) {
                         Image(systemName: "info.circle.fill")
                             .font(.system(size: 14))
-                        Text("Beta Testing - User accounts coming soon")
+                        Text("Beta Testing Only - No user authentication")
                             .font(.caption)
                     }
                     .foregroundStyle(Theme.accent)
@@ -129,7 +126,7 @@ struct SignInPage: View {
                                 .font(.caption)
                                 .foregroundStyle(Theme.secondaryText.opacity(0.7))
                         }
-                        TextField("your@email.com", text: $email)
+                        TextField("Enter your email", text: $email)
                             .textFieldStyle(SignInTextFieldStyle())
                             .keyboardType(.emailAddress)
                             .textContentType(.emailAddress)
