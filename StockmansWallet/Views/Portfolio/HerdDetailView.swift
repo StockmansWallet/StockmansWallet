@@ -213,6 +213,21 @@ struct TotalValueCard: View {
     let herd: HerdGroup
     let valuation: HerdValuation
     
+    // Debug: Format currency value with grey decimal portion
+    private var formattedValue: (whole: String, decimal: String) {
+        let value = valuation.netRealizableValue
+        let numberFormatter = NumberFormatter()
+        numberFormatter.numberStyle = .decimal
+        numberFormatter.maximumFractionDigits = 0
+        numberFormatter.groupingSeparator = ","
+        numberFormatter.usesGroupingSeparator = true
+        
+        let whole = numberFormatter.string(from: NSNumber(value: abs(value))) ?? "0"
+        let decimal = String(format: "%02d", Int((abs(value) - floor(abs(value))) * 100))
+        
+        return (whole: whole, decimal: decimal)
+    }
+    
     var body: some View {
         VStack(spacing: 12) {
             // Debug: Herd name centered and smaller
@@ -238,31 +253,54 @@ struct TotalValueCard: View {
                 Spacer()
             }
             
-            // Debug: Total value without label
-            Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
-                .font(.system(size: 44, weight: .bold))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
+            // Debug: Total value with grey decimal - matches Dashboard/Portfolio styling
+            HStack(alignment: .firstTextBaseline, spacing: 0) {
+                Text("$")
+                    .font(.system(size: 36, weight: .bold))
+                    .foregroundStyle(.white)
+                    .tracking(-2)
+                    .baselineOffset(3)
+                    .padding(.trailing, 6)
+                
+                Text(formattedValue.whole)
+                    .font(.system(size: 44, weight: .bold))
+                    .foregroundStyle(.white)
+                    .tracking(-2)
+                    .monospacedDigit()
+                
+                Text(".")
+                    .font(.system(size: 16, weight: .bold))
+                    .foregroundStyle(Color(hex: "9E9E9E"))
+                    .tracking(-2)
+                
+                Text(formattedValue.decimal)
+                    .font(.system(size: 22, weight: .bold))
+                    .foregroundStyle(Color(hex: "9E9E9E"))
+                    .tracking(-1)
+                    .monospacedDigit()
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
         }
         .frame(maxWidth: .infinity)
-        .padding()
+        .padding(.horizontal)
     }
 }
 
 // MARK: - Herd Stats Card
-// Debug: Horizontal card showing species and total head - matches Portfolio page styling
+// Debug: Horizontal card showing total head and species - matches Portfolio page styling
 struct HerdStatsCard: View {
     let herd: HerdGroup
     
     var body: some View {
         HStack(spacing: 24) {
-            // Species
+            // Total Head (left side)
             HStack(spacing: 8) {
-                Text("Species")
+                Text("Total Head")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
-                Text(herd.species)
+                Text("\(herd.headCount)")
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(Theme.primaryText)
                     .lineLimit(1)
@@ -275,12 +313,12 @@ struct HerdStatsCard: View {
                 .fill(Theme.separator.opacity(0.3))
                 .frame(width: 1, height: 30)
             
-            // Total Head
+            // Species (right side)
             HStack(spacing: 8) {
-                Text("Total Head")
+                Text("Species")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
-                Text("\(herd.headCount)")
+                Text(herd.species)
                     .font(.system(size: 20, weight: .bold))
                     .foregroundStyle(Theme.primaryText)
                     .lineLimit(1)
@@ -288,7 +326,8 @@ struct HerdStatsCard: View {
             }
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
-        .padding()
+        .padding(.horizontal, 20)
+        .padding(.vertical, 12)
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }

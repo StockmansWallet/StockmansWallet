@@ -49,6 +49,7 @@ struct PortfolioView: View {
                             // View Mode Selector
                             PortfolioViewModeSelector(selectedView: $selectedView)
                                 .padding(.horizontal)
+                                .padding(.vertical, -8) // Debug: Reduce gap above and below segmented control
                             
                             if selectedView == .overview {
                                 overviewContent
@@ -366,7 +367,7 @@ struct PortfolioStatsCards: View {
     let isLoading: Bool
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: Theme.sectionSpacing) {
             // Debug: Total Value - simplified title, no background for cleaner look
             VStack(spacing: 8) {
                 Text("Total Value")
@@ -385,7 +386,7 @@ struct PortfolioStatsCards: View {
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding()
+            .padding(.horizontal)
             
             // Debug: Combined stats card with horizontal layout for cleaner, more compact design
             HStack(spacing: 24) {
@@ -420,7 +421,8 @@ struct PortfolioStatsCards: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .trailing)
             }
-            .padding()
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
             .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
@@ -435,10 +437,13 @@ struct PortfolioViewModeSelector: View {
     var body: some View {
         Picker("View Mode", selection: $selectedView) {
             ForEach(PortfolioView.PortfolioViewMode.allCases, id: \.self) { mode in
-                Text(mode.rawValue).tag(mode)
+                Text(mode.rawValue)
+                    .font(Theme.headline) // Debug: Larger font for better readability
+                    .tag(mode)
             }
         }
         .pickerStyle(.segmented)
+        .frame(height: 50) // Debug: Increased height for better tap target (taller than standard 44pt)
         .onChange(of: selectedView) { _, _ in
             HapticManager.tap()
         }

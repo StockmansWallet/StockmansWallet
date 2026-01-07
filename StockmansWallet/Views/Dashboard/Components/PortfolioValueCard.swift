@@ -35,7 +35,7 @@ struct PortfolioValueCard: View {
                 value: value,
                 isScrubbing: isScrubbing
             )
-                .padding(.bottom, 4)
+                .padding(.bottom, 8)
                 // Debug: Pulse/glow effect during value update (crypto-style)
                 .shadow(
                     color: isUpdating ? Theme.accent.opacity(0.6) : .clear,
