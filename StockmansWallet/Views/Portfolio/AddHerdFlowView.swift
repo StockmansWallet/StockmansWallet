@@ -25,8 +25,8 @@ struct AddHerdFlowView: View {
     @State private var headCount: Int? = nil
     @State private var averageAgeMonths: Int? = nil
     @State private var averageWeightKg: Int? = nil
-    @State private var dailyGainGrams = 0
-    @State private var mortalityRate = 0
+    @State private var dailyGainGrams = 5 // Default: 0.5 kg/day
+    @State private var mortalityRate = 2 // Default: 2%
     @State private var calvesAtFootHeadCount: Int? = nil
     @State private var calvesAtFootAgeMonths: Int? = nil
     @State private var selectedSaleyard: String? = nil
@@ -561,108 +561,56 @@ struct AddHerdFlowView: View {
                     .accessibilityLabel("Average weight in kilograms")
             }
             
-            // Debug: HIG-compliant toggle/slider for daily gain (matches reference screenshots)
+            // Debug: Daily weight gain slider (always visible)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Daily Weight Gain (Estimated)")
+                    Text("Average Daily Weight Gain")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
                     Spacer()
+                    Text(String(format: "%.1f kg/day", Double(dailyGainGrams) / 10.0))
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.accent)
+                        .fontWeight(.semibold)
                 }
                 
-                Toggle(isOn: Binding(
-                    get: { dailyGainGrams > 0 },
-                    set: { isOn in
-                        if isOn && dailyGainGrams == 0 {
-                            dailyGainGrams = 10 // Default to 1.0 kg/day
-                        } else if !isOn {
-                            dailyGainGrams = 0
-                        }
-                    }
-                )) {
-                    if dailyGainGrams > 0 {
-                        Text(String(format: "%.1f kg/day", Double(dailyGainGrams) / 10.0))
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.accent)
-                            .fontWeight(.semibold)
-                    } else {
-                        Text("Off")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                }
-                .tint(Theme.accent)
-                .padding()
-                .background(Theme.inputFieldBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .accessibilityLabel("Daily weight gain toggle")
-                
-                if dailyGainGrams > 0 {
-                    Slider(value: Binding(
-                        get: { Double(dailyGainGrams) },
-                        set: { dailyGainGrams = Int($0) }
-                    ), in: 1...30, step: 1)
-                        .tint(Theme.accent)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 8)
-                        .background(Theme.inputFieldBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .accessibilityLabel("Daily weight gain slider")
-                        .accessibilityValue(String(format: "%.1f kilograms per day", Double(dailyGainGrams) / 10.0))
-                        .transition(.opacity)
-                }
+                Slider(value: Binding(
+                    get: { Double(dailyGainGrams) },
+                    set: { dailyGainGrams = Int($0) }
+                ), in: 0...30, step: 1)
+                    .tint(Theme.accent)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 8)
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .accessibilityLabel("Average daily weight gain")
+                    .accessibilityValue(String(format: "%.1f kilograms per day", Double(dailyGainGrams) / 10.0))
             }
             
-            // Debug: HIG-compliant toggle/slider for mortality rate (matches reference screenshots)
+            // Debug: Mortality rate slider (always visible)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Mortality Rate (Estimated)")
+                    Text("Estimated Mortality")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
                     Spacer()
+                    Text("\(mortalityRate)%")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.accent)
+                        .fontWeight(.semibold)
                 }
                 
-                Toggle(isOn: Binding(
-                    get: { mortalityRate > 0 },
-                    set: { isOn in
-                        if isOn && mortalityRate == 0 {
-                            mortalityRate = 5 // Default to 5%
-                        } else if !isOn {
-                            mortalityRate = 0
-                        }
-                    }
-                )) {
-                    if mortalityRate > 0 {
-                        Text("\(mortalityRate)%")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.accent)
-                            .fontWeight(.semibold)
-                    } else {
-                        Text("Off")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                }
-                .tint(Theme.accent)
-                .padding()
-                .background(Theme.inputFieldBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .accessibilityLabel("Mortality rate toggle")
-                
-                if mortalityRate > 0 {
-                    Slider(value: Binding(
-                        get: { Double(mortalityRate) },
-                        set: { mortalityRate = Int($0) }
-                    ), in: 1...30, step: 1)
-                        .tint(Theme.accent)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 8)
-                        .background(Theme.inputFieldBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                        .accessibilityLabel("Mortality rate slider")
-                        .accessibilityValue("\(mortalityRate) percent")
-                        .transition(.opacity)
-                }
+                Slider(value: Binding(
+                    get: { Double(mortalityRate) },
+                    set: { mortalityRate = Int($0) }
+                ), in: 0...30, step: 1)
+                    .tint(Theme.accent)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 8)
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .accessibilityLabel("Estimated mortality rate")
+                    .accessibilityValue("\(mortalityRate) percent")
             }
             
             // Debug: Calves at Foot removed from Physical Attributes (now in Breeding Details screen)
