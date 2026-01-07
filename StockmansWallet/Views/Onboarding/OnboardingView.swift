@@ -51,18 +51,19 @@ struct OnboardingView: View {
                     )
                     
                 case .signIn:
-                    // Debug: Full-screen sign-in page (HIG-compliant for authentication flows)
+                    // Debug: Profile setup page for beta testing (no authentication)
+                    // Rule: Simple solution - captures name and optional email for personalization
                     SignInPage(
                         currentPage: $currentPage,
                         userPrefs: $userPrefs,
                         onSignInComplete: {
                             onboardingStep = .onboardingPages
                         },
-                        // Debug: Demo sign-in handlers
-                        onEmailSignIn: demoEmailSignIn,
-                        onEmailSignUp: demoEmailSignUp,
-                        onAppleSignIn: demoAppleSignIn,
-                        onGoogleSignIn: demoGoogleSignIn
+                        // Debug: Beta testing - only onEmailSignUp is used (all users are "new")
+                        onEmailSignIn: nil, // Not used in beta
+                        onEmailSignUp: demoEmailSignUp, // Continues to onboarding flow
+                        onAppleSignIn: nil, // Not used in beta
+                        onGoogleSignIn: nil // Not used in beta
                     )
                     
                 case .onboardingPages:
@@ -290,14 +291,30 @@ struct OnboardingView: View {
         try? modelContext.save()
     }
     
-    // MARK: - Demo Sign-In Methods (TEMPORARY - DELETE BEFORE LAUNCH) ⚠️
+    // MARK: - Beta Profile Setup Method
+    // Rule: Simple solution for beta testing - no authentication, just profile capture
     
-    // Debug: Demo Email/Password sign-in - Existing user goes to Farmer dashboard
-    // In production, this would authenticate against backend
+    // Debug: Beta profile setup - captures name/email then continues to onboarding
+    // In production, this would create account on Supabase backend
+    private func demoEmailSignUp() {
+        HapticManager.tap()
+        
+        // Debug: Name/email already saved in SignInPage, now navigate to onboarding
+        // Profile data will be used throughout the app (reports, settings, etc.)
+        withAnimation {
+            onboardingStep = .onboardingPages
+            currentPage = 0 // Start at User Type Selection
+        }
+    }
+    
+    // MARK: - Unused Auth Methods (Commented out for beta, restore for production)
+    
+    /* TODO: Restore for production authentication
+    
+    // Debug: Email/Password sign-in - Existing user goes to dashboard
     private func demoEmailSignIn() {
         HapticManager.tap()
         
-        // Debug: Get or create the user preferences object
         let prefsToUpdate: UserPreferences
         if let existing = preferences.first {
             prefsToUpdate = existing
@@ -306,9 +323,8 @@ struct OnboardingView: View {
             modelContext.insert(prefsToUpdate)
         }
         
-        // Debug: Mark as completed - existing user goes straight to dashboard
         prefsToUpdate.hasCompletedOnboarding = true
-        prefsToUpdate.role = UserRole.farmerGrazier.rawValue // Default to farmer for demo
+        prefsToUpdate.role = UserRole.farmerGrazier.rawValue
         prefsToUpdate.firstName = userPrefs.firstName
         prefsToUpdate.lastName = userPrefs.lastName
         prefsToUpdate.email = userPrefs.email
@@ -316,24 +332,10 @@ struct OnboardingView: View {
         try? modelContext.save()
     }
     
-    // Debug: Demo Email/Password sign-up - New user goes through onboarding
-    // In production, this would create account on backend then show onboarding
-    private func demoEmailSignUp() {
-        HapticManager.tap()
-        
-        // Debug: Save name/email already done in SignInPage, now navigate to onboarding
-        // No delay needed - full-screen to full-screen transition is smooth
-        withAnimation {
-            onboardingStep = .onboardingPages
-            currentPage = 0 // Start at User Type Selection
-        }
-    }
-    
-    // Debug: Demo Apple sign-in - Goes to Farmer dashboard
+    // Debug: Apple sign-in - Authenticate with Apple ID
     private func demoAppleSignIn() {
         HapticManager.tap()
         
-        // Debug: Get or create the user preferences object
         let prefsToUpdate: UserPreferences
         if let existing = preferences.first {
             prefsToUpdate = existing
@@ -342,18 +344,16 @@ struct OnboardingView: View {
             modelContext.insert(prefsToUpdate)
         }
         
-        // Debug: Update the preferences with Apple sign-in data
         prefsToUpdate.hasCompletedOnboarding = true
-        prefsToUpdate.role = UserRole.farmerGrazier.rawValue // Set as farmer for demo
+        prefsToUpdate.role = UserRole.farmerGrazier.rawValue
         
         try? modelContext.save()
     }
     
-    // Debug: Demo Google sign-in - Goes to Advisor dashboard
+    // Debug: Google sign-in - Authenticate with Google account
     private func demoGoogleSignIn() {
         HapticManager.tap()
         
-        // Debug: Get or create the user preferences object
         let prefsToUpdate: UserPreferences
         if let existing = preferences.first {
             prefsToUpdate = existing
@@ -362,10 +362,10 @@ struct OnboardingView: View {
             modelContext.insert(prefsToUpdate)
         }
         
-        // Debug: Update the preferences with Google sign-in data
         prefsToUpdate.hasCompletedOnboarding = true
-        prefsToUpdate.role = UserRole.livestockAgent.rawValue // Set as advisor for demo
+        prefsToUpdate.role = UserRole.livestockAgent.rawValue
         
         try? modelContext.save()
     }
+    */
 }
