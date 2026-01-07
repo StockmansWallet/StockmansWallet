@@ -78,3 +78,4 @@ struct FarmComparisonData: Identifiable {
 
 
 
+

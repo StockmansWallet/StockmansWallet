@@ -573,6 +573,10 @@ struct HerdDetailsCard: View {
                 if let paddock = herd.paddockName, !paddock.isEmpty {
                     DetailRow(label: "Paddock", value: paddock)
                 }
+                // Debug: Show mortality rate if it exists
+                if let mortality = herd.mortalityRate, mortality > 0 {
+                    DetailRow(label: "Mortality Rate", value: "\(Int(mortality * 100))% annually")
+                }
             }
             
             Divider()
@@ -593,6 +597,20 @@ struct HerdDetailsCard: View {
                 SectionHeader(title: "Timeline")
                 DetailRow(label: "Days Held", value: "\(herd.daysHeld) days")
                 DetailRow(label: "Created", value: herd.createdAt.formatted(date: .abbreviated, time: .omitted))
+            }
+            
+            // Debug: Show additional notes if they exist (for non-breeders or general info)
+            if let notes = herd.additionalInfo, !notes.isEmpty, !herd.isBreeder {
+                Divider()
+                    .background(Theme.separator.opacity(0.3))
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionHeader(title: "Additional Information")
+                    Text(notes)
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
         .padding(Theme.cardPadding)
@@ -848,9 +866,58 @@ struct IndividualAnimalRow: View {
 }
 
 // MARK: - Breeding Details Card
-// Debug: Breeding information only shown when relevant
+// Debug: Breeding information only shown when herd.isBreeder is true
 struct BreedingDetailsCard: View {
     let herd: HerdGroup
+    
+    // Debug: Parse breeding program information from additionalInfo
+    private var breedingProgramInfo: (type: String?, details: String?) {
+        guard let additionalInfo = herd.additionalInfo else {
+            return (nil, nil)
+        }
+        
+        // Parse breeding program type (AI, Controlled, Uncontrolled)
+        if additionalInfo.contains("Breeding: AI") {
+            let components = additionalInfo.components(separatedBy: "Insemination Period: ")
+            let details = components.count > 1 ? components[1].components(separatedBy: "\n").first : nil
+            return ("AI (Artificial Insemination)", details)
+        } else if additionalInfo.contains("Breeding: Controlled") {
+            let components = additionalInfo.components(separatedBy: "Joining Period: ")
+            let details = components.count > 1 ? components[1].components(separatedBy: "\n").first : nil
+            return ("Controlled Breeding", details)
+        } else if additionalInfo.contains("Breeding: Uncontrolled") {
+            return ("Uncontrolled Breeding", nil)
+        }
+        
+        return (nil, nil)
+    }
+    
+    // Debug: Parse calves at foot information from additionalInfo
+    private var calvesAtFootInfo: String? {
+        guard let additionalInfo = herd.additionalInfo else { return nil }
+        
+        // Look for "Calves at Foot: X head, Y months" pattern
+        if let range = additionalInfo.range(of: "Calves at Foot: [^\\n]+", options: .regularExpression) {
+            let calvesInfo = String(additionalInfo[range])
+            // Extract just the numeric part after "Calves at Foot: "
+            return calvesInfo.replacingOccurrences(of: "Calves at Foot: ", with: "")
+        }
+        
+        return nil
+    }
+    
+    // Debug: Extract any other notes from additionalInfo (excluding breeding and calves info)
+    private var generalNotes: String? {
+        guard let additionalInfo = herd.additionalInfo else { return nil }
+        
+        // Split by newlines and filter out breeding/calves lines
+        let lines = additionalInfo.components(separatedBy: "\n")
+            .filter { !$0.contains("Breeding:") && !$0.contains("Calves at Foot:") }
+            .joined(separator: "\n")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        return lines.isEmpty ? nil : lines
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -859,8 +926,18 @@ struct BreedingDetailsCard: View {
                 .foregroundStyle(Theme.primaryText)
             
             VStack(spacing: 8) {
-                DetailRow(label: "Pregnant", value: herd.isPregnant ? "Yes" : "No")
+                // Debug: Show breeding program type if available
+                if let programType = breedingProgramInfo.type {
+                    DetailRow(label: "Breeding Program", value: programType)
+                    
+                    // Show joining/insemination period if available
+                    if let periodDetails = breedingProgramInfo.details {
+                        DetailRow(label: "Period", value: periodDetails)
+                    }
+                }
+                
                 DetailRow(label: "Calving Rate", value: "\(Int(herd.calvingRate * 100))%")
+                DetailRow(label: "Pregnant", value: herd.isPregnant ? "Yes" : "No")
                 
                 if let joinedDate = herd.joinedDate {
                     DetailRow(label: "Joined Date", value: joinedDate.formatted(date: .abbreviated, time: .omitted))
@@ -894,6 +971,25 @@ struct BreedingDetailsCard: View {
                 
                 if let lactationStatus = herd.lactationStatus {
                     DetailRow(label: "Lactation", value: lactationStatus)
+                }
+                
+                // Debug: Show calves at foot information if available
+                if let calvesInfo = calvesAtFootInfo {
+                    DetailRow(label: "Calves at Foot", value: calvesInfo)
+                }
+            }
+            
+            // Debug: Show general notes in a separate section if they exist
+            if let notes = generalNotes {
+                Divider()
+                    .background(Theme.separator.opacity(0.3))
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionHeader(title: "Notes")
+                    Text(notes)
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
         }

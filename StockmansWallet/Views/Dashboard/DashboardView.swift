@@ -413,7 +413,7 @@ struct DashboardView: View {
                 HStack(spacing: 8) {
                     Image(systemName: "testtube.2")
                         .font(.system(size: 14))
-                    Text("Beta Testing Tools")
+                    Text("Beta Testing Only")
                         .font(Theme.caption)
                         .fontWeight(.semibold)
                 }
@@ -450,7 +450,7 @@ struct DashboardView: View {
                 }
                 .disabled(isClearingMockData)
                 .opacity(isClearingMockData ? 0.6 : 1.0)
-                .accessibilityLabel("Clear all data")
+                .accessibilityLabel("Clear Mock Data")
                 .accessibilityHint("Removes all herds and data for fresh testing")
                 
                 // Disclaimer note
@@ -458,7 +458,7 @@ struct DashboardView: View {
                     Image(systemName: "info.circle.fill")
                         .font(.system(size: 14))
                         .foregroundStyle(Theme.secondaryText)
-                    Text("Use this to reset your test data and start fresh. All herds, animals, and generated data will be permanently deleted.")
+                    Text("Use this to reset your test mock data and start fresh. All herds, animals, and generated data will be deleted.")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
