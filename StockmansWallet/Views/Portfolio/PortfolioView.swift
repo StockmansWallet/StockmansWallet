@@ -1147,7 +1147,7 @@ struct EnhancedHerdCard: View {
             
             // Debug: Bottom row with weights and sell button - OUTSIDE NavigationLink so sell button works on first tap
             if let valuation = valuation {
-                HStack(spacing: 12) {
+                HStack(alignment: .bottom, spacing: 12) {
                     // Average Weight
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Avg Weight")
@@ -1171,7 +1171,7 @@ struct EnhancedHerdCard: View {
                     
                     Spacer()
                     
-                    // Debug: Sell button on bottom right - small, bordered style with semi-transparent background
+                    // Debug: Sell button on bottom right - properly styled with rounded corners and background
                     if onSellTapped != nil {
                         Button {
                             HapticManager.tap()
@@ -1185,11 +1185,15 @@ struct EnhancedHerdCard: View {
                                 .foregroundStyle(Theme.accent)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 4)
-                                .background(Theme.accent.opacity(0.1))
+                                .background(
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .fill(Theme.accent.opacity(0.1))
+                                )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
                                         .stroke(Theme.accent, lineWidth: 0.8)
                                 )
+                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                         }
                         .buttonStyle(.plain)
                     }
