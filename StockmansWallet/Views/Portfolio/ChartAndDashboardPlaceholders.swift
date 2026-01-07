@@ -145,17 +145,39 @@ struct TimeRangeSelector: View {
     }
 }
 
-// MARK: - Herd Performance View (Weekly)
-// Debug: Shows weekly performance by herd category with percentage changes
+// MARK: - Herd Performance View
+// Debug: Shows performance by herd category with percentage changes over selected time range
 struct MarketPulseView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var herds: [HerdGroup]
     @Query private var preferences: [UserPreferences]
     @State private var categoryPerformance: [HerdCategoryPerformance] = []
     @State private var isLoading = true
+    @State private var performanceTimeRange: PerformanceTimeRange = .week
+    @State private var showingCustomDatePicker = false
+    @State private var customStartDate: Date?
+    @State private var customEndDate: Date?
     
-    // Debug: Access ValuationEngine for calculating weekly changes
+    // Debug: Access ValuationEngine for calculating performance changes
     let valuationEngine = ValuationEngine.shared
+    
+    // Debug: Time range options for performance tracking
+    enum PerformanceTimeRange: String, CaseIterable {
+        case week = "Week"
+        case month = "Month"
+        case year = "Year"
+        case custom = "Custom"
+        
+        // Debug: Display label for each range
+        var displayLabel: String {
+            switch self {
+            case .week: return "7d"
+            case .month: return "1m"
+            case .year: return "1y"
+            case .custom: return "Custom"
+            }
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -164,13 +186,40 @@ struct MarketPulseView: View {
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
-                HStack(spacing: 4) {
-                    Text("7d")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .foregroundStyle(Theme.accent)
+                
+                // Debug: Time range selector menu
+                Menu {
+                    ForEach(PerformanceTimeRange.allCases, id: \.self) { range in
+                        Button {
+                            HapticManager.tap()
+                            if range == .custom {
+                                showingCustomDatePicker = true
+                            } else {
+                                performanceTimeRange = range
+                            }
+                        } label: {
+                            HStack {
+                                Text(range.rawValue)
+                                if performanceTimeRange == range {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        // Debug: Show custom date range or standard label
+                        Text(customDateRangeLabel)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Image(systemName: "chevron.down.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .contentShape(Rectangle())
                 }
+                .accessibilityLabel("Select performance time range")
+                .accessibilityValue(performanceTimeRange.rawValue)
             }
             
             if isLoading {
@@ -197,6 +246,21 @@ struct MarketPulseView: View {
         }
         .padding(Theme.cardPadding)
         .stitchedCard()
+        .sheet(isPresented: $showingCustomDatePicker) {
+            CustomDateRangeSheet(
+                startDate: $customStartDate,
+                endDate: $customEndDate,
+                timeRange: Binding(
+                    get: { 
+                        // Debug: Map PerformanceTimeRange to TimeRange for sheet compatibility
+                        performanceTimeRange == .custom ? .custom : .week 
+                    },
+                    set: { _ in 
+                        performanceTimeRange = .custom 
+                    }
+                )
+            )
+        }
         .task {
             await loadCategoryPerformance()
         }
@@ -206,9 +270,43 @@ struct MarketPulseView: View {
                 await loadCategoryPerformance()
             }
         }
+        .onChange(of: performanceTimeRange) { _, _ in
+            // Debug: Reload when time range changes
+            Task {
+                await loadCategoryPerformance()
+            }
+        }
+        .onChange(of: customStartDate) { _, _ in
+            // Debug: Reload when custom start date changes
+            if performanceTimeRange == .custom {
+                Task {
+                    await loadCategoryPerformance()
+                }
+            }
+        }
+        .onChange(of: customEndDate) { _, _ in
+            // Debug: Reload when custom end date changes
+            if performanceTimeRange == .custom {
+                Task {
+                    await loadCategoryPerformance()
+                }
+            }
+        }
     }
     
-    // Debug: Calculate weekly performance for each herd category
+    // Debug: Format custom date range label (e.g., "Jan 1 - Feb 15")
+    private var customDateRangeLabel: String {
+        if performanceTimeRange == .custom,
+           let start = customStartDate,
+           let end = customEndDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        }
+        return performanceTimeRange.displayLabel
+    }
+    
+    // Debug: Calculate performance for each herd category over selected time range
     private func loadCategoryPerformance() async {
         isLoading = true
         
@@ -224,15 +322,53 @@ struct MarketPulseView: View {
             return
         }
         
-        // Debug: Calculate values for each category
+        // Debug: Calculate comparison date based on selected time range
         let calendar = Calendar.current
         let now = Date()
-        guard let weekAgo = calendar.date(byAdding: .day, value: -7, to: now) else {
-            await MainActor.run {
-                self.categoryPerformance = []
-                self.isLoading = false
+        let comparisonDate: Date
+        
+        switch performanceTimeRange {
+        case .week:
+            guard let date = calendar.date(byAdding: .day, value: -7, to: now) else {
+                await MainActor.run {
+                    self.categoryPerformance = []
+                    self.isLoading = false
+                }
+                return
             }
-            return
+            comparisonDate = date
+        case .month:
+            guard let date = calendar.date(byAdding: .month, value: -1, to: now) else {
+                await MainActor.run {
+                    self.categoryPerformance = []
+                    self.isLoading = false
+                }
+                return
+            }
+            comparisonDate = date
+        case .year:
+            guard let date = calendar.date(byAdding: .year, value: -1, to: now) else {
+                await MainActor.run {
+                    self.categoryPerformance = []
+                    self.isLoading = false
+                }
+                return
+            }
+            comparisonDate = date
+        case .custom:
+            // Debug: Use custom start date if available, otherwise default to 7 days ago
+            if let startDate = customStartDate {
+                comparisonDate = startDate
+            } else {
+                guard let date = calendar.date(byAdding: .day, value: -7, to: now) else {
+                    await MainActor.run {
+                        self.categoryPerformance = []
+                        self.isLoading = false
+                    }
+                    return
+                }
+                comparisonDate = date
+            }
         }
         
         // Group herds by category
@@ -243,11 +379,11 @@ struct MarketPulseView: View {
         for (category, categoryHerds) in categoryGroups {
             // Debug: Calculate current value for category
             var currentValue: Double = 0.0
-            var weekAgoValue: Double = 0.0
+            var comparisonValue: Double = 0.0
             
             for herd in categoryHerds {
-                // Only include herds that existed a week ago
-                guard herd.createdAt <= weekAgo else { continue }
+                // Only include herds that existed at comparison date
+                guard herd.createdAt <= comparisonDate else { continue }
                 
                 let currentValuation = await valuationEngine.calculateHerdValue(
                     herd: herd,
@@ -259,18 +395,18 @@ struct MarketPulseView: View {
                     herd: herd,
                     preferences: prefs,
                     modelContext: modelContext,
-                    asOfDate: weekAgo
+                    asOfDate: comparisonDate
                 )
                 
                 currentValue += currentValuation.netRealizableValue
-                weekAgoValue += pastValuation.netRealizableValue
+                comparisonValue += pastValuation.netRealizableValue
             }
             
             // Debug: Calculate percentage change
-            guard weekAgoValue > 0 else { continue }
+            guard comparisonValue > 0 else { continue }
             
-            let change = currentValue - weekAgoValue
-            let percentChange = (change / weekAgoValue) * 100
+            let change = currentValue - comparisonValue
+            let percentChange = (change / comparisonValue) * 100
             
             // Debug: Determine trend based on percentage change threshold
             let trend: PriceTrend = {
