@@ -25,8 +25,8 @@ struct AddHerdFlowView: View {
     @State private var headCount: Int? = nil
     @State private var averageAgeMonths: Int? = nil
     @State private var averageWeightKg: Int? = nil
-    @State private var dailyGainGrams = 5 // Default: 0.5 kg/day
-    @State private var mortalityRate = 2 // Default: 2%
+    @State private var dailyGainGrams = 15 // Default: 1.5 kg/day (halfway on 0-30 scale)
+    @State private var mortalityRate = 15 // Default: 15% (halfway on 0-30% scale)
     @State private var calvesAtFootHeadCount: Int? = nil
     @State private var calvesAtFootAgeMonths: Int? = nil
     @State private var selectedSaleyard: String? = nil
@@ -406,12 +406,17 @@ struct AddHerdFlowView: View {
                 }
             }
             
-            // Debug: Helper text for coming soon animals
-            Text("Support for Sheep, Pigs, and Goats coming soon!")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondaryText)
-                .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 4)
+            // Debug: Subtle info text for coming soon animals (matches onboarding style)
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .foregroundStyle(Theme.secondaryText)
+                    .font(.caption)
+                Text("Support for Sheep, Pigs, and Goats coming soon!")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 20)
@@ -627,53 +632,41 @@ struct AddHerdFlowView: View {
                 .font(Theme.title)
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
             
-            // Debug: Saleyard picker button that opens searchable sheet
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Saleyard")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                
-                // Debug: Picker button meets iOS 26 HIG minimum touch target of 44pt height
-                Button(action: {
-                    HapticManager.tap()
-                    showingSaleyardPicker = true
-                }) {
-                    HStack {
-                        Text(selectedSaleyard ?? "Use Default")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.primaryText)
-                        Spacer()
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                    .padding()
-                    .frame(minHeight: Theme.minimumTouchTarget) // iOS 26 HIG: Minimum 44pt
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .buttonBorderShape(.roundedRectangle)
-                .accessibilityLabel("Select saleyard")
-            }
-            
-            // Debug: Informative text about valuation engine - placed below picker
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "info.circle.fill")
-                        .foregroundStyle(Theme.accent)
-                        .font(.system(size: 16))
-                        .padding(.top, 2)
-                    
-                    Text("Valuation engine currently derived from this saleyard. You can change it later in Settings.")
+            // Debug: Saleyard picker button that opens searchable sheet (no redundant label)
+            Button(action: {
+                HapticManager.tap()
+                showingSaleyardPicker = true
+            }) {
+                HStack {
+                    Text(selectedSaleyard ?? "Use Default")
                         .font(Theme.body)
+                        .foregroundStyle(Theme.primaryText)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Theme.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding()
-                .background(Theme.accent.opacity(0.1))
+                .frame(minHeight: Theme.minimumTouchTarget) // iOS 26 HIG: Minimum 44pt
+                .background(Theme.inputFieldBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
+            .buttonBorderShape(.roundedRectangle)
+            .accessibilityLabel("Select saleyard")
+            
+            // Debug: Subtle info text (matches onboarding style)
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .foregroundStyle(Theme.secondaryText)
+                    .font(.caption)
+                Text("Valuation engine currently derived from this saleyard. You can change it later in Settings.")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 20)
