@@ -22,10 +22,10 @@ struct AddIndividualAnimalView: View {
     @State private var selectedCategory = ""
     @State private var ageMonths = 12
     @State private var initialWeight: Double = 300
-    @State private var dailyWeightGain: Double = 0.5
+    @State private var dailyWeightGain: Double = 1.0 // Default: 1.0 kg/day (halfway on 0-2.0 scale)
     @State private var joinedDate = Date()
     // Debug: Breeding-specific state variables (removed inCalf and isPregnant, added breedingProgramType)
-    @State private var calvingRate: Int = 85
+    @State private var calvingRate: Int = 50 // Default: 50% (halfway on 0-100% scale)
     @State private var breedingProgramType: BreedingProgramType = .uncontrolled
     @State private var joiningPeriodStart = Date()
     @State private var joiningPeriodEnd = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
@@ -59,7 +59,10 @@ struct AddIndividualAnimalView: View {
     }
     
     private var totalSteps: Int {
-        isBreederCategory ? 4 : 3 // Basic Info, Breeder (conditional), Physical Attributes, Additional Details
+        // Debug: Updated for 3-page split (Location, Species, Breed)
+        // Non-breeders: 5 steps (Location, Species, Breed, Physical, Additional)
+        // Breeders: 6 steps (Location, Species, Breed, Breeder, Physical, Additional)
+        isBreederCategory ? 6 : 5
     }
     
     private var breedOptions: [String] {
@@ -144,18 +147,31 @@ struct AddIndividualAnimalView: View {
                 .padding(.bottom, 20)
                 
                 // Content
+                // Debug: Updated flow logic with 3-page split (Location, Species, Breed)
                 ScrollView {
                     VStack(spacing: 0) {
                         if currentStep == 1 {
-                            step1Content
+                            // Step 1: Location (name, paddock)
+                            locationContent
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
-                        } else if currentStep == 2 && isBreederCategory {
+                        } else if currentStep == 2 {
+                            // Step 2: Species (species cards only)
+                            speciesContent
+                                .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
+                        } else if currentStep == 3 {
+                            // Step 3: Breed (breed, category)
+                            breedContent
+                                .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
+                        } else if currentStep == 4 && isBreederCategory {
+                            // Step 4: Breeder details (for breeder categories only)
                             breedersContent
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
-                        } else if (currentStep == 2 && !isBreederCategory) || (currentStep == 3 && isBreederCategory) {
+                        } else if (currentStep == 4 && !isBreederCategory) || (currentStep == 5 && isBreederCategory) {
+                            // Step 4/5: Physical attributes
                             step2Content
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         } else {
+                            // Step 5/6: Additional details
                             step3Content
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         }
@@ -237,9 +253,17 @@ struct AddIndividualAnimalView: View {
         }
     }
     
-    // MARK: - Step 1: Basic Information
-    private var step1Content: some View {
+    // MARK: - Step 1: Location
+    // Debug: Animal name and paddock location
+    private var locationContent: some View {
         VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header
+            Text("Location")
+                .font(Theme.title)
+                .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
+            
             VStack(alignment: .leading, spacing: 8) {
                 Text("Animal Name/Tag")
                     .font(Theme.headline)
@@ -262,67 +286,96 @@ struct AddIndividualAnimalView: View {
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .accessibilityLabel("Paddock location")
             }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 20)
+    }
+    
+    // MARK: - Step 2: Species
+    // Debug: Species card selector only (gives cards room to breathe)
+    private var speciesContent: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header
+            Text("Species")
+                .font(Theme.title)
+                .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Species")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                
-                // Debug: Grid of species cards with emoji icons
-                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                    // Cattle - Available
-                    SpeciesCard(
-                        emoji: "🐄",
-                        name: "Cattle",
-                        isAvailable: true,
-                        isSelected: selectedSpecies == "Cattle"
-                    ) {
-                        HapticManager.tap()
-                        selectedSpecies = "Cattle"
-                        selectedBreed = ""
-                        selectedCategory = ""
-                        breedSearchText = ""
-                        categorySearchText = ""
-                    }
-                    
-                    // Sheep - Coming Soon
-                    SpeciesCard(
-                        emoji: "🐑",
-                        name: "Sheep",
-                        isAvailable: false,
-                        isSelected: false
-                    ) {
-                        // Disabled - no action
-                    }
-                    
-                    // Pigs - Coming Soon
-                    SpeciesCard(
-                        emoji: "🐷",
-                        name: "Pigs",
-                        isAvailable: false,
-                        isSelected: false
-                    ) {
-                        // Disabled - no action
-                    }
-                    
-                    // Goats - Coming Soon
-                    SpeciesCard(
-                        emoji: "🐐",
-                        name: "Goats",
-                        isAvailable: false,
-                        isSelected: false
-                    ) {
-                        // Disabled - no action
-                    }
+            // Debug: Grid of species cards with emoji icons (2x2 grid with more space)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                // Cattle - Available
+                SpeciesCard(
+                    emoji: "🐄",
+                    name: "Cattle",
+                    isAvailable: true,
+                    isSelected: selectedSpecies == "Cattle"
+                ) {
+                    HapticManager.tap()
+                    selectedSpecies = "Cattle"
+                    selectedBreed = ""
+                    selectedCategory = ""
+                    breedSearchText = ""
+                    categorySearchText = ""
                 }
                 
-                // Debug: Helper text for coming soon animals
+                // Sheep - Coming Soon
+                SpeciesCard(
+                    emoji: "🐑",
+                    name: "Sheep",
+                    isAvailable: false,
+                    isSelected: false
+                ) {
+                    // Disabled - no action
+                }
+                
+                // Pigs - Coming Soon
+                SpeciesCard(
+                    emoji: "🐷",
+                    name: "Pigs",
+                    isAvailable: false,
+                    isSelected: false
+                ) {
+                    // Disabled - no action
+                }
+                
+                // Goats - Coming Soon
+                SpeciesCard(
+                    emoji: "🐐",
+                    name: "Goats",
+                    isAvailable: false,
+                    isSelected: false
+                ) {
+                    // Disabled - no action
+                }
+            }
+            
+            // Debug: Subtle info text for coming soon animals (matches onboarding style)
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .foregroundStyle(Theme.secondaryText)
+                    .font(.caption)
                 Text("Support for Sheep, Pigs, and Goats coming soon!")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding(.top, 4)
             }
+            .frame(maxWidth: .infinity, alignment: .center)
+            .padding(.top, 8)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 20)
+    }
+    
+    // MARK: - Step 3: Breed
+    // Debug: Breed and category selection
+    private var breedContent: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header
+            Text("Breed")
+                .font(Theme.title)
+                .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
             
             VStack(alignment: .leading, spacing: 8) {
                 Text("Breed")
@@ -401,9 +454,16 @@ struct AddIndividualAnimalView: View {
         )
     }
     
-    // MARK: - Step 2/3: Physical Attributes
+    // MARK: - Physical Attributes
     private var step2Content: some View {
         VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header
+            Text("Physical")
+                .font(Theme.title)
+                .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
+            
             Toggle(isOn: $hasBirthDate) {
                 Text("Specify Birth Date")
                     .font(Theme.body)
@@ -458,106 +518,113 @@ struct AddIndividualAnimalView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             
-            // Debug: Field label outside container, value inside with body font
+            // Debug: Daily weight gain slider (always visible, matches herd flow style)
             VStack(alignment: .leading, spacing: 8) {
-                Text("Daily Weight Gain (kg/day)")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
                 HStack {
-                    Slider(value: $dailyWeightGain, in: 0...2.0, step: 0.1)
-                    Text(String(format: "%.2f kg/day", dailyWeightGain))
+                    Text("Average Daily Weight Gain")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
-                        .frame(width: 100)
+                    Spacer()
+                    Text(String(format: "%.1f kg/day", dailyWeightGain))
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.accent)
+                        .fontWeight(.semibold)
                 }
-                .padding()
-                .background(Theme.inputFieldBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                
+                Slider(value: $dailyWeightGain, in: 0...2.0, step: 0.1)
+                    .tint(Theme.accent)
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 8)
+                    .background(Theme.inputFieldBackground)
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    .accessibilityLabel("Average daily weight gain")
+                    .accessibilityValue(String(format: "%.1f kilograms per day", dailyWeightGain))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 20)
     }
     
-    // MARK: - Step 3/4: Additional Details
+    // MARK: - Saleyard
     private var step3Content: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // Debug: Section header - center aligned and larger font
-            Text("Saleyard Selection")
+            // Debug: Section header
+            Text("Saleyard")
                 .font(Theme.title)
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
             
-            // Debug: Saleyard picker button that opens searchable sheet
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Saleyard")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                
-                // Debug: Picker button meets iOS 26 HIG minimum touch target of 44pt height
-                Button(action: {
-                    HapticManager.tap()
-                    showingSaleyardPicker = true
-                }) {
-                    HStack {
-                        Text(selectedSaleyard ?? "Use Default")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.primaryText)
-                        Spacer()
-                        Image(systemName: "chevron.down")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                    .padding()
-                    .frame(minHeight: Theme.minimumTouchTarget) // iOS 26 HIG: Minimum 44pt
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .buttonBorderShape(.roundedRectangle)
-                .accessibilityLabel("Select saleyard")
-            }
-            
-            // Debug: Informative text about valuation engine - placed below picker
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(alignment: .top, spacing: 12) {
-                    Image(systemName: "info.circle.fill")
-                        .foregroundStyle(Theme.accent)
-                        .font(.system(size: 16))
-                        .padding(.top, 2)
-                    
-                    Text("Valuation engine currently derived from this saleyard. You can change it later in Settings.")
+            // Debug: Saleyard picker button that opens searchable sheet (no redundant label)
+            Button(action: {
+                HapticManager.tap()
+                showingSaleyardPicker = true
+            }) {
+                HStack {
+                    Text(selectedSaleyard ?? "Use Default")
                         .font(Theme.body)
+                        .foregroundStyle(Theme.primaryText)
+                    Spacer()
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(Theme.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding()
-                .background(Theme.accent.opacity(0.1))
+                .frame(minHeight: Theme.minimumTouchTarget) // iOS 26 HIG: Minimum 44pt
+                .background(Theme.inputFieldBackground)
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
+            .buttonBorderShape(.roundedRectangle)
+            .accessibilityLabel("Select saleyard")
+            
+            // Debug: Subtle info text (matches onboarding style)
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .foregroundStyle(Theme.secondaryText)
+                    .font(.caption)
+                Text("Valuation engine currently derived from this saleyard. You can change it later in Settings.")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 8)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 20)
     }
     
     // MARK: - Validation
+    // Debug: Updated validation for 3-page split (Location, Species, Breed)
     private var isStepValid: Bool {
         switch currentStep {
         case 1:
-            return !animalName.isEmpty && !selectedBreed.isEmpty && !selectedCategory.isEmpty
+            // Step 1: Location - only name is required
+            return !animalName.isEmpty
         case 2:
-            if isBreederCategory {
-                return true // Breeder step is always valid
-            } else {
-                return initialWeight > 0 // Physical attributes
-            }
+            // Step 2: Species - species selection required
+            return !selectedSpecies.isEmpty
         case 3:
-            if isBreederCategory {
-                return initialWeight > 0 // Physical attributes
-            } else {
-                return true // Additional details always valid
-            }
+            // Step 3: Breed - breed and category required
+            return !selectedBreed.isEmpty && !selectedCategory.isEmpty
         case 4:
-            return true // Additional details always valid
+            if isBreederCategory {
+                // Step 4 (breeders): Breeder details - always valid
+                return true
+            } else {
+                // Step 4 (non-breeders): Physical attributes
+                return initialWeight > 0
+            }
+        case 5:
+            if isBreederCategory {
+                // Step 5 (breeders): Physical attributes
+                return initialWeight > 0
+            } else {
+                // Step 5 (non-breeders): Additional details - always valid
+                return true
+            }
+        case 6:
+            // Step 6 (breeders): Additional details - always valid
+            return true
         default:
             return false
         }

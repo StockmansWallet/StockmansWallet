@@ -149,7 +149,7 @@ struct SellStockView: View {
                                     // Herd details
                                     VStack(alignment: .leading, spacing: 12) {
                                         HStack {
-                                            Text("Current Head Count:")
+                                            Text("Current Head:")
                                                 .font(Theme.body)
                                                 .foregroundStyle(Theme.secondaryText)
                                             Spacer()

@@ -38,7 +38,7 @@ struct AddHerdFlowView: View {
     @State private var showingSaleyardPicker = false
     
     // Debug: Breeding-specific state variables
-    @State private var calvingRate = 0
+    @State private var calvingRate = 50 // Default: 50% (halfway on 0-100% scale)
     @State private var joinedDate = Date()
     @State private var breedingProgramType: BreedingProgramType = .uncontrolled
     @State private var joiningPeriodStart = Date()
@@ -528,7 +528,7 @@ struct AddHerdFlowView: View {
             // Debug: HIG-compliant text fields with empty placeholders for friction-free input
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text("Head Count")
+                    Text("Head")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
                     TextField("", value: $headCount, format: .number)

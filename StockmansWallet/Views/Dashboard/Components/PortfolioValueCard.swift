@@ -79,7 +79,7 @@ struct PortfolioValueCard: View {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(change >= 0 ? Theme.positiveChangeBg : Theme.negativeChangeBg)
             )
-            .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
+            
             .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)
             .accessibilityLabel("Change for selected time range")
             .accessibilityValue("\(change.formatted(.currency(code: "AUD"))), \(percentageChange, specifier: "%.2f") percent")

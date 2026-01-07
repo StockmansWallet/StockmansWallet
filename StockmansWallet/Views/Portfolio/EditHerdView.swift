@@ -107,7 +107,7 @@ struct EditHerdView: View {
                                 Text("Herd/Animal Name")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
-                                TextField("e.g., North Paddock Mob", text: $herdName)
+                                TextField("e.g., North Paddock Herd", text: $herdName)
                                     .textFieldStyle(.plain)
                                     .padding()
                                     .background(Theme.inputFieldBackground)
@@ -230,7 +230,7 @@ struct EditHerdView: View {
                                 .foregroundStyle(Theme.primaryText)
                             
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Head Count")
+                                Text("Head")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
                                 Stepper(value: $headCount, in: 1...10000, step: 1) {

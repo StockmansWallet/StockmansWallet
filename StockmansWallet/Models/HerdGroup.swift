@@ -13,7 +13,7 @@ import SwiftData
 final class HerdGroup {
     // MARK: - Identification
     var id: UUID
-    var name: String // Paddock name or mob identifier
+    var name: String // Paddock name or herd identifier
     var createdAt: Date
     var updatedAt: Date
     

@@ -40,7 +40,6 @@ struct AddAssetMenuView: View {
                         VStack(spacing: 16) {
                             
                             // Debug: Add Herd first as it's the more common action
-                            // Add Herd / Mob
                             AssetMenuRow(
                                 iconColor: Theme.accent,
                                 iconSymbol: "plus.app",

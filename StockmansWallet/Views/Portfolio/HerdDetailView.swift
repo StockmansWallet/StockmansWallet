@@ -327,9 +327,9 @@ struct HerdStatsCard: View {
     
     var body: some View {
         HStack(spacing: 24) {
-            // Total Head (left side)
+            // Head (left side)
             HStack(spacing: 8) {
-                Text("Total Head")
+                Text("Head")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
                 Text("\(herd.headCount)")

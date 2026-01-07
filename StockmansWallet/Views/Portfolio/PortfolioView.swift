@@ -512,7 +512,7 @@ struct PortfolioStatsCards: View {
             
             // Debug: Combined stats card with horizontal layout for cleaner, more compact design
             HStack(spacing: 24) {
-                // Total Head
+                // Head
                 HStack(spacing: 8) {
                     Text("Head")
                         .font(Theme.caption)
@@ -815,7 +815,7 @@ struct CategoryRow: View {
 }
 
 // MARK: - Performance Metrics Card
-// Debug: Removed Total Head and Active Herds metrics - now shown at top
+// Debug: Removed Head and Active Herds metrics - now shown at top
 struct PerformanceMetricsCard: View {
     let summary: PortfolioSummary
     
@@ -1008,7 +1008,7 @@ struct SpeciesRow: View {
                 Text(species)
                     .font(Theme.body)
                     .foregroundStyle(Theme.primaryText)
-                Text("\(herdCount) mob\(herdCount == 1 ? "" : "s") • \(headCount) head")
+                Text("\(herdCount) herd\(herdCount == 1 ? "" : "s") • \(headCount) head")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
             }
@@ -1043,7 +1043,7 @@ struct AssetRegisterHeader: View {
                 .font(Theme.headline)
                 .foregroundStyle(Theme.primaryText)
             
-            Text("\(summary.activeHerdCount) active mob\(summary.activeHerdCount == 1 ? "" : "s") • \(summary.totalHeadCount) total head")
+            Text("\(summary.activeHerdCount) active herd\(summary.activeHerdCount == 1 ? "" : "s") • \(summary.totalHeadCount) total head")
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondaryText)
         }

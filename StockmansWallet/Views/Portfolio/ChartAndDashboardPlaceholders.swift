@@ -773,9 +773,9 @@ struct QuickStatsView: View {
             
             Spacer()
             
-            // Total Head stat
+            // Head stat
             HStack(spacing: 8) {
-                Text("Total Head")
+                Text("Head")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
                 Text("\(herds.reduce(0) { $0 + $1.headCount })")

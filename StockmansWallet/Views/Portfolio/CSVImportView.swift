@@ -137,7 +137,7 @@ struct CSVImportView: View {
                             
                             Text("""
 name,species,breed,category,sex,ageMonths,headCount,initialWeight,dailyWeightGain,paddockName
-North Mob,Cattle,Angus,Weaner Steer,Male,8,50,280,0.6,North Paddock
+North Herd,Cattle,Angus,Weaner Steer,Male,8,50,280,0.6,North Paddock
 Bessie,Cattle,Hereford,Breeding Cow,Female,36,1,550,0.3,South Paddock
 """)
                             .font(.system(size: 12, design: .monospaced))

@@ -30,13 +30,13 @@ struct AssetSummaryView: View {
                     .frame(maxWidth: .infinity)
                     .padding()
             } else if activeHerds.isEmpty {
-                Text("No active mobs")
+                Text("No active herds")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.primaryText.opacity(0.7))
             } else {
                 HStack(spacing: 16) {
-                    SummaryTile(title: "Active Mobs", value: "\(activeHerds.count)", icon: "square.stack.3d.up.fill")
-                    SummaryTile(title: "Total Head", value: "\(activeHerds.reduce(0) { $0 + $1.headCount })", icon: "person.3.fill")
+                    SummaryTile(title: "Active Herds", value: "\(activeHerds.count)", icon: "square.stack.3d.up.fill")
+                    SummaryTile(title: "Head", value: "\(activeHerds.reduce(0) { $0 + $1.headCount })", icon: "person.3.fill")
                 }
                 
                 HStack(spacing: 16) {

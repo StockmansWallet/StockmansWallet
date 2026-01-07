@@ -260,11 +260,11 @@ struct BreedingDetailsScreen: View {
                     .font(Theme.body)
                     .foregroundStyle(Theme.secondaryText)
                 
-                // Debug: Two text fields side by side for Head Count and Average Age
+                // Debug: Two text fields side by side for Head and Average Age
                 HStack(spacing: 12) {
-                    // Head Count field
+                    // Head field
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Head Count")
+                        Text("Head")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                         TextField("", value: $calvesAtFootHeadCount, format: .number)
