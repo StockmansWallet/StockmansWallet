@@ -83,7 +83,7 @@ struct UserTypeSelectionPage: View {
                 VStack(spacing: 32) {
                     // Title and subtitle
                     VStack(spacing: 12) {
-                        Text("Select your account type")
+                        Text("Account")
                             .font(.system(size: 28, weight: .bold))
                             .foregroundStyle(Theme.primaryText)
                             .multilineTextAlignment(.center)

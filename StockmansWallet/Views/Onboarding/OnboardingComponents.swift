@@ -151,7 +151,7 @@ struct OnboardingPageTemplate<Content: View>: View {
                     .padding(.horizontal, 20)
                     .padding(.bottom, 20)
                 } else {
-                    // Debug: Removed opacity modifier - disabled state provides sufficient visual feedback
+                    // Debug: Button with opacity for visual feedback matching UserTypeSelectionPage
                     Button(action: {
                         HapticManager.tap()
                         guard isValid else {
@@ -167,6 +167,7 @@ struct OnboardingPageTemplate<Content: View>: View {
                     }
                     .buttonStyle(Theme.PrimaryButtonStyle())
                     .disabled(!isValid)
+                    .opacity(isValid ? 1.0 : 0.5)
                     .padding(.horizontal, 20)
                     .padding(.bottom, 20)
                     .accessibilityLabel("Continue to next page")

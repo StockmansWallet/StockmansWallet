@@ -1,5 +1,5 @@
 //
-//  YourPropertyPage.swift
+//  PrimaryPropertyPage.swift
 //  StockmansWallet
 //
 //  Page 2 (Farmer): Primary Property - 3-Step Progressive Flow
@@ -9,7 +9,7 @@
 import SwiftUI
 import SwiftData
 
-struct YourPropertyPage: View {
+struct PrimaryPropertyPage: View {
     @Binding var userPrefs: UserPreferences
     @Binding var currentPage: Int
     @Environment(\.modelContext) private var modelContext
@@ -74,7 +74,7 @@ struct YourPropertyPage: View {
     }
     
     var body: some View {
-        // Debug: Custom layout that mimics OnboardingPageTemplate but with step navigation
+        // Debug: Layout matches UserTypeSelectionPage structure with progress dots and button at bottom
         ZStack(alignment: .top) {
             // Background gradient
             Theme.backgroundGradient
@@ -117,9 +117,41 @@ struct YourPropertyPage: View {
                         ))
                     }
                     .padding(.top, 8)
-                    .padding(.bottom, 120)
+                    .padding(.bottom, 32)
                 }
                 .animation(.easeInOut(duration: 0.3), value: propertyStep)
+            }
+            .safeAreaInset(edge: .bottom, spacing: 0) {
+                // Debug: Footer section with progress dots and button matching UserTypeSelectionPage
+                VStack(spacing: 16) {
+                    // Progress dots
+                    HStack(spacing: 8) {
+                        ForEach(0..<3, id: \.self) { index in
+                            Circle()
+                                .fill(index <= propertyStepIndex ? Theme.accent : Theme.secondaryText.opacity(0.3))
+                                .frame(width: 8, height: 8)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                    .padding(.top, 16)
+                    .accessibilityLabel("Step \(propertyStepIndex + 1) of 3")
+                    
+                    // Continue button
+                    Button(action: {
+                        HapticManager.success()
+                        handleNextStep()
+                    }) {
+                        Text(propertyStep == .additional ? "Finish Setup" : "Continue")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(Theme.PrimaryButtonStyle())
+                    .disabled(!canProceedFromCurrentStep)
+                    .opacity(canProceedFromCurrentStep ? 1.0 : 0.5)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                    .accessibilityLabel(propertyStep == .additional ? "Finish Setup" : "Continue to next step")
+                    .accessibilityHint(canProceedFromCurrentStep ? "" : "Please complete required fields")
+                }
             }
             
             // Back button (top left)
@@ -149,42 +181,6 @@ struct YourPropertyPage: View {
                 .padding(.horizontal, 20)
                 .padding(.top, 12)
             }
-            
-            // Next/Continue button (bottom)
-            VStack {
-                Spacer()
-                
-                Button(action: {
-                    HapticManager.success()
-                    handleNextStep()
-                }) {
-                    HStack {
-                        Text(propertyStep == .additional ? "Finish Setup" : "Continue")
-                            .font(Theme.body)
-                            .fontWeight(.semibold)
-                        Image(systemName: "arrow.right")
-                            .font(.system(size: 14, weight: .semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 50)
-                    .background(canProceedFromCurrentStep ? Theme.accent : Theme.secondaryText.opacity(0.3))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .disabled(!canProceedFromCurrentStep)
-                .padding(.horizontal, 20)
-                .padding(.bottom, 40)
-            }
-            
-            // Progress indicator (top center)
-            HStack(spacing: 4) {
-                ForEach(0..<3, id: \.self) { index in
-                    RoundedRectangle(cornerRadius: 2)
-                        .fill(index <= propertyStepIndex ? Theme.accent : Theme.secondaryText.opacity(0.3))
-                        .frame(width: 24, height: 4)
-                }
-            }
-            .padding(.top, 12)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .sheet(isPresented: $showingRolePicker) {
@@ -277,6 +273,7 @@ struct YourPropertyPage: View {
             }
             
             // Herd Size Section (determines subscription)
+            // Debug: Updated to use checkmark selection instead of radio buttons
             VStack(alignment: .leading, spacing: 12) {
                 Text("Herd Size")
                     .font(Theme.headline)
@@ -290,54 +287,37 @@ struct YourPropertyPage: View {
                         herdSize = "under100"
                     }) {
                         HStack(spacing: 16) {
-                            ZStack {
-                                Circle()
-                                    .strokeBorder(
-                                        herdSize == "under100" ? Theme.accent : Theme.secondaryText.opacity(0.3),
-                                        lineWidth: 2
-                                    )
-                                    .frame(width: 24, height: 24)
-                                
-                                if herdSize == "under100" {
-                                    Circle()
-                                        .fill(Theme.accent)
-                                        .frame(width: 12, height: 12)
-                                }
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Less than 100 Head")
-                                    .font(Theme.body)
-                                    .foregroundStyle(Theme.primaryText)
-                                    .fontWeight(herdSize == "under100" ? .semibold : .regular)
-                                
-                                HStack(spacing: 4) {
-                                    Text("Starter Plan")
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.positiveChange)
-                                    Text("• Free")
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.secondaryText)
-                                }
-                            }
+                            // Debug: Text content (removed secondary text with plan info)
+                            Text("Less than 100 Head")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.primaryText)
+                                .fontWeight(herdSize == "under100" ? .semibold : .regular)
                             
                             Spacer()
+                            
+                            // Debug: Checkmark indicator - always present to maintain button size
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(Theme.accent)
+                                .font(.system(size: 24, weight: .semibold))
+                                .opacity(herdSize == "under100" ? 1.0 : 0.0)
                         }
                         .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                                 .fill(Theme.cardBackground)
                         )
                         .overlay(
+                            // Debug: Removed accent color stroke, only subtle border
                             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                                 .strokeBorder(
-                                    herdSize == "under100" ? Theme.accent : Color.white.opacity(0.05),
-                                    lineWidth: herdSize == "under100" ? 2 : 1
+                                    Color.white.opacity(0.05),
+                                    lineWidth: 1
                                 )
                         )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Less than 100 head, Starter plan, free")
+                    .accessibilityLabel("Less than 100 head")
                     
                     // More than 100 Head option
                     Button(action: {
@@ -345,54 +325,37 @@ struct YourPropertyPage: View {
                         herdSize = "over100"
                     }) {
                         HStack(spacing: 16) {
-                            ZStack {
-                                Circle()
-                                    .strokeBorder(
-                                        herdSize == "over100" ? Theme.accent : Theme.secondaryText.opacity(0.3),
-                                        lineWidth: 2
-                                    )
-                                    .frame(width: 24, height: 24)
-                                
-                                if herdSize == "over100" {
-                                    Circle()
-                                        .fill(Theme.accent)
-                                        .frame(width: 12, height: 12)
-                                }
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("More than 100 Head")
-                                    .font(Theme.body)
-                                    .foregroundStyle(Theme.primaryText)
-                                    .fontWeight(herdSize == "over100" ? .semibold : .regular)
-                                
-                                HStack(spacing: 4) {
-                                    Text("Pro Plan")
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.accent)
-                                    Text("• $29.99/month")
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.secondaryText)
-                                }
-                            }
+                            // Debug: Text content (removed secondary text with plan info)
+                            Text("More than 100 Head")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.primaryText)
+                                .fontWeight(herdSize == "over100" ? .semibold : .regular)
                             
                             Spacer()
+                            
+                            // Debug: Checkmark indicator - always present to maintain button size
+                            Image(systemName: "checkmark.circle.fill")
+                                .foregroundStyle(Theme.accent)
+                                .font(.system(size: 24, weight: .semibold))
+                                .opacity(herdSize == "over100" ? 1.0 : 0.0)
                         }
                         .padding(16)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                         .background(
                             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                                 .fill(Theme.cardBackground)
                         )
                         .overlay(
+                            // Debug: Removed accent color stroke, only subtle border
                             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                                 .strokeBorder(
-                                    herdSize == "over100" ? Theme.accent : Color.white.opacity(0.05),
-                                    lineWidth: herdSize == "over100" ? 2 : 1
+                                    Color.white.opacity(0.05),
+                                    lineWidth: 1
                                 )
                         )
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("More than 100 head, Pro plan, $29.99 per month")
+                    .accessibilityLabel("More than 100 head")
                 }
                 .padding(.horizontal, 20)
             }
@@ -402,29 +365,18 @@ struct YourPropertyPage: View {
     // Debug: Step 2 - Optional Property Details
     private var step2DetailsView: some View {
         VStack(spacing: 24) {
-            // Optional notice
-            HStack(spacing: 8) {
-                Image(systemName: "info.circle.fill")
-                    .foregroundStyle(Theme.accent)
-                    .font(.caption)
-                Text("These details are optional and can be added later in settings")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                    .multilineTextAlignment(.leading)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
-            .background(Theme.accent.opacity(0.1))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .padding(.horizontal, 20)
-            
             // PIC/ID Section
             VStack(alignment: .leading, spacing: 12) {
-                Text("PIC/ID (Optional)")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                    .padding(.horizontal, 20)
+                // Debug: Label with smaller optional indicator
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("PIC/ID")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Text("*Optional")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                .padding(.horizontal, 20)
                 
                 TextField("Property Identification Code", text: $propertyPIC)
                     .textFieldStyle(OnboardingTextFieldStyle())
@@ -441,10 +393,16 @@ struct YourPropertyPage: View {
             
             // Address Section
             VStack(alignment: .leading, spacing: 12) {
-                Text("Property Address (Optional)")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                    .padding(.horizontal, 20)
+                // Debug: Label with smaller optional indicator
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("Property Address")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Text("*Optional")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                .padding(.horizontal, 20)
                 
                 TextField("Address", text: $address)
                     .textFieldStyle(OnboardingTextFieldStyle())
@@ -462,10 +420,16 @@ struct YourPropertyPage: View {
             
             // Your Role Section
             VStack(alignment: .leading, spacing: 12) {
-                Text("Your Role (Optional)")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                    .padding(.horizontal, 20)
+                // Debug: Label with smaller optional indicator
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("Your Role")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Text("*Optional")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                .padding(.horizontal, 20)
                 
                 Button(action: {
                     HapticManager.tap()
@@ -501,20 +465,6 @@ struct YourPropertyPage: View {
                 .accessibilityValue(role ?? "Not selected")
                 .padding(.horizontal, 20)
             }
-            
-            // Skip button
-            Button(action: {
-                HapticManager.tap()
-                withAnimation(.easeInOut(duration: 0.3)) {
-                    propertyStep = .additional
-                }
-            }) {
-                Text("Skip & Continue")
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.secondaryText)
-                    .padding(.vertical, 12)
-            }
-            .padding(.top, 8)
         }
     }
     
@@ -644,6 +594,7 @@ struct YourPropertyPage: View {
             .padding(.horizontal, 20)
             
             // Info message
+            // Debug: Horizontally centered info text
             HStack(spacing: 8) {
                 Image(systemName: "info.circle.fill")
                     .foregroundStyle(Theme.secondaryText)
@@ -651,9 +602,9 @@ struct YourPropertyPage: View {
                 Text("You can add and manage properties later in settings")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
-                    .multilineTextAlignment(.leading)
+                    .multilineTextAlignment(.center)
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .center)
             .padding(.horizontal, 20)
             .padding(.top, 8)
         }
@@ -668,7 +619,7 @@ struct YourPropertyPage: View {
         case .details:
             return "Property Details"
         case .additional:
-            return "Add More Properties?"
+            return "Additional Properties"
         }
     }
     
@@ -677,9 +628,9 @@ struct YourPropertyPage: View {
         case .essentials:
             return "Tell us about your primary property"
         case .details:
-            return "Optional - complete now or later"
+            return "Additional Information"
         case .additional:
-            return "You can manage these later too"
+            return "Manage additional properties"
         }
     }
     
@@ -955,3 +906,4 @@ struct RolePickerSheet: View {
         }
     }
 }
+

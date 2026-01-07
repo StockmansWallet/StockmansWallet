@@ -83,7 +83,7 @@ struct OnboardingView: View {
                             // Second page: Branch based on user role
                             if userPrefs.userRole == .farmerGrazier {
                                 // Green Path: Property Information
-                                YourPropertyPage(
+                                PrimaryPropertyPage(
                                     userPrefs: $userPrefs,
                                     currentPage: $currentPage
                                 )
