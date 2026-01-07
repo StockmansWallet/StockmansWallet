@@ -74,7 +74,7 @@ struct AnimatedCurrencyValue: View {
         // Debug: Center align number so it grows evenly from center instead of jumping from left
         .frame(maxWidth: .infinity, alignment: .center)
         // Padding gives the digit rolling animation room to render without clipping
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
         .padding(.horizontal, 4)
         .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 4)
         .onChange(of: value) { oldValue, newValue in

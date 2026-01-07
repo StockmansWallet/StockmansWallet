@@ -23,9 +23,11 @@ struct Theme {
     static let separator = Color.white.opacity(0.1)  // Subtle divider lines and borders
     
     // Debug: Custom colors for positive/negative change indicators (total change, percent change, tickers)
-    // Rule #0: Single source of truth for green color used throughout change indicators
-    static let positiveChange = Color(hex: "74B236")  // Custom green for positive changes
-    static let negativeChange = Color.red  // Red for negative changes
+    // Rule #0: Single source of truth for change colors used throughout change indicators
+    static let positiveChange = Color(hex: "9CD563")  // Bright green for positive changes (text)
+    static let positiveChangeBg = Color(hex: "29321F")  // Dark green background for positive change pills
+    static let negativeChange = Color(hex: "D64F41")  // Bright red for negative changes (text)
+    static let negativeChangeBg = Color(hex: "432522")  // Dark red background for negative change pills
    
     // MARK: - Backgrounds
     // Debug: Standardized backgrounds for consistent visual identity across the app

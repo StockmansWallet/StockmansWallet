@@ -26,7 +26,7 @@ struct PortfolioValueCard: View {
             Text("Total Portfolio Value")
                 .font(Theme.caption)
                 .foregroundStyle(.white.opacity(0.7))
-                .padding(.bottom, 8)
+                .padding(.bottom, 4)
                 .accessibilityAddTraits(.isHeader)
             
             // Debug: Always show the number - never hide it with ProgressView
@@ -35,7 +35,7 @@ struct PortfolioValueCard: View {
                 value: value,
                 isScrubbing: isScrubbing
             )
-                .padding(.bottom, 8)
+                .padding(.bottom, 4)
                 // Debug: Pulse/glow effect during value update (crypto-style)
                 .shadow(
                     color: isUpdating ? Theme.accent.opacity(0.6) : .clear,
@@ -74,10 +74,10 @@ struct PortfolioValueCard: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            // Debug: Solid dark background matching ticker color (no glass effect)
+            // Debug: Solid dark background matching ticker color from Theme (no glass effect)
             .background(
                 Capsule()
-                    .fill(change >= 0 ? Color(hex: "1E2E0E") : Color(hex: "2E0E0E"))
+                    .fill(change >= 0 ? Theme.positiveChangeBg : Theme.negativeChangeBg)
             )
             .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
             .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)

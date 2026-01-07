@@ -2,6 +2,10 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<!-- App Display Name on Home Screen -->
+	<key>CFBundleDisplayName</key>
+	<string>Stockman's Wallet</string>
+	
 	<!-- Location Services -->
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>Stockman's Wallet needs your location to provide localized market prices and saleyard recommendations based on your property location.</string>
