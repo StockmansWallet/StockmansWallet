@@ -3,6 +3,8 @@
 //  StockmansWallet
 //
 //  Herd composition breakdown with pie chart and category list
+//  Debug: Time range selector UI implemented - currently shows current composition
+//  Note: Historical composition comparison to be implemented in future update
 //
 
 import SwiftUI
@@ -11,6 +13,31 @@ import Charts
 struct CapitalConcentrationView: View {
     let breakdown: [CapitalConcentrationBreakdown]
     let totalValue: Double
+    @State private var compositionTimeRange: CompositionTimeRange = .current
+    @State private var showingCustomDatePicker = false
+    @State private var customStartDate: Date?
+    @State private var customEndDate: Date?
+    
+    // Debug: Time range options for composition tracking
+    // Note: Currently all options display the same current data; historical comparison planned
+    enum CompositionTimeRange: String, CaseIterable {
+        case current = "Current"
+        case week = "Week Ago"
+        case month = "Month Ago"
+        case year = "Year Ago"
+        case custom = "Custom"
+        
+        // Debug: Display label for each range
+        var displayLabel: String {
+            switch self {
+            case .current: return "Now"
+            case .week: return "7d ago"
+            case .month: return "1m ago"
+            case .year: return "1y ago"
+            case .custom: return "Custom"
+            }
+        }
+    }
     
     // Debug: Color palette for pie chart segments (darker earthy, muted tones)
     private let chartColors: [Color] = [
@@ -31,9 +58,40 @@ struct CapitalConcentrationView: View {
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
-                Image(systemName: "chart.pie.fill")
-                    .foregroundStyle(Theme.accent)
-                    .accessibilityHidden(true)
+                
+                // Debug: Time range selector menu
+                Menu {
+                    ForEach(CompositionTimeRange.allCases, id: \.self) { range in
+                        Button {
+                            HapticManager.tap()
+                            if range == .custom {
+                                showingCustomDatePicker = true
+                            } else {
+                                compositionTimeRange = range
+                            }
+                        } label: {
+                            HStack {
+                                Text(range.rawValue)
+                                if compositionTimeRange == range {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        // Debug: Show custom date or standard label
+                        Text(customDateRangeLabel)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Image(systemName: "chevron.down.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Select composition time view")
+                .accessibilityValue(compositionTimeRange.rawValue)
             }
             
             // Debug: Pie chart showing category distribution
@@ -103,7 +161,34 @@ struct CapitalConcentrationView: View {
         }
         .padding(Theme.cardPadding)
         .stitchedCard()
+        .sheet(isPresented: $showingCustomDatePicker) {
+            CustomDateRangeSheet(
+                startDate: $customStartDate,
+                endDate: $customEndDate,
+                timeRange: Binding(
+                    get: { 
+                        // Debug: Map CompositionTimeRange to TimeRange for sheet compatibility
+                        compositionTimeRange == .custom ? .custom : .week 
+                    },
+                    set: { _ in 
+                        compositionTimeRange = .custom 
+                    }
+                )
+            )
+        }
         .accessibilityElement(children: .contain)
+    }
+    
+    // Debug: Format custom date range label
+    private var customDateRangeLabel: String {
+        if compositionTimeRange == .custom,
+           let start = customStartDate,
+           let end = customEndDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        }
+        return compositionTimeRange.displayLabel
     }
 }
 

@@ -472,6 +472,45 @@ struct IndicatorRow: View {
 // Debug: Shows biological changes affecting herd value - weight gain, mortality, breeding
 struct HerdDynamicsView: View {
     let herds: [HerdGroup]
+    @State private var dynamicsTimeRange: DynamicsTimeRange = .week
+    @State private var showingCustomDatePicker = false
+    @State private var customStartDate: Date?
+    @State private var customEndDate: Date?
+    
+    // Debug: Time range options for dynamics tracking
+    enum DynamicsTimeRange: String, CaseIterable {
+        case week = "Week"
+        case month = "Month"
+        case year = "Year"
+        case all = "All Time"
+        case custom = "Custom"
+        
+        // Debug: Display label for each range
+        var displayLabel: String {
+            switch self {
+            case .week: return "7d"
+            case .month: return "1m"
+            case .year: return "1y"
+            case .all: return "All"
+            case .custom: return "Custom"
+            }
+        }
+        
+        // Debug: Calculate days for each range
+        func days(from customStart: Date?) -> Int {
+            switch self {
+            case .week: return 7
+            case .month: return 30
+            case .year: return 365
+            case .all: return Int.max // Use all days
+            case .custom:
+                if let startDate = customStart {
+                    return Calendar.current.dateComponents([.day], from: startDate, to: Date()).day ?? 30
+                }
+                return 30
+            }
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -480,8 +519,40 @@ struct HerdDynamicsView: View {
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
-                Image(systemName: "leaf.fill")
-                    .foregroundStyle(Theme.accent)
+                
+                // Debug: Time range selector menu
+                Menu {
+                    ForEach(DynamicsTimeRange.allCases, id: \.self) { range in
+                        Button {
+                            HapticManager.tap()
+                            if range == .custom {
+                                showingCustomDatePicker = true
+                            } else {
+                                dynamicsTimeRange = range
+                            }
+                        } label: {
+                            HStack {
+                                Text(range.rawValue)
+                                if dynamicsTimeRange == range {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        // Debug: Show custom date range or standard label
+                        Text(customDateRangeLabel)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Image(systemName: "chevron.down.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Select dynamics time range")
+                .accessibilityValue(dynamicsTimeRange.rawValue)
             }
             
             VStack(alignment: .leading, spacing: 12) {
@@ -489,7 +560,7 @@ struct HerdDynamicsView: View {
                 if let weightGainMetrics = calculateWeightGainMetrics() {
                     BiologicalMetricRow(
                         title: "Weight Gain",
-                        subtitle: "\(weightGainMetrics.totalKgGained.formatted(.number.precision(.fractionLength(0)))) kg gained",
+                        subtitle: "\(weightGainMetrics.totalKgGained.formatted(.number.precision(.fractionLength(0)))) kg gained (\(dynamicsTimeRange.displayLabel))",
                         value: weightGainMetrics.valueImpact,
                         trend: .up
                     )
@@ -505,21 +576,19 @@ struct HerdDynamicsView: View {
                     )
                 }
                 
-                // Mortality Impact (if any herds have mortality data)
-                if let mortalityMetrics = calculateMortalityMetrics() {
-                    BiologicalMetricRow(
-                        title: "Mortality Impact",
-                        subtitle: "\(mortalityMetrics.projectedLosses.formatted(.number.precision(.fractionLength(1)))) head projected",
-                        value: mortalityMetrics.valueImpact,
-                        trend: .down
-                    )
-                }
+                // Mortality Impact - always show, even if zero
+                let mortalityMetrics = calculateMortalityMetrics()
+                BiologicalMetricRow(
+                    title: "Mortality Loss",
+                    subtitle: "\(mortalityMetrics.projectedLosses.formatted(.number.precision(.fractionLength(1)))) head projected (\(dynamicsTimeRange.displayLabel))",
+                    value: -mortalityMetrics.valueImpact,
+                    trend: mortalityMetrics.projectedLosses > 0 ? .down : .neutral
+                )
                 
                 // Show message if no biological data is available
                 if calculateWeightGainMetrics() == nil && 
-                   calculateBreedingMetrics() == nil && 
-                   calculateMortalityMetrics() == nil {
-                    Text("No biological data tracked")
+                   calculateBreedingMetrics() == nil {
+                    Text("No growth or breeding data tracked")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                         .padding(.vertical, 4)
@@ -528,19 +597,52 @@ struct HerdDynamicsView: View {
         }
         .padding(Theme.cardPadding)
         .stitchedCard()
+        .sheet(isPresented: $showingCustomDatePicker) {
+            CustomDateRangeSheet(
+                startDate: $customStartDate,
+                endDate: $customEndDate,
+                timeRange: Binding(
+                    get: { 
+                        // Debug: Map DynamicsTimeRange to TimeRange for sheet compatibility
+                        dynamicsTimeRange == .custom ? .custom : .week 
+                    },
+                    set: { _ in 
+                        dynamicsTimeRange = .custom 
+                    }
+                )
+            )
+        }
+    }
+    
+    // Debug: Format custom date range label (e.g., "Jan 1 - Feb 15")
+    private var customDateRangeLabel: String {
+        if dynamicsTimeRange == .custom,
+           let start = customStartDate,
+           let end = customEndDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        }
+        return dynamicsTimeRange.displayLabel
     }
     
     // MARK: - Weight Gain Calculations
-    // Debug: Calculate total weight gained across all herds with active DWG
+    // Debug: Calculate total weight gained across all herds with active DWG over selected time range
     private func calculateWeightGainMetrics() -> (totalKgGained: Double, valueImpact: Double)? {
         let activeHerds = herds.filter { $0.isTrackingWeightGain }
         guard !activeHerds.isEmpty else { return nil }
         
+        // Debug: Calculate days to consider based on time range
+        let daysToConsider = dynamicsTimeRange.days(from: customStartDate)
+        
         var totalKgGained: Double = 0
         
         for herd in activeHerds {
-            let daysHeld = Double(herd.daysHeld)
-            let weightPerHead = herd.dailyWeightGain * daysHeld
+            // Debug: Use minimum of days held and selected time range
+            let actualDaysHeld = Double(herd.daysHeld)
+            let effectiveDays = min(actualDaysHeld, Double(daysToConsider))
+            
+            let weightPerHead = herd.dailyWeightGain * effectiveDays
             let totalWeight = weightPerHead * Double(herd.headCount)
             totalKgGained += totalWeight
         }
@@ -577,10 +679,18 @@ struct HerdDynamicsView: View {
     }
     
     // MARK: - Mortality Impact Calculations
-    // Debug: Calculate projected losses from mortality rates
-    private func calculateMortalityMetrics() -> (projectedLosses: Double, valueImpact: Double)? {
+    // Debug: Calculate projected losses from mortality rates over selected time range
+    // Always returns a value (even if 0) so the row always displays
+    private func calculateMortalityMetrics() -> (projectedLosses: Double, valueImpact: Double) {
         let herdsWithMortality = herds.filter { ($0.mortalityRate ?? 0) > 0 }
-        guard !herdsWithMortality.isEmpty else { return nil }
+        
+        // Debug: Return 0 if no mortality data
+        guard !herdsWithMortality.isEmpty else { 
+            return (projectedLosses: 0.0, valueImpact: 0.0) 
+        }
+        
+        // Debug: Calculate days to consider based on time range
+        let daysToConsider = dynamicsTimeRange.days(from: customStartDate)
         
         var totalProjectedLosses: Double = 0
         var totalValueImpact: Double = 0
@@ -590,10 +700,13 @@ struct HerdDynamicsView: View {
             
             // Debug: Calculate daily mortality rate from annual rate
             let dailyRate = annualRate / 365.0
-            let daysHeld = Double(herd.daysHeld)
             
-            // Debug: Projected losses = head count × daily rate × days held
-            let projectedLosses = Double(herd.headCount) * dailyRate * daysHeld
+            // Debug: Use minimum of days held and selected time range
+            let actualDaysHeld = Double(herd.daysHeld)
+            let effectiveDays = min(actualDaysHeld, Double(daysToConsider))
+            
+            // Debug: Projected losses = head count × daily rate × effective days
+            let projectedLosses = Double(herd.headCount) * dailyRate * effectiveDays
             totalProjectedLosses += projectedLosses
             
             // Debug: Value impact = losses × current weight × avg price
