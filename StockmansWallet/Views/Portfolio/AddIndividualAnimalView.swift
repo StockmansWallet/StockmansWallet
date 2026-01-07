@@ -38,6 +38,9 @@ struct AddIndividualAnimalView: View {
     @State private var showingBreedPicker = false
     @State private var showingCategoryPicker = false
     @State private var showingSaleyardPicker = false
+    // Debug: Calves at foot state (not typically used for individual animals, but needed for component compatibility)
+    @State private var calvesAtFootHeadCount: Int? = nil
+    @State private var calvesAtFootAgeMonths: Int? = nil
     
     private let speciesOptions = ["Cattle", "Sheep", "Pig"]
     
@@ -348,7 +351,9 @@ struct AddIndividualAnimalView: View {
             calvingRate: $calvingRate,
             breedingProgramType: $breedingProgramType,
             joiningPeriodStart: $joiningPeriodStart,
-            joiningPeriodEnd: $joiningPeriodEnd
+            joiningPeriodEnd: $joiningPeriodEnd,
+            calvesAtFootHeadCount: $calvesAtFootHeadCount,
+            calvesAtFootAgeMonths: $calvesAtFootAgeMonths
         )
     }
     

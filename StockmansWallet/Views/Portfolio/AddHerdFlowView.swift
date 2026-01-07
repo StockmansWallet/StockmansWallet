@@ -119,8 +119,9 @@ struct AddHerdFlowView: View {
         return calvesAtFootCategories.contains(selectedCategory)
     }
     
+    // Debug: Updated step count for new flow with separate breeder selection and details screens
     private var totalSteps: Int {
-        isBreederCategory ? 4 : 3
+        isBreederCategory ? 5 : 3
     }
     
     var body: some View {
@@ -169,18 +170,27 @@ struct AddHerdFlowView: View {
                 .padding(.bottom, 20)
                 
                 // Content
+                // Debug: Updated flow logic for new breeder screens
                 ScrollView {
                     VStack(spacing: 0) {
                         if currentStep == 1 {
+                            // Step 1: Basic info (name, species, breed, category)
                             step1Content
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         } else if currentStep == 2 && isBreederCategory {
-                            breedersContent
+                            // Step 2: Breeder selection (for breeder categories only)
+                            breederSelectionContent
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
-                        } else if (currentStep == 2 && !isBreederCategory) || (currentStep == 3 && isBreederCategory) {
+                        } else if currentStep == 3 && isBreederCategory {
+                            // Step 3: Breeding details (for breeder categories only)
+                            breedingDetailsContent
+                                .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
+                        } else if (currentStep == 2 && !isBreederCategory) || (currentStep == 4 && isBreederCategory) {
+                            // Step 2/4: Physical attributes
                             step2Content
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         } else {
+                            // Step 3/5: Saleyard selection
                             step3Content
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         }
@@ -401,14 +411,22 @@ struct AddHerdFlowView: View {
         .padding(.bottom, 20)
     }
     
-    // MARK: - Breeders (Conditional)
-    // Debug: Using shared BreedersFormSection component for consistency across flows
-    private var breedersContent: some View {
-        BreedersFormSection(
+    // MARK: - Breeder Selection Screen (Step 2 for breeders)
+    // Debug: New breeder selection screen matching reference screenshots
+    private var breederSelectionContent: some View {
+        BreederSelectionScreen(breedingProgramType: $breedingProgramType)
+    }
+    
+    // MARK: - Breeding Details Screen (Step 3 for breeders)
+    // Debug: Breeding-specific inputs based on selected program type
+    private var breedingDetailsContent: some View {
+        BreedingDetailsScreen(
+            breedingProgramType: breedingProgramType,
             calvingRate: $calvingRate,
-            breedingProgramType: $breedingProgramType,
             joiningPeriodStart: $joiningPeriodStart,
-            joiningPeriodEnd: $joiningPeriodEnd
+            joiningPeriodEnd: $joiningPeriodEnd,
+            calvesAtFootHeadCount: $calvesAtFootHeadCount,
+            calvesAtFootAgeMonths: $calvesAtFootAgeMonths
         )
     }
     
@@ -462,91 +480,111 @@ struct AddHerdFlowView: View {
                     .accessibilityLabel("Average weight in kilograms")
             }
             
-            // Debug: HIG-compliant slider for daily gain (estimated value, visual feedback useful)
+            // Debug: HIG-compliant toggle/slider for daily gain (matches reference screenshots)
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
-                    Text("Daily Weight Gain")
+                    Text("Daily Weight Gain (Estimated)")
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
                     Spacer()
-                    Text(String(format: "%.1f kg/day", Double(dailyGainGrams) / 10.0))
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.accent)
-                        .fontWeight(.semibold)
                 }
-                Slider(value: Binding(
-                    get: { Double(dailyGainGrams) },
-                    set: { dailyGainGrams = Int($0) }
-                ), in: 0...30, step: 1)
-                    .tint(Theme.accent)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 8)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .accessibilityLabel("Daily weight gain")
-                    .accessibilityValue(String(format: "%.1f kilograms per day", Double(dailyGainGrams) / 10.0))
-            }
-            
-
-            
-            // Debug: HIG-compliant slider for mortality rate (estimated percentage, slider is ideal)
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Mortality Rate")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    Spacer()
-                    Text("\(mortalityRate)%")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.accent)
-                        .fontWeight(.semibold)
-                }
-                Slider(value: Binding(
-                    get: { Double(mortalityRate) },
-                    set: { mortalityRate = Int($0) }
-                ), in: 0...30, step: 1)
-                    .tint(Theme.accent)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 8)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .accessibilityLabel("Mortality rate")
-                    .accessibilityValue("\(mortalityRate) percent")
-            }
-            
-            // Debug: Only show "Calves at Foot" for breeder cattle categories
-            if shouldShowCalvesAtFoot {
-                Text("Calves at Foot")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
                 
-                // Debug: Text fields with empty placeholders for friction-free input
-                HStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Head Count")
+                Toggle(isOn: Binding(
+                    get: { dailyGainGrams > 0 },
+                    set: { isOn in
+                        if isOn && dailyGainGrams == 0 {
+                            dailyGainGrams = 10 // Default to 1.0 kg/day
+                        } else if !isOn {
+                            dailyGainGrams = 0
+                        }
+                    }
+                )) {
+                    if dailyGainGrams > 0 {
+                        Text(String(format: "%.1f kg/day", Double(dailyGainGrams) / 10.0))
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.accent)
+                            .fontWeight(.semibold)
+                    } else {
+                        Text("Off")
                             .font(Theme.body)
                             .foregroundStyle(Theme.secondaryText)
-                        TextField("", value: $calvesAtFootHeadCount, format: .number)
-                            .keyboardType(.numberPad)
-                            .textFieldStyle(AddHerdTextFieldStyle())
-                            .multilineTextAlignment(.center)
-                            .accessibilityLabel("Calves head count")
                     }
-                    .frame(maxWidth: .infinity)
-                    
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Average Age (mo)")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondaryText)
-                        TextField("", value: $calvesAtFootAgeMonths, format: .number)
-                            .keyboardType(.numberPad)
-                            .textFieldStyle(AddHerdTextFieldStyle())
-                            .multilineTextAlignment(.center)
-                            .accessibilityLabel("Calves average age in months")
-                    }
-                    .frame(maxWidth: .infinity)
+                }
+                .tint(Theme.accent)
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .accessibilityLabel("Daily weight gain toggle")
+                
+                if dailyGainGrams > 0 {
+                    Slider(value: Binding(
+                        get: { Double(dailyGainGrams) },
+                        set: { dailyGainGrams = Int($0) }
+                    ), in: 1...30, step: 1)
+                        .tint(Theme.accent)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 8)
+                        .background(Theme.inputFieldBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .accessibilityLabel("Daily weight gain slider")
+                        .accessibilityValue(String(format: "%.1f kilograms per day", Double(dailyGainGrams) / 10.0))
+                        .transition(.opacity)
                 }
             }
+            
+            // Debug: HIG-compliant toggle/slider for mortality rate (matches reference screenshots)
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Mortality Rate (Estimated)")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.secondaryText)
+                    Spacer()
+                }
+                
+                Toggle(isOn: Binding(
+                    get: { mortalityRate > 0 },
+                    set: { isOn in
+                        if isOn && mortalityRate == 0 {
+                            mortalityRate = 5 // Default to 5%
+                        } else if !isOn {
+                            mortalityRate = 0
+                        }
+                    }
+                )) {
+                    if mortalityRate > 0 {
+                        Text("\(mortalityRate)%")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.accent)
+                            .fontWeight(.semibold)
+                    } else {
+                        Text("Off")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                }
+                .tint(Theme.accent)
+                .padding()
+                .background(Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .accessibilityLabel("Mortality rate toggle")
+                
+                if mortalityRate > 0 {
+                    Slider(value: Binding(
+                        get: { Double(mortalityRate) },
+                        set: { mortalityRate = Int($0) }
+                    ), in: 1...30, step: 1)
+                        .tint(Theme.accent)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 8)
+                        .background(Theme.inputFieldBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .accessibilityLabel("Mortality rate slider")
+                        .accessibilityValue("\(mortalityRate) percent")
+                        .transition(.opacity)
+                }
+            }
+            
+            // Debug: Calves at Foot removed from Physical Attributes (now in Breeding Details screen)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 20)
@@ -613,24 +651,33 @@ struct AddHerdFlowView: View {
     }
     
     // MARK: - Validation
-    // Debug: Updated validation to handle optional numeric fields
+    // Debug: Updated validation for new flow with separate breeder screens
     private var isStepValid: Bool {
         switch currentStep {
         case 1:
+            // Step 1: Basic info validation
             return !herdName.isEmpty && !selectedBreed.isEmpty && !selectedCategory.isEmpty
         case 2:
             if isBreederCategory {
+                // Step 2 (breeders): Breeder selection - always valid (default selection exists)
                 return true
             } else {
+                // Step 2 (non-breeders): Physical attributes validation
                 return (headCount ?? 0) > 0 && (averageWeightKg ?? 0) > 0
             }
         case 3:
             if isBreederCategory {
-                return (headCount ?? 0) > 0 && (averageWeightKg ?? 0) > 0
+                // Step 3 (breeders): Breeding details - always valid (optional fields)
+                return true
             } else {
+                // Step 3 (non-breeders): Saleyard selection - always valid (has default)
                 return true
             }
         case 4:
+            // Step 4 (breeders): Physical attributes validation
+            return (headCount ?? 0) > 0 && (averageWeightKg ?? 0) > 0
+        case 5:
+            // Step 5 (breeders): Saleyard selection - always valid (has default)
             return true
         default:
             return false
