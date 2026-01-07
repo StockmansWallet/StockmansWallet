@@ -29,7 +29,6 @@ struct InteractiveChartView: View {
     let onValueChange: (Double, Double) -> Void
     
     @State private var scrubberX: CGFloat?
-    @State private var chartOpacity: Double = 0.0
     
     // Performance optimization: Cache sorted data to avoid sorting on every drag event (60fps)
     // This dramatically improves scrubbing performance by sorting once instead of 60 times/second
@@ -129,16 +128,14 @@ struct InteractiveChartView: View {
         Color.clear
     }
     
-    // Performance: Chart content without dimming effect to prevent redraw on every drag event
-    // Apple HIG: Charts should respond immediately without lag - dimming causes full chart redraw at 60fps
+    // HIG: Chart content following Apple's Charts framework best practices
+    // Charts handle their own smooth transitions when data or scales change
     private func chartContent() -> some View {
         let renderData = edgeExtendedData(for: data, in: timeRange)
         let yRange = valueRange(data: data)
         let xRange = dataRange(data: renderData)
         
         return Chart {
-            // Debug: Removed opacity changes that triggered chart redraw on every drag event
-            // This is the #1 performance issue - changing opacity forces full chart re-render
             ForEach(renderData) { point in
                 LineMark(
                     x: .value("Date", point.date),
@@ -226,9 +223,6 @@ struct InteractiveChartView: View {
                     chartGrid
                     
                     chartContent()
-                        // Debug: Simple fade-in animation (no rendering artifacts like mask had)
-                        // Smooth opacity transition prevents jarring "pop" on load
-                        .opacity(chartOpacity)
                         .chartOverlay { proxy in
                             GeometryReader { geo in
                                 Rectangle()
@@ -341,12 +335,10 @@ struct InteractiveChartView: View {
                                                 debounceWorkItem?.cancel()
                                                 debounceWorkItem = nil
                                                 
-                                                // Performance: Batch state reset with animation
-                                                withAnimation(.easeOut(duration: 0.2)) {
-                                                    isScrubbing = false
-                                                    scrubberPosition = nil
-                                                }
-                                                // Performance: Separate state updates that don't need animation
+                                                // Debug: Remove animation to prevent glitch on release
+                                                // Instant state reset prevents visual artifacts from partial render frames
+                                                isScrubbing = false
+                                                scrubberPosition = nil
                                                 selectedDate = nil
                                                 selectedValue = nil
                                                 scrubberX = nil
@@ -423,29 +415,19 @@ struct InteractiveChartView: View {
         .onAppear {
             // Performance: Initialize sorted data cache for smooth scrubbing
             sortedData = data.sorted { $0.date < $1.date }
-            
-            // Debug: Fade in chart smoothly (respects reduce motion accessibility setting)
-            if UIAccessibility.isReduceMotionEnabled {
-                chartOpacity = 1.0
-            } else {
-                withAnimation(.easeIn(duration: 0.6)) {
-                    chartOpacity = 1.0
-                }
-            }
         }
         .onChange(of: data.count) { _, _ in
             // Performance: Update sorted data cache when data changes
             sortedData = data.sorted { $0.date < $1.date }
-            
-            // Debug: Fade in chart when data updates
-            chartOpacity = 0.0
-            if UIAccessibility.isReduceMotionEnabled {
-                chartOpacity = 1.0
-            } else {
-                withAnimation(.easeIn(duration: 0.6)) {
-                    chartOpacity = 1.0
-                }
-            }
+        }
+        .onChange(of: timeRange) { _, _ in
+            // HIG: Reset scrubbing state when time range changes
+            // Ensures clean slate for new time range without visual artifacts
+            isScrubbing = false
+            scrubberPosition = nil
+            selectedDate = nil
+            selectedValue = nil
+            scrubberX = nil
         }
     }
     
