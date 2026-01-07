@@ -71,6 +71,8 @@ struct AnimatedCurrencyValue: View {
                 .contentTransition(isScrubbing ? .identity : .numericText(countsDown: isDecreasing))
                 .animation(isScrubbing ? .none : .default, value: formattedValue.decimal)
         }
+        // Debug: Center align number so it grows evenly from center instead of jumping from left
+        .frame(maxWidth: .infinity, alignment: .center)
         // Padding gives the digit rolling animation room to render without clipping
         .padding(.vertical, 8)
         .padding(.horizontal, 4)
