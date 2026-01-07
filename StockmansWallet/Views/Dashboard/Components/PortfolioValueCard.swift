@@ -61,7 +61,7 @@ struct PortfolioValueCard: View {
                     .foregroundStyle(change >= 0 ? Theme.positiveChange : Theme.negativeChange)
                 
                 // Debug: Separator dot between dollar and percentage
-                Text("•")
+                Text("|")
                     .font(.system(size: 11, weight: .regular))
                     .foregroundStyle((change >= 0 ? Theme.positiveChange : Theme.negativeChange).opacity(0.5))
                     .accessibilityHidden(true)
@@ -74,9 +74,9 @@ struct PortfolioValueCard: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            // Debug: Solid dark background matching ticker color from Theme (no glass effect)
+            // Debug: Solid dark background with rounded rectangle matching ticker color from Theme (no glass effect)
             .background(
-                Capsule()
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(change >= 0 ? Theme.positiveChangeBg : Theme.negativeChangeBg)
             )
             .shadow(color: .black.opacity(0.3), radius: 8, y: 4)

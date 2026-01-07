@@ -183,13 +183,13 @@ struct InteractiveChartView: View {
                     Text(position.date, format: .dateTime.day(.twoDigits).month(.abbreviated).year())
                         .font(.system(size: 11, weight: .regular))
                         .monospacedDigit()
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.accent)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        // Debug: Solid accent background (no glass effect)
+                        // Debug: Solid dark background with rounded rectangle (no glass effect)
                         .background(
-                            Capsule()
-                                .fill(Theme.accent)
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(Color(hex: "552F0D"))
                         )
                         .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                         .offset(x: {

@@ -58,14 +58,14 @@ struct AnimatedCurrencyValue: View {
             
             Text(".")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(Color(hex: "9E9E9E")) // Debug: Solid grey instead of transparent white
                 .tracking(-2)
                 .accessibilityHidden(true)
             
             Text(formattedValue.decimal)
                 .font(.system(size: 24, weight: .bold))
                 .monospacedDigit()
-                .foregroundStyle(.white.opacity(0.6))
+                .foregroundStyle(Color(hex: "9E9E9E")) // Debug: Solid grey instead of transparent white
                 .tracking(-1)
                 .fixedSize()
                 .contentTransition(isScrubbing ? .identity : .numericText(countsDown: isDecreasing))
