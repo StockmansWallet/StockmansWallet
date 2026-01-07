@@ -85,24 +85,24 @@ struct ReferenceData {
     static let cattleCategories = [
         "Yearling Steer", "Grown Steer", "Yearling Bull", "Weaner Bull",
         "Grown Bull", "Heifer (Unjoined)", "Heifer (Joined)", "First Calf Heifer",
-        "Breeding Cow", "Dry Cow",
+        "Breeder", "Dry Cow",
         "Weaner Heifer", "Feeder Heifer", "Cull Cow", "Calves", "Slaughter Cattle"
     ]
     
     static let sheepCategories = [
-        "Breeding Ram", "Maiden Ewe (Joined)", "Maiden Ewe (Unjoined)",
+        "Breeder", "Maiden Ewe (Joined)", "Maiden Ewe (Unjoined)",
         "Dry Ewe", "Cull Ewe", "Weaner Ewe", "Feeder Ewe", "Slaughter Ewe",
         "Lambs", "Weaner Lamb", "Feeder Lamb", "Slaughter Lamb"
     ]
     
     static let pigCategories = [
-        "Grower Pig", "Finisher Pig", "Breeder Sow", "Dry Sow", "Cull Sow",
+        "Grower Pig", "Finisher Pig", "Breeder", "Dry Sow", "Cull Sow",
         "Weaner Pig", "Feeder Pig", "Porker", "Baconer",
         "Grower Barrow", "Finisher Barrow"
     ]
     
     static let goatCategories = [
-        "Breeding Doe", "Dry Doe", "Cull Doe", "Breeding Buck", "Sale Buck",
+        "Breeder Doe", "Dry Doe", "Cull Doe", "Breeder Buck", "Sale Buck",
         "Mature Wether", "Rangeland Goat", "Capretto", "Chevon"
     ]
     

@@ -105,7 +105,7 @@ struct AddHerdFlowView: View {
     // Debug: Determines if category requires breeding-specific step (calvingRate, joinedDate, breedingProgramType)
     private var isBreederCategory: Bool {
         let breederCategories = [
-            "Breeding Cow", "Breeding Ewe", "Breeder Sow", "Breeding Doe",
+            "Breeder", "Breeder Doe", "Breeder Buck",
             "Maiden Ewe (Joined)", "Heifer (Joined)", "First Calf Heifer"
         ]
         return breederCategories.contains(selectedCategory)
@@ -114,7 +114,7 @@ struct AddHerdFlowView: View {
     // Debug: Determines if "Calves at Foot" section should be shown in Physical Attributes
     private var shouldShowCalvesAtFoot: Bool {
         let calvesAtFootCategories = [
-            "Heifer (Joined)", "First Calf Heifer", "Breeding Cow"
+            "Heifer (Joined)", "First Calf Heifer", "Breeder"
         ]
         return calvesAtFootCategories.contains(selectedCategory)
     }

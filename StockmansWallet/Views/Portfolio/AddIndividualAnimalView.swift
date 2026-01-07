@@ -52,7 +52,7 @@ struct AddIndividualAnimalView: View {
     // Debug: Determines if category requires breeding-specific step
     private var isBreederCategory: Bool {
         let breederCategories = [
-            "Breeding Cow", "Breeding Ewe", "Breeder Sow", "Breeding Doe",
+            "Breeder", "Breeder Doe", "Breeder Buck",
             "Maiden Ewe (Joined)", "Heifer (Joined)", "First Calf Heifer"
         ]
         return breederCategories.contains(selectedCategory)
