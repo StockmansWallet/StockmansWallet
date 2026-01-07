@@ -28,6 +28,10 @@ struct PortfolioView: View {
     @State private var herdsSearchText = ""
     @State private var individualSearchText = ""
     
+    // Debug: Sell functionality - show sell sheet and track selected herd
+    @State private var showingSellSheet = false
+    @State private var herdToSell: HerdGroup? = nil
+    
     // Performance: Task cancellation - prevent wasted CPU when user navigates away
     @State private var loadingTask: Task<Void, Never>? = nil
     
@@ -123,6 +127,11 @@ struct PortfolioView: View {
                     .presentationDragIndicator(.visible)
                     .presentationBackground(Theme.sheetBackground)
             }
+            .fullScreenCover(isPresented: $showingSellSheet) {
+                SellStockView(preselectedHerd: herdToSell)
+                    .transition(.move(edge: .trailing))
+                    .presentationBackground(Theme.sheetBackground)
+            }
             .task {
                 // Performance: Store task so it can be cancelled on view disappear
                 loadingTask = Task {
@@ -182,7 +191,15 @@ struct PortfolioView: View {
                     
                     LazyVStack(spacing: 16) {
                         ForEach(filteredHerds) { herd in
-                            EnhancedHerdCard(herd: herd, summary: summary)
+                            EnhancedHerdCard(
+                                herd: herd,
+                                summary: summary,
+                                onSellTapped: {
+                                    // Debug: Open sell sheet with preselected herd
+                                    herdToSell = herd
+                                    showingSellSheet = true
+                                }
+                            )
                         }
                     }
                     .padding(.horizontal)
@@ -211,7 +228,15 @@ struct PortfolioView: View {
                     
                     LazyVStack(spacing: 16) {
                         ForEach(filteredIndividuals) { herd in
-                            EnhancedHerdCard(herd: herd, summary: summary)
+                            EnhancedHerdCard(
+                                herd: herd,
+                                summary: summary,
+                                onSellTapped: {
+                                    // Debug: Open sell sheet with preselected individual
+                                    herdToSell = herd
+                                    showingSellSheet = true
+                                }
+                            )
                         }
                     }
                     .padding(.horizontal)
@@ -1022,7 +1047,7 @@ struct AssetRegisterHeader: View {
 }
 
 // MARK: - Enhanced Herd Card
-// Debug: Clear layout showing all essential herd information
+// Debug: Clear layout showing all essential herd information with optional sell button
 // Layout: name, headcount, saleyard, weights, prices in logical hierarchy
 struct EnhancedHerdCard: View {
     @Environment(\.modelContext) private var modelContext
@@ -1032,6 +1057,7 @@ struct EnhancedHerdCard: View {
     let valuationEngine = ValuationEngine.shared
     let herd: HerdGroup
     let summary: PortfolioSummary
+    var onSellTapped: (() -> Void)? = nil // Debug: Optional callback for sell action
     
     @State private var valuation: HerdValuation?
     @State private var isLoading = true
@@ -1126,6 +1152,30 @@ struct EnhancedHerdCard: View {
                             Text("\(valuation.pricePerKg, format: .currency(code: "AUD"))/kg")
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.secondaryText)
+                        }
+                        
+                        Spacer()
+                        
+                        // Debug: Sell button in bottom right if callback provided
+                        if let onSellTapped = onSellTapped {
+                            Button {
+                                HapticManager.tap()
+                                onSellTapped()
+                            } label: {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "dollarsign.circle.fill")
+                                        .font(.system(size: 14))
+                                    Text("Sell")
+                                        .font(Theme.caption)
+                                        .fontWeight(.semibold)
+                                }
+                                .foregroundStyle(.white)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Theme.accent)
+                                .clipShape(Capsule())
+                            }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
@@ -1600,6 +1650,37 @@ struct EmptySearchResultView: View {
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 60)
+    }
+}
+
+// MARK: - Floating Sell Button
+// Debug: Prominent floating action button for selling stock at bottom of Herds/Individual pages
+struct FloatingSellButton: View {
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: {
+            HapticManager.tap()
+            action()
+        }) {
+            HStack(spacing: 8) {
+                Image(systemName: "dollarsign.circle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                Text("Sell Stock")
+                    .font(Theme.headline)
+                    .fontWeight(.semibold)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 14)
+            .background(
+                Capsule()
+                    .fill(Theme.accent)
+                    .shadow(color: Theme.accent.opacity(0.4), radius: 12, x: 0, y: 4)
+            )
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("Sell stock")
     }
 }
 

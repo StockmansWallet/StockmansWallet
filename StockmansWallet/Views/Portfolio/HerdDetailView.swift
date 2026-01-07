@@ -25,6 +25,9 @@ struct HerdDetailView: View {
     @State private var isLoading = true
     @State private var showingAnimalsList = false
     
+    // Debug: Sell functionality for this herd
+    @State private var showingSellSheet = false
+    
     // Debug: Fetch herd from current context using ID - safest SwiftData pattern
     private var herd: HerdGroup? {
         let foundHerd = allHerds.first(where: { $0.id == herdId })
@@ -49,7 +52,8 @@ struct HerdDetailView: View {
     var body: some View {
         // Debug: Guard against nil herd to prevent crashes from stale SwiftData references
         if let activeHerd = herd {
-            ScrollView {
+            ZStack(alignment: .bottom) {
+                ScrollView {
                 VStack(spacing: 20) {
                     // Debug: Total value card with herd name at the very top
                     if let valuation = valuation {
@@ -133,25 +137,40 @@ struct HerdDetailView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient)
-            .navigationTitle("Herd Details")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    NavigationLink(destination: EditHerdView(herd: activeHerd)) {
-                        Text("Edit")
-                            .foregroundStyle(Theme.accent)
-                    }
+            
+            // Debug: Floating sell button at bottom of detail page
+            if !activeHerd.isSold {
+                FloatingSellButton {
+                    HapticManager.tap()
+                    showingSellSheet = true
+                }
+                .padding(.bottom, 20)
+            }
+        }
+        .navigationTitle("Herd Details")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                NavigationLink(destination: EditHerdView(herd: activeHerd)) {
+                    Text("Edit")
+                        .foregroundStyle(Theme.accent)
                 }
             }
-            .sheet(isPresented: $showingAnimalsList) {
-                AnimalListSheet(herd: activeHerd)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-                    .presentationBackground(Theme.sheetBackground)
-            }
-            .task {
-                await loadValuation()
-            }
+        }
+        .sheet(isPresented: $showingAnimalsList) {
+            AnimalListSheet(herd: activeHerd)
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Theme.sheetBackground)
+        }
+        .fullScreenCover(isPresented: $showingSellSheet) {
+            SellStockView(preselectedHerd: activeHerd)
+                .transition(.move(edge: .trailing))
+                .presentationBackground(Theme.sheetBackground)
+        }
+        .task {
+            await loadValuation()
+        }
         } else {
             // Debug: Show error if herd can't be found in context
             VStack(spacing: 16) {

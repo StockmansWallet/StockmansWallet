@@ -1,7 +1,13 @@
 # Portfolio Three-Section Update
 
 ## Overview
-Updated the Portfolio page to reorganize content from 2 sections (Overview/Assets) to 3 sections (Overview/Herds/Individual) with integrated search functionality.
+Updated the Portfolio page to reorganize content from 2 sections (Overview/Assets) to 3 sections (Overview/Herds/Individual) with integrated search functionality and sell buttons.
+
+### Key Features Added
+1. **Three-section layout** - Separate tabs for Overview, Herds, and Individual animals
+2. **Search functionality** - Inline search fields for Herds and Individual sections
+3. **Floating sell button** - Prominent button at bottom of Herds/Individual pages
+4. **Card sell buttons** - Quick sell action on each card's bottom right
 
 ## Changes Made
 
@@ -80,9 +86,66 @@ Updated the Portfolio page to reorganize content from 2 sections (Overview/Asset
 
 ### File Changes
 - Modified: `StockmansWallet/Views/Portfolio/PortfolioView.swift`
+  - Added search functionality for Herds and Individual sections
+  - Added card sell buttons with preselection
+  - Updated to three-section layout
+- Modified: `StockmansWallet/Views/Portfolio/HerdDetailView.swift`
+  - Added floating sell button at bottom of detail page
+  - Added sell sheet presentation
+- Modified: `StockmansWallet/Views/Portfolio/SellStockView.swift`
+  - Added preselectedHerd parameter
+  - Added automatic form pre-filling with valuation data
+  - Added ValuationEngine integration for price calculation
+  - Added loading state during valuation calculation
+
+## Sell Button Features (Added)
+
+### 1. Floating Sell Button
+- **Location**: Appears at the bottom of HerdDetailView (individual herd/animal detail pages)
+- Only visible when the herd/animal is not already sold
+- Opens SellStockView with the current herd preselected and form pre-filled
+- Prominent design with shadow effect for easy access
+
+### 2. Card Sell Button
+- Small "Sell" button appears in bottom right of each card on list pages
+- Located next to the Average Weight/Price information
+- Tappable with clear visual feedback
+- Opens SellStockView with the specific herd preselected and form pre-filled
+- Uses capsule shape with accent color background
+
+### 3. SellStockView Enhancement
+- Now accepts optional `preselectedHerd` parameter
+- **Pre-fills form automatically** when herd is preselected:
+  - Herd selection auto-populated
+  - Head count set to herd's total head count
+  - **Price per kg pre-filled** using ValuationEngine calculation
+  - **Total price auto-calculated** based on current weight and price
+  - **Notes field pre-populated** with price source information
+  - Loading indicator shown while calculating valuation
+- When opened without preselection, user selects herd manually
+
+## User Experience Flow
+
+### Selling from Card Button (List Pages)
+1. User taps "Sell" button on specific card in Herds or Individual list
+2. SellStockView opens with:
+   - Herd preselected
+   - Price per kg pre-filled with current market price
+   - Total value calculated and displayed
+   - Price source noted in comments
+3. User can adjust price if needed and confirm sale
+
+### Selling from Floating Button (Detail Page)
+1. User views herd/individual detail page
+2. User taps "Sell Stock" floating button at bottom
+3. SellStockView opens with:
+   - Current herd preselected
+   - All form fields pre-filled with calculated values
+   - Ready to confirm or adjust and sell
 
 ## Testing Recommendations
 
+### Basic Portfolio Functionality
 1. Test with empty portfolio (no herds/individuals)
 2. Test with only herds (no individuals)
 3. Test with only individuals (no herds)
@@ -93,4 +156,32 @@ Updated the Portfolio page to reorganize content from 2 sections (Overview/Asset
 8. Verify empty states display correctly
 9. Check that filtering works for all searchable fields
 10. Verify navigation to HerdDetailView still works from cards
+
+### Sell Button Functionality
+11. **Test card sell button (list pages)**
+    - Verify it opens SellStockView with herd preselected
+    - Verify price per kg is pre-filled from valuation
+    - Verify total price is calculated correctly
+    - Verify notes field shows price source
+    - Verify button doesn't interfere with card navigation
+    
+12. **Test floating sell button (detail page)**
+    - Verify it appears at bottom of HerdDetailView
+    - Verify it doesn't appear for sold herds
+    - Verify it opens SellStockView with current herd preselected
+    - Verify form is pre-filled with valuation data
+    - Verify button doesn't overlap with scrollable content
+    
+13. **Test form pre-filling**
+    - Verify loading indicator appears during valuation
+    - Verify price fields are disabled during loading
+    - Verify calculated values match expected valuation
+    - Verify user can still modify pre-filled values
+    - Verify form validation still works correctly
+    
+14. **Test sell flow completion**
+    - Verify sale records correctly from pre-filled form
+    - Verify sold herds disappear from active lists
+    - Verify sold herds don't show sell button on detail page
+    - Verify partial sales reduce head count correctly
 

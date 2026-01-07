@@ -13,6 +13,13 @@ struct SellStockView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
     @Query(filter: #Predicate<HerdGroup> { !$0.isSold }, sort: \HerdGroup.updatedAt, order: .reverse) private var activeHerds: [HerdGroup]
+    @Query private var preferences: [UserPreferences]
+    
+    // Debug: Optional preselected herd - allows opening sell sheet with specific herd already selected
+    var preselectedHerd: HerdGroup? = nil
+    
+    // Debug: Use 'let' with @Observable instead of @StateObject
+    let valuationEngine = ValuationEngine.shared
     
     @State private var selectedHerd: HerdGroup?
     @State private var saleDate = Date()
@@ -22,6 +29,7 @@ struct SellStockView: View {
     @State private var headSold: Int = 0
     @State private var freightCost: Double = 0
     @State private var showingConfirmation = false
+    @State private var isLoadingValuation = false
     
     var body: some View {
         NavigationStack {
@@ -160,9 +168,18 @@ struct SellStockView: View {
                                     
                                     // Price per kg
                                     VStack(alignment: .leading, spacing: 8) {
-                                        Text("Price per kg ($/kg)")
-                                            .font(Theme.headline)
-                                            .foregroundStyle(Theme.primaryText)
+                                        HStack(spacing: 8) {
+                                            Text("Price per kg ($/kg)")
+                                                .font(Theme.headline)
+                                                .foregroundStyle(Theme.primaryText)
+                                            
+                                            // Debug: Show loading indicator when pre-filling valuation
+                                            if isLoadingValuation {
+                                                ProgressView()
+                                                    .scaleEffect(0.8)
+                                                    .tint(Theme.accent)
+                                            }
+                                        }
                                         
                                         TextField("0.00", value: $pricePerKg, format: .number)
                                             .keyboardType(.decimalPad)
@@ -173,6 +190,7 @@ struct SellStockView: View {
                                             .onChange(of: pricePerKg) { _, _ in
                                                 calculateTotalPrice()
                                             }
+                                            .disabled(isLoadingValuation)
                                     }
                                     
                                     // Calculated total price
@@ -278,6 +296,44 @@ struct SellStockView: View {
                     Text("Record sale of \(headSold) head from \(herd.name) at $\(String(format: "%.2f", pricePerKg))/kg (Total: $\(String(format: "%.2f", salePrice)))?")
                 }
             }
+            .task {
+                // Debug: Set preselected herd and pre-fill form if provided (from card/detail sell button)
+                if let preselected = preselectedHerd {
+                    selectedHerd = preselected
+                    headSold = preselected.headCount
+                    await preFillFormWithValuation(for: preselected)
+                }
+            }
+        }
+    }
+    
+    // MARK: - Pre-fill Form with Valuation
+    // Debug: Calculate valuation and pre-fill price when herd is preselected
+    private func preFillFormWithValuation(for herd: HerdGroup) async {
+        await MainActor.run { isLoadingValuation = true }
+        
+        let prefs = preferences.first ?? UserPreferences()
+        let valuation = await valuationEngine.calculateHerdValue(
+            herd: herd,
+            preferences: prefs,
+            modelContext: modelContext
+        )
+        
+        await MainActor.run {
+            // Debug: Pre-fill price per kg from valuation
+            self.pricePerKg = valuation.pricePerKg
+            
+            // Debug: Auto-calculate total price
+            calculateTotalPrice()
+            
+            // Debug: Pre-fill notes with source information
+            self.notes = "Price source: \(valuation.priceSource)"
+            
+            self.isLoadingValuation = false
+            
+            #if DEBUG
+            print("📊 SellStockView: Pre-filled with valuation - Price: $\(valuation.pricePerKg)/kg, Total: $\(salePrice)")
+            #endif
         }
     }
     
