@@ -55,6 +55,7 @@ struct SignInPage: View {
             Theme.backgroundGradient
                 .ignoresSafeArea()
             
+            // Debug: Align content to top for better visual hierarchy
             VStack(spacing: 32) {
                         // Debug: Improved header with better visual hierarchy
                         VStack(spacing: 12) {
@@ -70,7 +71,6 @@ struct SignInPage: View {
                                 .multilineTextAlignment(.center)
                         }
                         .frame(maxWidth: .infinity)
-                        .padding(.top, 24)
                         
                         // Debug: Email/password form with proper keyboard navigation
                         VStack(spacing: 14) {
@@ -229,39 +229,42 @@ struct SignInPage: View {
                         .frame(maxWidth: .infinity)
                         
                         // Footer - Terms & Privacy
+                        // Debug: Very subtle footer with low-opacity accent color links
                         HStack(spacing: 4) {
                             Text("By continuing, you accept our")
                                 .font(.caption)
-                                .foregroundStyle(Theme.secondaryText.opacity(0.6)) // Debug: More subtle
+                                .foregroundStyle(Theme.secondaryText.opacity(0.4))
                             
                             Button {
                                 HapticManager.tap()
                             } label: {
                                 Text("Terms")
                                     .font(.caption)
+                                    .foregroundStyle(Theme.accent.opacity(0.35))
                             }
                             .buttonStyle(.plain)
-                            .tint(Theme.secondaryText.opacity(0.7)) // Debug: Subtle link
                             
                             Text("&")
                                 .font(.caption)
-                                .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.4))
                             
                             Button {
                                 HapticManager.tap()
                             } label: {
                                 Text("Privacy Policy")
                                     .font(.caption)
+                                    .foregroundStyle(Theme.accent.opacity(0.35))
                             }
                             .buttonStyle(.plain)
-                            .tint(Theme.secondaryText.opacity(0.7)) // Debug: Subtle link
                         }
                         .frame(maxWidth: .infinity)
+                        
+                        Spacer()
                 }
                 .padding(.horizontal, 24)
-                .padding(.top, 60) // Debug: Add top padding for status bar
+                .padding(.top, 60)
                 .padding(.bottom, 40)
-                .frame(maxHeight: .infinity)
+                .frame(maxHeight: .infinity, alignment: .top)
         }
     }
 }
