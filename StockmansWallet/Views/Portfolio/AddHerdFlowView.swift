@@ -119,9 +119,11 @@ struct AddHerdFlowView: View {
         return calvesAtFootCategories.contains(selectedCategory)
     }
     
-    // Debug: Updated step count for new flow with separate breeder selection and details screens
+    // Debug: Updated step count for 3-page split (Location, Species, Breed)
+    // Non-breeders: 5 steps (Location, Species, Breed, Physical, Saleyard)
+    // Breeders: 7 steps (Location, Species, Breed, Breeder Selection, Breeding Details, Physical, Saleyard)
     private var totalSteps: Int {
-        isBreederCategory ? 5 : 3
+        isBreederCategory ? 7 : 5
     }
     
     var body: some View {
@@ -170,27 +172,35 @@ struct AddHerdFlowView: View {
                 .padding(.bottom, 20)
                 
                 // Content
-                // Debug: Updated flow logic for new breeder screens
+                // Debug: Updated flow logic with 3-page split (Location, Species, Breed)
                 ScrollView {
                     VStack(spacing: 0) {
                         if currentStep == 1 {
-                            // Step 1: Basic info (name, species, breed, category)
-                            step1Content
+                            // Step 1: Location (name, paddock)
+                            locationContent
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
-                        } else if currentStep == 2 && isBreederCategory {
-                            // Step 2: Breeder selection (for breeder categories only)
+                        } else if currentStep == 2 {
+                            // Step 2: Species (species cards only)
+                            speciesContent
+                                .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
+                        } else if currentStep == 3 {
+                            // Step 3: Breed (breed, category)
+                            breedContent
+                                .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
+                        } else if currentStep == 4 && isBreederCategory {
+                            // Step 4: Breeder selection (for breeder categories only)
                             breederSelectionContent
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
-                        } else if currentStep == 3 && isBreederCategory {
-                            // Step 3: Breeding details (for breeder categories only)
+                        } else if currentStep == 5 && isBreederCategory {
+                            // Step 5: Breeding details (for breeder categories only)
                             breedingDetailsContent
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
-                        } else if (currentStep == 2 && !isBreederCategory) || (currentStep == 4 && isBreederCategory) {
-                            // Step 2/4: Physical attributes
+                        } else if (currentStep == 4 && !isBreederCategory) || (currentStep == 6 && isBreederCategory) {
+                            // Step 4/6: Physical attributes
                             step2Content
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         } else {
-                            // Step 3/5: Saleyard selection
+                            // Step 5/7: Saleyard selection
                             step3Content
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         }
@@ -299,9 +309,17 @@ struct AddHerdFlowView: View {
         }
     }
     
-    // MARK: - Step 1
-    private var step1Content: some View {
+    // MARK: - Step 1: Location
+    // Debug: Herd name and paddock location
+    private var locationContent: some View {
         VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header
+            Text("Location")
+                .font(Theme.title)
+                .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
+            
             VStack(alignment: .leading, spacing: 8) {
                 Text("Herd Name")
                     .font(Theme.headline)
@@ -324,28 +342,91 @@ struct AddHerdFlowView: View {
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .accessibilityLabel("Paddock location")
             }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 20)
+    }
+    
+    // MARK: - Step 2: Species
+    // Debug: Species card selector only (gives cards room to breathe)
+    private var speciesContent: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header
+            Text("Species")
+                .font(Theme.title)
+                .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
             
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Species")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                
-                Picker("Species", selection: $selectedSpecies) {
-                    ForEach(speciesOptions, id: \.self) { species in
-                        Text(species).tag(species)
-                    }
-                }
-                .pickerStyle(.segmented)
-                // Note: SwiftUI segmented controls don't reliably respect custom tint colors in dark mode
-                .onChange(of: selectedSpecies) { _, _ in
+            // Debug: Grid of species cards with emoji icons (2x2 grid with more space)
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
+                // Cattle - Available
+                SpeciesCard(
+                    emoji: "🐄",
+                    name: "Cattle",
+                    isAvailable: true,
+                    isSelected: selectedSpecies == "Cattle"
+                ) {
                     HapticManager.tap()
+                    selectedSpecies = "Cattle"
                     selectedBreed = ""
                     selectedCategory = ""
                     breedSearchText = ""
                     categorySearchText = ""
                 }
-                .accessibilityLabel("Species")
+                
+                // Sheep - Coming Soon
+                SpeciesCard(
+                    emoji: "🐑",
+                    name: "Sheep",
+                    isAvailable: false,
+                    isSelected: false
+                ) {
+                    // Disabled - no action
+                }
+                
+                // Pigs - Coming Soon
+                SpeciesCard(
+                    emoji: "🐷",
+                    name: "Pigs",
+                    isAvailable: false,
+                    isSelected: false
+                ) {
+                    // Disabled - no action
+                }
+                
+                // Goats - Coming Soon
+                SpeciesCard(
+                    emoji: "🐐",
+                    name: "Goats",
+                    isAvailable: false,
+                    isSelected: false
+                ) {
+                    // Disabled - no action
+                }
             }
+            
+            // Debug: Helper text for coming soon animals
+            Text("Support for Sheep, Pigs, and Goats coming soon!")
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.top, 4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(.bottom, 20)
+    }
+    
+    // MARK: - Step 3: Breed
+    // Debug: Breed and category selection
+    private var breedContent: some View {
+        VStack(alignment: .leading, spacing: 24) {
+            // Debug: Section header
+            Text("Breed")
+                .font(Theme.title)
+                .foregroundStyle(Theme.primaryText)
+                .frame(maxWidth: .infinity, alignment: .center)
+                .padding(.bottom, 8)
             
             VStack(alignment: .leading, spacing: 8) {
                 Text("Breed")
@@ -411,13 +492,13 @@ struct AddHerdFlowView: View {
         .padding(.bottom, 20)
     }
     
-    // MARK: - Breeder Selection Screen (Step 2 for breeders)
-    // Debug: New breeder selection screen matching reference screenshots
+    // MARK: - Step 4: Breeder Selection (Breeders Only)
+    // Debug: Breeder selection screen (AI/Controlled/Uncontrolled)
     private var breederSelectionContent: some View {
         BreederSelectionScreen(breedingProgramType: $breedingProgramType)
     }
     
-    // MARK: - Breeding Details Screen (Step 3 for breeders)
+    // MARK: - Step 5: Breeding Details (Breeders Only)
     // Debug: Breeding-specific inputs based on selected program type
     private var breedingDetailsContent: some View {
         BreedingDetailsScreen(
@@ -430,11 +511,11 @@ struct AddHerdFlowView: View {
         )
     }
     
-    // MARK: - Step 2
+    // MARK: - Physical Attributes
     private var step2Content: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // Debug: Section header - center aligned and larger font
-            Text("Physical Attributes")
+            // Debug: Section header
+            Text("Physical")
                 .font(Theme.title)
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -590,11 +671,11 @@ struct AddHerdFlowView: View {
         .padding(.bottom, 20)
     }
     
-    // MARK: - Step 3
+    // MARK: - Saleyard
     private var step3Content: some View {
         VStack(alignment: .leading, spacing: 24) {
-            // Debug: Section header - center aligned and larger font
-            Text("Saleyard Selection")
+            // Debug: Section header
+            Text("Saleyard")
                 .font(Theme.title)
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
@@ -651,33 +732,39 @@ struct AddHerdFlowView: View {
     }
     
     // MARK: - Validation
-    // Debug: Updated validation for new flow with separate breeder screens
+    // Debug: Updated validation for 3-page split (Location, Species, Breed)
     private var isStepValid: Bool {
         switch currentStep {
         case 1:
-            // Step 1: Basic info validation
-            return !herdName.isEmpty && !selectedBreed.isEmpty && !selectedCategory.isEmpty
+            // Step 1: Location - only name is required
+            return !herdName.isEmpty
         case 2:
+            // Step 2: Species - species selection required
+            return !selectedSpecies.isEmpty
+        case 3:
+            // Step 3: Breed - breed and category required
+            return !selectedBreed.isEmpty && !selectedCategory.isEmpty
+        case 4:
             if isBreederCategory {
-                // Step 2 (breeders): Breeder selection - always valid (default selection exists)
+                // Step 4 (breeders): Breeder selection - always valid (default selection exists)
                 return true
             } else {
-                // Step 2 (non-breeders): Physical attributes validation
+                // Step 4 (non-breeders): Physical attributes validation
                 return (headCount ?? 0) > 0 && (averageWeightKg ?? 0) > 0
             }
-        case 3:
+        case 5:
             if isBreederCategory {
-                // Step 3 (breeders): Breeding details - always valid (optional fields)
+                // Step 5 (breeders): Breeding details - always valid (optional fields)
                 return true
             } else {
-                // Step 3 (non-breeders): Saleyard selection - always valid (has default)
+                // Step 5 (non-breeders): Saleyard selection - always valid (has default)
                 return true
             }
-        case 4:
-            // Step 4 (breeders): Physical attributes validation
+        case 6:
+            // Step 6 (breeders): Physical attributes validation
             return (headCount ?? 0) > 0 && (averageWeightKg ?? 0) > 0
-        case 5:
-            // Step 5 (breeders): Saleyard selection - always valid (has default)
+        case 7:
+            // Step 7 (breeders): Saleyard selection - always valid (has default)
             return true
         default:
             return false
@@ -1002,5 +1089,62 @@ struct ScrollablePickerSheet: View {
         .onAppear {
             localSearchText = searchText
         }
+    }
+}
+
+// MARK: - Species Card Component
+// Debug: Card component for species selection with "Coming Soon" badge
+struct SpeciesCard: View {
+    let emoji: String
+    let name: String
+    let isAvailable: Bool
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: {
+            if isAvailable {
+                action()
+            }
+        }) {
+            VStack(spacing: 12) {
+                // Debug: Emoji icon (will be replaced with custom images later)
+                Text(emoji)
+                    .font(.system(size: 44))
+                
+                // Debug: Species name
+                Text(name)
+                    .font(Theme.headline)
+                    .foregroundStyle(isAvailable ? Theme.primaryText : Theme.secondaryText)
+                
+                // Debug: "Coming Soon" badge for unavailable species
+                if !isAvailable {
+                    Text("Coming Soon")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Theme.accent.opacity(0.15))
+                        .clipShape(Capsule())
+                }
+            }
+            .frame(maxWidth: .infinity)
+            .frame(height: 140) // Fixed height for consistency
+            .padding()
+            .background(
+                // Debug: Show selected state with accent color border
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(isAvailable ? Theme.inputFieldBackground : Theme.inputFieldBackground.opacity(0.5))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .strokeBorder(isSelected ? Theme.accent : Color.clear, lineWidth: 2)
+                    )
+            )
+        }
+        .buttonBorderShape(.roundedRectangle)
+        .disabled(!isAvailable)
+        .accessibilityLabel(isAvailable ? name : "\(name) coming soon")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityHint(!isAvailable ? "This animal type will be available in a future update" : "")
     }
 }

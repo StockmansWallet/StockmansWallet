@@ -42,7 +42,7 @@ struct AddIndividualAnimalView: View {
     @State private var calvesAtFootHeadCount: Int? = nil
     @State private var calvesAtFootAgeMonths: Int? = nil
     
-    private let speciesOptions = ["Cattle", "Sheep", "Pig"]
+    private let speciesOptions = ["Cattle", "Sheep", "Pigs", "Goats"]
     
     // Debug: Get user preferences for filtered saleyards
     private var userPrefs: UserPreferences {
@@ -69,8 +69,10 @@ struct AddIndividualAnimalView: View {
             breeds = ReferenceData.cattleBreeds
         case "Sheep":
             breeds = ReferenceData.sheepBreeds
-        case "Pig":
+        case "Pigs":
             breeds = ReferenceData.pigBreeds
+        case "Goats":
+            breeds = ReferenceData.goatBreeds
         default:
             breeds = []
         }
@@ -85,8 +87,10 @@ struct AddIndividualAnimalView: View {
             categories = ReferenceData.cattleCategories
         case "Sheep":
             categories = ReferenceData.sheepCategories
-        case "Pig":
+        case "Pigs":
             categories = ReferenceData.pigCategories
+        case "Goats":
+            categories = ReferenceData.goatCategories
         default:
             categories = []
         }
@@ -264,20 +268,60 @@ struct AddIndividualAnimalView: View {
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 
-                Picker("Species", selection: $selectedSpecies) {
-                    ForEach(speciesOptions, id: \.self) { species in
-                        Text(species).tag(species)
+                // Debug: Grid of species cards with emoji icons
+                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                    // Cattle - Available
+                    SpeciesCard(
+                        emoji: "🐄",
+                        name: "Cattle",
+                        isAvailable: true,
+                        isSelected: selectedSpecies == "Cattle"
+                    ) {
+                        HapticManager.tap()
+                        selectedSpecies = "Cattle"
+                        selectedBreed = ""
+                        selectedCategory = ""
+                        breedSearchText = ""
+                        categorySearchText = ""
+                    }
+                    
+                    // Sheep - Coming Soon
+                    SpeciesCard(
+                        emoji: "🐑",
+                        name: "Sheep",
+                        isAvailable: false,
+                        isSelected: false
+                    ) {
+                        // Disabled - no action
+                    }
+                    
+                    // Pigs - Coming Soon
+                    SpeciesCard(
+                        emoji: "🐷",
+                        name: "Pigs",
+                        isAvailable: false,
+                        isSelected: false
+                    ) {
+                        // Disabled - no action
+                    }
+                    
+                    // Goats - Coming Soon
+                    SpeciesCard(
+                        emoji: "🐐",
+                        name: "Goats",
+                        isAvailable: false,
+                        isSelected: false
+                    ) {
+                        // Disabled - no action
                     }
                 }
-                .pickerStyle(.segmented)
-                .onChange(of: selectedSpecies) { _, _ in
-                    HapticManager.tap()
-                    selectedBreed = ""
-                    selectedCategory = ""
-                    breedSearchText = ""
-                    categorySearchText = ""
-                }
-                .accessibilityLabel("Species")
+                
+                // Debug: Helper text for coming soon animals
+                Text("Support for Sheep, Pigs, and Goats coming soon!")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .padding(.top, 4)
             }
             
             VStack(alignment: .leading, spacing: 8) {

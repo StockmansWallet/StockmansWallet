@@ -32,7 +32,7 @@ struct EditHerdView: View {
     @State private var paddockName: String
     @State private var useCreationDateForWeight: Bool
     
-    private let speciesOptions = ["Cattle", "Sheep", "Pig"]
+    private let speciesOptions = ["Cattle", "Sheep", "Pigs", "Goats"]
     
     // Debug: Get user preferences for filtered saleyards
     private var userPrefs: UserPreferences {
@@ -44,9 +44,11 @@ struct EditHerdView: View {
         case "Cattle":
             return ReferenceData.cattleBreeds
         case "Sheep":
-            return ["Merino", "Dorper", "Poll Dorset", "Suffolk", "Border Leicester", "Corriedale", "Romney", "Other"]
-        case "Pig":
-            return ["Large White", "Landrace", "Duroc", "Hampshire", "Pietrain", "Berkshire", "Other"]
+            return ReferenceData.sheepBreeds
+        case "Pigs":
+            return ReferenceData.pigBreeds
+        case "Goats":
+            return ReferenceData.goatBreeds
         default:
             return []
         }
@@ -58,8 +60,10 @@ struct EditHerdView: View {
             return ReferenceData.cattleCategories
         case "Sheep":
             return ReferenceData.sheepCategories
-        case "Pig":
+        case "Pigs":
             return ReferenceData.pigCategories
+        case "Goats":
+            return ReferenceData.goatCategories
         default:
             return []
         }
@@ -114,20 +118,63 @@ struct EditHerdView: View {
                                 Text("Species")
                                     .font(Theme.headline)
                                     .foregroundStyle(Theme.primaryText)
-                                Picker("Species", selection: $selectedSpecies) {
-                                    ForEach(speciesOptions, id: \.self) { species in
-                                        Text(species).tag(species)
+                                
+                                // Debug: Grid of species cards with emoji icons
+                                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                                    // Cattle - Available
+                                    SpeciesCard(
+                                        emoji: "🐄",
+                                        name: "Cattle",
+                                        isAvailable: true,
+                                        isSelected: selectedSpecies == "Cattle"
+                                    ) {
+                                        HapticManager.tap()
+                                        selectedSpecies = "Cattle"
+                                        if !breedOptions.contains(selectedBreed) {
+                                            selectedBreed = ""
+                                        }
+                                        if !categoryOptions.contains(selectedCategory) {
+                                            selectedCategory = ""
+                                        }
+                                    }
+                                    
+                                    // Sheep - Coming Soon
+                                    SpeciesCard(
+                                        emoji: "🐑",
+                                        name: "Sheep",
+                                        isAvailable: false,
+                                        isSelected: false
+                                    ) {
+                                        // Disabled - no action
+                                    }
+                                    
+                                    // Pigs - Coming Soon
+                                    SpeciesCard(
+                                        emoji: "🐷",
+                                        name: "Pigs",
+                                        isAvailable: false,
+                                        isSelected: false
+                                    ) {
+                                        // Disabled - no action
+                                    }
+                                    
+                                    // Goats - Coming Soon
+                                    SpeciesCard(
+                                        emoji: "🐐",
+                                        name: "Goats",
+                                        isAvailable: false,
+                                        isSelected: false
+                                    ) {
+                                        // Disabled - no action
                                     }
                                 }
-                                .pickerStyle(.segmented)
-                                .onChange(of: selectedSpecies) { _, _ in
-                                    if !breedOptions.contains(selectedBreed) {
-                                        selectedBreed = ""
-                                    }
-                                    if !categoryOptions.contains(selectedCategory) {
-                                        selectedCategory = ""
-                                    }
-                                }
+                                
+                                // Debug: Helper text for coming soon animals
+                                Text("Support for Sheep, Pigs, and Goats coming soon!")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                    .frame(maxWidth: .infinity, alignment: .center)
+                                    .padding(.top, 4)
                             }
                             
                             VStack(alignment: .leading, spacing: 12) {
