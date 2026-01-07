@@ -24,12 +24,18 @@ struct PortfolioView: View {
     @State private var isLoading = true
     @State private var selectedView: PortfolioViewMode = .overview
     
+    // Debug: Search functionality for Herds and Individual sections
+    @State private var herdsSearchText = ""
+    @State private var individualSearchText = ""
+    
     // Performance: Task cancellation - prevent wasted CPU when user navigates away
     @State private var loadingTask: Task<Void, Never>? = nil
     
+    // Debug: Three-section portfolio view - Overview for summary stats, Herds for groups, Individual for single animals
     enum PortfolioViewMode: String, CaseIterable {
         case overview = "Overview"
-        case assets = "Assets"
+        case herds = "Herds"
+        case individual = "Individual"
     }
     
     var body: some View {
@@ -51,10 +57,13 @@ struct PortfolioView: View {
                                 .padding(.horizontal)
                                 .padding(.vertical, -8) // Debug: Reduce gap above and below segmented control
                             
+                            // Debug: Show different content based on selected view mode
                             if selectedView == .overview {
                                 overviewContent
+                            } else if selectedView == .herds {
+                                herdsContent
                             } else {
-                                assetsContent
+                                individualContent
                             }
                         }
                         .frame(maxWidth: .infinity)
@@ -161,18 +170,99 @@ struct PortfolioView: View {
         }
     }
     
-    // MARK: - Assets Content
-    // Debug: Removed AssetRegisterHeader as stats now shown above view selector
-    private var assetsContent: some View {
+    // MARK: - Herds Content
+    // Debug: Display only herds (headCount > 1) with search functionality
+    private var herdsContent: some View {
         Group {
             if let summary = portfolioSummary {
-                LazyVStack(spacing: 16) {
-                    ForEach(herds.filter { !$0.isSold }) { herd in
-                        EnhancedHerdCard(herd: herd, summary: summary)
+                VStack(spacing: 16) {
+                    // Debug: Search field at top of herds section (below segmented control)
+                    SearchField(text: $herdsSearchText, placeholder: "Search herds...")
+                        .padding(.horizontal)
+                    
+                    LazyVStack(spacing: 16) {
+                        ForEach(filteredHerds) { herd in
+                            EnhancedHerdCard(herd: herd, summary: summary)
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    // Debug: Show message if no herds found
+                    if filteredHerds.isEmpty {
+                        EmptySearchResultView(
+                            searchText: herdsSearchText,
+                            type: "herds"
+                        )
                     }
                 }
-                .padding(.horizontal)
             }
+        }
+    }
+    
+    // MARK: - Individual Content
+    // Debug: Display only individual animals (headCount == 1) with search functionality
+    private var individualContent: some View {
+        Group {
+            if let summary = portfolioSummary {
+                VStack(spacing: 16) {
+                    // Debug: Search field at top of individual section (below segmented control)
+                    SearchField(text: $individualSearchText, placeholder: "Search individuals...")
+                        .padding(.horizontal)
+                    
+                    LazyVStack(spacing: 16) {
+                        ForEach(filteredIndividuals) { herd in
+                            EnhancedHerdCard(herd: herd, summary: summary)
+                        }
+                    }
+                    .padding(.horizontal)
+                    
+                    // Debug: Show message if no individuals found
+                    if filteredIndividuals.isEmpty {
+                        EmptySearchResultView(
+                            searchText: individualSearchText,
+                            type: "individual animals"
+                        )
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Filtered Herds and Individuals
+    // Debug: Filter herds based on search text and headCount
+    private var filteredHerds: [HerdGroup] {
+        let herdsOnly = herds.filter { !$0.isSold && $0.headCount > 1 }
+        
+        guard !herdsSearchText.isEmpty else {
+            return herdsOnly
+        }
+        
+        let searchLower = herdsSearchText.lowercased()
+        return herdsOnly.filter { herd in
+            herd.name.lowercased().contains(searchLower) ||
+            herd.breed.lowercased().contains(searchLower) ||
+            herd.category.lowercased().contains(searchLower) ||
+            herd.species.lowercased().contains(searchLower) ||
+            (herd.paddockName?.lowercased().contains(searchLower) ?? false) ||
+            (herd.additionalInfo?.lowercased().contains(searchLower) ?? false)
+        }
+    }
+    
+    private var filteredIndividuals: [HerdGroup] {
+        let individualsOnly = herds.filter { !$0.isSold && $0.headCount == 1 }
+        
+        guard !individualSearchText.isEmpty else {
+            return individualsOnly
+        }
+        
+        let searchLower = individualSearchText.lowercased()
+        return individualsOnly.filter { herd in
+            herd.name.lowercased().contains(searchLower) ||
+            herd.breed.lowercased().contains(searchLower) ||
+            herd.category.lowercased().contains(searchLower) ||
+            herd.species.lowercased().contains(searchLower) ||
+            (herd.paddockName?.lowercased().contains(searchLower) ?? false) ||
+            (herd.additionalInfo?.lowercased().contains(searchLower) ?? false)
         }
     }
     
@@ -1446,6 +1536,70 @@ struct SearchResultCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .stitchedCard()
+    }
+}
+
+// MARK: - Search Field
+// Debug: Reusable search text field for Herds and Individual sections
+struct SearchField: View {
+    @Binding var text: String
+    let placeholder: String
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "magnifyingglass")
+                .foregroundStyle(Theme.secondaryText)
+                .font(.system(size: 16))
+            
+            TextField(placeholder, text: $text)
+                .textFieldStyle(.plain)
+                .font(Theme.body)
+                .foregroundStyle(Theme.primaryText)
+                .autocorrectionDisabled()
+                .textInputAutocapitalization(.never)
+            
+            // Debug: Show clear button when text is not empty
+            if !text.isEmpty {
+                Button {
+                    HapticManager.tap()
+                    text = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(Theme.secondaryText)
+                        .font(.system(size: 16))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(Theme.inputFieldBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// MARK: - Empty Search Result View
+// Debug: Display when no search results are found
+struct EmptySearchResultView: View {
+    let searchText: String
+    let type: String
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(systemName: searchText.isEmpty ? "tray.fill" : "doc.text.magnifyingglass")
+                .font(.system(size: 48))
+                .foregroundStyle(Theme.secondaryText.opacity(0.5))
+            
+            Text(searchText.isEmpty ? "No \(type) found" : "No results for \"\(searchText)\"")
+                .font(Theme.headline)
+                .foregroundStyle(Theme.primaryText)
+            
+            Text(searchText.isEmpty ? "Add \(type) to see them here" : "Try a different search term")
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondaryText)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 60)
     }
 }
 
