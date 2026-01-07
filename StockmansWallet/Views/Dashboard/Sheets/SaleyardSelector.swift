@@ -18,7 +18,7 @@ struct SaleyardSelector: View {
             showingSaleyardSheet = true
         }) {
             HStack {
-                Image(systemName: "mappin.circle.fill")
+                Image(systemName: "dollarsign.bank.building")
                     .foregroundStyle(Theme.accent)
                     .font(.system(size: 16))
                 
