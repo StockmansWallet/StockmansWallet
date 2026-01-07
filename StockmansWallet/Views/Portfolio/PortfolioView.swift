@@ -28,9 +28,14 @@ struct PortfolioView: View {
     @State private var herdsSearchText = ""
     @State private var individualSearchText = ""
     
-    // Debug: Sell functionality - show sell sheet and track selected herd ID
-    @State private var showingSellSheet = false
-    @State private var herdIdToSell: UUID? = nil
+    // Debug: Sell functionality - track selected herd ID (nil means sheet is dismissed)
+    // Wrapper to make UUID Identifiable for fullScreenCover(item:)
+    @State private var herdIdToSell: IdentifiableUUID? = nil
+    
+    // Debug: Wrapper struct to make UUID Identifiable
+    struct IdentifiableUUID: Identifiable {
+        let id: UUID
+    }
     
     // Performance: Task cancellation - prevent wasted CPU when user navigates away
     @State private var loadingTask: Task<Void, Never>? = nil
@@ -43,118 +48,123 @@ struct PortfolioView: View {
     }
     
     var body: some View {
+        ZStack {
+            portfolioContent
+        }
+        .fullScreenCover(item: $herdIdToSell) { identifiableId in
+            SellStockView(preselectedHerdId: identifiableId.id)
+                .transition(.move(edge: .trailing))
+                .presentationBackground(Theme.sheetBackground)
+        }
+    }
+    
+    // Debug: Break up body into smaller computed properties to help compiler
+    private var portfolioContent: some View {
         NavigationStack {
-            Group {
-                if herds.isEmpty {
-                    EmptyPortfolioView(showingAddAssetMenu: $showingAddAssetMenu)
-                } else {
-                    ScrollView {
-                        VStack(spacing: Theme.sectionSpacing) {
-                            // Debug: Portfolio stats cards stacked at the top
-                            if let summary = portfolioSummary {
-                                PortfolioStatsCards(summary: summary, isLoading: isLoading)
-                                    .padding(.horizontal)
-                            }
-                            
-                            // View Mode Selector
-                            PortfolioViewModeSelector(selectedView: $selectedView)
-                                .padding(.horizontal)
-                                .padding(.vertical, -8) // Debug: Reduce gap above and below segmented control
-                            
-                            // Debug: Show different content based on selected view mode
-                            if selectedView == .overview {
-                                overviewContent
-                            } else if selectedView == .herds {
-                                herdsContent
-                            } else {
-                                individualContent
-                            }
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding(.bottom, 100)
-                    }
-                    .scrollContentBackground(.hidden) // iOS 26: keep bar transparent, content draws behind
-                    .background(Theme.backgroundGradient) // content background
-                    .refreshable {
+            mainContent
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar {
+                    toolbarContent
+                }
+                .toolbarBackground(.clear, for: .navigationBar)
+                .toolbarBackground(.visible, for: .navigationBar)
+                .fullScreenCover(isPresented: $showingAddAssetMenu) {
+                    AddAssetMenuView(isPresented: $showingAddAssetMenu)
+                        .transition(.move(edge: .trailing))
+                        .presentationBackground(Theme.sheetBackground)
+                }
+                .sheet(isPresented: $showingSearchPanel) {
+                    PortfolioSearchPanel(herds: herds)
+                        .presentationDetents([.large])
+                        .presentationDragIndicator(.visible)
+                        .presentationBackground(Theme.sheetBackground)
+                }
+                .task {
+                    loadingTask = Task {
                         await loadPortfolioSummary()
                     }
                 }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .principal) {
-                    Text("Portfolio")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                        .accessibilityAddTraits(.isHeader)
+                .onDisappear {
+                    loadingTask?.cancel()
+                    loadingTask = nil
+                    #if DEBUG
+                    print("📊 PortfolioView disappeared - cancelled loading task")
+                    #endif
                 }
-                
-                // Debug: Per Apple HIG - Search (secondary action) on left, Add (primary action) on right
-                // This creates clear visual hierarchy and follows iOS conventions
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button {
-                        HapticManager.tap()
-                        showingSearchPanel = true
-                    } label: {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundStyle(Theme.primaryText)
+                .onChange(of: herds.count) { _, _ in
+                    loadingTask?.cancel()
+                    loadingTask = Task {
+                        await loadPortfolioSummary()
                     }
-                    .accessibilityLabel("Search assets")
                 }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    // Debug: Per iOS HIG - Use .borderedProminent for primary toolbar action
-                    // Creates a filled, tinted button that stands out as the main CTA
-                    Button("Manage") {
-                        HapticManager.tap()
-                        showingAddAssetMenu = true
+                .background(Theme.backgroundGradient.ignoresSafeArea(edges: [.horizontal, .bottom]))
+        }
+    }
+    
+    private var mainContent: some View {
+        Group {
+            if herds.isEmpty {
+                EmptyPortfolioView(showingAddAssetMenu: $showingAddAssetMenu)
+            } else {
+                ScrollView {
+                    VStack(spacing: Theme.sectionSpacing) {
+                        if let summary = portfolioSummary {
+                            PortfolioStatsCards(summary: summary, isLoading: isLoading)
+                                .padding(.horizontal)
+                        }
+                        
+                        PortfolioViewModeSelector(selectedView: $selectedView)
+                            .padding(.horizontal)
+                            .padding(.vertical, -8)
+                        
+                        if selectedView == .overview {
+                            overviewContent
+                        } else if selectedView == .herds {
+                            herdsContent
+                        } else {
+                            individualContent
+                        }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .tint(Theme.accent)
-                    .accessibilityLabel("Manage Stock")
+                    .frame(maxWidth: .infinity)
+                    .padding(.bottom, 100)
                 }
-            }
-            .toolbarBackground(.clear, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .fullScreenCover(isPresented: $showingAddAssetMenu) {
-                AddAssetMenuView(isPresented: $showingAddAssetMenu)
-                    .transition(.move(edge: .trailing))
-                    .presentationBackground(Theme.sheetBackground)
-            }
-            .sheet(isPresented: $showingSearchPanel) {
-                PortfolioSearchPanel(herds: herds)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-                    .presentationBackground(Theme.sheetBackground)
-            }
-            .fullScreenCover(isPresented: $showingSellSheet) {
-                SellStockView(preselectedHerdId: herdIdToSell)
-                    .transition(.move(edge: .trailing))
-                    .presentationBackground(Theme.sheetBackground)
-            }
-            .task {
-                // Performance: Store task so it can be cancelled on view disappear
-                loadingTask = Task {
+                .scrollContentBackground(.hidden)
+                .background(Theme.backgroundGradient)
+                .refreshable {
                     await loadPortfolioSummary()
                 }
             }
-            .onDisappear {
-                // Performance: Cancel any in-progress data loading to save CPU/battery
-                loadingTask?.cancel()
-                loadingTask = nil
-                #if DEBUG
-                print("📊 PortfolioView disappeared - cancelled loading task")
-                #endif
+        }
+    }
+    
+    @ToolbarContentBuilder
+    private var toolbarContent: some ToolbarContent {
+        ToolbarItem(placement: .principal) {
+            Text("Portfolio")
+                .font(Theme.headline)
+                .foregroundStyle(Theme.primaryText)
+                .accessibilityAddTraits(.isHeader)
+        }
+        
+        ToolbarItem(placement: .navigationBarLeading) {
+            Button {
+                HapticManager.tap()
+                showingSearchPanel = true
+            } label: {
+                Image(systemName: "magnifyingglass")
+                    .foregroundStyle(Theme.primaryText)
             }
-            .onChange(of: herds.count) { _, _ in
-                // Performance: Cancel previous task before starting new one
-                loadingTask?.cancel()
-                loadingTask = Task {
-                    await loadPortfolioSummary()
-                }
+            .accessibilityLabel("Search assets")
+        }
+        
+        ToolbarItem(placement: .navigationBarTrailing) {
+            Button("Manage") {
+                HapticManager.tap()
+                showingAddAssetMenu = true
             }
-            // Keep gradient off the nav bar edges to preserve the iOS 26 transparent bar visuals
-            .background(Theme.backgroundGradient.ignoresSafeArea(edges: [.horizontal, .bottom]))
+            .buttonStyle(.borderedProminent)
+            .tint(Theme.accent)
+            .accessibilityLabel("Manage Stock")
         }
     }
     
@@ -191,13 +201,12 @@ struct PortfolioView: View {
                     
                     LazyVStack(spacing: 16) {
                         ForEach(filteredHerds) { herd in
+                            let herdIdForSale = herd.id
                             EnhancedHerdCard(
                                 herd: herd,
                                 summary: summary,
                                 onSellTapped: {
-                                    // Debug: Open sell sheet with preselected herd ID
-                                    herdIdToSell = herd.id
-                                    showingSellSheet = true
+                                    herdIdToSell = IdentifiableUUID(id: herdIdForSale)
                                 }
                             )
                         }
@@ -228,13 +237,12 @@ struct PortfolioView: View {
                     
                     LazyVStack(spacing: 16) {
                         ForEach(filteredIndividuals) { herd in
+                            let herdIdForSale = herd.id
                             EnhancedHerdCard(
                                 herd: herd,
                                 summary: summary,
                                 onSellTapped: {
-                                    // Debug: Open sell sheet with preselected individual ID
-                                    herdIdToSell = herd.id
-                                    showingSellSheet = true
+                                    herdIdToSell = IdentifiableUUID(id: herdIdForSale)
                                 }
                             )
                         }
@@ -1063,134 +1071,132 @@ struct EnhancedHerdCard: View {
     @State private var isLoading = true
     
     var body: some View {
-        // Debug: Capture herd ID early to avoid potential SwiftData access issues in NavigationLink
+        // Debug: Capture herd properties early to avoid potential SwiftData access issues
         let herdId = herd.id
         let herdName = herd.name
+        let herdHeadCount = herd.headCount
+        let herdSaleyard = herd.selectedSaleyard
         
-        VStack(alignment: .leading, spacing: 0) {
-            // Debug: Tappable content area that navigates to detail
+        VStack(alignment: .leading, spacing: 12) {
+            // Debug: Most content is tappable and navigates to detail
             NavigationLink(destination: HerdDetailView(herdId: herdId)) {
                 VStack(alignment: .leading, spacing: 12) {
-                // Top Row: Herd Name (left, orange) and Chevron (right)
-                HStack {
-                    Text(herdName)
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.accent)
-                    
-                    Spacer()
-                    
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                }
-                
-                // Divider
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundStyle(Theme.separator.opacity(0.15))
-                
-                // Headcount and Total Price Row
-                HStack(alignment: .firstTextBaseline) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Headcount")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        Text("\(herd.headCount) head")
-                            .font(Theme.subheadline)
-                            .foregroundStyle(.white)
-                    }
-                    
-                    Spacer()
-                    
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text("Total Value")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
+                    // Top Row: Herd Name (left, orange) and Chevron (right)
+                    HStack {
+                        Text(herdName)
+                            .font(Theme.headline)
+                            .foregroundStyle(Theme.accent)
                         
-                        if let valuation = valuation {
-                            Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
-                                .font(Theme.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(Theme.accent)
-                        } else if isLoading {
-                            ProgressView()
-                                .tint(Theme.accent)
-                                .scaleEffect(0.8)
-                        }
+                        Spacer()
+                        
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.6))
                     }
-                }
-                
-                // Saleyard Row
-                if let saleyard = herd.selectedSaleyard, !saleyard.isEmpty {
-                    HStack(spacing: 6) {
-                        Image(systemName: "building.2")
-                            .font(.system(size: 12))
-                            .foregroundStyle(Theme.secondaryText)
-                        Text(saleyard)
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                }
-                
-                // Average Weight and Average Price Row
-                if let valuation = valuation {
-                    HStack(spacing: 20) {
-                        // Average Weight
+                    
+                    // Divider
+                    Rectangle()
+                        .frame(height: 1)
+                        .foregroundStyle(Theme.separator.opacity(0.15))
+                    
+                    // Headcount and Total Price Row
+                    HStack(alignment: .firstTextBaseline) {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("Avg Weight")
+                            Text("Headcount")
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.secondaryText)
-                            Text("\(Int(valuation.projectedWeight)) kg")
-                                .font(Theme.caption)
-                                .fontWeight(.medium)
+                            Text("\(herdHeadCount) head")
+                                .font(Theme.subheadline)
                                 .foregroundStyle(.white)
                         }
                         
-                        // Average Price
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Avg Price")
+                        Spacer()
+                        
+                        VStack(alignment: .trailing, spacing: 4) {
+                            Text("Total Value")
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.secondaryText)
-                            Text("\(valuation.pricePerKg, format: .currency(code: "AUD"))/kg")
+                            
+                            if let valuation = valuation {
+                                Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
+                                    .font(Theme.subheadline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(Theme.accent)
+                            } else if isLoading {
+                                ProgressView()
+                                    .tint(Theme.accent)
+                                    .scaleEffect(0.8)
+                            }
+                        }
+                    }
+                    
+                    // Saleyard Row
+                    if let saleyard = herdSaleyard, !saleyard.isEmpty {
+                        HStack(spacing: 6) {
+                            Image(systemName: "building.2")
+                                .font(.system(size: 12))
+                                .foregroundStyle(Theme.secondaryText)
+                            Text(saleyard)
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.secondaryText)
                         }
-                        
-                        Spacer()
                     }
                 }
-                }
-                .padding(Theme.cardPadding)
             }
             .buttonStyle(PlainButtonStyle())
             
-            // Debug: Sell button at bottom of card if callback provided (outside navigation tap area)
-            if let onSellTapped = onSellTapped {
-                Divider()
-                    .background(Theme.separator.opacity(0.2))
-                
-                Button {
-                    HapticManager.tap()
-                    onSellTapped()
-                } label: {
-                    Text("Sell")
-                        .font(Theme.caption)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Theme.accent)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 10)
-                        .background(Color.clear)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .stroke(Theme.accent, lineWidth: 1.5)
-                        )
+            // Debug: Bottom row with weights and sell button - OUTSIDE NavigationLink so sell button works on first tap
+            if let valuation = valuation {
+                HStack(spacing: 12) {
+                    // Average Weight
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Avg Weight")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Text("\(Int(valuation.projectedWeight)) kg")
+                            .font(Theme.caption)
+                            .fontWeight(.medium)
+                            .foregroundStyle(.white)
+                    }
+                    
+                    // Average Price
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Avg Price")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Text("\(valuation.pricePerKg, format: .currency(code: "AUD"))/kg")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    
+                    Spacer()
+                    
+                    // Debug: Sell button on bottom right - small, bordered style with semi-transparent background
+                    if onSellTapped != nil {
+                        Button {
+                            HapticManager.tap()
+                            if let callback = onSellTapped {
+                                callback()
+                            }
+                        } label: {
+                            Text("Sell")
+                                .font(.system(size: 12))
+                                .fontWeight(.medium)
+                                .foregroundStyle(Theme.accent)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 4)
+                                .background(Theme.accent.opacity(0.1))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                        .stroke(Theme.accent, lineWidth: 0.8)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, Theme.cardPadding)
-                .padding(.bottom, Theme.cardPadding)
-                .padding(.top, 8)
             }
         }
+        .padding(Theme.cardPadding)
         .stitchedCard()
         .task {
             await loadValuation()
