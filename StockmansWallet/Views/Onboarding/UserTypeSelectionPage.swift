@@ -88,7 +88,7 @@ struct UserTypeSelectionPage: View {
                             .foregroundStyle(Theme.primaryText)
                             .multilineTextAlignment(.center)
                         
-                        Text("Stockman's Wallet has two different account types. Each account unlocks tools and views specific to your role. Choose the option that best matches how you work with livestock value and reporting.")
+                        Text("Choose the option that best matches how you work with livestock value and reporting.")
                             .font(Theme.body)
                             .foregroundStyle(Theme.secondaryText)
                             .multilineTextAlignment(.center)
@@ -131,7 +131,7 @@ struct UserTypeSelectionPage: View {
                     if let userType = selectedUserType {
                         VStack(spacing: 16) {
                             // Heading
-                            Text(userType == .farmer ? "Farmers / Graziers" : "Industry Advisors")
+                            Text(userType == .farmer ? "Farmers, Graziers & Producers" : "Industry Advisors")
                                 .font(Theme.title3)
                                 .foregroundStyle(Theme.primaryText)
                                 .multilineTextAlignment(.center)

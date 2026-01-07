@@ -51,7 +51,9 @@ struct BackgroundImageSelectorView: View {
         "FarmBG_14",
         "FarmBG_15",
         "FarmBG_16",
-        "FarmBG_17"
+        "FarmBG_17",
+        "FarmBG_18",
+        "FarmBG_19"
     ]
     
     private var userPrefs: UserPreferences {

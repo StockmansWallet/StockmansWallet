@@ -30,7 +30,6 @@ struct AddHerdFlowView: View {
     @State private var calvesAtFootHeadCount: Int? = nil
     @State private var calvesAtFootAgeMonths: Int? = nil
     @State private var selectedSaleyard: String? = nil
-    @State private var inCalf = true
     @State private var additionalInfo = ""
     @State private var breedSearchText = ""
     @State private var categorySearchText = ""
@@ -38,9 +37,10 @@ struct AddHerdFlowView: View {
     @State private var showingCategoryPicker = false
     @State private var showingSaleyardPicker = false
     
+    // Debug: Breeding-specific state variables
     @State private var calvingRate = 0
     @State private var joinedDate = Date()
-    @State private var controlledBreedingProgram = false
+    @State private var breedingProgramType: BreedingProgramType = .uncontrolled
     @State private var joiningPeriodStart = Date()
     @State private var joiningPeriodEnd = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
     
@@ -102,7 +102,7 @@ struct AddHerdFlowView: View {
     }
     
     
-    // Debug: Determines if category requires breeding-specific step (calvingRate, joinedDate, inCalf)
+    // Debug: Determines if category requires breeding-specific step (calvingRate, joinedDate, breedingProgramType)
     private var isBreederCategory: Bool {
         let breederCategories = [
             "Breeding Cow", "Breeding Ewe", "Breeder Sow", "Breeding Doe",
@@ -406,8 +406,7 @@ struct AddHerdFlowView: View {
     private var breedersContent: some View {
         BreedersFormSection(
             calvingRate: $calvingRate,
-            inCalf: $inCalf,
-            controlledBreedingProgram: $controlledBreedingProgram,
+            breedingProgramType: $breedingProgramType,
             joiningPeriodStart: $joiningPeriodStart,
             joiningPeriodEnd: $joiningPeriodEnd
         )
@@ -672,6 +671,9 @@ struct AddHerdFlowView: View {
         // Debug: Use selectedSaleyard if specified, otherwise fall back to default saleyard
         let effectiveSaleyard = selectedSaleyard ?? prefs.defaultSaleyard
         
+        // Debug: Determine if this is a breeder category (removed inCalf dependency)
+        let isBreeder = selectedCategory.lowercased().contains("breeding") || selectedCategory.lowercased().contains("breeder")
+        
         let herd = HerdGroup(
             name: herdName,
             species: selectedSpecies,
@@ -682,7 +684,7 @@ struct AddHerdFlowView: View {
             headCount: finalHeadCount,
             initialWeight: Double(finalWeightKg),
             dailyWeightGain: dailyWeightGain,
-            isBreeder: inCalf || selectedCategory.lowercased().contains("breeding"),
+            isBreeder: isBreeder,
             selectedSaleyard: effectiveSaleyard
         )
         
@@ -690,7 +692,6 @@ struct AddHerdFlowView: View {
         print("   Name: \(herd.name), HeadCount: \(herd.headCount), Species: \(herd.species)")
         
         herd.paddockName = paddockLocation.isEmpty ? nil : paddockLocation
-        herd.isPregnant = inCalf
         herd.mortalityRate = Double(mortalityRate) / 100.0
         
         // Debug: Set breeding-specific data for breeder categories
@@ -705,13 +706,18 @@ struct AddHerdFlowView: View {
         if let calvesCount = calvesAtFootHeadCount, let calvesAge = calvesAtFootAgeMonths, calvesCount > 0 {
             infoParts.append("Calves at Foot: \(calvesCount) head, \(calvesAge) months")
         }
+        // Debug: Add breeding program information to additional info
         if isBreederCategory {
-            if controlledBreedingProgram {
-                let formatter = DateFormatter()
-                formatter.dateStyle = .short
-                infoParts.append("Controlled Breeding: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))")
-            } else {
-                infoParts.append("Breeding: All year round")
+            let formatter = DateFormatter()
+            formatter.dateStyle = .short
+            
+            switch breedingProgramType {
+            case .ai:
+                infoParts.append("Breeding: AI, Insemination Period: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))")
+            case .controlled:
+                infoParts.append("Breeding: Controlled, Joining Period: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))")
+            case .uncontrolled:
+                infoParts.append("Breeding: Uncontrolled (year-round)")
             }
         }
         if !infoParts.isEmpty { herd.additionalInfo = infoParts.joined(separator: " | ") }

@@ -8,12 +8,53 @@
 
 import SwiftUI
 
+// MARK: - Breeding Program Type Enum
+// Debug: Three breeding program options for breeder management
+enum BreedingProgramType: String, CaseIterable {
+    case ai = "Artificial Insemination (AI)"
+    case controlled = "Controlled Breeding"
+    case uncontrolled = "Uncontrolled Breeding"
+    
+    // Debug: Helper to get description for each breeding type
+    var description: String {
+        switch self {
+        case .ai:
+            return "Breeding is managed through planned insemination dates rather than running bulls.\n*Calving accrual commences midpoint of the insemination period"
+        case .controlled:
+            return "A defined joining period where bulls are added and removed at set dates.\n*Calving accrual commences midpoint of the joining period"
+        case .uncontrolled:
+            return "Bulls run with breeders year-round with no defined joining period."
+        }
+    }
+    
+    // Debug: Helper to check if breeding type requires date picker
+    var requiresDatePicker: Bool {
+        switch self {
+        case .ai, .controlled:
+            return true
+        case .uncontrolled:
+            return false
+        }
+    }
+    
+    // Debug: Label for date picker based on breeding type
+    var datePickerLabel: String {
+        switch self {
+        case .ai:
+            return "Insemination Period"
+        case .controlled:
+            return "Joining Period"
+        case .uncontrolled:
+            return ""
+        }
+    }
+}
+
 // MARK: - Breeders Form Section
 // Debug: HIG-compliant form section for breeder animals shared across add herd/individual flows
 struct BreedersFormSection: View {
     @Binding var calvingRate: Int
-    @Binding var inCalf: Bool
-    @Binding var controlledBreedingProgram: Bool
+    @Binding var breedingProgramType: BreedingProgramType
     @Binding var joiningPeriodStart: Date
     @Binding var joiningPeriodEnd: Date
     
@@ -25,115 +66,136 @@ struct BreedersFormSection: View {
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
             
-            // Debug: HIG-compliant slider for calving rate (estimated percentage)
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text("Calving Rate")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                    Spacer()
-                    Text("\(calvingRate)%")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.accent)
-                        .fontWeight(.semibold)
-                }
-                Slider(value: Binding(
-                    get: { Double(calvingRate) },
-                    set: { calvingRate = Int($0) }
-                ), in: 50...100, step: 1)
-                    .tint(Theme.accent)
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 8)
-                    .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    .accessibilityLabel("Calving rate")
-                    .accessibilityValue("\(calvingRate) percent")
-            }
+            // Debug: Section description
+            Text("Select how you manage joining. This determines how calving value accrues in your herd.")
+                .font(Theme.body)
+                .foregroundStyle(Theme.secondaryText)
+                .multilineTextAlignment(.leading)
+                .frame(maxWidth: .infinity, alignment: .leading)
             
-            // Debug: HIG-compliant toggle for In Calf status
-            HStack {
-                Text("In Calf")
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.primaryText)
-                Spacer()
-                Toggle("", isOn: $inCalf)
-                    .labelsHidden()
-                    .tint(Theme.accent)
-            }
-            .padding()
-            .background(Theme.inputFieldBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .accessibilityLabel("In calf status")
-            
-            // Debug: Breeding Program section - controls joining period
-            VStack(alignment: .leading, spacing: 12) {
-                Text("Breeding Program")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                
-                // Debug: Toggle for controlled breeding program
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Controlled Program")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.primaryText)
-                        Text(controlledBreedingProgram ? "Specific joining period" : "Accruing all year round")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                    Spacer()
-                    Toggle("", isOn: $controlledBreedingProgram)
-                        .labelsHidden()
-                        .tint(Theme.accent)
-                }
-                .padding()
-                .background(Theme.inputFieldBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .accessibilityLabel("Controlled breeding program")
-                
-                // Debug: Show joining period date range if controlled program is enabled
-                if controlledBreedingProgram {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Joining Period")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondaryText)
-                        
-                        VStack(spacing: 12) {
-                            // Start date
-                            HStack {
-                                Text("Start")
-                                    .font(Theme.body)
-                                    .foregroundStyle(Theme.secondaryText)
-                                    .frame(width: 60, alignment: .leading)
-                                DatePicker("", selection: $joiningPeriodStart, displayedComponents: .date)
-                                    .labelsHidden()
-                                    .datePickerStyle(.compact)
-                            }
-                            
-                            Divider()
-                                .background(Theme.primaryText.opacity(0.2))
-                            
-                            // End date
-                            HStack {
-                                Text("End")
-                                    .font(Theme.body)
-                                    .foregroundStyle(Theme.secondaryText)
-                                    .frame(width: 60, alignment: .leading)
-                                DatePicker("", selection: $joiningPeriodEnd, displayedComponents: .date)
-                                    .labelsHidden()
-                                    .datePickerStyle(.compact)
-                            }
-                        }
-                        .padding()
-                        .background(Theme.inputFieldBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                    }
-                    .accessibilityLabel("Joining period date range")
+            // Debug: Breeding program options
+            VStack(spacing: 16) {
+                ForEach(BreedingProgramType.allCases, id: \.self) { programType in
+                    breedingProgramCard(for: programType)
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.bottom, 20)
+    }
+    
+    // MARK: - Breeding Program Card
+    // Debug: Individual card for each breeding program option
+    @ViewBuilder
+    private func breedingProgramCard(for programType: BreedingProgramType) -> some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Debug: Selection button with program title and description
+            Button {
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    breedingProgramType = programType
+                }
+            } label: {
+                HStack(alignment: .top, spacing: 12) {
+                    // Debug: Radio button indicator
+                    Image(systemName: breedingProgramType == programType ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 24))
+                        .foregroundStyle(breedingProgramType == programType ? Theme.accent : Theme.secondaryText)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text(programType.rawValue)
+                            .font(Theme.headline)
+                            .foregroundStyle(Theme.primaryText)
+                            .multilineTextAlignment(.leading)
+                        
+                        Text(programType.description)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .multilineTextAlignment(.leading)
+                    }
+                    
+                    Spacer()
+                }
+                .padding()
+                .background(breedingProgramType == programType ? Theme.accent.opacity(0.1) : Theme.inputFieldBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(breedingProgramType == programType ? Theme.accent : Color.clear, lineWidth: 2)
+                )
+            }
+            .buttonStyle(.plain)
+            
+            // Debug: Show content if this program type is selected
+            if breedingProgramType == programType {
+                VStack(alignment: .leading, spacing: 16) {
+                    // Debug: Date picker for AI and Controlled Breeding only (shown above slider)
+                    if programType.requiresDatePicker {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text(programType.datePickerLabel)
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            // Debug: Horizontal layout for Start and End date pickers
+                            HStack(spacing: 12) {
+                                // Start date
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Start")
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                    DatePicker("", selection: $joiningPeriodStart, displayedComponents: .date)
+                                        .labelsHidden()
+                                        .datePickerStyle(.compact)
+                                }
+                                .frame(maxWidth: .infinity)
+                                
+                                // End date
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("End")
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                    DatePicker("", selection: $joiningPeriodEnd, displayedComponents: .date)
+                                        .labelsHidden()
+                                        .datePickerStyle(.compact)
+                                }
+                                .frame(maxWidth: .infinity)
+                            }
+                            .padding()
+                            .background(Theme.inputFieldBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .accessibilityLabel("\(programType.datePickerLabel) date range")
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                    
+                    // Debug: Estimated Calving slider - shown below date pickers for all breeding types
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("Estimated Calving")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.secondaryText)
+                            Spacer()
+                            Text("\(calvingRate)%")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.accent)
+                                .fontWeight(.semibold)
+                        }
+                        Slider(value: Binding(
+                            get: { Double(calvingRate) },
+                            set: { calvingRate = Int($0) }
+                        ), in: 50...100, step: 1)
+                            .tint(Theme.accent)
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 8)
+                            .background(Theme.inputFieldBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            .accessibilityLabel("Estimated calving rate")
+                            .accessibilityValue("\(calvingRate) percent")
+                    }
+                }
+                .padding(.horizontal)
+                .transition(.opacity.combined(with: .move(edge: .top)))
+            }
+        }
     }
 }
 

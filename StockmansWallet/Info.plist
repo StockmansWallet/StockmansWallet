@@ -2,52 +2,18 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- App Display Name on Home Screen -->
-	<key>CFBundleDisplayName</key>
-	<string>Stockman's Wallet</string>
-	
-	<!-- Location Services -->
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Stockman's Wallet needs your location to provide localized market prices and saleyard recommendations based on your property location.</string>
-	
-	<!-- Photo Library (if needed for future features) -->
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Stockman's Wallet would like to access your photo library to attach images to your livestock records.</string>
-	
-	<!-- Camera (if needed for future features) -->
-	<key>NSCameraUsageDescription</key>
-	<string>Stockman's Wallet would like to access your camera to take photos of your livestock for your records.</string>
-	
-	<!-- Network Usage (for App Store transparency) -->
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<key>NSAllowsArbitraryLoads</key>
 		<false/>
-		<!-- Use HTTPS only for production -->
 	</dict>
-	
-	<!-- Required for iOS 17+ -->
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
 		<false/>
 	</dict>
-	
-	<!-- Background modes (if needed for future features) -->
 	<key>UIBackgroundModes</key>
-	<array>
-		<!-- Add modes if needed: fetch, remote-notification, etc. -->
-	</array>
-	
-	<!-- Appearance -->
-	<key>UIUserInterfaceStyle</key>
-	<string>Dark</string>
-	
-	<!-- Status bar style -->
-	<key>UIStatusBarStyle</key>
-	<string>UIStatusBarStyleLightContent</string>
-	
-	<!-- Launch screen -->
+	<array/>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>
@@ -55,22 +21,5 @@
 		<key>UIImageName</key>
 		<string>MainLogo</string>
 	</dict>
-	
-	<!-- Supported orientations - Portrait only -->
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	
-	<!-- iPad specific - Portrait only -->
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-	</array>
-	
-	<!-- Export Compliance - App uses standard HTTPS encryption only -->
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
 </dict>
 </plist>

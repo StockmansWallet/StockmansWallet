@@ -527,6 +527,30 @@ struct ValueBreakdownRow: View {
 // Debug: Removed largest category section per user request
 struct CapitalConcentrationCard: View {
     let summary: PortfolioSummary
+    @State private var categoryTimeRange: CategoryTimeRange = .current
+    @State private var showingCustomDatePicker = false
+    @State private var customStartDate: Date?
+    @State private var customEndDate: Date?
+    
+    // Debug: Time range options for category breakdown
+    // Note: Currently all options display the same current data; historical comparison planned
+    enum CategoryTimeRange: String, CaseIterable {
+        case current = "Current"
+        case week = "Week Ago"
+        case month = "Month Ago"
+        case year = "Year Ago"
+        case custom = "Custom"
+        
+        var displayLabel: String {
+            switch self {
+            case .current: return "Now"
+            case .week: return "7d ago"
+            case .month: return "1m ago"
+            case .year: return "1y ago"
+            case .custom: return "Custom"
+            }
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -535,9 +559,39 @@ struct CapitalConcentrationCard: View {
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
-                Image(systemName: "chart.pie.fill")
-                    .foregroundStyle(Theme.accent)
-                    .accessibilityHidden(true)
+                
+                // Debug: Time range selector menu
+                Menu {
+                    ForEach(CategoryTimeRange.allCases, id: \.self) { range in
+                        Button {
+                            HapticManager.tap()
+                            if range == .custom {
+                                showingCustomDatePicker = true
+                            } else {
+                                categoryTimeRange = range
+                            }
+                        } label: {
+                            HStack {
+                                Text(range.rawValue)
+                                if categoryTimeRange == range {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(customDateRangeLabel)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Image(systemName: "chevron.down.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Select category view time range")
+                .accessibilityValue(categoryTimeRange.rawValue)
             }
             
             if !summary.categoryBreakdown.isEmpty {
@@ -555,6 +609,32 @@ struct CapitalConcentrationCard: View {
         }
         .padding(Theme.cardPadding)
         .stitchedCard()
+        .sheet(isPresented: $showingCustomDatePicker) {
+            CustomDateRangeSheet(
+                startDate: $customStartDate,
+                endDate: $customEndDate,
+                timeRange: Binding(
+                    get: { 
+                        categoryTimeRange == .custom ? .custom : .week 
+                    },
+                    set: { _ in 
+                        categoryTimeRange = .custom 
+                    }
+                )
+            )
+        }
+    }
+    
+    // Debug: Format custom date range label
+    private var customDateRangeLabel: String {
+        if categoryTimeRange == .custom,
+           let start = customStartDate,
+           let end = customEndDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        }
+        return categoryTimeRange.displayLabel
     }
 }
 
@@ -676,6 +756,30 @@ struct MetricTile: View {
 // MARK: - Asset Breakdown Card
 struct AssetBreakdownCard: View {
     let summary: PortfolioSummary
+    @State private var assetTimeRange: AssetTimeRange = .current
+    @State private var showingCustomDatePicker = false
+    @State private var customStartDate: Date?
+    @State private var customEndDate: Date?
+    
+    // Debug: Time range options for asset breakdown
+    // Note: Currently all options display the same current data; historical comparison planned
+    enum AssetTimeRange: String, CaseIterable {
+        case current = "Current"
+        case week = "Week Ago"
+        case month = "Month Ago"
+        case year = "Year Ago"
+        case custom = "Custom"
+        
+        var displayLabel: String {
+            switch self {
+            case .current: return "Now"
+            case .week: return "7d ago"
+            case .month: return "1m ago"
+            case .year: return "1y ago"
+            case .custom: return "Custom"
+            }
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -684,9 +788,39 @@ struct AssetBreakdownCard: View {
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
-                Image(systemName: "square.grid.2x2")
-                    .foregroundStyle(Theme.accent)
-                    .accessibilityHidden(true)
+                
+                // Debug: Time range selector menu
+                Menu {
+                    ForEach(AssetTimeRange.allCases, id: \.self) { range in
+                        Button {
+                            HapticManager.tap()
+                            if range == .custom {
+                                showingCustomDatePicker = true
+                            } else {
+                                assetTimeRange = range
+                            }
+                        } label: {
+                            HStack {
+                                Text(range.rawValue)
+                                if assetTimeRange == range {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Text(customDateRangeLabel)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Image(systemName: "chevron.down.circle.fill")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.accent)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .accessibilityLabel("Select asset view time range")
+                .accessibilityValue(assetTimeRange.rawValue)
             }
             
             if !summary.speciesBreakdown.isEmpty {
@@ -705,6 +839,32 @@ struct AssetBreakdownCard: View {
         }
         .padding(Theme.cardPadding)
         .stitchedCard()
+        .sheet(isPresented: $showingCustomDatePicker) {
+            CustomDateRangeSheet(
+                startDate: $customStartDate,
+                endDate: $customEndDate,
+                timeRange: Binding(
+                    get: { 
+                        assetTimeRange == .custom ? .custom : .week 
+                    },
+                    set: { _ in 
+                        assetTimeRange = .custom 
+                    }
+                )
+            )
+        }
+    }
+    
+    // Debug: Format custom date range label
+    private var customDateRangeLabel: String {
+        if assetTimeRange == .custom,
+           let start = customStartDate,
+           let end = customEndDate {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        }
+        return assetTimeRange.displayLabel
     }
 }
 
