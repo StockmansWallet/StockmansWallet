@@ -74,7 +74,11 @@ struct PortfolioValueCard: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            .glassEffect(.regular.interactive().tint((change >= 0 ? Theme.positiveChange : Theme.negativeChange).opacity(0.1)), in: Capsule())
+            // Debug: Solid dark background matching ticker color (no glass effect)
+            .background(
+                Capsule()
+                    .fill(change >= 0 ? Color(hex: "1E2E0E") : Color(hex: "2E0E0E"))
+            )
             .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
             .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)
             .accessibilityLabel("Change for selected time range")

@@ -186,7 +186,11 @@ struct InteractiveChartView: View {
                         .foregroundStyle(.white)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
-                        .glassEffect(.regular.interactive().tint(Theme.accent.opacity(0.15)), in: Capsule())
+                        // Debug: Solid accent background (no glass effect)
+                        .background(
+                            Capsule()
+                                .fill(Theme.accent)
+                        )
                         .shadow(color: .black.opacity(0.3), radius: 8, y: 4)
                         .offset(x: {
                             // Performance: Calculate offset once per position update
