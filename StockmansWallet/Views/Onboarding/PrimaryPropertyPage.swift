@@ -287,19 +287,18 @@ struct PrimaryPropertyPage: View {
                         herdSize = "under100"
                     }) {
                         HStack(spacing: 16) {
-                            // Debug: Text content (removed secondary text with plan info)
+                            // Debug: Checkbox indicator on the left (standard checkbox pattern)
+                            Image(systemName: herdSize == "under100" ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(herdSize == "under100" ? Theme.accent : Theme.secondaryText.opacity(0.5))
+                                .font(.system(size: 24))
+                            
+                            // Debug: Text content
                             Text("Less than 100 Head")
                                 .font(Theme.body)
                                 .foregroundStyle(Theme.primaryText)
                                 .fontWeight(herdSize == "under100" ? .semibold : .regular)
                             
                             Spacer()
-                            
-                            // Debug: Checkmark indicator - always present to maintain button size
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(Theme.accent)
-                                .font(.system(size: 24, weight: .semibold))
-                                .opacity(herdSize == "under100" ? 1.0 : 0.0)
                         }
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -308,16 +307,16 @@ struct PrimaryPropertyPage: View {
                                 .fill(Theme.cardBackground)
                         )
                         .overlay(
-                            // Debug: Removed accent color stroke, only subtle border
                             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                                 .strokeBorder(
-                                    Color.white.opacity(0.05),
+                                    herdSize == "under100" ? Theme.accent.opacity(0.5) : Color.white.opacity(0.05),
                                     lineWidth: 1
                                 )
                         )
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("Less than 100 head")
+                    .accessibilityAddTraits(herdSize == "under100" ? [.isSelected] : [])
                     
                     // More than 100 Head option
                     Button(action: {
@@ -325,19 +324,18 @@ struct PrimaryPropertyPage: View {
                         herdSize = "over100"
                     }) {
                         HStack(spacing: 16) {
-                            // Debug: Text content (removed secondary text with plan info)
+                            // Debug: Checkbox indicator on the left (standard checkbox pattern)
+                            Image(systemName: herdSize == "over100" ? "checkmark.circle.fill" : "circle")
+                                .foregroundStyle(herdSize == "over100" ? Theme.accent : Theme.secondaryText.opacity(0.5))
+                                .font(.system(size: 24))
+                            
+                            // Debug: Text content
                             Text("More than 100 Head")
                                 .font(Theme.body)
                                 .foregroundStyle(Theme.primaryText)
                                 .fontWeight(herdSize == "over100" ? .semibold : .regular)
                             
                             Spacer()
-                            
-                            // Debug: Checkmark indicator - always present to maintain button size
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(Theme.accent)
-                                .font(.system(size: 24, weight: .semibold))
-                                .opacity(herdSize == "over100" ? 1.0 : 0.0)
                         }
                         .padding(16)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -346,16 +344,16 @@ struct PrimaryPropertyPage: View {
                                 .fill(Theme.cardBackground)
                         )
                         .overlay(
-                            // Debug: Removed accent color stroke, only subtle border
                             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                                 .strokeBorder(
-                                    Color.white.opacity(0.05),
+                                    herdSize == "over100" ? Theme.accent.opacity(0.5) : Color.white.opacity(0.05),
                                     lineWidth: 1
                                 )
                         )
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel("More than 100 head")
+                    .accessibilityAddTraits(herdSize == "over100" ? [.isSelected] : [])
                 }
                 .padding(.horizontal, 20)
             }

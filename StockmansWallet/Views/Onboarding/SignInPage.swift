@@ -50,8 +50,10 @@ struct SignInPage: View {
                 // Debug: Profile setup header for beta testing
                 VStack(spacing: 16) {
                     // Profile icon
-                    Image(systemName: "person.circle.fill")
-                        .font(.system(size: 64))
+                    Image("farmer_icon")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 64, height: 64)
                         .foregroundStyle(Theme.accent)
                         .padding(.bottom, 4)
                     
@@ -68,7 +70,7 @@ struct SignInPage: View {
                     HStack(spacing: 8) {
                         Image(systemName: "info.circle.fill")
                             .font(.system(size: 14))
-                        Text("Beta Testing Only - No user authentication")
+                        Text("Beta Testing - No user authentication")
                             .font(.caption)
                     }
                     .foregroundStyle(Theme.accent)
@@ -87,7 +89,7 @@ struct SignInPage: View {
                             .font(.caption)
                             .foregroundStyle(Theme.secondaryText)
                             .fontWeight(.medium)
-                        TextField("Enter your first name", text: $firstName)
+                        TextField("First Name", text: $firstName)
                             .textFieldStyle(SignInTextFieldStyle())
                             .textContentType(.givenName)
                             .autocapitalization(.words)
@@ -104,7 +106,7 @@ struct SignInPage: View {
                             .font(.caption)
                             .foregroundStyle(Theme.secondaryText)
                             .fontWeight(.medium)
-                        TextField("Enter your last name", text: $lastName)
+                        TextField("Last Name", text: $lastName)
                             .textFieldStyle(SignInTextFieldStyle())
                             .textContentType(.familyName)
                             .autocapitalization(.words)
@@ -126,7 +128,7 @@ struct SignInPage: View {
                                 .font(.caption)
                                 .foregroundStyle(Theme.secondaryText.opacity(0.7))
                         }
-                        TextField("Enter your email", text: $email)
+                        TextField("Email", text: $email)
                             .textFieldStyle(SignInTextFieldStyle())
                             .keyboardType(.emailAddress)
                             .textContentType(.emailAddress)
