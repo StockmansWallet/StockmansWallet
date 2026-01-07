@@ -406,32 +406,74 @@ struct DashboardView: View {
                     .accessibilityLabel("Herd composition")
             }
             
-            #if DEBUG
-            // Debug: Temporary Clear Mock Data button for development
-            // TODO: Remove this button before production release
-            Button(action: {
-                HapticManager.tap()
-                clearMockData()
-            }) {
+            // Debug: Beta testing card with clear data button
+            // TODO: Remove this entire section before App Store launch (after beta testing complete)
+            VStack(spacing: 16) {
+                // Beta testing badge
                 HStack(spacing: 8) {
-                    if isClearingMockData {
-                        ProgressView()
-                            .tint(.white)
-                            .scaleEffect(0.8)
-                    } else {
-                        Image(systemName: "trash.fill")
-                    }
-                    Text(isClearingMockData ? "Clearing..." : "Clear Mock Data")
+                    Image(systemName: "testtube.2")
+                        .font(.system(size: 14))
+                    Text("Beta Testing Tools")
+                        .font(Theme.caption)
+                        .fontWeight(.semibold)
                 }
-                .frame(maxWidth: .infinity)
+                .foregroundStyle(Theme.accent)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Theme.accent.opacity(0.15))
+                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                
+                // Clear data button
+                Button(action: {
+                    HapticManager.tap()
+                    clearMockData()
+                }) {
+                    HStack(spacing: 10) {
+                        if isClearingMockData {
+                            ProgressView()
+                                .tint(.white)
+                                .scaleEffect(0.9)
+                        } else {
+                            Image(systemName: "trash.fill")
+                                .font(.system(size: 15, weight: .semibold))
+                        }
+                        Text(isClearingMockData ? "Clearing..." : "Clear All Data")
+                            .font(.system(size: 17, weight: .semibold))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 52)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12, style: .continuous)
+                            .fill(.red)
+                    )
+                }
+                .disabled(isClearingMockData)
+                .opacity(isClearingMockData ? 0.6 : 1.0)
+                .accessibilityLabel("Clear all data")
+                .accessibilityHint("Removes all herds and data for fresh testing")
+                
+                // Disclaimer note
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.secondaryText)
+                    Text("Use this to reset your test data and start fresh. All herds, animals, and generated data will be permanently deleted.")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.top, 4)
             }
-            .buttonStyle(Theme.DestructiveButtonStyle())
-            .disabled(isClearingMockData)
+            .padding(20)
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                    .strokeBorder(Theme.accent.opacity(0.2), lineWidth: 1)
+            )
             .padding(.horizontal, Theme.cardPadding)
             .padding(.top, Theme.sectionSpacing)
-            .accessibilityLabel("Clear mock data")
-            .accessibilityHint("Removes all mock data from the dashboard")
-            #endif
         }
         .padding(.top, -12)
         .padding(.bottom, 100)
@@ -997,8 +1039,8 @@ struct DashboardView: View {
         }
     }
     
-    // Debug: Clear all mock data (temporary dev feature)
-    // TODO: Remove this function before production release
+    // Debug: Clear all data for beta testing
+    // TODO: Remove this function before App Store launch (after beta testing complete)
     @MainActor
     private func clearMockData() {
         isClearingMockData = true
