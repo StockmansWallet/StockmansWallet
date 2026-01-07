@@ -28,9 +28,9 @@ struct PortfolioView: View {
     @State private var herdsSearchText = ""
     @State private var individualSearchText = ""
     
-    // Debug: Sell functionality - show sell sheet and track selected herd
+    // Debug: Sell functionality - show sell sheet and track selected herd ID
     @State private var showingSellSheet = false
-    @State private var herdToSell: HerdGroup? = nil
+    @State private var herdIdToSell: UUID? = nil
     
     // Performance: Task cancellation - prevent wasted CPU when user navigates away
     @State private var loadingTask: Task<Void, Never>? = nil
@@ -128,7 +128,7 @@ struct PortfolioView: View {
                     .presentationBackground(Theme.sheetBackground)
             }
             .fullScreenCover(isPresented: $showingSellSheet) {
-                SellStockView(preselectedHerd: herdToSell)
+                SellStockView(preselectedHerdId: herdIdToSell)
                     .transition(.move(edge: .trailing))
                     .presentationBackground(Theme.sheetBackground)
             }
@@ -195,8 +195,8 @@ struct PortfolioView: View {
                                 herd: herd,
                                 summary: summary,
                                 onSellTapped: {
-                                    // Debug: Open sell sheet with preselected herd
-                                    herdToSell = herd
+                                    // Debug: Open sell sheet with preselected herd ID
+                                    herdIdToSell = herd.id
                                     showingSellSheet = true
                                 }
                             )
@@ -232,8 +232,8 @@ struct PortfolioView: View {
                                 herd: herd,
                                 summary: summary,
                                 onSellTapped: {
-                                    // Debug: Open sell sheet with preselected individual
-                                    herdToSell = herd
+                                    // Debug: Open sell sheet with preselected individual ID
+                                    herdIdToSell = herd.id
                                     showingSellSheet = true
                                 }
                             )
@@ -1067,8 +1067,10 @@ struct EnhancedHerdCard: View {
         let herdId = herd.id
         let herdName = herd.name
         
-        NavigationLink(destination: HerdDetailView(herdId: herdId)) {
-            VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Debug: Tappable content area that navigates to detail
+            NavigationLink(destination: HerdDetailView(herdId: herdId)) {
+                VStack(alignment: .leading, spacing: 12) {
                 // Top Row: Herd Name (left, orange) and Chevron (right)
                 HStack {
                     Text(herdName)
@@ -1155,34 +1157,40 @@ struct EnhancedHerdCard: View {
                         }
                         
                         Spacer()
-                        
-                        // Debug: Sell button in bottom right if callback provided
-                        if let onSellTapped = onSellTapped {
-                            Button {
-                                HapticManager.tap()
-                                onSellTapped()
-                            } label: {
-                                HStack(spacing: 4) {
-                                    Image(systemName: "dollarsign.circle.fill")
-                                        .font(.system(size: 14))
-                                    Text("Sell")
-                                        .font(Theme.caption)
-                                        .fontWeight(.semibold)
-                                }
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 6)
-                                .background(Theme.accent)
-                                .clipShape(Capsule())
-                            }
-                            .buttonStyle(.plain)
-                        }
                     }
                 }
+                }
+                .padding(Theme.cardPadding)
             }
-            .padding(Theme.cardPadding)
+            .buttonStyle(PlainButtonStyle())
+            
+            // Debug: Sell button at bottom of card if callback provided (outside navigation tap area)
+            if let onSellTapped = onSellTapped {
+                Divider()
+                    .background(Theme.separator.opacity(0.2))
+                
+                Button {
+                    HapticManager.tap()
+                    onSellTapped()
+                } label: {
+                    Text("Sell")
+                        .font(Theme.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Theme.accent)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(Color.clear)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .stroke(Theme.accent, lineWidth: 1.5)
+                        )
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, Theme.cardPadding)
+                .padding(.bottom, Theme.cardPadding)
+                .padding(.top, 8)
+            }
         }
-        .buttonStyle(PlainButtonStyle())
         .stitchedCard()
         .task {
             await loadValuation()

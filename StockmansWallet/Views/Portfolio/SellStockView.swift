@@ -15,8 +15,8 @@ struct SellStockView: View {
     @Query(filter: #Predicate<HerdGroup> { !$0.isSold }, sort: \HerdGroup.updatedAt, order: .reverse) private var activeHerds: [HerdGroup]
     @Query private var preferences: [UserPreferences]
     
-    // Debug: Optional preselected herd - allows opening sell sheet with specific herd already selected
-    var preselectedHerd: HerdGroup? = nil
+    // Debug: Pass herd ID instead of object to avoid SwiftData context issues
+    var preselectedHerdId: UUID? = nil
     
     // Debug: Use 'let' with @Observable instead of @StateObject
     let valuationEngine = ValuationEngine.shared
@@ -30,6 +30,12 @@ struct SellStockView: View {
     @State private var freightCost: Double = 0
     @State private var showingConfirmation = false
     @State private var isLoadingValuation = false
+    
+    // Debug: Fetch preselected herd from current context using ID
+    private var preselectedHerd: HerdGroup? {
+        guard let herdId = preselectedHerdId else { return nil }
+        return activeHerds.first(where: { $0.id == herdId })
+    }
     
     var body: some View {
         NavigationStack {
@@ -93,28 +99,50 @@ struct SellStockView: View {
                         } else {
                             // Sale form
                             VStack(alignment: .leading, spacing: 24) {
-                                // Select Herd
+                                // Debug: Select Herd - Full width, searchable picker
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("Select Herd/Mob")
+                                    Text("Select Herd")
                                         .font(Theme.headline)
                                         .foregroundStyle(Theme.primaryText)
                                     
-                                    Picker("Select Herd", selection: $selectedHerd) {
-                                        Text("Choose herd to sell").tag(nil as HerdGroup?)
+                                    Menu {
+                                        // Debug: Searchable menu with all active herds
                                         ForEach(activeHerds, id: \.id) { herd in
-                                            Text(herd.name).tag(herd as HerdGroup?)
+                                            Button {
+                                                HapticManager.tap()
+                                                selectedHerd = herd
+                                                headSold = herd.headCount
+                                                // Debug: Only pre-fill if not already preselected (to avoid double loading)
+                                                if preselectedHerdId == nil {
+                                                    Task {
+                                                        await preFillFormWithValuation(for: herd)
+                                                    }
+                                                }
+                                            } label: {
+                                                HStack {
+                                                    Text(herd.name)
+                                                    Spacer()
+                                                    if selectedHerd?.id == herd.id {
+                                                        Image(systemName: "checkmark")
+                                                    }
+                                                }
+                                            }
                                         }
-                                    }
-                                    .pickerStyle(.menu)
-                                    .padding()
-                                    .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                    .onChange(of: selectedHerd) { _, newValue in
-                                        HapticManager.tap()
-                                        if let herd = newValue {
-                                            headSold = herd.headCount
+                                    } label: {
+                                        HStack {
+                                            Text(selectedHerd?.name ?? "Choose herd to sell")
+                                                .font(Theme.body)
+                                                .foregroundStyle(selectedHerd == nil ? Theme.secondaryText : Theme.primaryText)
+                                            Spacer()
+                                            Image(systemName: "chevron.down")
+                                                .font(.system(size: 14))
+                                                .foregroundStyle(Theme.secondaryText)
                                         }
+                                        .padding()
+                                        .background(Theme.inputFieldBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     }
+                                    .buttonStyle(.plain)
                                 }
                                 
                                 if let herd = selectedHerd {
@@ -134,36 +162,41 @@ struct SellStockView: View {
                                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     }
                                     
-                                    // Head sold
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text("Head Sold")
-                                            .font(Theme.headline)
-                                            .foregroundStyle(Theme.primaryText)
-                                        
-                                        Stepper(value: $headSold, in: 1...herd.headCount, step: 1) {
-                                            Text("\(headSold) head")
+                                    // Debug: Head sold and Sale date side by side to save space
+                                    HStack(spacing: 12) {
+                                        // Head sold
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            Text("Head Sold")
                                                 .font(Theme.headline)
                                                 .foregroundStyle(Theme.primaryText)
-                                        }
-                                        .padding()
-                                        .background(Theme.inputFieldBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                        .onChange(of: headSold) { _, _ in
-                                            calculateTotalPrice()
-                                        }
-                                    }
-                                    
-                                    // Sale date
-                                    VStack(alignment: .leading, spacing: 8) {
-                                        Text("Sale Date")
-                                            .font(Theme.headline)
-                                            .foregroundStyle(Theme.primaryText)
-                                        
-                                        DatePicker("", selection: $saleDate, displayedComponents: .date)
-                                            .datePickerStyle(.compact)
+                                            
+                                            Stepper(value: $headSold, in: 1...herd.headCount, step: 1) {
+                                                Text("\(headSold)")
+                                                    .font(Theme.headline)
+                                                    .foregroundStyle(Theme.primaryText)
+                                            }
                                             .padding()
                                             .background(Theme.inputFieldBackground)
                                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                            .onChange(of: headSold) { _, _ in
+                                                calculateTotalPrice()
+                                            }
+                                        }
+                                        .frame(maxWidth: .infinity)
+                                        
+                                        // Sale date
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            Text("Sale Date")
+                                                .font(Theme.headline)
+                                                .foregroundStyle(Theme.primaryText)
+                                            
+                                            DatePicker("", selection: $saleDate, displayedComponents: .date)
+                                                .datePickerStyle(.compact)
+                                                .padding()
+                                                .background(Theme.inputFieldBackground)
+                                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        }
+                                        .frame(maxWidth: .infinity)
                                     }
                                     
                                     // Price per kg
@@ -296,12 +329,32 @@ struct SellStockView: View {
                     Text("Record sale of \(headSold) head from \(herd.name) at $\(String(format: "%.2f", pricePerKg))/kg (Total: $\(String(format: "%.2f", salePrice)))?")
                 }
             }
-            .task {
-                // Debug: Set preselected herd and pre-fill form if provided (from card/detail sell button)
+            .onAppear {
+                #if DEBUG
+                print("📊 SellStockView.onAppear - preselectedHerdId: \(preselectedHerdId?.uuidString ?? "nil")")
+                #endif
+                
+                // Debug: Set preselected herd and pre-fill form immediately if provided (from card/detail sell button)
                 if let preselected = preselectedHerd {
+                    #if DEBUG
+                    print("📊 Found preselected herd in context: \(preselected.name)")
+                    #endif
+                    
                     selectedHerd = preselected
                     headSold = preselected.headCount
-                    await preFillFormWithValuation(for: preselected)
+                    
+                    #if DEBUG
+                    print("📊 Starting pre-fill task for: \(preselected.name)")
+                    #endif
+                    
+                    Task {
+                        await preFillFormWithValuation(for: preselected)
+                    }
+                } else if preselectedHerdId != nil {
+                    #if DEBUG
+                    print("⚠️ SellStockView: preselectedHerdId provided but herd not found in context!")
+                    print("   Available herds: \(activeHerds.map { $0.name }.joined(separator: ", "))")
+                    #endif
                 }
             }
         }
@@ -326,13 +379,53 @@ struct SellStockView: View {
             // Debug: Auto-calculate total price
             calculateTotalPrice()
             
-            // Debug: Pre-fill notes with source information
-            self.notes = "Price source: \(valuation.priceSource)"
+            // Debug: Build comprehensive notes with herd information
+            var noteComponents: [String] = []
+            
+            // Price source information
+            noteComponents.append("Price source: \(valuation.priceSource)")
+            
+            // Herd details
+            noteComponents.append("\(herd.breed) \(herd.category)")
+            
+            // Weight information
+            let avgWeight = Int(valuation.projectedWeight)
+            noteComponents.append("Avg weight: \(avgWeight)kg")
+            
+            // Age information
+            if herd.ageMonths > 0 {
+                let years = herd.ageMonths / 12
+                let months = herd.ageMonths % 12
+                if years > 0 {
+                    noteComponents.append("Age: \(years)y \(months)m")
+                } else {
+                    noteComponents.append("Age: \(months)m")
+                }
+            }
+            
+            // Location/Paddock if available
+            if let paddock = herd.paddockName, !paddock.isEmpty {
+                noteComponents.append("Location: \(paddock)")
+            }
+            
+            // Saleyard if selected
+            if let saleyard = herd.selectedSaleyard, !saleyard.isEmpty {
+                noteComponents.append("Saleyard: \(saleyard)")
+            }
+            
+            // Add any existing additional info
+            if let additionalInfo = herd.additionalInfo, !additionalInfo.isEmpty {
+                noteComponents.append(additionalInfo)
+            }
+            
+            // Debug: Combine all notes with line breaks
+            self.notes = noteComponents.joined(separator: "\n")
             
             self.isLoadingValuation = false
             
             #if DEBUG
             print("📊 SellStockView: Pre-filled with valuation - Price: $\(valuation.pricePerKg)/kg, Total: $\(salePrice)")
+            print("   Herd: \(herd.name), Head count: \(herd.headCount), Avg weight: \(avgWeight)kg")
             #endif
         }
     }

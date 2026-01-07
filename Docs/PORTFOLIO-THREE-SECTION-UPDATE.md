@@ -84,6 +84,18 @@ Updated the Portfolio page to reorganize content from 2 sections (Overview/Asset
 - ✅ Maintains consistency with existing Theme system
 - ✅ Performance: Filtered computations only when needed
 
+### SwiftData Context Management
+- **Critical Fix**: Pass herd IDs between views, not SwiftData objects
+- Each view fetches objects from its own context using the ID
+- Prevents cross-context issues and ensures first-tap reliability
+- Same pattern successfully used in HerdDetailView
+
+### Card Button Architecture
+- Sell button positioned **outside** NavigationLink wrapper
+- Prevents tap gesture conflicts
+- Uses `.plain` button style to avoid style inheritance
+- Divider separates navigation area from action button
+
 ### File Changes
 - Modified: `StockmansWallet/Views/Portfolio/PortfolioView.swift`
   - Added search functionality for Herds and Individual sections
@@ -100,29 +112,36 @@ Updated the Portfolio page to reorganize content from 2 sections (Overview/Asset
 
 ## Sell Button Features (Added)
 
-### 1. Floating Sell Button
-- **Location**: Appears at the bottom of HerdDetailView (individual herd/animal detail pages)
+### 1. Detail Page Sell Button
+- **Location**: At the bottom of HerdDetailView (individual herd/animal detail pages)
+- Regular full-width button with accent background
 - Only visible when the herd/animal is not already sold
 - Opens SellStockView with the current herd preselected and form pre-filled
-- Prominent design with shadow effect for easy access
+- Clean, prominent design integrated into scrollable content
 
 ### 2. Card Sell Button
-- Small "Sell" button appears in bottom right of each card on list pages
-- Located next to the Average Weight/Price information
-- Tappable with clear visual feedback
+- **Location**: Full-width button at bottom of each card on list pages
+- **Style**: Bordered button (accent stroke, transparent background, accent text)
+- Says "Sell" (no icon for clean look)
+- Separated from card content with divider
+- **Works on first tap** - positioned outside NavigationLink to avoid tap conflicts
 - Opens SellStockView with the specific herd preselected and form pre-filled
-- Uses capsule shape with accent color background
 
-### 3. SellStockView Enhancement
+### 3. SellStockView Enhancement & Layout Improvements
 - Now accepts optional `preselectedHerd` parameter
 - **Pre-fills form automatically** when herd is preselected:
   - Herd selection auto-populated
   - Head count set to herd's total head count
   - **Price per kg pre-filled** using ValuationEngine calculation
   - **Total price auto-calculated** based on current weight and price
-  - **Notes field pre-populated** with price source information
+  - **Notes field pre-populated** with comprehensive herd information
   - Loading indicator shown while calculating valuation
 - When opened without preselection, user selects herd manually
+- **Improved Layout:**
+  - "Select Herd" field is full-width with searchable menu
+  - "Head Sold" and "Sale Date" are side-by-side to save space
+  - Cleaner, more compact design
+- **Fixed timing issue:** Pre-fill now happens immediately on sheet presentation
 
 ## User Experience Flow
 

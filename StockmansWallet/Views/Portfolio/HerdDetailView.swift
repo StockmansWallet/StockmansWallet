@@ -52,8 +52,7 @@ struct HerdDetailView: View {
     var body: some View {
         // Debug: Guard against nil herd to prevent crashes from stale SwiftData references
         if let activeHerd = herd {
-            ZStack(alignment: .bottom) {
-                ScrollView {
+            ScrollView {
                 VStack(spacing: 20) {
                     // Debug: Total value card with herd name at the very top
                     if let valuation = valuation {
@@ -131,23 +130,37 @@ struct HerdDetailView: View {
                         .stitchedCard()
                         .padding(.horizontal)
                     }
+                    
+                    // Debug: Sell button at bottom of detail page (not floating, just regular button)
+                    if !isLoading && !activeHerd.isSold {
+                        Button {
+                            HapticManager.tap()
+                            showingSellSheet = true
+                        } label: {
+                            HStack(spacing: 8) {
+                                Image(systemName: "dollarsign.circle.fill")
+                                    .font(.system(size: 18, weight: .semibold))
+                                Text("Sell Stock")
+                                    .font(Theme.headline)
+                                    .fontWeight(.semibold)
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 16)
+                            .background(Theme.accent)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal)
+                        .accessibilityLabel("Sell stock")
+                    }
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 100)
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient)
-            
-            // Debug: Floating sell button at bottom of detail page
-            if !activeHerd.isSold {
-                FloatingSellButton {
-                    HapticManager.tap()
-                    showingSellSheet = true
-                }
-                .padding(.bottom, 20)
-            }
-        }
-        .navigationTitle("Herd Details")
+            .navigationTitle("Herd Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -164,7 +177,7 @@ struct HerdDetailView: View {
                 .presentationBackground(Theme.sheetBackground)
         }
         .fullScreenCover(isPresented: $showingSellSheet) {
-            SellStockView(preselectedHerd: activeHerd)
+            SellStockView(preselectedHerdId: activeHerd.id)
                 .transition(.move(edge: .trailing))
                 .presentationBackground(Theme.sheetBackground)
         }
