@@ -158,13 +158,12 @@ struct PortfolioView: View {
         }
         
         ToolbarItem(placement: .navigationBarTrailing) {
-            Button("Manage") {
+            Button("Add") {
                 HapticManager.tap()
                 showingAddAssetMenu = true
             }
-            .buttonStyle(.borderedProminent)
-            .tint(Theme.accent)
-            .accessibilityLabel("Manage Stock")
+            .foregroundStyle(Theme.accent)
+            .accessibilityLabel("Add Stock")
         }
     }
     
@@ -196,7 +195,7 @@ struct PortfolioView: View {
             if let summary = portfolioSummary {
                 VStack(spacing: 16) {
                     // Debug: Search field at top of herds section (below segmented control)
-                    SearchField(text: $herdsSearchText, placeholder: "Search herds...")
+                    SearchField(text: $herdsSearchText, placeholder: "Search for a herd")
                         .padding(.horizontal)
                     
                     LazyVStack(spacing: 16) {
@@ -232,7 +231,7 @@ struct PortfolioView: View {
             if let summary = portfolioSummary {
                 VStack(spacing: 16) {
                     // Debug: Search field at top of individual section (below segmented control)
-                    SearchField(text: $individualSearchText, placeholder: "Search individuals...")
+                    SearchField(text: $individualSearchText, placeholder: "Search for an individual animal")
                         .padding(.horizontal)
                     
                     LazyVStack(spacing: 16) {
@@ -515,7 +514,7 @@ struct PortfolioStatsCards: View {
             HStack(spacing: 24) {
                 // Total Head
                 HStack(spacing: 8) {
-                    Text("Total Head")
+                    Text("Head")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                     Text("\(summary.totalHeadCount)")
@@ -533,7 +532,7 @@ struct PortfolioStatsCards: View {
                 
                 // Active Herds
                 HStack(spacing: 8) {
-                    Text("Active Herds")
+                    Text("Herds")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                     Text("\(summary.activeHerdCount)")
