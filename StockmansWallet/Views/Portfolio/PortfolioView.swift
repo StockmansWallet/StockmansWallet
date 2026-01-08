@@ -12,9 +12,11 @@ import Charts
 
 struct PortfolioView: View {
     @Environment(\.modelContext) private var modelContext
-    // Performance: Don't use @Query directly - it creates live queries that trigger on every data change
-    // Instead, fetch data manually in task to avoid constant re-renders
     @Query private var preferences: [UserPreferences]
+    
+    // Debug: Use @Query with stable sort to get automatic SwiftData updates without manual fetching
+    // This prevents navigation toolbar blur by removing async fetching during transitions
+    @Query(sort: \HerdGroup.updatedAt, order: .reverse) private var allHerds: [HerdGroup]
     
     // Debug: Use 'let' with @Observable instead of @StateObject
     let valuationEngine = ValuationEngine.shared
@@ -25,9 +27,8 @@ struct PortfolioView: View {
     @State private var isLoading = true
     @State private var selectedView: PortfolioViewMode = .overview
     
-    // Performance: Store fetched herds in @State to control when updates happen
-    @State private var herds: [HerdGroup] = []
-    @State private var lastFetchTime: Date = Date()
+    // Performance: Track if we've loaded summary to prevent recalculation on every navigation
+    @State private var hasInitiallyLoaded = false
     
     // Debug: Search functionality for Herds and Individual sections
     @State private var herdsSearchText = ""
@@ -85,47 +86,30 @@ struct PortfolioView: View {
                 }
                 .sheet(isPresented: $showingSearchPanel) {
                     // Performance: Pass herds as binding to avoid capturing live query
-                    PortfolioSearchPanel(herds: herds)
+                    PortfolioSearchPanel(herds: allHerds)
                         .presentationDetents([.large])
                         .presentationDragIndicator(.visible)
                         .presentationBackground(Theme.sheetBackground)
                 }
-                .task(id: herds.count) {
-                    // Debug: Only recalculate when herd count changes, not on every view appearance
-                    // This prevents the value jump when returning from detail view
+                .task(id: hasInitiallyLoaded) {
+                    // Debug: @Query automatically fetches and updates herds, no manual fetch needed
+                    // This prevents async operations during navigation that blur toolbar buttons
+                    guard !hasInitiallyLoaded else { return }
                     
-                    // Performance: Update filtered caches after fetching
+                    // Performance: Update filtered caches
                     updateFilteredCaches()
                     
-                    // Debug: Only show quick summary if we don't have one yet
-                    if portfolioSummary == nil {
-                        // Performance: Show UI immediately with basic stats, calculate valuations in background
-                        await MainActor.run {
-                            self.isLoading = false
-                            // Create minimal summary to show UI immediately
-                            createQuickSummary()
-                        }
-                        
-                        // Performance: Calculate full valuations in background (low priority)
-                        loadingTask = Task(priority: .utility) {
-                            await loadPortfolioSummary()
-                        }
-                    } else {
-                        // Debug: Already have a summary, just recalculate in background without showing quick estimate
-                        await MainActor.run {
-                            self.isLoading = false
-                        }
-                        
-                        // Performance: Silently update in background to refresh values
-                        loadingTask = Task(priority: .utility) {
-                            await loadPortfolioSummary()
-                        }
+                    // Performance: Show UI immediately with basic stats, calculate valuations in background
+                    await MainActor.run {
+                        self.isLoading = false
+                        // Create minimal summary to show UI immediately
+                        createQuickSummary()
+                        self.hasInitiallyLoaded = true
                     }
-                }
-                .onAppear {
-                    // Debug: Fetch herds on appear to populate initial data
-                    Task {
-                        await fetchHerds()
+                    
+                    // Performance: Calculate full valuations in background (low priority)
+                    loadingTask = Task(priority: .utility) {
+                        await loadPortfolioSummary()
                     }
                 }
                 .onDisappear {
@@ -143,7 +127,7 @@ struct PortfolioView: View {
                     // Performance: Update cache when search changes
                     updateFilteredCaches()
                 }
-                .onChange(of: herds.count) { _, _ in
+                .onChange(of: allHerds.count) { _, _ in
                     // Performance: Update cache when herds change
                     updateFilteredCaches()
                 }
@@ -153,7 +137,7 @@ struct PortfolioView: View {
     
     private var mainContent: some View {
         Group {
-            if herds.isEmpty {
+            if allHerds.isEmpty {
                 EmptyPortfolioView(showingAddAssetMenu: $showingAddAssetMenu)
             } else {
                 ScrollView {
@@ -181,8 +165,7 @@ struct PortfolioView: View {
                 .scrollContentBackground(.hidden)
                 .background(Theme.backgroundGradient)
                 .refreshable {
-                    // Performance: Refresh both herds and summary
-                    await fetchHerds()
+                    // Performance: Refresh summary (herds auto-update via @Query)
                     await loadPortfolioSummary()
                 }
             }
@@ -311,7 +294,7 @@ struct PortfolioView: View {
     // Performance: Update cached filtered results only when search text or herds change
     private func updateFilteredCaches() {
         // Filter herds
-        let herdsOnly = herds.filter { !$0.isSold && $0.headCount > 1 }
+        let herdsOnly = allHerds.filter { !$0.isSold && $0.headCount > 1 }
         if herdsSearchText.isEmpty {
             cachedFilteredHerds = herdsOnly
         } else {
@@ -327,7 +310,7 @@ struct PortfolioView: View {
         }
         
         // Filter individuals and convert to plain structs with valuations
-        let individualsOnly = herds.filter { !$0.isSold && $0.headCount == 1 }
+        let individualsOnly = allHerds.filter { !$0.isSold && $0.headCount == 1 }
         let filteredIndividuals: [HerdGroup]
         if individualSearchText.isEmpty {
             filteredIndividuals = individualsOnly
@@ -371,37 +354,19 @@ struct PortfolioView: View {
         }
     }
     
-    // MARK: - Fetch Herds (Manual, Controlled)
-    // Performance: Fetch herds manually instead of using live @Query to prevent constant re-renders
-    private func fetchHerds() async {
-        let descriptor = FetchDescriptor<HerdGroup>(
-            sortBy: [SortDescriptor(\HerdGroup.updatedAt, order: .reverse)]
-        )
-        
-        do {
-            let fetchedHerds = try modelContext.fetch(descriptor)
-            await MainActor.run {
-                self.herds = fetchedHerds
-                self.lastFetchTime = Date()
-            }
-        } catch {
-            print("❌ Failed to fetch herds: \(error)")
-        }
-    }
-    
     // MARK: - Quick Summary (Instant Display)
     // Performance: Create basic summary instantly without expensive valuations
     private func createQuickSummary() {
-        let activeHerds = herds.filter { !$0.isSold && $0.headCount > 1 }
-        let allActiveHerds = herds.filter { !$0.isSold }
+        let activeHerds = allHerds.filter { !$0.isSold && $0.headCount > 1 }
+        let allActiveAssets = allHerds.filter { !$0.isSold }
         
-        guard !allActiveHerds.isEmpty else {
+        guard !allActiveAssets.isEmpty else {
             self.portfolioSummary = nil
             return
         }
         
         // Quick calculations without database queries
-        let totalHeadCount = allActiveHerds.reduce(0) { $0 + $1.headCount }
+        let totalHeadCount = allActiveAssets.reduce(0) { $0 + $1.headCount }
         let estimatedValue = Double(totalHeadCount) * 400.0 * 4.0 // Rough estimate: 400kg × $4/kg
         
         // Create minimal summary for instant display
@@ -439,10 +404,10 @@ struct PortfolioView: View {
         
         // Performance: Only calculate valuations for herds (headCount > 1) in summary
         // Individual animals (headCount == 1) load their valuations on-demand when viewed
-        let activeHerds = herds.filter { !$0.isSold && $0.headCount > 1 }
-        let allActiveHerds = herds.filter { !$0.isSold } // For head count totals
+        let activeHerds = allHerds.filter { !$0.isSold && $0.headCount > 1 }
+        let allActiveAssets = allHerds.filter { !$0.isSold } // For head count totals
         
-        guard !allActiveHerds.isEmpty else {
+        guard !allActiveAssets.isEmpty else {
             await MainActor.run {
                 self.portfolioSummary = nil
                 self.isLoading = false
@@ -608,7 +573,7 @@ struct PortfolioView: View {
                 unrealizedGains: unrealizedGains,
                 unrealizedGainsPercent: unrealizedGainsPercent,
                 // Performance: Total head count includes all animals (herds + individuals)
-                totalHeadCount: allActiveHerds.reduce(0) { $0 + $1.headCount },
+                totalHeadCount: allActiveAssets.reduce(0) { $0 + $1.headCount },
                 // Performance: Active herd count only includes actual herds (headCount > 1)
                 activeHerdCount: activeHerds.count,
                 categoryBreakdown: Array(categoryBreakdown.values),
