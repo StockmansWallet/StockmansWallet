@@ -1312,7 +1312,7 @@ struct LightweightAnimalCard: View {
                     
                     // Row 2: Species/Breed/Category
                     Text("\(data.species) | \(data.breed) | \(data.category)")
-                        .font(Theme.caption)
+                        .font(Theme.subheadline) // Debug: Bigger font for better readability
                         .foregroundStyle(Theme.secondaryText)
                         .lineLimit(1)
                     
@@ -1326,10 +1326,10 @@ struct LightweightAnimalCard: View {
                         if let paddock = data.paddockName, !paddock.isEmpty {
                             HStack(spacing: 4) {
                                 Image(systemName: "map.fill")
-                                    .font(.system(size: 10))
+                                    .font(.system(size: 12)) // Debug: Slightly bigger icon
                                 Text(paddock)
                             }
-                            .font(Theme.caption)
+                            .font(Theme.subheadline) // Debug: Bigger font for better readability
                             .foregroundStyle(Theme.secondaryText.opacity(0.8))
                         }
                         Spacer()
@@ -1348,15 +1348,15 @@ struct LightweightAnimalCard: View {
                                 Image("chick")
                                     .resizable()
                                     .renderingMode(.template)
-                                    .frame(width: 10, height: 10)
+                                    .frame(width: 12, height: 12) // Debug: Slightly bigger icon
                                 Text("Breeder")
                             }
-                            .font(Theme.caption)
+                            .font(Theme.subheadline) // Debug: Bigger font for better readability
                             .foregroundStyle(Theme.secondaryText.opacity(0.8))
                         }
                         Spacer()
                         Text("\(Int(data.currentWeight)) kg @ \(data.pricePerKg, format: .currency(code: "AUD"))")
-                            .font(Theme.caption)
+                            .font(Theme.subheadline) // Debug: Bigger font for better readability
                             .foregroundStyle(Theme.secondaryText)
                     }
                     
@@ -1457,7 +1457,7 @@ struct EnhancedHerdCard: View {
                 
                 // Row 2: Species/Breed/Category
                 Text("\(herdSpecies) | \(herdBreed) | \(herdCategory)")
-                    .font(Theme.caption)
+                    .font(Theme.subheadline) // Debug: Bigger font for better readability
                     .foregroundStyle(Theme.secondaryText)
                     .lineLimit(1)
                 
@@ -1471,10 +1471,10 @@ struct EnhancedHerdCard: View {
                     if let location = herdLocation, !location.isEmpty {
                         HStack(spacing: 4) {
                             Image(systemName: "map.fill")
-                                .font(.system(size: 10))
+                                .font(.system(size: 12)) // Debug: Slightly bigger icon
                             Text(location)
                         }
-                        .font(Theme.caption)
+                        .font(Theme.subheadline) // Debug: Bigger font for better readability
                         .foregroundStyle(Theme.secondaryText.opacity(0.8))
                     }
                     Spacer()
@@ -1497,10 +1497,10 @@ struct EnhancedHerdCard: View {
                             Image("cowhead")
                                 .resizable()
                                 .renderingMode(.template)
-                                .frame(width: 10, height: 10)
+                                .frame(width: 12, height: 12) // Debug: Slightly bigger icon
                             Text("\(herdHeadCount) head")
                         }
-                        .font(Theme.caption)
+                        .font(Theme.subheadline) // Debug: Bigger font for better readability
                         .foregroundStyle(Theme.secondaryText.opacity(0.8))
                         
                         if isBreeder {
@@ -1508,17 +1508,17 @@ struct EnhancedHerdCard: View {
                                 Image("chick")
                                     .resizable()
                                     .renderingMode(.template)
-                                    .frame(width: 10, height: 10)
+                                    .frame(width: 12, height: 12) // Debug: Slightly bigger icon
                                 Text("Breeder")
                             }
-                            .font(Theme.caption)
+                            .font(Theme.subheadline) // Debug: Bigger font for better readability
                             .foregroundStyle(Theme.secondaryText.opacity(0.8))
                             .padding(.leading, 8)
                         }
                         
                         Spacer()
                         Text("\(Int(valuation.projectedWeight)) kg @ \(valuation.pricePerKg, format: .currency(code: "AUD"))")
-                            .font(Theme.caption)
+                            .font(Theme.subheadline) // Debug: Bigger font for better readability
                             .foregroundStyle(Theme.secondaryText)
                     }
                 }

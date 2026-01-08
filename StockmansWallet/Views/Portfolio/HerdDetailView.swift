@@ -841,24 +841,24 @@ struct IndividualAnimalRow: View {
                     
                     HStack(spacing: 8) {
                         Text(animalBreed)
-                            .font(Theme.caption)
+                            .font(Theme.subheadline) // Debug: Bigger font for better readability
                             .foregroundStyle(Theme.secondaryText)
                         
                         Text("•")
-                            .font(Theme.caption)
+                            .font(Theme.subheadline)
                             .foregroundStyle(Theme.secondaryText)
                         
                         Text("\(Int(animalWeight)) kg")
-                            .font(Theme.caption)
+                            .font(Theme.subheadline) // Debug: Bigger font for better readability
                             .foregroundStyle(Theme.secondaryText)
                         
                         if let paddock = animalPaddock, !paddock.isEmpty {
                             Text("•")
-                                .font(Theme.caption)
+                                .font(Theme.subheadline)
                                 .foregroundStyle(Theme.secondaryText)
                             
                             Text(paddock)
-                                .font(Theme.caption)
+                                .font(Theme.subheadline) // Debug: Bigger font for better readability
                                 .foregroundStyle(Theme.secondaryText)
                         }
                     }
