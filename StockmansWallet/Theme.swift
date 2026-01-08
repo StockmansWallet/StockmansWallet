@@ -37,6 +37,10 @@ struct Theme {
     /// Dark brown (#1E1815) that creates depth and visual hierarchy
     static let backgroundColor = Color(hex: "1E1815")
     
+    /// Debug: Almost black background for when no background image is selected
+    /// Much darker than standard backgroundColor to create stronger contrast
+    static let noBackgroundColor = Color(hex: "0A0908")
+    
     /// Main gradient background - orange accent radiating from top
     /// Debug: Simple radial gradient - adjust opacity to control strength of orange glow
     @ViewBuilder

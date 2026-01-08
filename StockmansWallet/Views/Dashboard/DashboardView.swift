@@ -251,19 +251,26 @@ struct DashboardView: View {
                     .id("builtin_\(imageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
                 }
             } else {
-                // Debug: Subtle orange radial glow from top when no background is selected
-                // Adds visual interest and warmth to the "none" background option
-                RadialGradient(
-                    colors: [
-                        Theme.accent.opacity(0.12),  // Subtle orange glow at top
-                        Theme.accent.opacity(0.04),  // Fade to very subtle
-                        Color.clear                   // Fade to transparent
-                    ],
-                    center: .top,
-                    startRadius: 0,
-                    endRadius: 500
-                )
-                .ignoresSafeArea()
+                // Debug: Almost black background with subtle orange radial glow from top when no background is selected
+                // Much darker base color for stronger contrast, with minimal orange accent for warmth
+                ZStack {
+                    // Debug: Almost black base layer
+                    Theme.noBackgroundColor
+                        .ignoresSafeArea()
+                    
+                    // Debug: Very subtle orange glow at top for minimal warmth
+                    RadialGradient(
+                        colors: [
+                            Theme.accent.opacity(0.08),  // Minimal orange glow at top
+                            Theme.accent.opacity(0.02),  // Fade to barely visible
+                            Color.clear                   // Fade to transparent
+                        ],
+                        center: .top,
+                        startRadius: 0,
+                        endRadius: 500
+                    )
+                    .ignoresSafeArea()
+                }
                 .id("glow_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
             }
             

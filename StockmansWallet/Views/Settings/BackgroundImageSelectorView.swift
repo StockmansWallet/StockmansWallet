@@ -64,7 +64,7 @@ struct BackgroundImageSelectorView: View {
         // Debug: Use GeometryReader to make thumbnails responsive to screen size
         GeometryReader { geometry in
             ZStack(alignment: .top) {
-                // Debug: Background preview with dashboard-style parallax settings
+                // Debug: Background preview with dashboard-style parallax settings (fixed, doesn't scroll)
                 // Force view to update when preferences change
                 let currentPrefs = preferences.first ?? UserPreferences()
                 let _ = print("🖼️ BackgroundSelector: Rendering with background=\(currentPrefs.backgroundImageName ?? "nil"), isCustom=\(currentPrefs.isCustomBackground)")
@@ -72,77 +72,20 @@ struct BackgroundImageSelectorView: View {
                 backgroundPreview
                     .id("\(previewImageName ?? "none")_\(previewIsCustom)") // Debug: Force recreation when background changes
                 
-                // Debug: Background gradient overlay (like dashboard)
-                Theme.backgroundGradient
-                
-                // Debug: Main content layout
-                VStack(spacing: 0) {
-                    // Debug: Top spacing to show background
-                    Color.clear
-                        .frame(height: 180)
-                    
-                    // Debug: Content panel with rounded top corners (like dashboard)
+                // Debug: Scrollable content panel - slides up over the fixed background
+                ScrollView {
                     VStack(spacing: 0) {
-                        // Debug: Header section
-                        VStack(spacing: 12) {
-                            Text("Personalise your dashboard")
-                                .font(Theme.title2)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            Text("Select one of the default images or upload your own.")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.secondaryText)
-                                .multilineTextAlignment(.center)
-                        }
-                        .padding(.top, 32)
-                        .padding(.horizontal, Theme.cardPadding)
-                        .padding(.bottom, 24) // Debug: Increased spacing above thumbnails
-                        .accessibilityElement(children: .combine)
-                        .accessibilityLabel("Personalise your dashboard. Select one of the default images or upload your own.")
+                        // Debug: Top spacing to show background preview area - reduced to start higher on screen
+                        Color.clear
+                            .frame(height: 100)
                         
-                        // Debug: Image carousel or custom upload UI with responsive sizing
-                        contentForSelectedMode(screenHeight: geometry.size.height)
-                            .padding(.bottom, 16)
-                        
-                        Spacer()
-                        
-                        // Debug: Add Photo button (only shown in Custom mode) - iOS native PhotosPicker
-                        if selectedMode == .custom {
-                            PhotosPicker(
-                                selection: $selectedImageItem,
-                                matching: .images
-                            ) {
-                                Label("Add Photo", systemImage: "photo.badge.plus")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(.white)
-                                    .frame(maxWidth: .infinity)
-                                    .frame(height: Theme.buttonHeight)
-                                    .background(Color.white.opacity(0.1))
-                                    .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-                            }
-                            .buttonStyle(.plain)
-                            .padding(.horizontal, Theme.cardPadding)
-                            .padding(.bottom, 16)
-                            .accessibilityLabel("Add photo from library")
-                            .accessibilityHint("Opens your photo library to select a custom background image")
-                        }
-                        
-                        // Debug: Mode selector tabs (Default/Custom/None)
-                        modeSelector
-                            .padding(.horizontal, Theme.cardPadding)
-                            .padding(.bottom, 30)
+                        // Debug: Content panel with rounded top corners - scrolls up over background
+                        contentPanel(screenHeight: geometry.size.height)
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(
-                        // Debug: Rounded container background (like dashboard content panel)
-                        UnevenRoundedRectangle(
-                            topLeadingRadius: 32,
-                            topTrailingRadius: 32
-                        )
-                        .fill(Theme.backgroundColor)
-                    )
                 }
+                .scrollIndicators(.visible)
             }
+            .ignoresSafeArea(edges: .bottom) // Debug: Extend entire view to bottom edge to eliminate black bar
         }
         .navigationTitle("Dashboard Background")
         .navigationBarTitleDisplayMode(.inline)
@@ -160,6 +103,73 @@ struct BackgroundImageSelectorView: View {
                 await handleImageSelection(newValue)
             }
         }
+    }
+    
+    // MARK: - Content Panel
+    
+    /// Debug: Rounded content panel with all selector content - scrolls over background (like dashboard)
+    @ViewBuilder
+    private func contentPanel(screenHeight: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            // Debug: Header section
+            VStack(spacing: 12) {
+                Text("Personalise your dashboard")
+                    .font(Theme.title2)
+                    .foregroundStyle(Theme.primaryText)
+                
+                Text("Select one of the default images or upload your own.")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+            .padding(.top, 32)
+            .padding(.horizontal, Theme.cardPadding)
+            .padding(.bottom, 24)
+            .accessibilityElement(children: .combine)
+            .accessibilityLabel("Personalise your dashboard. Select one of the default images or upload your own.")
+            
+            // Debug: Mode selector tabs (Default/Custom/None) - moved above thumbnails
+            modeSelector
+                .padding(.horizontal, Theme.cardPadding)
+                .padding(.bottom, 24)
+            
+            // Debug: Image carousel or custom upload UI with responsive sizing
+            contentForSelectedMode(screenHeight: screenHeight)
+                .padding(.bottom, 16)
+            
+            // Debug: Add Photo button (only shown in Custom mode) - iOS native PhotosPicker
+            if selectedMode == .custom {
+                PhotosPicker(
+                    selection: $selectedImageItem,
+                    matching: .images
+                ) {
+                    Label("Add Photo", systemImage: "photo.badge.plus")
+                        .font(Theme.headline)
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: Theme.buttonHeight)
+                        .background(Color.white.opacity(0.1))
+                        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, Theme.cardPadding)
+                .padding(.bottom, 16)
+                .accessibilityLabel("Add photo from library")
+                .accessibilityHint("Opens your photo library to select a custom background image")
+            }
+        }
+        .padding(.bottom, 150) // Debug: Extra bottom padding to ensure content extends to screen bottom
+        .background(
+            // Debug: Flat rounded container background (no gradient for settings pages)
+            // Uses sheetCornerRadius (32pt) for large panel surfaces
+            UnevenRoundedRectangle(
+                topLeadingRadius: Theme.sheetCornerRadius,
+                topTrailingRadius: Theme.sheetCornerRadius,
+                style: .continuous
+            )
+            .fill(Theme.backgroundColor)
+            .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
+        )
     }
     
     // MARK: - Background Preview
@@ -190,9 +200,25 @@ struct BackgroundImageSelectorView: View {
                 )
             }
         } else {
-            // Debug: No background - show solid color
-            Theme.backgroundColor
+            // Debug: No background - show almost black color with subtle accent glow
+            ZStack {
+                // Debug: Almost black base layer for strong contrast
+                Theme.noBackgroundColor
+                    .ignoresSafeArea()
+                
+                // Debug: Very subtle orange glow at top for minimal warmth (matching dashboard)
+                RadialGradient(
+                    colors: [
+                        Theme.accent.opacity(0.08),  // Minimal orange glow at top
+                        Theme.accent.opacity(0.02),  // Fade to barely visible
+                        Color.clear                   // Fade to transparent
+                    ],
+                    center: .top,
+                    startRadius: 0,
+                    endRadius: 500
+                )
                 .ignoresSafeArea()
+            }
         }
     }
     
