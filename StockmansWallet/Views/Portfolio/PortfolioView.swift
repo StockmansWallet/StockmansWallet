@@ -90,23 +90,42 @@ struct PortfolioView: View {
                         .presentationDragIndicator(.visible)
                         .presentationBackground(Theme.sheetBackground)
                 }
-                .task {
-                    // Performance: Fetch herds immediately to show UI
-                    await fetchHerds()
+                .task(id: herds.count) {
+                    // Debug: Only recalculate when herd count changes, not on every view appearance
+                    // This prevents the value jump when returning from detail view
                     
                     // Performance: Update filtered caches after fetching
                     updateFilteredCaches()
                     
-                    // Performance: Show UI immediately with basic stats, calculate valuations in background
-                    await MainActor.run {
-                        self.isLoading = false
-                        // Create minimal summary to show UI immediately
-                        createQuickSummary()
+                    // Debug: Only show quick summary if we don't have one yet
+                    if portfolioSummary == nil {
+                        // Performance: Show UI immediately with basic stats, calculate valuations in background
+                        await MainActor.run {
+                            self.isLoading = false
+                            // Create minimal summary to show UI immediately
+                            createQuickSummary()
+                        }
+                        
+                        // Performance: Calculate full valuations in background (low priority)
+                        loadingTask = Task(priority: .utility) {
+                            await loadPortfolioSummary()
+                        }
+                    } else {
+                        // Debug: Already have a summary, just recalculate in background without showing quick estimate
+                        await MainActor.run {
+                            self.isLoading = false
+                        }
+                        
+                        // Performance: Silently update in background to refresh values
+                        loadingTask = Task(priority: .utility) {
+                            await loadPortfolioSummary()
+                        }
                     }
-                    
-                    // Performance: Calculate full valuations in background (low priority)
-                    loadingTask = Task(priority: .utility) {
-                        await loadPortfolioSummary()
+                }
+                .onAppear {
+                    // Debug: Fetch herds on appear to populate initial data
+                    Task {
+                        await fetchHerds()
                     }
                 }
                 .onDisappear {
@@ -639,6 +658,21 @@ struct PortfolioStatsCards: View {
     let summary: PortfolioSummary
     let isLoading: Bool
     
+    // Debug: Format currency value with grey decimal portion to match Dashboard/Detail pages
+    private var formattedValue: (whole: String, decimal: String) {
+        let value = summary.totalNetWorth
+        let numberFormatter = NumberFormatter()
+        numberFormatter.numberStyle = .decimal
+        numberFormatter.maximumFractionDigits = 0
+        numberFormatter.groupingSeparator = ","
+        numberFormatter.usesGroupingSeparator = true
+        
+        let whole = numberFormatter.string(from: NSNumber(value: abs(value))) ?? "0"
+        let decimal = String(format: "%02d", Int((abs(value) - floor(abs(value))) * 100))
+        
+        return (whole: whole, decimal: decimal)
+    }
+    
     var body: some View {
         VStack(spacing: Theme.sectionSpacing) {
             // Debug: Total Value - simplified title, no background for cleaner look
@@ -651,12 +685,35 @@ struct PortfolioStatsCards: View {
                     ProgressView()
                         .tint(Theme.accent)
                 } else {
-                    Text(summary.totalNetWorth, format: .currency(code: "AUD"))
-                        .font(.system(size: 44, weight: .bold))
-                        .monospacedDigit() // Debug: Consistent digit width
-                        .foregroundStyle(.white)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.5) // Debug: Scale down to 50% if needed to fit (consistent with Dashboard)
+                    // Debug: Formatted currency with grey decimal to match Dashboard/Detail pages
+                    HStack(alignment: .firstTextBaseline, spacing: 0) {
+                        Text("$")
+                            .font(.system(size: 36, weight: .bold))
+                            .foregroundStyle(.white)
+                            .tracking(-2)
+                            .baselineOffset(3)
+                            .padding(.trailing, 6)
+                        
+                        Text(formattedValue.whole)
+                            .font(.system(size: 44, weight: .bold))
+                            .foregroundStyle(.white)
+                            .tracking(-2)
+                            .monospacedDigit()
+                        
+                        Text(".")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundStyle(Color(hex: "9E9E9E"))
+                            .tracking(-2)
+                        
+                        Text(formattedValue.decimal)
+                            .font(.system(size: 22, weight: .bold))
+                            .foregroundStyle(Color(hex: "9E9E9E"))
+                            .tracking(-1)
+                            .monospacedDigit()
+                    }
+                    .frame(maxWidth: .infinity, alignment: .center)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
                 }
             }
             .frame(maxWidth: .infinity)
