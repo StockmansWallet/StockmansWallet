@@ -113,7 +113,8 @@ struct TimeRangeSelector: View {
     }
     
     var body: some View {
-        HStack(spacing: 8) {
+        // Debug: Reduced spacing and padding for smaller screens (iPhone 17 Pro compatibility)
+        HStack(spacing: 6) {
             Spacer()
             ForEach(TimeRange.allCases, id: \.self) { range in
                 Button {
@@ -131,7 +132,7 @@ struct TimeRangeSelector: View {
                         : range.rawValue)
                         .font(Theme.caption)
                         .foregroundStyle(timeRange == range ? Theme.accent : Theme.secondaryText)
-                        .padding(.horizontal, 12)
+                        .padding(.horizontal, 10) // Reduced from 12 for smaller screens
                         .padding(.vertical, 6)
                         .background(
                             timeRange == range ? Theme.accent.opacity(0.15) : Color.clear

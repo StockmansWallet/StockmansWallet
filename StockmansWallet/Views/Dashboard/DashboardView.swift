@@ -266,22 +266,21 @@ struct DashboardView: View {
                 .id("glow_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
             }
             
-            // Debug: Fixed portfolio value - stays in place while content scrolls over it
-            VStack {
+            // Debug: Fixed portfolio value header - stays in place while content scrolls beneath
+            VStack(spacing: 0) {
                 PortfolioValueCard(
                     value: selectedValue ?? displayValue,
                     change: isScrubbing ? (selectedValue ?? displayValue) - baseValue : timeRangeChange,
-                    baseValue: baseValue, // Debug: Pass baseValue for percentage calculation
+                    baseValue: baseValue,
                     isLoading: isLoading,
                     isScrubbing: isScrubbing,
                     isUpdating: isUpdatingValue
                 )
                 .padding(.horizontal, Theme.cardPadding)
-                .padding(.top, 30) 
+                .padding(.top, 30)
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Total portfolio value")
                 .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
-                
                 
                 Spacer()
             }
@@ -291,7 +290,7 @@ struct DashboardView: View {
                 VStack(spacing: 0) {
                     // Debug: Top spacing to position content panel lower and clear the fixed header
                     Color.clear
-                        .frame(height: 230) // Adjust this to control how much background shows
+                        .frame(height: 230)
                     
                     contentPanel
                 }
@@ -312,7 +311,7 @@ struct DashboardView: View {
                     Color.clear
                         .frame(height: 32)
                     
-                    // Debug: Main chart area placeholder
+                    // Debug: Main chart area placeholder (fixed width constraint for smaller screens)
                     VStack(spacing: 10) {
                         Image(systemName: "chart.line.uptrend.xyaxis")
                             .font(.system(size: 32))
@@ -327,9 +326,9 @@ struct DashboardView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                             .multilineTextAlignment(.center)
-                            .padding(.horizontal, 24)
                             .lineLimit(4)
                     }
+                    .padding(.horizontal, 24)
                     .frame(maxWidth: .infinity)
                     .frame(height: 200)
                     .clipped()
@@ -354,6 +353,7 @@ struct DashboardView: View {
                         .padding(.top, 10)
                 }
                 .padding(.horizontal, Theme.cardPadding)
+                .padding(.bottom, -Theme.sectionSpacing) // Debug: Remove gap below placeholder since no time range selector
                 .accessibilityLabel("Chart placeholder")
                 .accessibilityHint("This chart will populate as your portfolio data accumulates over time.")
             } else {
@@ -370,18 +370,19 @@ struct DashboardView: View {
                 )
                 .padding(.horizontal, Theme.cardPadding)
                 .accessibilityHint("Drag your finger across the chart to explore values over time.")
+                
+                // Debug: Only show time range selector when there's data to filter
+                TimeRangeSelector(
+                    timeRange: $timeRange,
+                    customStartDate: $customStartDate,
+                    customEndDate: $customEndDate,
+                    showingCustomDatePicker: $showingCustomDatePicker
+                )
+                    .padding(.horizontal, Theme.cardPadding)
+                    .padding(.top, -Theme.sectionSpacing)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Time range selector")
             }
-            
-            TimeRangeSelector(
-                timeRange: $timeRange,
-                customStartDate: $customStartDate,
-                customEndDate: $customEndDate,
-                showingCustomDatePicker: $showingCustomDatePicker
-            )
-                .padding(.horizontal, Theme.cardPadding)
-                .padding(.top, -Theme.sectionSpacing)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Time range selector")
             
             // Debug: Saleyard selector - updates valuations based on selected saleyard prices
             SaleyardSelector(selectedSaleyard: $selectedSaleyard)

@@ -31,23 +31,26 @@ struct PortfolioValueCard: View {
             
             // Debug: Always show the number - never hide it with ProgressView
             // Use pulsing effect (isUpdating) to indicate loading instead
+            // Fixed height container prevents layout shifts
             AnimatedCurrencyValue(
                 value: value,
                 isScrubbing: isScrubbing
             )
-                .padding(.bottom, 8)
-                // Debug: Pulse/glow effect during value update (crypto-style)
-                .shadow(
-                    color: isUpdating ? Theme.accent.opacity(0.6) : .clear,
-                    radius: isUpdating ? 20 : 0
-                )
-                .shadow(
-                    color: isUpdating ? Theme.accent.opacity(0.4) : .clear,
-                    radius: isUpdating ? 40 : 0
-                )
-                .animation(.easeInOut(duration: 0.8).repeatCount(3, autoreverses: true), value: isUpdating)
+            .frame(height: 58) // Debug: Fixed height for currency display (50pt font + 8pt padding)
+            // Debug: Pulse/glow effect during value update (crypto-style)
+            .shadow(
+                color: isUpdating ? Theme.accent.opacity(0.6) : .clear,
+                radius: isUpdating ? 20 : 0
+            )
+            .shadow(
+                color: isUpdating ? Theme.accent.opacity(0.4) : .clear,
+                radius: isUpdating ? 40 : 0
+            )
+            .animation(.easeInOut(duration: 0.8).repeatCount(3, autoreverses: true), value: isUpdating)
+            .padding(.bottom, 8)
             
             // Debug: Change pill with both dollar amount and percentage
+            // Fixed width container prevents layout shifts when values change
             HStack(spacing: 6) {
                 Image(systemName: change >= 0 ? "arrow.up.right" : "arrow.down.right")
                     .font(.system(size: 10, weight: .regular))
@@ -74,17 +77,15 @@ struct PortfolioValueCard: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
-            // Debug: Solid dark background with rounded rectangle matching ticker color from Theme (no glass effect)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
                     .fill(change >= 0 ? Theme.positiveChangeBg : Theme.negativeChangeBg)
             )
-            
+            .fixedSize() // Debug: Prevent pill from affecting parent layout when values animate
             .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)
             .accessibilityLabel("Change for selected time range")
             .accessibilityValue("\(change.formatted(.currency(code: "AUD"))), \(percentageChange, specifier: "%.2f") percent")
         }
-        .frame(maxWidth: .infinity)
         .padding(.vertical, Theme.cardPadding)
     }
 }

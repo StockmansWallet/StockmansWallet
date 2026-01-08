@@ -36,6 +36,7 @@ struct AnimatedCurrencyValue: View {
     }
     
     var body: some View {
+        // Debug: Responsive scaling - HStack scales down to fit available width
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text("$")
                 .font(.system(size: 40, weight: .bold))
@@ -47,36 +48,35 @@ struct AnimatedCurrencyValue: View {
             
             // Performance: While finger is down (isScrubbing) → instant updates, no animation
             // When finger lifts → beautiful .numericText() rolling animation
+            // Debug: monospacedDigit() handles width changes properly
             Text(formattedValue.whole)
                 .font(.system(size: 50, weight: .bold))
                 .monospacedDigit()
                 .foregroundStyle(.white)
                 .tracking(-2)
-                .fixedSize()
                 .contentTransition(isScrubbing ? .identity : .numericText(countsDown: isDecreasing))
                 .animation(isScrubbing ? .none : .default, value: formattedValue.whole)
             
             Text(".")
                 .font(.system(size: 18, weight: .bold))
-                .foregroundStyle(Color(hex: "9E9E9E")) // Debug: Solid grey instead of transparent white
+                .foregroundStyle(Color(hex: "9E9E9E"))
                 .tracking(-2)
                 .accessibilityHidden(true)
             
             Text(formattedValue.decimal)
                 .font(.system(size: 24, weight: .bold))
                 .monospacedDigit()
-                .foregroundStyle(Color(hex: "9E9E9E")) // Debug: Solid grey instead of transparent white
+                .foregroundStyle(Color(hex: "9E9E9E"))
                 .tracking(-1)
-                .fixedSize()
                 .contentTransition(isScrubbing ? .identity : .numericText(countsDown: isDecreasing))
                 .animation(isScrubbing ? .none : .default, value: formattedValue.decimal)
         }
-        // Debug: Center align number so it grows evenly from center instead of jumping from left
-        .frame(maxWidth: .infinity, alignment: .center)
-        // Padding gives the digit rolling animation room to render without clipping
-        .padding(.vertical, 4)
-        .padding(.horizontal, 4)
         .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 4)
+        .frame(maxWidth: .infinity)
+        .minimumScaleFactor(0.5) // Debug: Scale down to 50% if needed to fit screen width
+        .lineLimit(1) // Debug: Keep on single line, scale instead of wrapping
+        .padding(.vertical, 4)
+        .padding(.horizontal, 16) // Debug: Horizontal padding for breathing room on smaller screens
         .onChange(of: value) { oldValue, newValue in
             previousValue = oldValue
         }

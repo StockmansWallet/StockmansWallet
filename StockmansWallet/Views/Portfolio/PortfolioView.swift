@@ -502,13 +502,14 @@ struct PortfolioStatsCards: View {
                 } else {
                     Text(summary.totalNetWorth, format: .currency(code: "AUD"))
                         .font(.system(size: 44, weight: .bold))
+                        .monospacedDigit() // Debug: Consistent digit width
                         .foregroundStyle(.white)
                         .lineLimit(1)
-                        .minimumScaleFactor(0.7)
+                        .minimumScaleFactor(0.5) // Debug: Scale down to 50% if needed to fit (consistent with Dashboard)
                 }
             }
             .frame(maxWidth: .infinity)
-            .padding(.horizontal)
+            .padding(.horizontal, 16) // Debug: Consistent horizontal padding for breathing room
             
             // Debug: Combined stats card with horizontal layout for cleaner, more compact design
             HStack(spacing: 24) {
