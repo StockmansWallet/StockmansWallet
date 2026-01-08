@@ -307,7 +307,7 @@ struct PortfolioView: View {
             }
         }
         
-        // Filter individuals and convert to plain structs
+        // Filter individuals and convert to plain structs with valuations
         let individualsOnly = herds.filter { !$0.isSold && $0.headCount == 1 }
         let filteredIndividuals: [HerdGroup]
         if individualSearchText.isEmpty {
@@ -323,8 +323,33 @@ struct PortfolioView: View {
                 (herd.additionalInfo?.lowercased().contains(searchLower) ?? false)
             }
         }
-        // Performance: Convert to plain structs to break SwiftData observation
-        cachedFilteredIndividuals = filteredIndividuals.map { AnimalDisplayData(from: $0) }
+        
+        // Performance: Calculate valuations in background and update cache
+        Task {
+            await updateIndividualValuations(filteredIndividuals)
+        }
+    }
+    
+    // Performance: Calculate valuations for individual animals in batch
+    private func updateIndividualValuations(_ individuals: [HerdGroup]) async {
+        let prefs = preferences.first ?? UserPreferences()
+        
+        // Debug: Calculate valuations for each individual animal
+        var displayData: [AnimalDisplayData] = []
+        
+        for individual in individuals {
+            let valuation = await valuationEngine.calculateHerdValue(
+                herd: individual,
+                preferences: prefs,
+                modelContext: modelContext
+            )
+            displayData.append(AnimalDisplayData(from: individual, valuation: valuation))
+        }
+        
+        // Update cache on main thread
+        await MainActor.run {
+            cachedFilteredIndividuals = displayData
+        }
     }
     
     // MARK: - Fetch Herds (Manual, Controlled)
@@ -387,7 +412,6 @@ struct PortfolioView: View {
             self.isLoading = true
         }
         
-        let prefs = preferences.first ?? UserPreferences()
         // Performance: Only calculate valuations for herds (headCount > 1) in summary
         // Individual animals (headCount == 1) load their valuations on-demand when viewed
         let activeHerds = herds.filter { !$0.isSold && $0.headCount > 1 }
@@ -1191,8 +1215,10 @@ struct AnimalDisplayData: Identifiable, Equatable {
     let paddockName: String?
     let currentWeight: Double
     let additionalInfo: String?
+    let totalValue: Double // Pre-calculated valuation
+    let pricePerKg: Double // Market price
     
-    init(from herd: HerdGroup) {
+    init(from herd: HerdGroup, valuation: HerdValuation?) {
         self.id = herd.id
         self.name = herd.name
         self.breed = herd.breed
@@ -1200,6 +1226,8 @@ struct AnimalDisplayData: Identifiable, Equatable {
         self.paddockName = herd.paddockName
         self.currentWeight = herd.currentWeight
         self.additionalInfo = herd.additionalInfo
+        self.totalValue = valuation?.netRealizableValue ?? 0
+        self.pricePerKg = valuation?.pricePerKg ?? 0
     }
 }
 
@@ -1207,67 +1235,121 @@ struct AnimalDisplayData: Identifiable, Equatable {
 // Performance: Uses plain struct instead of SwiftData model to avoid observation overhead
 struct LightweightAnimalCard: View {
     let data: AnimalDisplayData
+    @State private var showingSellSheet = false
     
     var body: some View {
-        NavigationLink(destination: HerdDetailView(herdId: data.id)) {
-            HStack(spacing: 12) {
-                // Left: Animal info
-                VStack(alignment: .leading, spacing: 6) {
-                    // Name
+        VStack(alignment: .leading, spacing: 12) {
+            // Top Row: Name and Chevron (tappable)
+            NavigationLink(destination: HerdDetailView(herdId: data.id)) {
+                HStack {
                     Text(data.name)
                         .font(Theme.headline)
                         .foregroundStyle(Theme.accent)
                         .lineLimit(1)
                     
-                    // Breed & Category
-                    Text("\(data.breed) • \(data.category)")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                        .lineLimit(1)
+                    Spacer()
                     
-                    // Paddock location
-                    if let paddock = data.paddockName, !paddock.isEmpty {
-                        HStack(spacing: 4) {
-                            Image(systemName: "map.fill")
-                                .font(.system(size: 10))
-                            Text(paddock)
-                        }
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText.opacity(0.8))
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                }
+            }
+            .buttonStyle(PlainButtonStyle())
+            
+            // Divider
+            Rectangle()
+                .frame(height: 1)
+                .foregroundStyle(Theme.separator.opacity(0.15))
+            
+            // Row 2: Breed/Category and Total Value
+            HStack {
+                Text("\(data.breed) • \(data.category)")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                    .lineLimit(1)
+                
+                Spacer()
+                
+                if data.totalValue > 0 {
+                    Text("$\(Int(data.totalValue))")
+                        .font(Theme.headline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Theme.accent)
+                }
+            }
+            
+            // Row 3: Paddock and Weight/Price
+            HStack {
+                if let paddock = data.paddockName, !paddock.isEmpty {
+                    HStack(spacing: 4) {
+                        Image(systemName: "map.fill")
+                            .font(.system(size: 12))
+                        Text(paddock)
                     }
-                    
-                    // NLIS tag (compact)
-                    if let info = data.additionalInfo, !info.isEmpty {
-                        Text(info)
-                            .font(.system(size: 10))
-                            .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                            .lineLimit(1)
-                    }
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
                 }
                 
                 Spacer()
                 
-                // Right: Weight & Chevron (no valuation to keep it fast)
-                VStack(alignment: .trailing, spacing: 6) {
-                    Text("\(Int(data.currentWeight)) kg")
-                        .font(Theme.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundStyle(Theme.primaryText)
+                HStack(spacing: 4) {
+                    Text("\(Int(data.currentWeight))kg")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
                     
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                    if data.pricePerKg > 0 {
+                        Text("@ $\(String(format: "%.2f", data.pricePerKg))")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
                 }
             }
-            .padding(12)
-            .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(Theme.separator.opacity(0.2), lineWidth: 1)
-            )
+            
+            // Row 4: NLIS tag and Sell button
+            HStack {
+                if let info = data.additionalInfo, !info.isEmpty {
+                    Text(info)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                // Sell button - matching herd card style
+                Button {
+                    HapticManager.tap()
+                    showingSellSheet = true
+                } label: {
+                    Text("Sell")
+                        .font(.system(size: 12))
+                        .fontWeight(.medium)
+                        .foregroundStyle(Theme.accent)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .fill(Theme.accent.opacity(0.1))
+                        )
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 6, style: .continuous)
+                                .stroke(Theme.accent, lineWidth: 0.8)
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .buttonStyle(PlainButtonStyle())
+        .padding(12)
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(Theme.separator.opacity(0.2), lineWidth: 1)
+        )
+        .sheet(isPresented: $showingSellSheet) {
+            SellStockView(preselectedHerdId: data.id)
+        }
     }
 }
 

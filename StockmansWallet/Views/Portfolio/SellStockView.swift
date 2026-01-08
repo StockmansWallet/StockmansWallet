@@ -12,8 +12,8 @@ import SwiftData
 struct SellStockView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    // Performance: Only query unsold herds (headCount > 1), not individual animals
-    @Query(filter: #Predicate<HerdGroup> { !$0.isSold && $0.headCount > 1 }, sort: \HerdGroup.updatedAt, order: .reverse) private var activeHerds: [HerdGroup]
+    // Performance: Query all unsold herds and individual animals for selling
+    @Query(filter: #Predicate<HerdGroup> { !$0.isSold }, sort: \HerdGroup.updatedAt, order: .reverse) private var activeHerds: [HerdGroup]
     @Query private var preferences: [UserPreferences]
     
     // Debug: Pass herd ID instead of object to avoid SwiftData context issues
@@ -100,14 +100,14 @@ struct SellStockView: View {
                         } else {
                             // Sale form
                             VStack(alignment: .leading, spacing: 24) {
-                                // Debug: Select Herd - Full width, searchable picker
+                                // Debug: Select Herd/Animal - Full width, searchable picker
                                 VStack(alignment: .leading, spacing: 8) {
-                                    Text("Select Herd")
+                                    Text("Select Stock")
                                         .font(Theme.headline)
                                         .foregroundStyle(Theme.primaryText)
                                     
                                     Menu {
-                                        // Debug: Searchable menu with all active herds
+                                        // Debug: Searchable menu with all active herds and individual animals
                                         ForEach(activeHerds, id: \.id) { herd in
                                             Button {
                                                 HapticManager.tap()
@@ -131,7 +131,7 @@ struct SellStockView: View {
                                         }
                                     } label: {
                                         HStack {
-                                            Text(selectedHerd?.name ?? "Choose herd to sell")
+                                            Text(selectedHerd?.name ?? "Choose stock to sell")
                                                 .font(Theme.body)
                                                 .foregroundStyle(selectedHerd == nil ? Theme.secondaryText : Theme.primaryText)
                                             Spacer()
@@ -165,22 +165,36 @@ struct SellStockView: View {
                                     
                                     // Debug: Head sold and Sale date side by side to save space
                                     HStack(spacing: 12) {
-                                        // Head sold
+                                        // Head sold (stepper for herds, static for individual animals)
                                         VStack(alignment: .leading, spacing: 8) {
                                             Text("Head Sold")
                                                 .font(Theme.headline)
                                                 .foregroundStyle(Theme.primaryText)
                                             
-                                            Stepper(value: $headSold, in: 1...herd.headCount, step: 1) {
-                                                Text("\(headSold)")
-                                                    .font(Theme.headline)
-                                                    .foregroundStyle(Theme.primaryText)
-                                            }
-                                            .padding()
-                                            .background(Theme.inputFieldBackground)
-                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                            .onChange(of: headSold) { _, _ in
-                                                calculateTotalPrice()
+                                            if herd.headCount > 1 {
+                                                // Stepper for herds - allow partial sales
+                                                Stepper(value: $headSold, in: 1...herd.headCount, step: 1) {
+                                                    Text("\(headSold)")
+                                                        .font(Theme.headline)
+                                                        .foregroundStyle(Theme.primaryText)
+                                                }
+                                                .padding()
+                                                .background(Theme.inputFieldBackground)
+                                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                                .onChange(of: headSold) { _, _ in
+                                                    calculateTotalPrice()
+                                                }
+                                            } else {
+                                                // Static display for individual animals
+                                                HStack {
+                                                    Text("1 head")
+                                                        .font(Theme.headline)
+                                                        .foregroundStyle(Theme.primaryText)
+                                                    Spacer()
+                                                }
+                                                .padding()
+                                                .background(Theme.inputFieldBackground)
+                                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                             }
                                         }
                                         .frame(maxWidth: .infinity)
