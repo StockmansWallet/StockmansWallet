@@ -67,10 +67,10 @@ struct OnboardingView: View {
                     )
                     
                 case .onboardingPages:
-                    // Debug: Branching onboarding flow based on user role (4 pages total)
-                    // Green Path (Farmer): UserType → Property → Welcome → Subscription (4 pages)
-                    // Pink Path (Advisory): UserType → Company → Welcome → Subscription (4 pages)
-                    // Welcome & Subscription pages are SHARED between both paths
+                    // Debug: Branching onboarding flow based on user role (3 pages for beta)
+                    // Green Path (Farmer): UserType → Property → Welcome (3 pages)
+                    // Pink Path (Advisory): UserType → Company → Welcome (3 pages)
+                    // Beta: Subscription page hidden - users get free access
                     // Name/email collected in Sign Up, Security/Privacy in Terms sheet
                     Group {
                         switch currentPage {
@@ -96,18 +96,23 @@ struct OnboardingView: View {
                                 )
                             }
                         case 2:
-                            // Third page: Welcome/Completion (SHARED - both paths)
-                            // Debug: Celebrates completion before subscription selection
+                            // Third page: Welcome/Completion (SHARED - both paths, final page for beta)
+                            // Debug: Beta testing - completes onboarding directly without subscription selection
                             WelcomeCompletionPage(
                                 userPrefs: $userPrefs,
-                                currentPage: $currentPage
+                                currentPage: $currentPage,
+                                onComplete: saveAndComplete
                             )
+                        // Debug: Case 3 (Subscription page) hidden for beta testing
+                        // TODO: Restore for production launch
+                        /*
                         case 3:
                             // Fourth page: Subscription/Pricing (SHARED - final page)
                             SubscriptionView(
                                 userPrefs: $userPrefs,
                                 onComplete: saveAndComplete
                             )
+                        */
                         default:
                             // Fallback to first page
                             UserTypeSelectionPage(

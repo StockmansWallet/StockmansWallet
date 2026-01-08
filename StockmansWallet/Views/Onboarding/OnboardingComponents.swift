@@ -17,12 +17,13 @@ struct OnboardingPageTemplate<Content: View>: View {
     let title: String
     let subtitle: String
     @Binding var currentPage: Int
-    let nextPage: Int
+    let nextPage: Int?  // Debug: Optional nextPage for custom completion flow
     var showBack: Bool = true
     var isValid: Bool = true // Default to true for optional pages
     var isLastPage: Bool = false // Set to true for the final page
     var totalPages: Int = 4 // Debug: Total pages in flow (4 pages for both farmer and advisory paths)
     var onComplete: (() -> Void)? = nil // Optional completion handler for last page
+    var onCustomContinue: (() -> Void)? = nil // Debug: Optional custom continue handler (for beta testing)
     @ViewBuilder let content: Content
     
     // Metrics per HIG
@@ -150,6 +151,25 @@ struct OnboardingPageTemplate<Content: View>: View {
                     .accessibilityLabel("Complete onboarding setup")
                     .padding(.horizontal, 20)
                     .padding(.bottom, 20)
+                } else if let customContinue = onCustomContinue {
+                    // Debug: Custom continue handler for beta testing (skips subscription page)
+                    Button(action: {
+                        HapticManager.tap()
+                        guard isValid else {
+                            HapticManager.error()
+                            return
+                        }
+                        customContinue()
+                    }) {
+                        Text("Get Started")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(Theme.PrimaryButtonStyle())
+                    .disabled(!isValid)
+                    .opacity(isValid ? 1.0 : 0.5)
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                    .accessibilityLabel("Get started with the app")
                 } else {
                     // Debug: Button with opacity for visual feedback matching UserTypeSelectionPage
                     Button(action: {
@@ -158,8 +178,10 @@ struct OnboardingPageTemplate<Content: View>: View {
                             HapticManager.error()
                             return
                         }
-                        withAnimation {
-                            currentPage = nextPage
+                        if let next = nextPage {
+                            withAnimation {
+                                currentPage = next
+                            }
                         }
                     }) {
                         Text("Next")

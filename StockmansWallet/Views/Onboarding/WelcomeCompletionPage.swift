@@ -11,10 +11,11 @@ import SwiftUI
 struct WelcomeCompletionPage: View {
     @Binding var userPrefs: UserPreferences
     @Binding var currentPage: Int
+    var onComplete: () -> Void // Debug: Beta testing - complete onboarding directly
     
-    // Debug: Both paths have 4 pages (About You removed, captured in Sign Up)
+    // Debug: Both paths now have 3 pages (Subscription hidden for beta)
     private var totalPages: Int {
-        4
+        3
     }
     
     // Debug: Personalized greeting
@@ -30,10 +31,11 @@ struct WelcomeCompletionPage: View {
             title: greeting,
             subtitle: "You're all set to get started",
             currentPage: $currentPage,
-            nextPage: 3, // Next: Subscription page (now page 3 after removing About You)
+            nextPage: nil, // Debug: Beta testing - no next page, complete directly
             showBack: false, // Debug: No back button on success page
             isValid: true,
-            totalPages: totalPages
+            totalPages: totalPages,
+            onCustomContinue: onComplete // Debug: Complete onboarding on continue
         ) {
             // Debug: Clean success screen with icon, message, and feature highlights
             VStack(spacing: 32) {

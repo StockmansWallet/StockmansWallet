@@ -114,19 +114,15 @@ struct SubscriptionView: View {
         }
     }
     
-    // Debug: Auto-select appropriate tier based on role and farm size
+    // Debug: Auto-select appropriate tier based on role
     init(userPrefs: Binding<UserPreferences>, onComplete: @escaping () -> Void) {
         self._userPrefs = userPrefs
         self.onComplete = onComplete
         
-        // Auto-select tier based on role and farm size
+        // Auto-select tier based on role (always default to free tier for farmers)
         if userPrefs.wrappedValue.userRole == .farmerGrazier {
-            // Debug: Farm size determines tier for farmers
-            if userPrefs.wrappedValue.farmSize == "over100" {
-                self._selectedTier = State(initialValue: .professionalFarmer)
-            } else {
-                self._selectedTier = State(initialValue: .smallFarmerFree)
-            }
+            // Debug: Always default to Starter tier for farmers
+            self._selectedTier = State(initialValue: .smallFarmerFree)
         } else {
             self._selectedTier = State(initialValue: .advisoryFree)
         }
@@ -156,8 +152,7 @@ struct SubscriptionView: View {
                                     HapticManager.tap()
                                     selectedTier = tier
                                 },
-                                isPaginated: true,
-                                farmSize: userPrefs.farmSize
+                                isPaginated: true
                             )
                             .padding(.horizontal, 20)
                             .tag(tier)
@@ -191,8 +186,7 @@ struct SubscriptionView: View {
                                     tier: tier,
                                     isSelected: true,
                                     onSelect: {},
-                                    isPaginated: false,
-                                    farmSize: userPrefs.farmSize
+                                    isPaginated: false
                                 )
                             }
                         }
@@ -283,13 +277,6 @@ struct SubscriptionTierCard: View {
     let isSelected: Bool
     let onSelect: () -> Void
     var isPaginated: Bool = false // Debug: Different layout for paginated vs single view
-    var farmSize: String? = nil // Debug: Farm size to determine if tier is available
-    
-    // Debug: Check if this tier is disabled based on farm size
-    private var isDisabled: Bool {
-        // Starter plan is disabled if farm size is over 100 head
-        return tier == .smallFarmerFree && farmSize == "over100"
-    }
     
     var body: some View {
         Button(action: onSelect) {
@@ -297,25 +284,6 @@ struct SubscriptionTierCard: View {
             ZStack(alignment: .top) {
                 // Main card content with consistent spacing
                 VStack(alignment: .leading, spacing: 12) {
-                    // Debug: Show disabled message if tier is not available
-                    if isDisabled {
-                        HStack(spacing: 8) {
-                            Image(systemName: "info.circle.fill")
-                                .foregroundStyle(Theme.secondaryText)
-                                .font(.caption)
-                            Text("Your herd size requires Pro for unlimited tracking")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                                .multilineTextAlignment(.leading)
-                        }
-                        .padding(12)
-                        .background(
-                            RoundedRectangle(cornerRadius: Theme.cornerRadius * 0.75, style: .continuous)
-                                .fill(Theme.secondaryText.opacity(0.1))
-                        )
-                        .padding(.bottom, 4)
-                    }
-                    
                     // Tier name - centered for paginated
                     Text(tier.rawValue)
                         .font(.system(size: 22, weight: .bold))
@@ -411,8 +379,6 @@ struct SubscriptionTierCard: View {
             )
         }
         .buttonStyle(.plain)
-        .disabled(isDisabled) // Debug: Prevent interaction with disabled tier
-        .opacity(isDisabled ? 0.5 : 1.0) // Debug: Visual indicator that tier is disabled
     }
 }
 

@@ -41,7 +41,7 @@ struct PrimaryPropertyPage: View {
     
     // Debug: Property onboarding steps
     enum PropertyStep {
-        case essentials      // Step 1: Name, State, Herd Size
+        case essentials      // Step 1: Name, State
         case details         // Step 2: PIC, Address, Role (optional)
         case additional      // Step 3: Add more properties (optional)
     }
@@ -62,8 +62,8 @@ struct PrimaryPropertyPage: View {
     private var canProceedFromCurrentStep: Bool {
         switch propertyStep {
         case .essentials:
-            // Step 1: Only name, state, and herd size required
-            return !propertyName.isEmpty && !state.isEmpty && herdSize != nil
+            // Step 1: Only name and state required
+            return !propertyName.isEmpty && !state.isEmpty
         case .details:
             // Step 2: All optional, can always proceed
             return true
@@ -272,89 +272,51 @@ struct PrimaryPropertyPage: View {
                 .padding(.horizontal, 20)
             }
             
-            // Herd Size Section (determines subscription)
-            // Debug: Updated to use checkmark selection instead of radio buttons
+            // Your Role Section
             VStack(alignment: .leading, spacing: 12) {
-                Text("Herd Size")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                    .padding(.horizontal, 20)
-                
-                VStack(spacing: 12) {
-                    // Less than 100 Head option
-                    Button(action: {
-                        HapticManager.tap()
-                        herdSize = "under100"
-                    }) {
-                        HStack(spacing: 16) {
-                            // Debug: Checkbox indicator on the left (standard checkbox pattern)
-                            Image(systemName: herdSize == "under100" ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(herdSize == "under100" ? Theme.accent : Theme.secondaryText.opacity(0.5))
-                                .font(.system(size: 24))
-                            
-                            // Debug: Text content
-                            Text("Less than 100 Head")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.primaryText)
-                                .fontWeight(herdSize == "under100" ? .semibold : .regular)
-                            
-                            Spacer()
-                        }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                                .fill(Theme.cardBackground)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                                .strokeBorder(
-                                    herdSize == "under100" ? Theme.accent.opacity(0.5) : Color.white.opacity(0.05),
-                                    lineWidth: 1
-                                )
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("Less than 100 head")
-                    .accessibilityAddTraits(herdSize == "under100" ? [.isSelected] : [])
-                    
-                    // More than 100 Head option
-                    Button(action: {
-                        HapticManager.tap()
-                        herdSize = "over100"
-                    }) {
-                        HStack(spacing: 16) {
-                            // Debug: Checkbox indicator on the left (standard checkbox pattern)
-                            Image(systemName: herdSize == "over100" ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(herdSize == "over100" ? Theme.accent : Theme.secondaryText.opacity(0.5))
-                                .font(.system(size: 24))
-                            
-                            // Debug: Text content
-                            Text("More than 100 Head")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.primaryText)
-                                .fontWeight(herdSize == "over100" ? .semibold : .regular)
-                            
-                            Spacer()
-                        }
-                        .padding(16)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .background(
-                            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                                .fill(Theme.cardBackground)
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                                .strokeBorder(
-                                    herdSize == "over100" ? Theme.accent.opacity(0.5) : Color.white.opacity(0.05),
-                                    lineWidth: 1
-                                )
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .accessibilityLabel("More than 100 head")
-                    .accessibilityAddTraits(herdSize == "over100" ? [.isSelected] : [])
+                // Debug: Label with smaller optional indicator
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text("Your Role")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Text("*Optional")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
                 }
+                .padding(.horizontal, 20)
+                
+                Button(action: {
+                    HapticManager.tap()
+                    showingRolePicker = true
+                    // Initialize temp values with current selection
+                    if let currentRole = role {
+                        if propertyRoles.contains(currentRole) {
+                            tempSelectedRole = currentRole
+                            isOtherSelected = false
+                        } else {
+                            tempSelectedRole = nil
+                            tempCustomRole = currentRole
+                            isOtherSelected = true
+                        }
+                    } else {
+                        tempSelectedRole = nil
+                        tempCustomRole = ""
+                        isOtherSelected = false
+                    }
+                }) {
+                    HStack {
+                        Text(role ?? "Select role")
+                            .font(Theme.body)
+                            .foregroundStyle(role == nil ? Theme.secondaryText : Theme.primaryText)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .foregroundStyle(Theme.secondaryText)
+                            .font(.caption)
+                    }
+                }
+                .buttonStyle(Theme.RowButtonStyle())
+                .accessibilityLabel("Select role")
+                .accessibilityValue(role ?? "Not selected")
                 .padding(.horizontal, 20)
             }
         }
@@ -414,54 +376,6 @@ struct PrimaryPropertyPage: View {
                     .accessibilityLabel("Property address")
                     .accessibilityHint("Optional")
                     .padding(.horizontal, 20)
-            }
-            
-            // Your Role Section
-            VStack(alignment: .leading, spacing: 12) {
-                // Debug: Label with smaller optional indicator
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("Your Role")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                    Text("*Optional")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                }
-                .padding(.horizontal, 20)
-                
-                Button(action: {
-                    HapticManager.tap()
-                    showingRolePicker = true
-                    // Initialize temp values with current selection
-                    if let currentRole = role {
-                        if propertyRoles.contains(currentRole) {
-                            tempSelectedRole = currentRole
-                            isOtherSelected = false
-                        } else {
-                            tempSelectedRole = nil
-                            tempCustomRole = currentRole
-                            isOtherSelected = true
-                        }
-                    } else {
-                        tempSelectedRole = nil
-                        tempCustomRole = ""
-                        isOtherSelected = false
-                    }
-                }) {
-                    HStack {
-                        Text(role ?? "Select role")
-                            .font(Theme.body)
-                            .foregroundStyle(role == nil ? Theme.secondaryText : Theme.primaryText)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .foregroundStyle(Theme.secondaryText)
-                            .font(.caption)
-                    }
-                }
-                .buttonStyle(Theme.RowButtonStyle())
-                .accessibilityLabel("Select role")
-                .accessibilityValue(role ?? "Not selected")
-                .padding(.horizontal, 20)
             }
         }
     }
