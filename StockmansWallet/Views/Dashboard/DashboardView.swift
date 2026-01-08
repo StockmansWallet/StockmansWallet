@@ -231,22 +231,22 @@ struct DashboardView: View {
                     // Debug: Load custom background from document directory
                     CustomParallaxImageView(
                         imageName: imageName,
-                        intensity: 25,           // Movement amount (20-40)
-                        opacity: 0.5,            // Background opacity
-                        scale: 0.5,              // Image takes 50% of screen height
-                        verticalOffset: -60,     // Move image up to show more middle/lower area
-                        blur: 0                  // BG Image Blur radius
+                        intensity: 25,                          // Movement amount (20-40)
+                        opacity: Theme.backgroundImageOpacity,  // Background opacity (from Theme)
+                        scale: 0.5,                             // Image takes 50% of screen height
+                        verticalOffset: -60,                    // Move image up to show more middle/lower area
+                        blur: 0                                 // BG Image Blur radius
                     )
                     .id("custom_\(imageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
                 } else {
                     // Debug: Load built-in background from Assets
                     ParallaxImageView(
                         imageName: imageName,
-                        intensity: 25,           // Movement amount (20-40)
-                        opacity: 0.5,            // Background opacity
-                        scale: 0.5,              // Image takes 50% of screen height
-                        verticalOffset: -60,     // Move image up to show more middle/lower area
-                        blur: 0                  // BG Image Blur radius
+                        intensity: 25,                          // Movement amount (20-40)
+                        opacity: Theme.backgroundImageOpacity,  // Background opacity (from Theme)
+                        scale: 0.5,                             // Image takes 50% of screen height
+                        verticalOffset: -60,                    // Move image up to show more middle/lower area
+                        blur: 0                                 // BG Image Blur radius
                     )
                     .id("builtin_\(imageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
                 }

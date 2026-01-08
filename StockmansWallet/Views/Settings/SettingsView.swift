@@ -60,10 +60,10 @@ struct SettingsView: View {
                 }
                 .listSectionSeparator(.hidden)
                 
-                // MARK: - Section 2: Appearance & Notifications
+                // MARK: - Section 2: Dashboard & Notifications
                 Section {
                     NavigationLink(destination: AppearanceSettingsView()) {
-                        SettingsListRow(icon: "paintbrush.fill", title: "Appearance", subtitle: nil)
+                        SettingsListRow(icon: "square.grid.2x2.fill", title: "Dashboard", subtitle: nil)
                     }
                     .listRowBackground(Theme.cardBackground)
                     

@@ -41,6 +41,11 @@ struct Theme {
     /// Much darker than standard backgroundColor to create stronger contrast
     static let noBackgroundColor = Color(hex: "0A0908")
     
+    /// Debug: Background image opacity for dashboard parallax images
+    /// Rule #0: Single source of truth for background image transparency
+    /// Range: 0.0 (fully transparent) to 1.0 (fully opaque)
+    static let backgroundImageOpacity: CGFloat = 0.4
+    
     /// Main gradient background - orange accent radiating from top
     /// Debug: Simple radial gradient - adjust opacity to control strength of orange glow
     @ViewBuilder

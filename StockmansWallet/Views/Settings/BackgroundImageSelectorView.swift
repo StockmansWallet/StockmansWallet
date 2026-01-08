@@ -73,15 +73,17 @@ struct BackgroundImageSelectorView: View {
                     .id("\(previewImageName ?? "none")_\(previewIsCustom)") // Debug: Force recreation when background changes
                 
                 // Debug: Scrollable content panel - slides up over the fixed background
+                // Aligned to bottom for consistent positioning
                 ScrollView {
                     VStack(spacing: 0) {
-                        // Debug: Top spacing to show background preview area - reduced to start higher on screen
-                        Color.clear
-                            .frame(height: 100)
+                        // Debug: Spacer pushes content panel to the bottom, revealing background at top
+                        Spacer()
+                            .frame(minHeight: 60) // Minimum spacing to always show some background
                         
                         // Debug: Content panel with rounded top corners - scrolls up over background
                         contentPanel(screenHeight: geometry.size.height)
                     }
+                    .frame(minHeight: geometry.size.height) // Ensure VStack fills available height
                 }
                 .scrollIndicators(.visible)
             }
@@ -158,45 +160,49 @@ struct BackgroundImageSelectorView: View {
                 .accessibilityHint("Opens your photo library to select a custom background image")
             }
         }
-        .padding(.bottom, 150) // Debug: Extra bottom padding to ensure content extends to screen bottom
+        .padding(.bottom, 20) // Debug: Minimal bottom padding
         .background(
             // Debug: Flat rounded container background (no gradient for settings pages)
-            // Uses sheetCornerRadius (32pt) for large panel surfaces
-            UnevenRoundedRectangle(
-                topLeadingRadius: Theme.sheetCornerRadius,
-                topTrailingRadius: Theme.sheetCornerRadius,
-                style: .continuous
-            )
-            .fill(Theme.backgroundColor)
-            .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
+            // Extends to bottom edge
+            GeometryReader { geo in
+                UnevenRoundedRectangle(
+                    topLeadingRadius: Theme.sheetCornerRadius,
+                    topTrailingRadius: Theme.sheetCornerRadius,
+                    style: .continuous
+                )
+                .fill(Theme.backgroundColor)
+                .frame(height: geo.size.height + 100) // Debug: Extend beyond container to eliminate gaps
+                .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
+            }
+            .ignoresSafeArea(edges: .bottom)
         )
     }
     
     // MARK: - Background Preview
     
-    /// Debug: Background preview - show full opacity for clear preview, matches dashboard layout
+    /// Debug: Background preview - matches dashboard opacity exactly for accurate preview
     @ViewBuilder
     private var backgroundPreview: some View {
         if let imageName = previewImageName {
             if previewIsCustom {
-                // Debug: Custom image from document directory - full opacity for preview
+                // Debug: Custom image from document directory - uses Theme constant for consistent opacity
                 CustomParallaxImageView(
                     imageName: imageName,
-                    intensity: 25,           // Movement amount (20-40)
-                    opacity: 0.9,            // Higher opacity for preview visibility
-                    scale: 0.5,              // Image takes 50% of screen height
-                    verticalOffset: -60,     // Move image up to show more middle/lower area
-                    blur: 0                  // No blur
+                    intensity: 25,                          // Movement amount (20-40)
+                    opacity: Theme.backgroundImageOpacity,  // Background opacity (from Theme)
+                    scale: 0.5,                             // Image takes 50% of screen height
+                    verticalOffset: -60,                    // Move image up to show more middle/lower area
+                    blur: 0                                 // No blur
                 )
             } else {
-                // Debug: Built-in image from assets - full opacity for preview
+                // Debug: Built-in image from assets - uses Theme constant for consistent opacity
                 ParallaxImageView(
                     imageName: imageName,
-                    intensity: 25,           // Movement amount (20-40)
-                    opacity: 0.9,            // Higher opacity for preview visibility
-                    scale: 0.5,              // Image takes 50% of screen height
-                    verticalOffset: -60,     // Move image up to show more middle/lower area
-                    blur: 0                  // No blur
+                    intensity: 25,                          // Movement amount (20-40)
+                    opacity: Theme.backgroundImageOpacity,  // Background opacity (from Theme)
+                    scale: 0.5,                             // Image takes 50% of screen height
+                    verticalOffset: -60,                    // Move image up to show more middle/lower area
+                    blur: 0                                 // No blur
                 )
             }
         } else {
