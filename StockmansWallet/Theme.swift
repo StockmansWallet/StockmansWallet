@@ -189,20 +189,18 @@ struct StitchedCard: ViewModifier {
         content
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .fill(Color.white.opacity(0.02))
+                    .fill(Theme.cardBackground)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                     .strokeBorder(
-                        Color.white.opacity(0),
+                        Theme.separator.opacity(0.2),
                         style: StrokeStyle(
                             lineWidth: 1,
-                            lineCap: .round,
-                            // dash: [4, 4] // Subtle stitching pattern: 6pt dash, 6pt gap
+                            lineCap: .round
                         )
                     )
             )
-         
     }
 }
 
