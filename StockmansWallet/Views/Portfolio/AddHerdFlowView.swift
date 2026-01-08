@@ -16,7 +16,8 @@ struct AddHerdFlowView: View {
     
     @State private var currentStep = 1
     @State private var isMovingForward = true
-    @State private var herdName = ""
+    @State private var herdName = "" // Herd ID
+    @State private var herdNickname = "" // Optional nickname
     @State private var paddockLocation = ""
     @State private var selectedSpecies = "Cattle"
     @State private var selectedBreed = ""
@@ -176,7 +177,7 @@ struct AddHerdFlowView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         if currentStep == 1 {
-                            // Step 1: Location (name, paddock)
+                            // Step 1: ID & Location (herd ID, optional nickname, location)
                             locationContent
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         } else if currentStep == 2 {
@@ -309,29 +310,43 @@ struct AddHerdFlowView: View {
         }
     }
     
-    // MARK: - Step 1: Location
-    // Debug: Herd name and paddock location
+    // MARK: - Step 1: ID & Location
+    // Debug: Herd ID, optional nickname, and paddock location
     private var locationContent: some View {
         VStack(alignment: .leading, spacing: 24) {
             // Debug: Section header
-            Text("Location")
+            Text("ID & Location")
                 .font(Theme.title)
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, 8)
             
             VStack(alignment: .leading, spacing: 8) {
-                Text("Herd Name")
+                Text("Herd ID")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
-                TextField("e.g. North Paddock Herd", text: $herdName)
+                TextField("e.g. North Paddock", text: $herdName)
                     .textFieldStyle(AddHerdTextFieldStyle())
-                    .accessibilityLabel("Herd name")
+                    .accessibilityLabel("Herd ID")
             }
             
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 4) {
-                    Text("Paddock Location")
+                    Text("Herd Nickname")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Text("Optional")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                TextField("e.g. The Angus Mob", text: $herdNickname)
+                    .textFieldStyle(AddHerdTextFieldStyle())
+                    .accessibilityLabel("Herd nickname")
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 4) {
+                    Text("Location")
                         .font(Theme.headline)
                         .foregroundStyle(Theme.primaryText)
                     Text("Optional")
@@ -340,7 +355,7 @@ struct AddHerdFlowView: View {
                 }
                 TextField("e.g. North Paddock", text: $paddockLocation)
                     .textFieldStyle(AddHerdTextFieldStyle())
-                    .accessibilityLabel("Paddock location")
+                    .accessibilityLabel("Location")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -677,7 +692,7 @@ struct AddHerdFlowView: View {
     private var isStepValid: Bool {
         switch currentStep {
         case 1:
-            // Step 1: Location - only name is required
+            // Step 1: ID & Location - only herd ID is required
             return !herdName.isEmpty
         case 2:
             // Step 2: Species - species selection required

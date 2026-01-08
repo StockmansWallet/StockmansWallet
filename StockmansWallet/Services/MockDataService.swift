@@ -57,86 +57,102 @@ class MockDataService {
         // Debug: Generate individual tagged animals for testing searchable list
         // Debug: Expanded collection with varied breeds, categories, weights, and realistic NLIS tags
         let individualAnimals: [(name: String, breed: String, category: String, weight: Double, dwg: Double, paddock: String, tagInfo: String, daysAgo: Int, ageMonths: Int)] = [
-            // North Paddock - Breeding Cows (Angus)
-            ("Bessie #A123", "Angus", "Breeding Cow", 580.0, 0.2, "North Paddock", "NLIS: 982000123456789", -365, 48),
-            ("Matilda #A124", "Angus", "Breeding Cow", 565.0, 0.25, "North Paddock", "NLIS: 982000123456790", -365, 52),
-            ("Ruby #A125", "Angus", "Breeding Cow", 590.0, 0.18, "North Paddock", "NLIS: 982000123456791", -340, 45),
-            ("Pearl #A126", "Angus", "Breeding Cow", 572.0, 0.22, "North Paddock", "NLIS: 982000123456792", -365, 54),
-            ("Stella #A127", "Angus", "Breeding Cow", 555.0, 0.21, "North Paddock", "NLIS: 982000123456793", -320, 46),
-            ("Luna #A128", "Angus", "Breeding Cow", 568.0, 0.19, "North Paddock", "NLIS: 982000123456794", -365, 50),
-            ("Daisy #C789", "Angus", "Breeding Cow", 550.0, 0.2, "North Paddock", "NLIS: 982000345678901", -300, 49),
-            ("Rosie #A129", "Angus", "Breeding Cow", 585.0, 0.23, "North Paddock", "NLIS: 982000123456795", -310, 47),
+            // North Paddock - Breeding Cows (Angus) - Mix of nicknamed and ID-only
+            ("Bessie #A001", "Angus", "Breeding Cow", 580.0, 0.2, "North Paddock", "NLIS: 982000123456789", -365, 48),
+            ("Matilda #A002", "Angus", "Breeding Cow", 565.0, 0.25, "North Paddock", "NLIS: 982000123456790", -365, 52),
+            ("#A003", "Angus", "Breeding Cow", 590.0, 0.18, "North Paddock", "NLIS: 982000123456791", -340, 45), // No nickname
+            ("Pearl #A004", "Angus", "Breeding Cow", 572.0, 0.22, "North Paddock", "NLIS: 982000123456792", -365, 54),
+            ("#A005", "Angus", "Breeding Cow", 555.0, 0.21, "North Paddock", "NLIS: 982000123456793", -320, 46), // No nickname
+            ("Luna #A006", "Angus", "Breeding Cow", 568.0, 0.19, "North Paddock", "NLIS: 982000123456794", -365, 50),
+            ("#A007", "Angus", "Breeding Cow", 550.0, 0.2, "North Paddock", "NLIS: 982000345678901", -300, 49), // No nickname
+            ("Rosie #A008", "Angus", "Breeding Cow", 585.0, 0.23, "North Paddock", "NLIS: 982000123456795", -310, 47),
             
             // North Paddock - Bulls
-            ("Bull #B456", "Angus", "Bull", 920.0, 0.3, "North Paddock", "NLIS: 982000234567890", -400, 60),
-            ("Caesar #B457", "Angus", "Bull", 950.0, 0.28, "North Paddock", "NLIS: 982000234567891", -420, 72),
+            ("#B001", "Angus", "Bull", 920.0, 0.3, "North Paddock", "NLIS: 982000234567890", -400, 60), // No nickname
+            ("Caesar #B002", "Angus", "Bull", 950.0, 0.28, "North Paddock", "NLIS: 982000234567891", -420, 72),
             
-            // South Paddock - Yearling Steers (Hereford)
-            ("Rex #D012", "Hereford", "Yearling Steer", 420.0, 0.9, "South Paddock", "NLIS: 982000456789012", -300, 16),
-            ("Max #E345", "Hereford", "Yearling Steer", 395.0, 0.8, "South Paddock", "NLIS: 982000567890123", -290, 15),
-            ("Bandit #D013", "Hereford", "Yearling Steer", 410.0, 0.85, "South Paddock", "NLIS: 982000456789013", -300, 17),
-            ("Rocky #D014", "Hereford", "Yearling Steer", 405.0, 0.92, "South Paddock", "NLIS: 982000456789014", -280, 16),
-            ("Scout #D015", "Hereford", "Yearling Steer", 390.0, 0.88, "South Paddock", "NLIS: 982000456789015", -295, 15),
-            ("Ranger #D016", "Hereford", "Yearling Steer", 425.0, 0.91, "South Paddock", "NLIS: 982000456789016", -310, 18),
-            ("Boss #D017", "Hereford", "Yearling Steer", 415.0, 0.87, "South Paddock", "NLIS: 982000456789017", -285, 16),
+            // South Paddock - Yearling Steers (Hereford) - Mostly ID-only
+            ("#S001", "Hereford", "Yearling Steer", 420.0, 0.9, "South Paddock", "NLIS: 982000456789012", -300, 16), // No nickname
+            ("#S002", "Hereford", "Yearling Steer", 395.0, 0.8, "South Paddock", "NLIS: 982000567890123", -290, 15), // No nickname
+            ("#S003", "Hereford", "Yearling Steer", 410.0, 0.85, "South Paddock", "NLIS: 982000456789013", -300, 17), // No nickname
+            ("Rocky #S004", "Hereford", "Yearling Steer", 405.0, 0.92, "South Paddock", "NLIS: 982000456789014", -280, 16),
+            ("#S005", "Hereford", "Yearling Steer", 390.0, 0.88, "South Paddock", "NLIS: 982000456789015", -295, 15), // No nickname
+            ("#S006", "Hereford", "Yearling Steer", 425.0, 0.91, "South Paddock", "NLIS: 982000456789016", -310, 18), // No nickname
+            ("#S007", "Hereford", "Yearling Steer", 415.0, 0.87, "South Paddock", "NLIS: 982000456789017", -285, 16), // No nickname
             
-            // East Paddock - Weaners (Angus X Friesian)
-            ("Duke #F678", "Angus X Friesian", "Weaner Steer", 265.0, 1.1, "East Paddock", "NLIS: 982000678901234", -180, 8),
-            ("Rusty #G901", "Angus X Friesian", "Weaner Steer", 248.0, 1.0, "East Paddock", "NLIS: 982000789012345", -175, 7),
-            ("Sparky #F679", "Angus X Friesian", "Weaner Steer", 255.0, 1.15, "East Paddock", "NLIS: 982000678901235", -180, 8),
-            ("Dash #F680", "Angus X Friesian", "Weaner Steer", 270.0, 1.08, "East Paddock", "NLIS: 982000678901236", -170, 9),
-            ("Flash #F681", "Angus X Friesian", "Weaner Steer", 260.0, 1.12, "East Paddock", "NLIS: 982000678901237", -180, 8),
-            ("Bolt #F682", "Angus X Friesian", "Weaner Steer", 252.0, 1.05, "East Paddock", "NLIS: 982000678901238", -185, 7),
-            ("Ace #F683", "Angus X Friesian", "Weaner Steer", 268.0, 1.18, "East Paddock", "NLIS: 982000678901239", -175, 8),
-            ("Chip #F684", "Angus X Friesian", "Weaner Steer", 245.0, 1.02, "East Paddock", "NLIS: 982000678901240", -190, 7),
-            ("Buddy #F685", "Angus X Friesian", "Weaner Steer", 258.0, 1.09, "East Paddock", "NLIS: 982000678901241", -180, 8),
+            // East Paddock - Weaners (Angus X Friesian) - All ID-only
+            ("#W001", "Angus X Friesian", "Weaner Steer", 265.0, 1.1, "East Paddock", "NLIS: 982000678901234", -180, 8),
+            ("#W002", "Angus X Friesian", "Weaner Steer", 248.0, 1.0, "East Paddock", "NLIS: 982000789012345", -175, 7),
+            ("#W003", "Angus X Friesian", "Weaner Steer", 255.0, 1.15, "East Paddock", "NLIS: 982000678901235", -180, 8),
+            ("#W004", "Angus X Friesian", "Weaner Steer", 270.0, 1.08, "East Paddock", "NLIS: 982000678901236", -170, 9),
+            ("#W005", "Angus X Friesian", "Weaner Steer", 260.0, 1.12, "East Paddock", "NLIS: 982000678901237", -180, 8),
+            ("#W006", "Angus X Friesian", "Weaner Steer", 252.0, 1.05, "East Paddock", "NLIS: 982000678901238", -185, 7),
+            ("#W007", "Angus X Friesian", "Weaner Steer", 268.0, 1.18, "East Paddock", "NLIS: 982000678901239", -175, 8),
+            ("#W008", "Angus X Friesian", "Weaner Steer", 245.0, 1.02, "East Paddock", "NLIS: 982000678901240", -190, 7),
+            ("#W009", "Angus X Friesian", "Weaner Steer", 258.0, 1.09, "East Paddock", "NLIS: 982000678901241", -180, 8),
             
-            // West Paddock - Grown Steers (Charolais)
-            ("Blaze #H234", "Charolais", "Grown Steer", 485.0, 0.7, "West Paddock", "NLIS: 982000890123456", -120, 26),
-            ("Thunder #I567", "Charolais", "Grown Steer", 470.0, 0.6, "West Paddock", "NLIS: 982000901234567", -115, 24),
-            ("Titan #H235", "Charolais", "Grown Steer", 495.0, 0.72, "West Paddock", "NLIS: 982000890123457", -120, 28),
-            ("Atlas #H236", "Charolais", "Grown Steer", 478.0, 0.68, "West Paddock", "NLIS: 982000890123458", -125, 25),
-            ("Zeus #H237", "Charolais", "Grown Steer", 490.0, 0.71, "West Paddock", "NLIS: 982000890123459", -118, 27),
-            ("Apollo #H238", "Charolais", "Grown Steer", 482.0, 0.65, "West Paddock", "NLIS: 982000890123460", -122, 26),
+            // West Paddock - Grown Steers (Charolais) - Mix
+            ("Blaze #G001", "Charolais", "Grown Steer", 485.0, 0.7, "West Paddock", "NLIS: 982000890123456", -120, 26),
+            ("#G002", "Charolais", "Grown Steer", 470.0, 0.6, "West Paddock", "NLIS: 982000901234567", -115, 24), // No nickname
+            ("Titan #G003", "Charolais", "Grown Steer", 495.0, 0.72, "West Paddock", "NLIS: 982000890123457", -120, 28),
+            ("#G004", "Charolais", "Grown Steer", 478.0, 0.68, "West Paddock", "NLIS: 982000890123458", -125, 25), // No nickname
+            ("Zeus #G005", "Charolais", "Grown Steer", 490.0, 0.71, "West Paddock", "NLIS: 982000890123459", -118, 27),
+            ("#G006", "Charolais", "Grown Steer", 482.0, 0.65, "West Paddock", "NLIS: 982000890123460", -122, 26), // No nickname
             
-            // Central Paddock - Heifers (Murray Grey)
-            ("Rosie #J890", "Murray Grey", "Heifer", 340.0, 0.8, "Central Paddock", "NLIS: 982001012345678", -90, 14),
-            ("Lily #J891", "Murray Grey", "Heifer", 335.0, 0.82, "Central Paddock", "NLIS: 982001012345679", -92, 13),
-            ("Willow #J892", "Murray Grey", "Heifer", 345.0, 0.78, "Central Paddock", "NLIS: 982001012345680", -88, 15),
-            ("Poppy #J893", "Murray Grey", "Heifer", 338.0, 0.81, "Central Paddock", "NLIS: 982001012345681", -90, 14),
-            ("Ivy #J894", "Murray Grey", "Heifer", 342.0, 0.79, "Central Paddock", "NLIS: 982001012345682", -95, 14),
-            ("Hazel #J895", "Murray Grey", "Heifer", 330.0, 0.83, "Central Paddock", "NLIS: 982001012345683", -85, 13),
+            // Central Paddock - Heifers (Murray Grey) - All have nicknames
+            ("Rosie #H001", "Murray Grey", "Heifer", 340.0, 0.8, "Central Paddock", "NLIS: 982001012345678", -90, 14),
+            ("Lily #H002", "Murray Grey", "Heifer", 335.0, 0.82, "Central Paddock", "NLIS: 982001012345679", -92, 13),
+            ("Willow #H003", "Murray Grey", "Heifer", 345.0, 0.78, "Central Paddock", "NLIS: 982001012345680", -88, 15),
+            ("Poppy #H004", "Murray Grey", "Heifer", 338.0, 0.81, "Central Paddock", "NLIS: 982001012345681", -90, 14),
+            ("Ivy #H005", "Murray Grey", "Heifer", 342.0, 0.79, "Central Paddock", "NLIS: 982001012345682", -95, 14),
+            ("Hazel #H006", "Murray Grey", "Heifer", 330.0, 0.83, "Central Paddock", "NLIS: 982001012345683", -85, 13),
             
-            // River Paddock - Feeder Steers (Brahman)
-            ("Cooper #K100", "Brahman", "Feeder Steer", 365.0, 0.95, "River Paddock", "NLIS: 982001112345600", -150, 12),
-            ("Banjo #K101", "Brahman", "Feeder Steer", 358.0, 0.92, "River Paddock", "NLIS: 982001112345601", -155, 11),
-            ("Dusty #K102", "Brahman", "Feeder Steer", 370.0, 0.98, "River Paddock", "NLIS: 982001112345602", -148, 13),
-            ("Red #K103", "Brahman", "Feeder Steer", 362.0, 0.94, "River Paddock", "NLIS: 982001112345603", -152, 12),
-            ("Tucker #K104", "Brahman", "Feeder Steer", 368.0, 0.96, "River Paddock", "NLIS: 982001112345604", -150, 12),
+            // River Paddock - Feeder Steers (Brahman) - ID-only
+            ("#F001", "Brahman", "Feeder Steer", 365.0, 0.95, "River Paddock", "NLIS: 982001112345600", -150, 12),
+            ("#F002", "Brahman", "Feeder Steer", 358.0, 0.92, "River Paddock", "NLIS: 982001112345601", -155, 11),
+            ("#F003", "Brahman", "Feeder Steer", 370.0, 0.98, "River Paddock", "NLIS: 982001112345602", -148, 13),
+            ("#F004", "Brahman", "Feeder Steer", 362.0, 0.94, "River Paddock", "NLIS: 982001112345603", -152, 12),
+            ("#F005", "Brahman", "Feeder Steer", 368.0, 0.96, "River Paddock", "NLIS: 982001112345604", -150, 12),
             
             // Hill Paddock - Mixed Breeds (Speckle Park & Limousin)
-            ("Pepper #L200", "Speckle Park", "Yearling Steer", 398.0, 0.89, "Hill Paddock", "NLIS: 982001212345700", -270, 16),
-            ("Salt #L201", "Speckle Park", "Yearling Steer", 405.0, 0.91, "Hill Paddock", "NLIS: 982001212345701", -275, 17),
-            ("Storm #M300", "Limousin", "Grown Steer", 488.0, 0.73, "Hill Paddock", "NLIS: 982001312345800", -130, 27),
-            ("Bear #M301", "Limousin", "Grown Steer", 492.0, 0.69, "Hill Paddock", "NLIS: 982001312345801", -135, 28),
+            ("Freckle #S03", "Speckle Park", "Heifer", 335.0, 0.89, "Hill Top", "NLISL 982501100001103", -270, 16),
+            ("#L001", "Speckle Park", "Yearling Steer", 405.0, 0.91, "Hill Paddock", "NLIS: 982001212345701", -275, 17), // No nickname
+            ("Storm #L002", "Limousin", "Grown Steer", 488.0, 0.73, "Hill Paddock", "NLIS: 982001312345800", -130, 27),
+            ("#L003", "Limousin", "Grown Steer", 492.0, 0.69, "Hill Paddock", "NLIS: 982001312345801", -135, 28), // No nickname
             
             // Valley Paddock - Santa Gertrudis
-            ("Jasper #N400", "Santa Gertrudis", "Feeder Steer", 372.0, 0.97, "Valley Paddock", "NLIS: 982001412345900", -145, 13),
-            ("Copper #N401", "Santa Gertrudis", "Feeder Steer", 366.0, 0.93, "Valley Paddock", "NLIS: 982001412345901", -150, 12),
-            ("Russet #N402", "Santa Gertrudis", "Breeding Cow", 575.0, 0.24, "Valley Paddock", "NLIS: 982001412345902", -330, 51),
+            ("Jasper #V001", "Santa Gertrudis", "Feeder Steer", 372.0, 0.97, "Valley Paddock", "NLIS: 982001412345900", -145, 13),
+            ("#V002", "Santa Gertrudis", "Feeder Steer", 366.0, 0.93, "Valley Paddock", "NLIS: 982001412345901", -150, 12), // No nickname
+            ("Russet #V003", "Santa Gertrudis", "Breeding Cow", 575.0, 0.24, "Valley Paddock", "NLIS: 982001412345902", -330, 51),
             
-            // Home Paddock - Premium Wagyu
-            ("Kobe #P500", "Wagyu", "Grown Steer", 465.0, 0.62, "Home Paddock", "NLIS: 982001612346100", -200, 30),
-            ("Miyazaki #P501", "Wagyu", "Grown Steer", 472.0, 0.64, "Home Paddock", "NLIS: 982001612346101", -205, 31),
-            ("Hokkaido #P502", "Wagyu", "Heifer", 348.0, 0.76, "Home Paddock", "NLIS: 982001612346102", -100, 15),
+            // Home Paddock - Premium Wagyu - All have nicknames (premium stock)
+            ("Kobe #P001", "Wagyu", "Grown Steer", 465.0, 0.62, "Home Paddock", "NLIS: 982001612346100", -200, 30),
+            ("Miyazaki #P002", "Wagyu", "Grown Steer", 472.0, 0.64, "Home Paddock", "NLIS: 982001612346101", -205, 31),
+            ("Hokkaido #P003", "Wagyu", "Heifer", 348.0, 0.76, "Home Paddock", "NLIS: 982001612346102", -100, 15),
         ]
         
         // Debug: Iterate through individual animals with varied start dates for realistic data spread
         for animal in individualAnimals {
             let startDate = calendar.date(byAdding: .day, value: animal.daysAgo, to: Date()) ?? Date()
             
+            // Debug: Parse name to extract ID number and nickname
+            // Format: "Nickname #ID" or just "#ID" or just "Nickname"
+            var idNumber: String? = nil
+            var nickname: String = animal.name
+            
+            if let hashIndex = animal.name.firstIndex(of: "#") {
+                // Has an ID number
+                let beforeHash = animal.name[..<hashIndex].trimmingCharacters(in: .whitespaces)
+                let afterHash = animal.name[animal.name.index(after: hashIndex)...].trimmingCharacters(in: .whitespaces)
+                
+                if !afterHash.isEmpty {
+                    idNumber = String(afterHash)
+                    nickname = beforeHash.isEmpty ? "" : beforeHash
+                }
+            }
+            
             let individual = HerdGroup(
-                name: animal.name,
+                name: nickname,
                 species: "Cattle",
                 breed: animal.breed,
                 sex: animal.category.contains("Cow") || animal.category.contains("Heifer") ? "Female" : "Male",
@@ -146,7 +162,8 @@ class MockDataService {
                 initialWeight: animal.weight,
                 dailyWeightGain: animal.dwg,
                 isBreeder: animal.category.contains("Breeding") || animal.category.contains("Heifer"),
-                selectedSaleyard: preferences.defaultSaleyard
+                selectedSaleyard: preferences.defaultSaleyard,
+                animalIdNumber: idNumber
             )
             
             individual.createdAt = startDate

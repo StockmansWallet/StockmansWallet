@@ -15,7 +15,8 @@ struct AddIndividualAnimalView: View {
     
     @State private var currentStep = 1
     @State private var isMovingForward = true
-    @State private var animalName = ""
+    @State private var animalName = "" // Animal ID
+    @State private var animalNickname = "" // Optional nickname
     @State private var paddockName = ""
     @State private var selectedSpecies = "Cattle"
     @State private var selectedBreed = ""
@@ -151,7 +152,7 @@ struct AddIndividualAnimalView: View {
                 ScrollView {
                     VStack(spacing: 0) {
                         if currentStep == 1 {
-                            // Step 1: Location (name, paddock)
+                            // Step 1: ID & Location (animal ID, optional nickname, location)
                             locationContent
                                 .transition(isMovingForward ? .asymmetric(insertion: .move(edge: .trailing), removal: .move(edge: .leading)) : .asymmetric(insertion: .move(edge: .leading), removal: .move(edge: .trailing)))
                         } else if currentStep == 2 {
@@ -253,38 +254,52 @@ struct AddIndividualAnimalView: View {
         }
     }
     
-    // MARK: - Step 1: Location
-    // Debug: Animal name and paddock location
+    // MARK: - Step 1: ID & Location
+    // Debug: Animal ID, optional nickname, and paddock location
     private var locationContent: some View {
         VStack(alignment: .leading, spacing: 24) {
             // Debug: Section header
-            Text("Location")
+            Text("ID & Location")
                 .font(Theme.title)
                 .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .center)
                 .padding(.bottom, 8)
             
             VStack(alignment: .leading, spacing: 8) {
-                Text("Animal Name/Tag")
+                Text("Animal ID")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
-                TextField("e.g., TAG-001 or Bessie", text: $animalName)
+                TextField("e.g. S03 or A001", text: $animalName)
                     .textFieldStyle(AddHerdTextFieldStyle())
-                    .accessibilityLabel("Animal name")
+                    .accessibilityLabel("Animal ID")
             }
             
             VStack(alignment: .leading, spacing: 8) {
                 HStack(spacing: 4) {
-                    Text("Paddock Location")
+                    Text("Animal Nickname")
                         .font(Theme.headline)
                         .foregroundStyle(Theme.primaryText)
                     Text("Optional")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                 }
-                TextField("e.g., North Paddock", text: $paddockName)
+                TextField("e.g. Freckle", text: $animalNickname)
                     .textFieldStyle(AddHerdTextFieldStyle())
-                    .accessibilityLabel("Paddock location")
+                    .accessibilityLabel("Animal nickname")
+            }
+            
+            VStack(alignment: .leading, spacing: 8) {
+                HStack(spacing: 4) {
+                    Text("Location")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Text("Optional")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                TextField("e.g. North Paddock", text: $paddockName)
+                    .textFieldStyle(AddHerdTextFieldStyle())
+                    .accessibilityLabel("Location")
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -598,7 +613,7 @@ struct AddIndividualAnimalView: View {
     private var isStepValid: Bool {
         switch currentStep {
         case 1:
-            // Step 1: Location - only name is required
+            // Step 1: ID & Location - only animal ID is required
             return !animalName.isEmpty
         case 2:
             // Step 2: Species - species selection required
@@ -664,7 +679,7 @@ struct AddIndividualAnimalView: View {
         let isBreeder = selectedCategory.lowercased().contains("breeding") || selectedCategory.lowercased().contains("breeder")
         
         let herd = HerdGroup(
-            name: animalName,
+            name: animalNickname, // Nickname (optional, can be empty)
             species: selectedSpecies,
             breed: selectedBreed,
             sex: sex,
@@ -674,7 +689,8 @@ struct AddIndividualAnimalView: View {
             initialWeight: initialWeight,
             dailyWeightGain: dailyWeightGain,
             isBreeder: isBreeder,
-            selectedSaleyard: selectedSaleyard ?? prefs.defaultSaleyard
+            selectedSaleyard: selectedSaleyard ?? prefs.defaultSaleyard,
+            animalIdNumber: animalName.isEmpty ? nil : animalName // Animal ID
         )
         
         herd.paddockName = paddockName.isEmpty ? nil : paddockName

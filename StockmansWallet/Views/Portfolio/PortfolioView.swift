@@ -1209,7 +1209,7 @@ struct AssetRegisterHeader: View {
 // Performance: Simple struct to hold display data, breaking SwiftData observation
 struct AnimalDisplayData: Identifiable, Equatable {
     let id: UUID
-    let name: String
+    let displayName: String // Formatted name with ID number for individuals
     let breed: String
     let category: String
     let paddockName: String?
@@ -1220,7 +1220,7 @@ struct AnimalDisplayData: Identifiable, Equatable {
     
     init(from herd: HerdGroup, valuation: HerdValuation?) {
         self.id = herd.id
-        self.name = herd.name
+        self.displayName = herd.displayName // Uses computed property for formatting
         self.breed = herd.breed
         self.category = herd.category
         self.paddockName = herd.paddockName
@@ -1242,7 +1242,7 @@ struct LightweightAnimalCard: View {
             // Top Row: Name and Chevron (tappable)
             NavigationLink(destination: HerdDetailView(herdId: data.id)) {
                 HStack {
-                    Text(data.name)
+                    Text(data.displayName)
                         .font(Theme.headline)
                         .foregroundStyle(Theme.accent)
                         .lineLimit(1)

@@ -13,7 +13,8 @@ import SwiftData
 final class HerdGroup {
     // MARK: - Identification
     var id: UUID
-    var name: String // Paddock name or herd identifier
+    var name: String // Paddock name or herd identifier (for herds) OR nickname (for individual animals)
+    var animalIdNumber: String? // ID number for individual animals (e.g., "S03", "A123") - only used when headCount == 1
     var createdAt: Date
     var updatedAt: Date
     
@@ -69,10 +70,12 @@ final class HerdGroup {
         initialWeight: Double,
         dailyWeightGain: Double = 0.0,
         isBreeder: Bool = false,
-        selectedSaleyard: String? = nil
+        selectedSaleyard: String? = nil,
+        animalIdNumber: String? = nil
     ) {
         self.id = UUID()
         self.name = name
+        self.animalIdNumber = animalIdNumber
         self.createdAt = Date()
         self.updatedAt = Date()
         self.species = species
@@ -106,6 +109,22 @@ final class HerdGroup {
     
     // MARK: - Computed Properties
     // Debug: Lightweight computed properties for common data access patterns
+    
+    /// Display name for individual animals: "#ID 'Nickname'" or just "#ID" if no nickname
+    /// For herds: returns the name as-is
+    var displayName: String {
+        if headCount == 1, let idNumber = animalIdNumber {
+            // Individual animal with ID number
+            if !name.isEmpty && name != idNumber {
+                return "#\(idNumber) \"\(name)\""
+            } else {
+                return "#\(idNumber)"
+            }
+        } else {
+            // Herd or no ID number
+            return name
+        }
+    }
     
     /// Days the herd has been held (from creation to now or sold date)
     var daysHeld: Int {
