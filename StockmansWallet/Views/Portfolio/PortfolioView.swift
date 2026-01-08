@@ -1210,19 +1210,25 @@ struct AssetRegisterHeader: View {
 struct AnimalDisplayData: Identifiable, Equatable {
     let id: UUID
     let displayName: String // Formatted name with ID number for individuals
+    let species: String
     let breed: String
     let category: String
     let paddockName: String?
+    let selectedSaleyard: String?
     let currentWeight: Double
     let additionalInfo: String?
     let totalValue: Double // Pre-calculated valuation
     let pricePerKg: Double // Market price
+    let isBreeder: Bool
     
     init(from herd: HerdGroup, valuation: HerdValuation?) {
         self.id = herd.id
         self.displayName = herd.displayName // Uses computed property for formatting
+        self.species = herd.species
         self.breed = herd.breed
         self.category = herd.category
+        self.selectedSaleyard = herd.selectedSaleyard
+        self.isBreeder = herd.isBreeder
         self.paddockName = herd.paddockName
         self.currentWeight = herd.currentWeight
         self.additionalInfo = herd.additionalInfo
@@ -1241,81 +1247,85 @@ struct LightweightAnimalCard: View {
         VStack(alignment: .leading, spacing: 12) {
             // Top Row: Name and Chevron (tappable)
             NavigationLink(destination: HerdDetailView(herdId: data.id)) {
-                HStack {
-                    Text(data.displayName)
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.accent)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(alignment: .top) {
+                        Text(data.displayName)
+                            .font(Theme.headline)
+                            .foregroundStyle(Theme.accent)
+                            .lineLimit(1)
+                        Spacer()
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                    }
+                    
+                    // Row 2: Species/Breed/Category
+                    Text("\(data.species) | \(data.breed) | \(data.category)")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
                         .lineLimit(1)
                     
-                    Spacer()
+                    // Divider
+                    Rectangle()
+                        .frame(height: 1)
+                        .foregroundStyle(Theme.separator.opacity(0.15))
+                
+                    // Row 3: Location and Value
+                    HStack {
+                        if let paddock = data.paddockName, !paddock.isEmpty {
+                            HStack(spacing: 4) {
+                                Image(systemName: "map.fill")
+                                    .font(.system(size: 10))
+                                Text(paddock)
+                            }
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText.opacity(0.8))
+                        }
+                        Spacer()
+                        if data.totalValue > 0 {
+                            Text(data.totalValue, format: .currency(code: "AUD"))
+                                .font(Theme.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(Theme.accent)
+                        }
+                    }
                     
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                    // Row 4: Weight and Price
+                    Text("\(Int(data.currentWeight)) kg @ \(data.pricePerKg, format: .currency(code: "AUD"))")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
                 }
             }
             .buttonStyle(PlainButtonStyle())
             
-            // Divider
-            Rectangle()
-                .frame(height: 1)
-                .foregroundStyle(Theme.separator.opacity(0.15))
-            
-            // Row 2: Breed/Category and Total Value
-            HStack {
-                Text("\(data.breed) • \(data.category)")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                    .lineLimit(1)
-                
-                Spacer()
-                
-                if data.totalValue > 0 {
-                    Text("$\(Int(data.totalValue))")
-                        .font(Theme.headline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Theme.accent)
-                }
-            }
-            
-            // Row 3: Paddock and Weight/Price
-            HStack {
-                if let paddock = data.paddockName, !paddock.isEmpty {
-                    HStack(spacing: 4) {
-                        Image(systemName: "map.fill")
-                            .font(.system(size: 12))
-                        Text(paddock)
-                    }
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                }
-                
-                Spacer()
-                
+            // Breeding Info Row (if breeder)
+            if data.isBreeder {
                 HStack(spacing: 4) {
-                    Text("\(Int(data.currentWeight))kg")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                    
-                    if data.pricePerKg > 0 {
-                        Text("@ $\(String(format: "%.2f", data.pricePerKg))")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
+                    Image("chick")
+                        .resizable()
+                        .renderingMode(.template)
+                        .frame(width: 10, height: 10)
+                    Text("Breeder")
                 }
+                .font(.system(size: 10))
+                .foregroundStyle(Theme.secondaryText.opacity(0.6))
             }
             
-            // Row 4: NLIS tag and Sell button
-            HStack {
-                if let info = data.additionalInfo, !info.isEmpty {
-                    Text(info)
-                        .font(.system(size: 11))
-                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                        .lineLimit(1)
+            // Saleyard and Sell Button Row
+            HStack(alignment: .bottom) {
+                if let saleyard = data.selectedSaleyard, !saleyard.isEmpty {
+                    HStack(spacing: 4) {
+                        Image("property_icon")
+                            .resizable()
+                            .renderingMode(.template)
+                            .frame(width: 10, height: 10)
+                        Text(saleyard)
+                    }
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                    .lineLimit(1)
                 }
-                
                 Spacer()
-                
                 // Sell button - matching herd card style
                 Button {
                     HapticManager.tap()
@@ -1376,105 +1386,111 @@ struct EnhancedHerdCard: View {
     var body: some View {
         // Debug: Capture herd properties early to avoid potential SwiftData access issues
         let herdId = herd.id
-        let herdName = herd.name
+        let herdDisplayName = herd.displayName
         let herdHeadCount = herd.headCount
+        let herdSpecies = herd.species
+        let herdBreed = herd.breed
+        let herdCategory = herd.category
+        let herdLocation = herd.paddockName
         let herdSaleyard = herd.selectedSaleyard
+        let isBreeder = herd.isBreeder
         
-        VStack(alignment: .leading, spacing: 12) {
-            // Debug: Most content is tappable and navigates to detail
-            NavigationLink(destination: HerdDetailView(herdId: herdId)) {
-                VStack(alignment: .leading, spacing: 12) {
-                    // Top Row: Herd Name (left, orange) and Chevron (right)
-                    HStack {
-                        Text(herdName)
-                            .font(Theme.headline)
+        NavigationLink(destination: HerdDetailView(herdId: herdId)) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Top Row: Herd Name (left, orange) and Chevron (right)
+                HStack(alignment: .top) {
+                    Text(herdDisplayName)
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.accent)
+                        .lineLimit(1)
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                }
+                
+                // Row 2: Species/Breed/Category
+                Text("\(herdSpecies) | \(herdBreed) | \(herdCategory)")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                    .lineLimit(1)
+                
+                // Divider
+                Rectangle()
+                    .frame(height: 1)
+                    .foregroundStyle(Theme.separator.opacity(0.15))
+                
+                // Row 3: Location and Value
+                HStack {
+                    if let location = herdLocation, !location.isEmpty {
+                        HStack(spacing: 4) {
+                            Image(systemName: "map.fill")
+                                .font(.system(size: 10))
+                            Text(location)
+                        }
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText.opacity(0.8))
+                    }
+                    Spacer()
+                    if let valuation = valuation {
+                        Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
+                            .font(Theme.subheadline)
+                            .fontWeight(.semibold)
                             .foregroundStyle(Theme.accent)
-                        
-                        Spacer()
-                        
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                    }
-                    
-                    // Divider
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundStyle(Theme.separator.opacity(0.15))
-                    
-                    // Headcount and Total Price Row
-                    HStack(alignment: .firstTextBaseline) {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Headcount")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                            Text("\(herdHeadCount) head")
-                                .font(Theme.subheadline)
-                                .foregroundStyle(.white)
-                        }
-                        
-                        Spacer()
-                        
-                        VStack(alignment: .trailing, spacing: 4) {
-                            Text("Total Value")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                            
-                            if let valuation = valuation {
-                                Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
-                                    .font(Theme.subheadline)
-                                    .fontWeight(.semibold)
-                                    .foregroundStyle(Theme.accent)
-                            } else if isLoading {
-                                ProgressView()
-                                    .tint(Theme.accent)
-                                    .scaleEffect(0.8)
-                            }
-                        }
-                    }
-                    
-                    // Saleyard Row
-                    if let saleyard = herdSaleyard, !saleyard.isEmpty {
-                        HStack(spacing: 6) {
-                            Image(systemName: "building.2")
-                                .font(.system(size: 12))
-                                .foregroundStyle(Theme.secondaryText)
-                            Text(saleyard)
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                        }
+                    } else if isLoading {
+                        ProgressView()
+                            .tint(Theme.accent)
+                            .scaleEffect(0.8)
                     }
                 }
-            }
-            .buttonStyle(PlainButtonStyle())
-            
-            // Debug: Bottom row with weights and sell button - OUTSIDE NavigationLink so sell button works on first tap
-            if let valuation = valuation {
-                HStack(alignment: .bottom, spacing: 12) {
-                    // Average Weight
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Avg Weight")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        Text("\(Int(valuation.projectedWeight)) kg")
-                            .font(Theme.caption)
-                            .fontWeight(.medium)
-                            .foregroundStyle(.white)
-                    }
-                    
-                    // Average Price
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Avg Price")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        Text("\(valuation.pricePerKg, format: .currency(code: "AUD"))/kg")
+                
+                // Head Count and Weight/Price Row
+                if let valuation = valuation {
+                    HStack(alignment: .bottom) {
+                        HStack(spacing: 4) {
+                            Image("cowhead")
+                                .resizable()
+                                .renderingMode(.template)
+                                .frame(width: 10, height: 10)
+                            Text("\(herdHeadCount) head")
+                        }
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText.opacity(0.8))
+                        Spacer()
+                        Text("\(Int(valuation.projectedWeight)) kg @ \(valuation.pricePerKg, format: .currency(code: "AUD"))")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
                     }
-                    
+                }
+                
+                // Breeding Info Row (if breeder)
+                if isBreeder {
+                    HStack(spacing: 4) {
+                        Image("chick")
+                            .resizable()
+                            .renderingMode(.template)
+                            .frame(width: 10, height: 10)
+                        Text("Breeder")
+                    }
+                    .font(.system(size: 10))
+                    .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                }
+                
+                // Saleyard and Sell Button Row
+                HStack(alignment: .bottom) {
+                    if let saleyard = herdSaleyard, !saleyard.isEmpty {
+                        HStack(spacing: 4) {
+                            Image("property_icon")
+                                .resizable()
+                                .renderingMode(.template)
+                                .frame(width: 10, height: 10)
+                            Text(saleyard)
+                        }
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                        .lineLimit(1)
+                    }
                     Spacer()
-                    
-                    // Debug: Sell button on bottom right - properly styled with rounded corners and background
                     if onSellTapped != nil {
                         Button {
                             HapticManager.tap()

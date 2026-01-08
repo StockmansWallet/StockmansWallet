@@ -113,20 +113,15 @@ final class HerdGroup {
     /// Display name for individual animals: "#ID 'Nickname'" or just "#ID" if no nickname
     /// For herds: returns the name as-is
     var displayName: String {
-        if headCount == 1, let idNumber = animalIdNumber {
-            // Individual animal with ID number
+        // Check if we have an ID number (for both herds and individuals)
+        if let idNumber = animalIdNumber, !idNumber.isEmpty {
             if !name.isEmpty && name != idNumber {
-                let formatted = "#\(idNumber) \"\(name)\""
-                print("🏷️ DisplayName: ID=\(idNumber), Name=\(name) -> \(formatted)")
-                return formatted
+                return "#\(idNumber) \"\(name)\""
             } else {
-                let formatted = "#\(idNumber)"
-                print("🏷️ DisplayName: ID=\(idNumber), No name -> \(formatted)")
-                return formatted
+                return "#\(idNumber)"
             }
         } else {
-            // Herd or no ID number
-            print("🏷️ DisplayName: Herd or no ID -> \(name)")
+            // No ID number - just return name
             return name
         }
     }

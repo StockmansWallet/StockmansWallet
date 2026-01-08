@@ -765,7 +765,7 @@ struct AddHerdFlowView: View {
         let isBreeder = selectedCategory.lowercased().contains("breeding") || selectedCategory.lowercased().contains("breeder")
         
         let herd = HerdGroup(
-            name: herdName,
+            name: herdNickname, // Nickname (optional)
             species: selectedSpecies,
             breed: selectedBreed,
             sex: sex,
@@ -775,7 +775,8 @@ struct AddHerdFlowView: View {
             initialWeight: Double(finalWeightKg),
             dailyWeightGain: dailyWeightGain,
             isBreeder: isBreeder,
-            selectedSaleyard: effectiveSaleyard
+            selectedSaleyard: effectiveSaleyard,
+            animalIdNumber: herdName.isEmpty ? nil : herdName // Herd ID
         )
         
         print("💾 AddHerdFlowView: Created herd object with ID: \(herd.id)")

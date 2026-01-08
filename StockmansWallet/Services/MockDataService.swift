@@ -17,19 +17,20 @@ class MockDataService {
         let calendar = Calendar.current
         
         // Generate herds with different start dates over the past year
-        let herdConfigs: [(name: String, breed: String, category: String, headCount: Int, initialWeight: Double, dwg: Double, startDateOffset: Int)] = [
-            ("North Paddock - Breeding Cows", "Angus", "Breeding Cow", 120, 550.0, 0.3, -365),
-            ("South Paddock - Yearling Steers", "Hereford", "Yearling Steer", 85, 380.0, 0.9, -300),
-            ("East Paddock - Weaners", "Angus X Friesian", "Weaner Steer", 150, 250.0, 1.1, -180),
-            ("West Paddock - Feeder Steers", "Charolais", "Grown Steer", 65, 450.0, 0.7, -120),
-            ("Central Paddock - Heifers", "Murray Grey", "Heifer", 95, 320.0, 0.8, -90),
+        // Format: (id, nickname, breed, category, headCount, initialWeight, dwg, startDateOffset)
+        let herdConfigs: [(id: String, nickname: String, breed: String, category: String, headCount: Int, initialWeight: Double, dwg: Double, startDateOffset: Int)] = [
+            ("NP01", "North Paddock Breeders", "Angus", "Breeding Cow", 120, 550.0, 0.3, -365),
+            ("SP01", "South Steers", "Hereford", "Yearling Steer", 85, 380.0, 0.9, -300),
+            ("EP01", "East Weaners", "Angus X Friesian", "Weaner Steer", 150, 250.0, 1.1, -180),
+            ("WP01", "West Grown Mob", "Charolais", "Grown Steer", 65, 450.0, 0.7, -120),
+            ("CP01", "Central Heifers", "Murray Grey", "Heifer", 95, 320.0, 0.8, -90),
         ]
         
         for config in herdConfigs {
             let startDate = calendar.date(byAdding: .day, value: config.startDateOffset, to: Date()) ?? Date()
             
             let herd = HerdGroup(
-                name: config.name,
+                name: config.nickname,
                 species: "Cattle",
                 breed: config.breed,
                 sex: config.category.contains("Cow") || config.category.contains("Heifer") ? "Female" : "Male",
@@ -39,7 +40,8 @@ class MockDataService {
                 initialWeight: config.initialWeight,
                 dailyWeightGain: config.dwg,
                 isBreeder: config.category.contains("Breeding") || config.category.contains("Heifer"),
-                selectedSaleyard: preferences.defaultSaleyard
+                selectedSaleyard: preferences.defaultSaleyard,
+                animalIdNumber: config.id
             )
             
             herd.createdAt = startDate
@@ -150,8 +152,6 @@ class MockDataService {
                     nickname = beforeHash.isEmpty ? "" : beforeHash
                 }
             }
-            
-            print("🐄 MockData: Parsing '\(animal.name)' -> ID: '\(idNumber ?? "nil")', Nickname: '\(nickname)'")
             
             let individual = HerdGroup(
                 name: nickname,

@@ -114,8 +114,27 @@ class HistoricalMockDataService {
             let paddock = paddocks[index % paddocks.count]
             let herdStartDate = calendar.date(byAdding: .day, value: config.startDateOffset, to: endDate) ?? startDate
             
+            // Parse name to extract ID number and nickname (e.g., "North Paddock #NP01")
+            var idNumber: String? = nil
+            var nickname: String = config.name
+            
+            if let dashIndex = config.name.firstIndex(of: "-") {
+                // Format: "Paddock Name - Description"
+                // Convert to ID/Nickname format
+                let beforeDash = config.name[..<dashIndex].trimmingCharacters(in: .whitespaces)
+                let afterDash = config.name[config.name.index(after: dashIndex)...].trimmingCharacters(in: .whitespaces)
+                
+                // Create a simple ID from the first letters
+                let words = beforeDash.split(separator: " ")
+                if words.count >= 2 {
+                    let id = String(words[0].prefix(1)) + String(words[1].prefix(1)) + "01"
+                    idNumber = id.uppercased()
+                    nickname = afterDash
+                }
+            }
+            
             let herd = HerdGroup(
-                name: config.name,
+                name: nickname,
                 species: config.species,
                 breed: config.breed,
                 sex: config.sex,
@@ -125,7 +144,8 @@ class HistoricalMockDataService {
                 initialWeight: config.initialWeight,
                 dailyWeightGain: config.dwg,
                 isBreeder: config.isBreeder,
-                selectedSaleyard: config.saleyard
+                selectedSaleyard: config.saleyard,
+                animalIdNumber: idNumber
             )
             
             herd.createdAt = herdStartDate
@@ -260,8 +280,6 @@ class HistoricalMockDataService {
                     nickname = beforeHash.isEmpty ? "" : beforeHash
                 }
             }
-            
-            print("🐄 HistoricalMockData: Parsing '\(animal.name)' -> ID: '\(idNumber ?? "nil")', Nickname: '\(nickname)'")
             
             let individual = HerdGroup(
                 name: nickname,
