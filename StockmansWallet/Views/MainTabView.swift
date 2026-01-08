@@ -11,7 +11,7 @@ import SwiftData
 
 struct MainTabView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var herds: [HerdGroup]
+    // Performance: Don't query herds here - child views will query only what they need
     @Query private var preferences: [UserPreferences]
     
     // Debug: Use 'let' with @Observable instead of @StateObject (modern pattern)

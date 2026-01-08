@@ -26,6 +26,9 @@ class HistoricalMockDataService {
         // Generate herds
         await generateHistoricalHerds(modelContext: modelContext, preferences: preferences)
         
+        // Generate individual animals
+        await generateIndividualAnimals(modelContext: modelContext, preferences: preferences)
+        
         // Generate 3 years of market prices
         await generate3YearMarketPrices(modelContext: modelContext, preferences: preferences)
         
@@ -156,6 +159,126 @@ class HistoricalMockDataService {
         }
     }
     
+    // MARK: - Generate Individual Animals
+    
+    private func generateIndividualAnimals(modelContext: ModelContext, preferences: UserPreferences) async {
+        // Debug: Generate individual tagged animals for 3-year historical dataset
+        // Debug: Individual animals with varied breeds, ages, and realistic NLIS tags
+        let individualAnimals: [(name: String, breed: String, category: String, weight: Double, dwg: Double, paddock: String, tagInfo: String, daysAgo: Int, ageMonths: Int)] = [
+            // River Paddock - Premium Angus Breeding Cows
+            ("Bella #001", "Angus", "Breeding Cow", 585.0, 0.22, "River Paddock", "NLIS: 982500100000001", -1000, 54),
+            ("Charlotte #002", "Angus", "Breeding Cow", 575.0, 0.21, "River Paddock", "NLIS: 982500100000002", -1010, 52),
+            ("Diana #003", "Angus", "Breeding Cow", 592.0, 0.19, "River Paddock", "NLIS: 982500100000003", -980, 56),
+            ("Emma #004", "Angus", "Breeding Cow", 568.0, 0.23, "River Paddock", "NLIS: 982500100000004", -1020, 51),
+            ("Fiona #005", "Angus", "Breeding Cow", 580.0, 0.20, "River Paddock", "NLIS: 982500100000005", -990, 53),
+            
+            // Back Hill - Wagyu Premium Stock
+            ("Sakura #W01", "Wagyu", "Breeding Cow", 595.0, 0.18, "Back Hill", "NLIS: 982500200000101", -950, 58),
+            ("Yuki #W02", "Wagyu", "Breeding Cow", 588.0, 0.17, "Back Hill", "NLIS: 982500200000102", -970, 60),
+            ("Kiku #W03", "Wagyu", "Grown Steer", 478.0, 0.65, "Back Hill", "NLIS: 982500200000103", -600, 32),
+            ("Hiro #W04", "Wagyu", "Grown Steer", 485.0, 0.63, "Back Hill", "NLIS: 982500200000104", -610, 33),
+            
+            // The Flats - Brahman Tropical Breed
+            ("Tropico #B01", "Brahman", "Breeding Cow", 545.0, 0.28, "The Flats", "NLIS: 982500300000201", -930, 48),
+            ("Savanna #B02", "Brahman", "Breeding Cow", 538.0, 0.26, "The Flats", "NLIS: 982500300000202", -940, 47),
+            ("Rio #B03", "Brahman", "Feeder Steer", 375.0, 0.96, "The Flats", "NLIS: 982500300000203", -400, 14),
+            ("Cruz #B04", "Brahman", "Feeder Steer", 368.0, 0.94, "The Flats", "NLIS: 982500300000204", -410, 13),
+            ("Mesa #B05", "Brahman", "Feeder Steer", 372.0, 0.98, "The Flats", "NLIS: 982500300000205", -395, 14),
+            
+            // North Ridge - Yearling Angus Steers
+            ("Ridge #Y01", "Angus", "Yearling Steer", 425.0, 0.93, "North Ridge", "NLIS: 982500400000301", -500, 18),
+            ("Summit #Y02", "Angus", "Yearling Steer", 415.0, 0.89, "North Ridge", "NLIS: 982500400000302", -510, 17),
+            ("Peak #Y03", "Angus", "Yearling Steer", 430.0, 0.95, "North Ridge", "NLIS: 982500400000303", -495, 18),
+            ("Cliff #Y04", "Angus", "Yearling Steer", 408.0, 0.87, "North Ridge", "NLIS: 982500400000304", -520, 16),
+            ("Boulder #Y05", "Angus", "Yearling Steer", 418.0, 0.91, "North Ridge", "NLIS: 982500400000305", -505, 17),
+            
+            // South Pasture - Hereford Feeders
+            ("Rusty #H01", "Hereford", "Grown Steer", 492.0, 0.71, "South Pasture", "NLIS: 982500500000401", -450, 28),
+            ("Buck #H02", "Hereford", "Grown Steer", 485.0, 0.69, "South Pasture", "NLIS: 982500500000402", -460, 27),
+            ("Champ #H03", "Hereford", "Grown Steer", 498.0, 0.73, "South Pasture", "NLIS: 982500500000403", -445, 29),
+            ("Duke #H04", "Hereford", "Grown Steer", 488.0, 0.70, "South Pasture", "NLIS: 982500500000404", -455, 28),
+            
+            // East Valley - Weaner Crossbreeds
+            ("Jet #X01", "Angus X Friesian", "Weaner Steer", 272.0, 1.14, "East Valley", "NLIS: 982500600000501", -300, 9),
+            ("Rocket #X02", "Angus X Friesian", "Weaner Steer", 265.0, 1.10, "East Valley", "NLIS: 982500600000502", -310, 8),
+            ("Zoom #X03", "Angus X Friesian", "Weaner Steer", 278.0, 1.18, "East Valley", "NLIS: 982500600000503", -295, 9),
+            ("Flash #X04", "Angus X Friesian", "Weaner Steer", 260.0, 1.08, "East Valley", "NLIS: 982500600000504", -315, 8),
+            ("Sprint #X05", "Angus X Friesian", "Weaner Steer", 268.0, 1.12, "East Valley", "NLIS: 982500600000505", -305, 9),
+            ("Dash #X06", "Angus X Friesian", "Weaner Steer", 275.0, 1.16, "East Valley", "NLIS: 982500600000506", -300, 9),
+            
+            // West Slope - Charolais Heifers
+            ("Ivory #C01", "Charolais", "Heifer", 348.0, 0.82, "West Slope", "NLIS: 982500700000601", -350, 15),
+            ("Pearl #C02", "Charolais", "Heifer", 342.0, 0.79, "West Slope", "NLIS: 982500700000602", -360, 14),
+            ("Snow #C03", "Charolais", "Heifer", 352.0, 0.84, "West Slope", "NLIS: 982500700000603", -345, 16),
+            ("Crystal #C04", "Charolais", "Heifer", 338.0, 0.77, "West Slope", "NLIS: 982500700000604", -365, 14),
+            ("Cloud #C05", "Charolais", "Heifer", 345.0, 0.81, "West Slope", "NLIS: 982500700000605", -355, 15),
+            
+            // Central Plains - Murray Grey Bulls
+            ("Titan #M01", "Murray Grey", "Weaner Bull", 305.0, 1.25, "Central Plains", "NLIS: 982500800000701", -280, 10),
+            ("Magnus #M02", "Murray Grey", "Weaner Bull", 298.0, 1.20, "Central Plains", "NLIS: 982500800000702", -290, 9),
+            ("Brutus #M03", "Murray Grey", "Weaner Bull", 312.0, 1.30, "Central Plains", "NLIS: 982500800000703", -275, 10),
+            
+            // Upper Meadow - Droughtmaster
+            ("Outback #D01", "Droughtmaster", "Grown Steer", 495.0, 0.68, "Upper Meadow", "NLIS: 982500900000801", -380, 29),
+            ("Desert #D02", "Droughtmaster", "Grown Steer", 488.0, 0.66, "Upper Meadow", "NLIS: 982500900000802", -390, 28),
+            ("Sahara #D03", "Droughtmaster", "Grown Steer", 502.0, 0.70, "Upper Meadow", "NLIS: 982500900000803", -375, 30),
+            
+            // Lower Field - Limousin Yearlings
+            ("Russet #L01", "Limousin", "Yearling Steer", 412.0, 0.90, "Lower Field", "NLIS: 982501000000901", -250, 17),
+            ("Copper #L02", "Limousin", "Yearling Steer", 405.0, 0.88, "Lower Field", "NLIS: 982501000001002", -260, 16),
+            ("Bronze #L03", "Limousin", "Yearling Steer", 418.0, 0.92, "Lower Field", "NLIS: 982501000001003", -245, 18),
+            ("Amber #L04", "Limousin", "Yearling Steer", 410.0, 0.89, "Lower Field", "NLIS: 982501000001004", -255, 17),
+            
+            // Hill Top - Speckle Park
+            ("Patch #S01", "Speckle Park", "Yearling Steer", 402.0, 0.86, "Hill Top", "NLIS: 982501100001101", -240, 16),
+            ("Spot #S02", "Speckle Park", "Yearling Steer", 408.0, 0.88, "Hill Top", "NLIS: 982501100001102", -235, 17),
+            ("Freckle #S03", "Speckle Park", "Heifer", 335.0, 0.78, "Hill Top", "NLIS: 982501100001103", -220, 14),
+            
+            // Bottom Paddock - Santa Gertrudis
+            ("Sunset #SG01", "Santa Gertrudis", "Breeding Cow", 572.0, 0.24, "Bottom Paddock", "NLIS: 982501200001201", -850, 50),
+            ("Sunrise #SG02", "Santa Gertrudis", "Breeding Cow", 565.0, 0.22, "Bottom Paddock", "NLIS: 982501200001202", -860, 49),
+            ("Dawn #SG03", "Santa Gertrudis", "Feeder Steer", 370.0, 0.95, "Bottom Paddock", "NLIS: 982501200001203", -320, 13),
+            ("Dusk #SG04", "Santa Gertrudis", "Feeder Steer", 365.0, 0.93, "Bottom Paddock", "NLIS: 982501200001204", -325, 12),
+        ]
+        
+        // Debug: Create individual animals with historical dates
+        for animal in individualAnimals {
+            let startDate = calendar.date(byAdding: .day, value: animal.daysAgo, to: endDate) ?? endDate
+            
+            let individual = HerdGroup(
+                name: animal.name,
+                species: "Cattle",
+                breed: animal.breed,
+                sex: animal.category.contains("Cow") || animal.category.contains("Heifer") ? "Female" : "Male",
+                category: animal.category,
+                ageMonths: animal.ageMonths,
+                headCount: 1, // Debug: Individual animal (headCount: 1)
+                initialWeight: animal.weight,
+                dailyWeightGain: animal.dwg,
+                isBreeder: animal.category.contains("Breeding") || animal.category.contains("Heifer"),
+                selectedSaleyard: preferences.defaultSaleyard
+            )
+            
+            individual.createdAt = startDate
+            individual.updatedAt = startDate
+            individual.paddockName = animal.paddock
+            individual.additionalInfo = animal.tagInfo
+            
+            // Debug: Set breeding status for breeding cows with realistic pregnancy distribution
+            if animal.category == "Breeding Cow" {
+                individual.isPregnant = Double.random(in: 0...1) < 0.65 // 65% pregnancy rate
+                if individual.isPregnant {
+                    // Debug: Set joined date 3-6 months before creation date (realistic gestation period)
+                    let daysPregnant = Int.random(in: 90...180)
+                    individual.joinedDate = calendar.date(byAdding: .day, value: -daysPregnant, to: startDate)
+                }
+                individual.calvingRate = Double.random(in: 0.75...0.92) // 75-92% calving rate
+            }
+            
+            modelContext.insert(individual)
+        }
+    }
+    
     // MARK: - Generate 3 Years of Market Prices
     
     private func generate3YearMarketPrices(modelContext: ModelContext, preferences: UserPreferences) async {
@@ -169,8 +292,8 @@ class HistoricalMockDataService {
         let totalDays = min(days, 1095) // Max 3 years
         
         // Base price trend: Peak in late 2022/early 2023, significant dip in 2023, then recovery
-        // Debug: Base price adjusted by 45% reduction (×0.55) for realistic market values
-        let basePrice = 4.13 // Adjusted from 7.50 (×0.55) - Peak price in early 2023
+        // Debug: Base price set to realistic market values - represents Grown Steer base price
+        let basePrice = 4.50 // Peak price in early 2023 (base for Grown Steer category)
         
         for dayOffset in (0..<totalDays).reversed() {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: endDate) else { continue }
@@ -221,27 +344,28 @@ class HistoricalMockDataService {
             
             // Calculate final price
             let adjustedPrice = basePrice * (1.0 + trend + seasonal + weeklyVolatility + dailyVolatility)
-            // Debug: Price clamps adjusted by 45% reduction (×0.55) for realistic ranges
-            let finalPrice = max(2.48, min(5.23, adjustedPrice)) // Clamp between $2.48-$5.23/kg (adjusted from $4.50-$9.50)
+            // Debug: Price clamps set to realistic market ranges
+            let finalPrice = max(2.80, min(5.80, adjustedPrice)) // Clamp between $2.80-$5.80/kg for realistic market ranges
             
             // Generate prices for each category
             for category in categories {
                 var categoryPrice = finalPrice
                 
-                // Category-specific multipliers
+                // Category-specific multipliers - adjusted to realistic market rates
+                // Base (finalPrice) represents Grown Steer at ~$3.70/kg
                 switch category {
                 case "Weaner Steer":
-                    categoryPrice = finalPrice * 1.18
+                    categoryPrice = finalPrice * 1.18 // ~$4.35/kg (highest per kg)
                 case "Yearling Steer":
-                    categoryPrice = finalPrice * 1.08
+                    categoryPrice = finalPrice * 1.11 // ~$4.10/kg target
                 case "Grown Steer":
-                    categoryPrice = finalPrice * 1.0
+                    categoryPrice = finalPrice * 1.0 // ~$3.70/kg (base)
                 case "Feeder Steer":
-                    categoryPrice = finalPrice * 0.95
+                    categoryPrice = finalPrice * 1.05 // ~$3.90/kg
                 case "Breeding Cow":
-                    categoryPrice = finalPrice * 0.68
+                    categoryPrice = finalPrice * 1.03 // ~$3.80/kg target
                 case "Heifer":
-                    categoryPrice = finalPrice * 0.92
+                    categoryPrice = finalPrice * 1.04 // ~$3.85/kg
                 case "Breeding Ewe":
                     categoryPrice = finalPrice * 3.2 // Sheep prices per kg are higher
                 case "Wether Lamb":

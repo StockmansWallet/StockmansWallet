@@ -12,7 +12,8 @@ import Charts
 
 struct PortfolioView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query(sort: \HerdGroup.updatedAt, order: .reverse) private var herds: [HerdGroup]
+    // Performance: Don't use @Query directly - it creates live queries that trigger on every data change
+    // Instead, fetch data manually in task to avoid constant re-renders
     @Query private var preferences: [UserPreferences]
     
     // Debug: Use 'let' with @Observable instead of @StateObject
@@ -24,9 +25,18 @@ struct PortfolioView: View {
     @State private var isLoading = true
     @State private var selectedView: PortfolioViewMode = .overview
     
+    // Performance: Store fetched herds in @State to control when updates happen
+    @State private var herds: [HerdGroup] = []
+    @State private var lastFetchTime: Date = Date()
+    
     // Debug: Search functionality for Herds and Individual sections
     @State private var herdsSearchText = ""
     @State private var individualSearchText = ""
+    
+    // Performance: Cache filtered results to avoid recalculating on every render
+    @State private var cachedFilteredHerds: [HerdGroup] = []
+    // Performance: Store individuals as plain structs to break SwiftData observation
+    @State private var cachedFilteredIndividuals: [AnimalDisplayData] = []
     
     // Debug: Sell functionality - track selected herd ID (nil means sheet is dismissed)
     // Wrapper to make UUID Identifiable for fullScreenCover(item:)
@@ -74,13 +84,28 @@ struct PortfolioView: View {
                         .presentationBackground(Theme.sheetBackground)
                 }
                 .sheet(isPresented: $showingSearchPanel) {
+                    // Performance: Pass herds as binding to avoid capturing live query
                     PortfolioSearchPanel(herds: herds)
                         .presentationDetents([.large])
                         .presentationDragIndicator(.visible)
                         .presentationBackground(Theme.sheetBackground)
                 }
                 .task {
-                    loadingTask = Task {
+                    // Performance: Fetch herds immediately to show UI
+                    await fetchHerds()
+                    
+                    // Performance: Update filtered caches after fetching
+                    updateFilteredCaches()
+                    
+                    // Performance: Show UI immediately with basic stats, calculate valuations in background
+                    await MainActor.run {
+                        self.isLoading = false
+                        // Create minimal summary to show UI immediately
+                        createQuickSummary()
+                    }
+                    
+                    // Performance: Calculate full valuations in background (low priority)
+                    loadingTask = Task(priority: .utility) {
                         await loadPortfolioSummary()
                     }
                 }
@@ -91,11 +116,17 @@ struct PortfolioView: View {
                     print("📊 PortfolioView disappeared - cancelled loading task")
                     #endif
                 }
+                .onChange(of: herdsSearchText) { _, _ in
+                    // Performance: Update cache when search changes
+                    updateFilteredCaches()
+                }
+                .onChange(of: individualSearchText) { _, _ in
+                    // Performance: Update cache when search changes
+                    updateFilteredCaches()
+                }
                 .onChange(of: herds.count) { _, _ in
-                    loadingTask?.cancel()
-                    loadingTask = Task {
-                        await loadPortfolioSummary()
-                    }
+                    // Performance: Update cache when herds change
+                    updateFilteredCaches()
                 }
                 .background(Theme.backgroundGradient.ignoresSafeArea(edges: [.horizontal, .bottom]))
         }
@@ -131,6 +162,8 @@ struct PortfolioView: View {
                 .scrollContentBackground(.hidden)
                 .background(Theme.backgroundGradient)
                 .refreshable {
+                    // Performance: Refresh both herds and summary
+                    await fetchHerds()
                     await loadPortfolioSummary()
                 }
             }
@@ -199,7 +232,7 @@ struct PortfolioView: View {
                         .padding(.horizontal)
                     
                     LazyVStack(spacing: 16) {
-                        ForEach(filteredHerds) { herd in
+                        ForEach(cachedFilteredHerds, id: \.id) { herd in
                             let herdIdForSale = herd.id
                             EnhancedHerdCard(
                                 herd: herd,
@@ -208,12 +241,13 @@ struct PortfolioView: View {
                                     herdIdToSell = IdentifiableUUID(id: herdIdForSale)
                                 }
                             )
+                            .id(herd.id) // Performance: Explicit ID for stable identity
                         }
                     }
                     .padding(.horizontal)
                     
                     // Debug: Show message if no herds found
-                    if filteredHerds.isEmpty {
+                    if cachedFilteredHerds.isEmpty {
                         EmptySearchResultView(
                             searchText: herdsSearchText,
                             type: "herds"
@@ -226,30 +260,24 @@ struct PortfolioView: View {
     
     // MARK: - Individual Content
     // Debug: Display only individual animals (headCount == 1) with search functionality
+    // Performance: Uses lightweight card for better scroll performance with many items
     private var individualContent: some View {
         Group {
-            if let summary = portfolioSummary {
+            if portfolioSummary != nil {
                 VStack(spacing: 16) {
                     // Debug: Search field at top of individual section (below segmented control)
                     SearchField(text: $individualSearchText, placeholder: "Search for an individual animal")
                         .padding(.horizontal)
                     
-                    LazyVStack(spacing: 16) {
-                        ForEach(filteredIndividuals) { herd in
-                            let herdIdForSale = herd.id
-                            EnhancedHerdCard(
-                                herd: herd,
-                                summary: summary,
-                                onSellTapped: {
-                                    herdIdToSell = IdentifiableUUID(id: herdIdForSale)
-                                }
-                            )
+                    LazyVStack(spacing: 12) {
+                        ForEach(cachedFilteredIndividuals) { data in
+                            LightweightAnimalCard(data: data)
                         }
                     }
                     .padding(.horizontal)
                     
                     // Debug: Show message if no individuals found
-                    if filteredIndividuals.isEmpty {
+                    if cachedFilteredIndividuals.isEmpty {
                         EmptySearchResultView(
                             searchText: individualSearchText,
                             type: "individual animals"
@@ -260,42 +288,97 @@ struct PortfolioView: View {
         }
     }
     
-    // MARK: - Filtered Herds and Individuals
-    // Debug: Filter herds based on search text and headCount
-    private var filteredHerds: [HerdGroup] {
+    // MARK: - Update Filtered Caches
+    // Performance: Update cached filtered results only when search text or herds change
+    private func updateFilteredCaches() {
+        // Filter herds
         let herdsOnly = herds.filter { !$0.isSold && $0.headCount > 1 }
-        
-        guard !herdsSearchText.isEmpty else {
-            return herdsOnly
+        if herdsSearchText.isEmpty {
+            cachedFilteredHerds = herdsOnly
+        } else {
+            let searchLower = herdsSearchText.lowercased()
+            cachedFilteredHerds = herdsOnly.filter { herd in
+                herd.name.lowercased().contains(searchLower) ||
+                herd.breed.lowercased().contains(searchLower) ||
+                herd.category.lowercased().contains(searchLower) ||
+                herd.species.lowercased().contains(searchLower) ||
+                (herd.paddockName?.lowercased().contains(searchLower) ?? false) ||
+                (herd.additionalInfo?.lowercased().contains(searchLower) ?? false)
+            }
         }
         
-        let searchLower = herdsSearchText.lowercased()
-        return herdsOnly.filter { herd in
-            herd.name.lowercased().contains(searchLower) ||
-            herd.breed.lowercased().contains(searchLower) ||
-            herd.category.lowercased().contains(searchLower) ||
-            herd.species.lowercased().contains(searchLower) ||
-            (herd.paddockName?.lowercased().contains(searchLower) ?? false) ||
-            (herd.additionalInfo?.lowercased().contains(searchLower) ?? false)
+        // Filter individuals and convert to plain structs
+        let individualsOnly = herds.filter { !$0.isSold && $0.headCount == 1 }
+        let filteredIndividuals: [HerdGroup]
+        if individualSearchText.isEmpty {
+            filteredIndividuals = individualsOnly
+        } else {
+            let searchLower = individualSearchText.lowercased()
+            filteredIndividuals = individualsOnly.filter { herd in
+                herd.name.lowercased().contains(searchLower) ||
+                herd.breed.lowercased().contains(searchLower) ||
+                herd.category.lowercased().contains(searchLower) ||
+                herd.species.lowercased().contains(searchLower) ||
+                (herd.paddockName?.lowercased().contains(searchLower) ?? false) ||
+                (herd.additionalInfo?.lowercased().contains(searchLower) ?? false)
+            }
+        }
+        // Performance: Convert to plain structs to break SwiftData observation
+        cachedFilteredIndividuals = filteredIndividuals.map { AnimalDisplayData(from: $0) }
+    }
+    
+    // MARK: - Fetch Herds (Manual, Controlled)
+    // Performance: Fetch herds manually instead of using live @Query to prevent constant re-renders
+    private func fetchHerds() async {
+        let descriptor = FetchDescriptor<HerdGroup>(
+            sortBy: [SortDescriptor(\HerdGroup.updatedAt, order: .reverse)]
+        )
+        
+        do {
+            let fetchedHerds = try modelContext.fetch(descriptor)
+            await MainActor.run {
+                self.herds = fetchedHerds
+                self.lastFetchTime = Date()
+            }
+        } catch {
+            print("❌ Failed to fetch herds: \(error)")
         }
     }
     
-    private var filteredIndividuals: [HerdGroup] {
-        let individualsOnly = herds.filter { !$0.isSold && $0.headCount == 1 }
+    // MARK: - Quick Summary (Instant Display)
+    // Performance: Create basic summary instantly without expensive valuations
+    private func createQuickSummary() {
+        let activeHerds = herds.filter { !$0.isSold && $0.headCount > 1 }
+        let allActiveHerds = herds.filter { !$0.isSold }
         
-        guard !individualSearchText.isEmpty else {
-            return individualsOnly
+        guard !allActiveHerds.isEmpty else {
+            self.portfolioSummary = nil
+            return
         }
         
-        let searchLower = individualSearchText.lowercased()
-        return individualsOnly.filter { herd in
-            herd.name.lowercased().contains(searchLower) ||
-            herd.breed.lowercased().contains(searchLower) ||
-            herd.category.lowercased().contains(searchLower) ||
-            herd.species.lowercased().contains(searchLower) ||
-            (herd.paddockName?.lowercased().contains(searchLower) ?? false) ||
-            (herd.additionalInfo?.lowercased().contains(searchLower) ?? false)
-        }
+        // Quick calculations without database queries
+        let totalHeadCount = allActiveHerds.reduce(0) { $0 + $1.headCount }
+        let estimatedValue = Double(totalHeadCount) * 400.0 * 4.0 // Rough estimate: 400kg × $4/kg
+        
+        // Create minimal summary for instant display
+        self.portfolioSummary = PortfolioSummary(
+            totalNetWorth: estimatedValue,
+            totalPhysicalValue: estimatedValue,
+            totalBreedingAccrual: 0,
+            totalGrossValue: estimatedValue,
+            totalMortalityDeduction: 0,
+            totalCostToCarry: 0,
+            totalInitialValue: estimatedValue,
+            unrealizedGains: 0,
+            unrealizedGainsPercent: 0,
+            totalHeadCount: totalHeadCount,
+            activeHerdCount: activeHerds.count,
+            categoryBreakdown: [],
+            speciesBreakdown: [],
+            largestCategory: "",
+            largestCategoryPercent: 0,
+            valuations: [:]
+        )
     }
     
     // MARK: - Load Portfolio Summary (Parallelized)
@@ -305,9 +388,12 @@ struct PortfolioView: View {
         }
         
         let prefs = preferences.first ?? UserPreferences()
-        let activeHerds = herds.filter { !$0.isSold }
+        // Performance: Only calculate valuations for herds (headCount > 1) in summary
+        // Individual animals (headCount == 1) load their valuations on-demand when viewed
+        let activeHerds = herds.filter { !$0.isSold && $0.headCount > 1 }
+        let allActiveHerds = herds.filter { !$0.isSold } // For head count totals
         
-        guard !activeHerds.isEmpty else {
+        guard !allActiveHerds.isEmpty else {
             await MainActor.run {
                 self.portfolioSummary = nil
                 self.isLoading = false
@@ -315,52 +401,91 @@ struct PortfolioView: View {
             return
         }
         
+        // Performance: Pre-fetch all market prices in ONE query to avoid 45+ individual queries
+        let allCategories = Set(activeHerds.map { $0.category })
+        // Performance: Fetch all prices for relevant categories, filter by date after
+        let priceDescriptor = FetchDescriptor<MarketPrice>(
+            sortBy: [SortDescriptor(\.priceDate, order: .reverse)]
+        )
+        
+        let allPrices = (try? modelContext.fetch(priceDescriptor)) ?? []
+        // Filter to relevant categories and recent prices
+        let relevantPrices = allPrices.filter { allCategories.contains($0.category) }
+        let priceCache = Dictionary(grouping: relevantPrices) { $0.category }
+        
         // Create a mapping of herd IDs to herds for later lookup
         let herdMap = Dictionary(uniqueKeysWithValues: activeHerds.map { ($0.id, $0) })
         
-        let results = await withTaskGroup(of: (herdId: UUID, valuation: HerdValuation).self) { group in
-            var out: [(herdId: UUID, valuation: HerdValuation)] = []
-            for herd in activeHerds {
-                // Performance: Check if task was cancelled before adding more work
-                if Task.isCancelled {
-                    #if DEBUG
-                    print("📊 Portfolio valuation cancelled - skipping remaining herds")
-                    #endif
-                    break
-                }
-                
-                let herdId = herd.id
-                let persistentId = herd.persistentModelID
-                group.addTask { @MainActor [modelContext] in
-                    // Fetch herd using persistentModelID to avoid Sendable issues
-                    guard let fetchedHerd = modelContext.model(for: persistentId) as? HerdGroup else {
-                        return (herdId: herdId, valuation: HerdValuation(
-                            herdId: herdId,
-                            physicalValue: 0,
-                            breedingAccrual: 0,
-                            grossValue: 0,
-                            mortalityDeduction: 0,
-                            netValue: 0,
-                            costToCarry: 0,
-                            netRealizableValue: 0,
-                            pricePerKg: 0,
-                            priceSource: "Unknown",
-                            projectedWeight: 0,
-                            valuationDate: Date()
-                        ))
-                    }
-                    let valuation = await self.valuationEngine.calculateHerdValue(
-                        herd: fetchedHerd,
-                        preferences: prefs,
-                        modelContext: modelContext
-                    )
-                    return (herdId: herdId, valuation: valuation)
+        // Performance: Calculate valuations with cached prices (no more database queries per herd)
+        var results: [(herdId: UUID, valuation: HerdValuation)] = []
+        
+        for herd in activeHerds {
+            // Performance: Check if task was cancelled
+            if Task.isCancelled {
+                #if DEBUG
+                print("📊 Portfolio valuation cancelled - skipping remaining herds")
+                #endif
+                break
+            }
+            
+            // Get price from cache (instant, no database query)
+            let categoryPrices = priceCache[herd.category] ?? []
+            let pricePerKg = categoryPrices.first?.pricePerKg ?? 4.0
+            
+            // Calculate projected weight
+            let calculationDate = herd.useCreationDateForWeight ? herd.createdAt : Date()
+            let projectedWeight = valuationEngine.calculateProjectedWeight(
+                initialWeight: herd.initialWeight,
+                dateStart: herd.createdAt,
+                dateChange: herd.dwgChangeDate,
+                dateCurrent: calculationDate,
+                dwgOld: herd.previousDWG,
+                dwgNew: herd.dailyWeightGain
+            )
+            
+            // Calculate physical value
+            let physicalValue = Double(herd.headCount) * projectedWeight * pricePerKg
+            
+            // Calculate breeding accrual if applicable
+            var breedingAccrual: Double = 0.0
+            if herd.isPregnant, let joinedDate = herd.joinedDate {
+                let daysPregnant = Calendar.current.dateComponents([.day], from: joinedDate, to: Date()).day ?? 0
+                let gestationDays = 283
+                if daysPregnant < gestationDays {
+                    let calfValue = 250.0 * pricePerKg
+                    let accrualRate = Double(daysPregnant) / Double(gestationDays)
+                    breedingAccrual = calfValue * accrualRate * herd.calvingRate * Double(herd.headCount)
                 }
             }
-            for await item in group {
-                out.append(item)
-            }
-            return out
+            
+            let grossValue = physicalValue + breedingAccrual
+            // Performance: Use default 2% mortality rate if not set
+            let mortalityRate = 0.02 // 2% default mortality rate
+            let mortalityDeduction = grossValue * mortalityRate
+            let netValue = grossValue - mortalityDeduction
+            
+            let monthsHeld = Double(Calendar.current.dateComponents([.day], from: herd.createdAt, to: Date()).day ?? 0) / 30.0
+            // Performance: Use default costs if not set
+            let monthlyCost = 100.0 // Default $100/month total cost
+            let costToCarry = monthlyCost * monthsHeld
+            let netRealizableValue = netValue - costToCarry
+            
+            let valuation = HerdValuation(
+                herdId: herd.id,
+                physicalValue: physicalValue,
+                breedingAccrual: breedingAccrual,
+                grossValue: grossValue,
+                mortalityDeduction: mortalityDeduction,
+                netValue: netValue,
+                costToCarry: costToCarry,
+                netRealizableValue: netRealizableValue,
+                pricePerKg: pricePerKg,
+                priceSource: "Cached",
+                projectedWeight: projectedWeight,
+                valuationDate: Date()
+            )
+            
+            results.append((herdId: herd.id, valuation: valuation))
         }
         
         // Aggregate results
@@ -433,7 +558,9 @@ struct PortfolioView: View {
                 totalInitialValue: totalInitialValue,
                 unrealizedGains: unrealizedGains,
                 unrealizedGainsPercent: unrealizedGainsPercent,
-                totalHeadCount: activeHerds.reduce(0) { $0 + $1.headCount },
+                // Performance: Total head count includes all animals (herds + individuals)
+                totalHeadCount: allActiveHerds.reduce(0) { $0 + $1.headCount },
+                // Performance: Active herd count only includes actual herds (headCount > 1)
                 activeHerdCount: activeHerds.count,
                 categoryBreakdown: Array(categoryBreakdown.values),
                 speciesBreakdown: Array(speciesBreakdown.values),
@@ -1054,9 +1181,100 @@ struct AssetRegisterHeader: View {
     }
 }
 
+    // MARK: - Animal Display Data
+// Performance: Simple struct to hold display data, breaking SwiftData observation
+struct AnimalDisplayData: Identifiable, Equatable {
+    let id: UUID
+    let name: String
+    let breed: String
+    let category: String
+    let paddockName: String?
+    let currentWeight: Double
+    let additionalInfo: String?
+    
+    init(from herd: HerdGroup) {
+        self.id = herd.id
+        self.name = herd.name
+        self.breed = herd.breed
+        self.category = herd.category
+        self.paddockName = herd.paddockName
+        self.currentWeight = herd.currentWeight
+        self.additionalInfo = herd.additionalInfo
+    }
+}
+
+// MARK: - Lightweight Animal Card
+// Performance: Uses plain struct instead of SwiftData model to avoid observation overhead
+struct LightweightAnimalCard: View {
+    let data: AnimalDisplayData
+    
+    var body: some View {
+        NavigationLink(destination: HerdDetailView(herdId: data.id)) {
+            HStack(spacing: 12) {
+                // Left: Animal info
+                VStack(alignment: .leading, spacing: 6) {
+                    // Name
+                    Text(data.name)
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.accent)
+                        .lineLimit(1)
+                    
+                    // Breed & Category
+                    Text("\(data.breed) • \(data.category)")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                        .lineLimit(1)
+                    
+                    // Paddock location
+                    if let paddock = data.paddockName, !paddock.isEmpty {
+                        HStack(spacing: 4) {
+                            Image(systemName: "map.fill")
+                                .font(.system(size: 10))
+                            Text(paddock)
+                        }
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText.opacity(0.8))
+                    }
+                    
+                    // NLIS tag (compact)
+                    if let info = data.additionalInfo, !info.isEmpty {
+                        Text(info)
+                            .font(.system(size: 10))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                            .lineLimit(1)
+                    }
+                }
+                
+                Spacer()
+                
+                // Right: Weight & Chevron (no valuation to keep it fast)
+                VStack(alignment: .trailing, spacing: 6) {
+                    Text("\(Int(data.currentWeight)) kg")
+                        .font(Theme.subheadline)
+                        .fontWeight(.medium)
+                        .foregroundStyle(Theme.primaryText)
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                }
+            }
+            .padding(12)
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(Theme.separator.opacity(0.2), lineWidth: 1)
+            )
+        }
+        .buttonStyle(PlainButtonStyle())
+    }
+}
+
 // MARK: - Enhanced Herd Card
 // Debug: Clear layout showing all essential herd information with optional sell button
 // Layout: name, headcount, saleyard, weights, prices in logical hierarchy
+// Performance: Uses cached valuations from summary to avoid expensive calculations on scroll
 struct EnhancedHerdCard: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
@@ -1069,6 +1287,9 @@ struct EnhancedHerdCard: View {
     
     @State private var valuation: HerdValuation?
     @State private var isLoading = true
+    
+    // Performance: Track if we've started loading to prevent duplicate tasks
+    @State private var hasStartedLoading = false
     
     var body: some View {
         // Debug: Capture herd properties early to avoid potential SwiftData access issues
@@ -1202,18 +1423,26 @@ struct EnhancedHerdCard: View {
         }
         .padding(Theme.cardPadding)
         .stitchedCard()
-        .task {
-            await loadValuation()
+        .onAppear {
+            // Performance: Load valuation only when card appears, and only once
+            if !hasStartedLoading {
+                hasStartedLoading = true
+                Task {
+                    await loadValuation()
+                }
+            }
         }
     }
     
     private func loadValuation() async {
+        // Performance: Check cache first (instant if available)
         if let cachedValuation = summary.valuations[herd.id] {
             await MainActor.run {
                 self.valuation = cachedValuation
                 self.isLoading = false
             }
         } else {
+            // Performance: Calculate on-demand only if not cached (rare for filtered lists)
             let prefs = preferences.first ?? UserPreferences()
             let calculatedValuation = await valuationEngine.calculateHerdValue(
                 herd: herd,

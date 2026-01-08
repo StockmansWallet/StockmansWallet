@@ -12,7 +12,8 @@ import SwiftData
 // Debug: Main enhanced reports view with all new features
 struct EnhancedReportsView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var herds: [HerdGroup]
+    // Performance: Only query herds (headCount > 1), not individual animals
+    @Query(filter: #Predicate<HerdGroup> { $0.headCount > 1 }) private var herds: [HerdGroup]
     @Query private var sales: [SalesRecord]
     @Query private var preferences: [UserPreferences]
     @Query private var properties: [Property]

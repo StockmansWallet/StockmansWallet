@@ -13,6 +13,8 @@ import Charts
 struct HerdDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
+    // Performance: Query all herds and individuals - needed to find specific herd by ID
+    // SwiftData doesn't support querying single object by ID efficiently
     @Query private var allHerds: [HerdGroup]
     
     // Debug: Use 'let' with @Observable instead of @StateObject
@@ -689,12 +691,8 @@ struct AnimalListSheet: View {
     
     @State private var searchText = ""
     
-    // Debug: Query all individual animals (HerdGroups with headCount = 1)
-    @Query(sort: \HerdGroup.name) private var allHerds: [HerdGroup]
-    
-    private var allIndividualAnimals: [HerdGroup] {
-        allHerds.filter { $0.headCount == 1 && !$0.isSold }
-    }
+    // Performance: Query only individual animals (headCount == 1)
+    @Query(filter: #Predicate<HerdGroup> { $0.headCount == 1 && !$0.isSold }, sort: \HerdGroup.name) private var allIndividualAnimals: [HerdGroup]
     
     private var relatedAnimals: [HerdGroup] {
         // Debug: For now, show ALL individual animals to verify they exist
@@ -775,10 +773,7 @@ struct AnimalListSheet: View {
                                         .foregroundStyle(Theme.primaryText)
                                     
                                     VStack(spacing: 8) {
-                                        Text("Total herds in database: \(allHerds.count)")
-                                            .font(Theme.caption)
-                                            .foregroundStyle(Theme.secondaryText)
-                                        Text("Individual animals (headCount=1): \(allIndividualAnimals.count)")
+                                        Text("Individual animals: \(allIndividualAnimals.count)")
                                             .font(Theme.caption)
                                             .foregroundStyle(Theme.secondaryText)
                                         

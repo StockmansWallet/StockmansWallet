@@ -176,13 +176,13 @@ class MarketDataService {
     // MARK: - Private Helper Methods
     
     private func cattlePrices(saleyard: String?, state: String?) -> [CategoryPrice] {
-        // Debug: All cattle prices reduced by 45% (×0.55) for realistic market values
+        // Debug: Cattle prices adjusted to realistic market values based on current Australian market rates
         return [
             CategoryPrice(
                 category: "Feeder Steer",
                 livestockType: .cattle,
-                price: 3.55, // Adjusted from 6.45 (×0.55)
-                change: 0.08, // Adjusted from 0.15 (×0.55)
+                price: 3.90, // Adjusted to realistic market rate
+                change: 0.08,
                 trend: .up,
                 weightRange: "300-400kg",
                 source: saleyard ?? "National Average"
@@ -190,8 +190,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Yearling Steer",
                 livestockType: .cattle,
-                price: 3.74, // Adjusted from 6.80 (×0.55)
-                change: -0.06, // Adjusted from -0.10 (×0.55)
+                price: 4.10, // Adjusted to realistic market rate (~$4.10/kg)
+                change: -0.06,
                 trend: .down,
                 weightRange: "400-500kg",
                 source: saleyard ?? "National Average"
@@ -199,8 +199,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Grown Steer",
                 livestockType: .cattle,
-                price: 3.38, // Adjusted from 6.15 (×0.55)
-                change: -0.03, // Adjusted from -0.05 (×0.55)
+                price: 3.70, // Adjusted to realistic market rate (base price)
+                change: -0.03,
                 trend: .down,
                 weightRange: "500-600kg",
                 source: saleyard ?? "National Average"
@@ -208,8 +208,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Breeding Cow",
                 livestockType: .cattle,
-                price: 2.31, // Adjusted from 4.20 (×0.55)
-                change: 0.03, // Adjusted from 0.05 (×0.55)
+                price: 3.80, // Adjusted to realistic market rate (~$3.80/kg)
+                change: 0.03,
                 trend: .up,
                 weightRange: "450-550kg",
                 source: saleyard ?? "National Average"
@@ -217,8 +217,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Heifer",
                 livestockType: .cattle,
-                price: 3.47, // Adjusted from 6.30 (×0.55)
-                change: 0.07, // Adjusted from 0.12 (×0.55)
+                price: 3.85, // Adjusted to realistic market rate
+                change: 0.07,
                 trend: .up,
                 weightRange: "350-450kg",
                 source: saleyard ?? "National Average"
@@ -226,8 +226,8 @@ class MarketDataService {
             CategoryPrice(
                 category: "Weaner Steer",
                 livestockType: .cattle,
-                price: 3.96, // Adjusted from 7.20 (×0.55)
-                change: 0.14, // Adjusted from 0.25 (×0.55)
+                price: 4.35, // Adjusted to realistic market rate (highest per kg)
+                change: 0.14,
                 trend: .up,
                 weightRange: "200-300kg",
                 source: saleyard ?? "National Average"
@@ -344,14 +344,15 @@ class MarketDataService {
     }
     
     private func getBasePrice(category: String, livestockType: LivestockType) -> Double {
-        // Debug: All base prices reduced by 45% (×0.55) for realistic market values
+        // Debug: Base prices set to realistic market values based on current Australian market rates
         switch livestockType {
         case .cattle:
-            if category.contains("Weaner") { return 3.96 } // Adjusted from 7.20
-            if category.contains("Feeder") { return 3.55 } // Adjusted from 6.45
-            if category.contains("Yearling") { return 3.74 } // Adjusted from 6.80
-            if category.contains("Heifer") { return 3.47 } // Adjusted from 6.30
-            return 3.38 // Adjusted from 6.15
+            if category.contains("Weaner") { return 4.35 } // Highest per kg (youngest animals)
+            if category.contains("Yearling") { return 4.10 } // ~$4.10/kg target
+            if category.contains("Feeder") { return 3.90 } // Mid-range price
+            if category.contains("Heifer") { return 3.85 } // Similar to breeding stock
+            if category.contains("Breeding") { return 3.80 } // ~$3.80/kg target
+            return 3.70 // Grown Steer base price
         case .sheep:
             if category.contains("Heavy") { return 4.81 } // Adjusted from 8.75
             if category.contains("Trade") { return 4.51 } // Adjusted from 8.20

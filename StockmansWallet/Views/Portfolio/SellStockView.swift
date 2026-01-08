@@ -12,7 +12,8 @@ import SwiftData
 struct SellStockView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query(filter: #Predicate<HerdGroup> { !$0.isSold }, sort: \HerdGroup.updatedAt, order: .reverse) private var activeHerds: [HerdGroup]
+    // Performance: Only query unsold herds (headCount > 1), not individual animals
+    @Query(filter: #Predicate<HerdGroup> { !$0.isSold && $0.headCount > 1 }, sort: \HerdGroup.updatedAt, order: .reverse) private var activeHerds: [HerdGroup]
     @Query private var preferences: [UserPreferences]
     
     // Debug: Pass herd ID instead of object to avoid SwiftData context issues

@@ -150,7 +150,8 @@ struct TimeRangeSelector: View {
 // Debug: Shows performance by herd category with percentage changes over selected time range
 struct MarketPulseView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var herds: [HerdGroup]
+    // Performance: Only query herds (headCount > 1), not individual animals
+    @Query(filter: #Predicate<HerdGroup> { $0.headCount > 1 }) private var herds: [HerdGroup]
     @Query private var preferences: [UserPreferences]
     @State private var categoryPerformance: [HerdCategoryPerformance] = []
     @State private var isLoading = true

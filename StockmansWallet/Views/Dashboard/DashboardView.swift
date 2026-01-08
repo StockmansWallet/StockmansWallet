@@ -13,7 +13,8 @@ import Foundation
 
 struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
-    @Query private var herds: [HerdGroup]
+    // Performance: Only query herds (headCount > 1), not individual animals
+    @Query(filter: #Predicate<HerdGroup> { $0.headCount > 1 }) private var herds: [HerdGroup]
     @Query private var preferences: [UserPreferences]
     
     // Debug: Use 'let' with @Observable instead of @StateObject (modern pattern)
