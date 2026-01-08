@@ -147,7 +147,7 @@ struct BackgroundImageSelectorView: View {
                 ) {
                     Label("Add Photo", systemImage: "photo.badge.plus")
                         .font(Theme.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.primaryText)
                         .frame(maxWidth: .infinity)
                         .frame(height: Theme.buttonHeight)
                         .background(Color.white.opacity(0.1))
@@ -367,7 +367,7 @@ struct BackgroundImageSelectorView: View {
                     
                     Text("No Custom Images")
                         .font(Theme.headline)
-                        .foregroundStyle(.white)
+                        .foregroundStyle(Theme.primaryText)
                     
                     Text("Tap 'Add Photo' below to upload your own image")
                         .font(Theme.caption)
@@ -417,7 +417,7 @@ struct BackgroundImageSelectorView: View {
             
             Text("No Background")
                 .font(Theme.headline)
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.primaryText)
             
             Text("Your dashboard will use the default theme color")
                 .font(Theme.caption)
@@ -791,7 +791,7 @@ struct CustomBackgroundThumbnail: View {
             }) {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: min(32, height * 0.11))) // Scale with height
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.primaryText)
                     .background(
                         Circle()
                             .fill(Color.red)

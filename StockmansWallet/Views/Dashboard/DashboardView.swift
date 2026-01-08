@@ -307,115 +307,36 @@ struct DashboardView: View {
         }
     }
     
-    // Debug: Rounded panel with all dashboard content
+    // Debug: Rounded panel with all dashboard content (displayed in user's custom order)
     @ViewBuilder
     private var contentPanel: some View {
+        let userPrefs = preferences.first ?? UserPreferences()
+        
         VStack(spacing: Theme.sectionSpacing) {
-            // Debug: Show placeholder when insufficient data (< 2 points), otherwise show chart
-            if filteredHistory.count < 2 {
-                // Debug: Empty state for new portfolios - matches InteractiveChartView structure exactly
-                VStack(spacing: 0) {
-                    // Debug: Space for date hover pill (matches InteractiveChartView)
-                    Color.clear
-                        .frame(height: 32)
-                    
-                    // Debug: Main chart area placeholder (fixed width constraint for smaller screens)
-                    VStack(spacing: 10) {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .font(.system(size: 32))
-                            .foregroundStyle(Theme.accent.opacity(0.6))
-                        
-                        Text("New Portfolio")
-                            .font(Theme.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(Theme.primaryText)
-                        
-                        Text("Your portfolio is brand new! As time passes and your herd data accumulates, this chart will automatically populate with historical valuation data.")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                            .multilineTextAlignment(.center)
-                            .lineLimit(4)
+            // Debug: Display cards in user's custom order from preferences
+            ForEach(userPrefs.dashboardCardOrder, id: \.self) { cardId in
+                // Debug: Render each card type inline to maintain access to @State bindings
+                if userPrefs.isCardVisible(cardId) {
+                    switch cardId {
+                    case "performanceChart":
+                        performanceChartCard
+                    case "quickActions":
+                        saleyardSelectorCard
+                    case "marketSummary":
+                        marketPulseCard
+                    case "recentActivity":
+                        herdDynamicsCard
+                    case "herdComposition":
+                        if !capitalConcentration.isEmpty {
+                            capitalConcentrationCard
+                        }
+                    default:
+                        EmptyView()
                     }
-                    .padding(.horizontal, 24)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 200)
-                    .clipped()
-                    .background(
-                        RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                            .fill(Color.white.opacity(0.01))
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                            .strokeBorder(
-                                Color.white.opacity(0.1),
-                                style: StrokeStyle(
-                                    lineWidth: 1,
-                                    lineCap: .round
-                                )
-                            )
-                    )
-                    
-                    // Debug: Space for chart date labels (matches InteractiveChartView)
-                    Color.clear
-                        .frame(height: 32)
-                        .padding(.top, 10)
                 }
-                .padding(.horizontal, Theme.cardPadding)
-                .padding(.bottom, -Theme.sectionSpacing) // Debug: Remove gap below placeholder since no time range selector
-                .accessibilityLabel("Chart placeholder")
-                .accessibilityHint("This chart will populate as your portfolio data accumulates over time.")
-            } else {
-                InteractiveChartView(
-                    data: filteredHistory,
-                    selectedDate: $selectedDate,
-                    selectedValue: $selectedValue,
-                    isScrubbing: $isScrubbing,
-                    timeRange: $timeRange,
-                    baseValue: baseValue,
-                    onValueChange: { newValue, change in
-                        portfolioChange = change
-                    }
-                )
-                .padding(.horizontal, Theme.cardPadding)
-                .accessibilityHint("Drag your finger across the chart to explore values over time.")
-                
-                // Debug: Only show time range selector when there's data to filter
-                TimeRangeSelector(
-                    timeRange: $timeRange,
-                    customStartDate: $customStartDate,
-                    customEndDate: $customEndDate,
-                    showingCustomDatePicker: $showingCustomDatePicker
-                )
-                    .padding(.horizontal, Theme.cardPadding)
-                    .padding(.top, -Theme.sectionSpacing)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel("Time range selector")
             }
             
-            // Debug: Saleyard selector - updates valuations based on selected saleyard prices
-            SaleyardSelector(selectedSaleyard: $selectedSaleyard)
-                .padding(.horizontal, Theme.cardPadding)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Saleyard selector")
-            
-            MarketPulseView()
-                .padding(.horizontal, Theme.cardPadding)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Herd performance")
-            
-            HerdDynamicsView(herds: herds.filter { !$0.isSold })
-                .padding(.horizontal, Theme.cardPadding)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Growth and mortality")
-            
-            if !capitalConcentration.isEmpty {
-                CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
-                    .padding(.horizontal, Theme.cardPadding)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel("Herd composition")
-            }
-            
-            // Debug: Beta testing card with clear data button
+            // Debug: Beta testing card with clear data button (always at the end)
             // TODO: Remove this entire section before App Store launch (after beta testing complete)
             VStack(spacing: 16) {
                 // Beta testing badge
@@ -521,6 +442,126 @@ struct DashboardView: View {
             }
             .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
         )
+    }
+    
+    // MARK: - Individual Card Views
+    // Debug: Separate computed properties for each dashboard card to maintain access to @State bindings
+    
+    @ViewBuilder
+    private var performanceChartCard: some View {
+        // Debug: Show placeholder when insufficient data (< 2 points), otherwise show chart
+        if filteredHistory.count < 2 {
+            // Debug: Empty state for new portfolios - matches InteractiveChartView structure exactly
+            VStack(spacing: 0) {
+                // Debug: Space for date hover pill (matches InteractiveChartView)
+                Color.clear
+                    .frame(height: 32)
+                
+                // Debug: Main chart area placeholder (fixed width constraint for smaller screens)
+                VStack(spacing: 10) {
+                    Image(systemName: "chart.line.uptrend.xyaxis")
+                        .font(.system(size: 32))
+                        .foregroundStyle(Theme.accent.opacity(0.6))
+                    
+                    Text("New Portfolio")
+                        .font(Theme.subheadline)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Theme.primaryText)
+                    
+                    Text("Your portfolio is brand new! As time passes and your herd data accumulates, this chart will automatically populate with historical valuation data.")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(4)
+                }
+                .padding(.horizontal, 24)
+                .frame(maxWidth: .infinity)
+                .frame(height: 200)
+                .clipped()
+                .background(
+                    RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                        .fill(Color.white.opacity(0.01))
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                        .strokeBorder(
+                            Color.white.opacity(0.1),
+                            style: StrokeStyle(
+                                lineWidth: 1,
+                                lineCap: .round
+                            )
+                        )
+                )
+                
+                // Debug: Space for chart date labels (matches InteractiveChartView)
+                Color.clear
+                    .frame(height: 32)
+                    .padding(.top, 10)
+            }
+            .padding(.horizontal, Theme.cardPadding)
+            .padding(.bottom, -Theme.sectionSpacing) // Debug: Remove gap below placeholder since no time range selector
+            .accessibilityLabel("Chart placeholder")
+            .accessibilityHint("This chart will populate as your portfolio data accumulates over time.")
+        } else {
+            InteractiveChartView(
+                data: filteredHistory,
+                selectedDate: $selectedDate,
+                selectedValue: $selectedValue,
+                isScrubbing: $isScrubbing,
+                timeRange: $timeRange,
+                baseValue: baseValue,
+                onValueChange: { newValue, change in
+                    portfolioChange = change
+                }
+            )
+            .padding(.horizontal, Theme.cardPadding)
+            .accessibilityHint("Drag your finger across the chart to explore values over time.")
+            
+            // Debug: Only show time range selector when there's data to filter
+            TimeRangeSelector(
+                timeRange: $timeRange,
+                customStartDate: $customStartDate,
+                customEndDate: $customEndDate,
+                showingCustomDatePicker: $showingCustomDatePicker
+            )
+                .padding(.horizontal, Theme.cardPadding)
+                .padding(.top, -Theme.sectionSpacing)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Time range selector")
+        }
+    }
+    
+    @ViewBuilder
+    private var saleyardSelectorCard: some View {
+        // Debug: Saleyard selector - updates valuations based on selected saleyard prices
+        SaleyardSelector(selectedSaleyard: $selectedSaleyard)
+            .padding(.horizontal, Theme.cardPadding)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Saleyard selector")
+    }
+    
+    @ViewBuilder
+    private var marketPulseCard: some View {
+        MarketPulseView()
+            .padding(.horizontal, Theme.cardPadding)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Herd performance")
+    }
+    
+    @ViewBuilder
+    private var herdDynamicsCard: some View {
+        HerdDynamicsView(herds: herds.filter { !$0.isSold })
+            .padding(.horizontal, Theme.cardPadding)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Growth and mortality")
+    }
+    
+    @ViewBuilder
+    private var capitalConcentrationCard: some View {
+        CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
+            .padding(.horizontal, Theme.cardPadding)
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel("Herd composition")
     }
     
     private var filteredHistory: [ValuationDataPoint] {

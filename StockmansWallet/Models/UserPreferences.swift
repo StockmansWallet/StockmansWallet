@@ -101,6 +101,15 @@ final class UserPreferences {
     var isCustomBackground: Bool // Debug: True if background is a custom uploaded image
     var customBackgroundImages: [String] // Debug: Array of custom uploaded image filenames
     
+    // MARK: - Dashboard Card Visibility
+    // Debug: User preferences for which dashboard cards to show/hide
+    var showPerformanceChart: Bool // Show/hide performance chart card
+    var showQuickActions: Bool // Show/hide quick actions card
+    var showMarketSummary: Bool // Show/hide market summary card
+    var showRecentActivity: Bool // Show/hide recent activity card
+    var showHerdComposition: Bool // Show/hide herd composition card
+    var dashboardCardOrder: [String] // Debug: Custom order of dashboard cards (drag to rearrange)
+    
     // MARK: - Dashboard State
     // Debug: Store last known portfolio value for "crypto-style" value reveal on dashboard load
     var lastPortfolioValue: Double // Last calculated portfolio value
@@ -148,6 +157,12 @@ final class UserPreferences {
         self.backgroundImageName = "BackgroundDefault" // Default background image
         self.isCustomBackground = false // Debug: Default to built-in asset
         self.customBackgroundImages = [] // Debug: Start with empty array of custom images
+        self.showPerformanceChart = true // Debug: Show by default
+        self.showQuickActions = true // Debug: Show by default
+        self.showMarketSummary = true // Debug: Show by default
+        self.showRecentActivity = true // Debug: Show by default
+        self.showHerdComposition = true // Debug: Show by default
+        self.dashboardCardOrder = ["performanceChart", "quickActions", "marketSummary", "recentActivity", "herdComposition"] // Debug: Default order
         self.lastPortfolioValue = 0.0 // Debug: Start at 0, will be updated after first calculation
         self.lastPortfolioUpdateDate = nil // Debug: No previous update
         self.lastChartData = nil // Debug: No cached chart data initially
@@ -171,6 +186,30 @@ final class UserPreferences {
             return ReferenceData.saleyards // All saleyards enabled by default
         }
         return enabledSaleyards
+    }
+    
+    // MARK: - Dashboard Card Helpers
+    // Debug: Helper functions to check and set card visibility by ID
+    func isCardVisible(_ cardId: String) -> Bool {
+        switch cardId {
+        case "performanceChart": return showPerformanceChart
+        case "quickActions": return showQuickActions
+        case "marketSummary": return showMarketSummary
+        case "recentActivity": return showRecentActivity
+        case "herdComposition": return showHerdComposition
+        default: return false
+        }
+    }
+    
+    func setCardVisibility(_ cardId: String, isVisible: Bool) {
+        switch cardId {
+        case "performanceChart": showPerformanceChart = isVisible
+        case "quickActions": showQuickActions = isVisible
+        case "marketSummary": showMarketSummary = isVisible
+        case "recentActivity": showRecentActivity = isVisible
+        case "herdComposition": showHerdComposition = isVisible
+        default: break
+        }
     }
 }
 

@@ -7,14 +7,41 @@
 //
 
 import SwiftUI
+import SwiftData
+
+// Debug: Dashboard card info for rearrangeable list
+struct DashboardCard: Identifiable {
+    let id: String
+    let name: String
+    let icon: String
+    let accessibilityLabel: String
+}
 
 struct AppearanceSettingsView: View {
-    // Debug: State for dashboard card visibility toggles
-    // TODO: Store these in UserPreferences and actually hide/show cards on dashboard
-    @State private var showPerformanceChart = true
-    @State private var showQuickActions = true
-    @State private var showMarketSummary = true
-    @State private var showRecentActivity = true
+    @Environment(\.modelContext) private var modelContext
+    @Query private var preferences: [UserPreferences]
+    
+    // Debug: Get user preferences with fallback
+    private var userPrefs: UserPreferences {
+        preferences.first ?? UserPreferences()
+    }
+    
+    // Debug: All available dashboard cards with metadata
+    private let allCards = [
+        DashboardCard(id: "performanceChart", name: "Performance Chart", icon: "chart.line.uptrend.xyaxis", accessibilityLabel: "Show performance chart on dashboard"),
+        DashboardCard(id: "quickActions", name: "Saleyards List", icon: "list.bullet", accessibilityLabel: "Show saleyards list on dashboard"),
+        DashboardCard(id: "marketSummary", name: "Herd Performance", icon: "chart.bar.fill", accessibilityLabel: "Show herd performance on dashboard"),
+        DashboardCard(id: "recentActivity", name: "Growth & Mortality", icon: "chart.line.uptrend.xyaxis", accessibilityLabel: "Show growth and mortality on dashboard"),
+        DashboardCard(id: "herdComposition", name: "Herd Composition", icon: "chart.pie.fill", accessibilityLabel: "Show herd composition on dashboard")
+    ]
+    
+    // Debug: Get cards in user's custom order
+    private var orderedCards: [DashboardCard] {
+        let order = userPrefs.dashboardCardOrder
+        return order.compactMap { cardId in
+            allCards.first { $0.id == cardId }
+        }
+    }
     
     var body: some View {
         List {
@@ -30,56 +57,28 @@ struct AppearanceSettingsView: View {
             }
             .listRowBackground(Theme.cardBackground)
             
-            // Debug: Dashboard Card Visibility Section
-            // Allows users to show/hide specific dashboard cards
+            // Debug: Dashboard Card Visibility Section with rearrangeable list
+            // Allows users to show/hide and reorder dashboard cards
             Section {
-                Toggle(isOn: $showPerformanceChart) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "chart.line.uptrend.xyaxis")
-                            .foregroundStyle(Theme.accent)
-                            .frame(width: 24)
-                        Text("Performance Chart")
-                            .font(Theme.body)
-                    }
+                ForEach(orderedCards) { card in
+                    cardToggleRow(for: card)
                 }
-                .tint(Theme.accent)
-                .accessibilityLabel("Show performance chart on dashboard")
+                .onMove { from, to in
+                    moveCard(from: from, to: to)
+                }
                 
-                Toggle(isOn: $showQuickActions) {
+                // Debug: Reset to default order button
+                Button(action: resetToDefaultOrder) {
                     HStack(spacing: 12) {
-                        Image(systemName: "bolt.fill")
+                        Image(systemName: "arrow.counterclockwise")
                             .foregroundStyle(Theme.accent)
                             .frame(width: 24)
-                        Text("Quick Actions")
+                        Text("Reset to Default Order")
                             .font(Theme.body)
-                    }
-                }
-                .tint(Theme.accent)
-                .accessibilityLabel("Show quick actions on dashboard")
-                
-                Toggle(isOn: $showMarketSummary) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "chart.bar.fill")
                             .foregroundStyle(Theme.accent)
-                            .frame(width: 24)
-                        Text("Market Summary")
-                            .font(Theme.body)
                     }
                 }
-                .tint(Theme.accent)
-                .accessibilityLabel("Show market summary on dashboard")
-                
-                Toggle(isOn: $showRecentActivity) {
-                    HStack(spacing: 12) {
-                        Image(systemName: "clock.fill")
-                            .foregroundStyle(Theme.accent)
-                            .frame(width: 24)
-                        Text("Recent Activity")
-                            .font(Theme.body)
-                    }
-                }
-                .tint(Theme.accent)
-                .accessibilityLabel("Show recent activity on dashboard")
+                .accessibilityLabel("Reset card order to default")
             } header: {
                 Text("Dashboard Cards")
             } footer: {
@@ -94,6 +93,80 @@ struct AppearanceSettingsView: View {
         .navigationTitle("Dashboard")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
+        .environment(\.editMode, .constant(.active)) // Debug: Always in edit mode for drag-and-drop
+    }
+    
+    // MARK: - Helper Views
+    
+    /// Debug: Create a toggle row for a dashboard card
+    @ViewBuilder
+    private func cardToggleRow(for card: DashboardCard) -> some View {
+        Toggle(isOn: Binding(
+            get: { getCardVisibility(for: card.id) },
+            set: { newValue in setCardVisibility(for: card.id, to: newValue) }
+        )) {
+            HStack(spacing: 12) {
+                Image(systemName: card.icon)
+                    .foregroundStyle(Theme.accent)
+                    .frame(width: 24)
+                Text(card.name)
+                    .font(Theme.body)
+            }
+        }
+        .tint(Theme.accent)
+        .accessibilityLabel(card.accessibilityLabel)
+    }
+    
+    // MARK: - Helper Functions
+    
+    /// Debug: Get visibility state for a specific card
+    private func getCardVisibility(for cardId: String) -> Bool {
+        switch cardId {
+        case "performanceChart": return userPrefs.showPerformanceChart
+        case "quickActions": return userPrefs.showQuickActions
+        case "marketSummary": return userPrefs.showMarketSummary
+        case "recentActivity": return userPrefs.showRecentActivity
+        case "herdComposition": return userPrefs.showHerdComposition
+        default: return true
+        }
+    }
+    
+    /// Debug: Set visibility state for a specific card
+    private func setCardVisibility(for cardId: String, to value: Bool) {
+        guard let prefs = preferences.first else { return }
+        
+        switch cardId {
+        case "performanceChart": prefs.showPerformanceChart = value
+        case "quickActions": prefs.showQuickActions = value
+        case "marketSummary": prefs.showMarketSummary = value
+        case "recentActivity": prefs.showRecentActivity = value
+        case "herdComposition": prefs.showHerdComposition = value
+        default: break
+        }
+        
+        try? modelContext.save()
+    }
+    
+    /// Debug: Move card in the custom order
+    private func moveCard(from source: IndexSet, to destination: Int) {
+        guard let prefs = preferences.first else { return }
+        
+        var newOrder = prefs.dashboardCardOrder
+        newOrder.move(fromOffsets: source, toOffset: destination)
+        prefs.dashboardCardOrder = newOrder
+        try? modelContext.save()
+        
+        HapticManager.selection()
+    }
+    
+    /// Debug: Reset card order to default
+    private func resetToDefaultOrder() {
+        guard let prefs = preferences.first else { return }
+        
+        prefs.dashboardCardOrder = ["performanceChart", "quickActions", "marketSummary", "recentActivity", "herdComposition"]
+        try? modelContext.save()
+        
+        HapticManager.success()
     }
 }
 
