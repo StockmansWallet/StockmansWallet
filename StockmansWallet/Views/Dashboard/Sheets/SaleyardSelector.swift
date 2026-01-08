@@ -41,6 +41,10 @@ struct SaleyardSelector: View {
             .padding(16)
             .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                    .strokeBorder(Color.white.opacity(0.1), lineWidth: 1)
+            )
         }
         .buttonStyle(.plain) // Debug: Prevent button highlight, keep custom styling
         .sheet(isPresented: $showingSaleyardSheet) {

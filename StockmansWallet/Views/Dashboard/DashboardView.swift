@@ -405,7 +405,7 @@ struct DashboardView: View {
             .padding(.horizontal, Theme.cardPadding)
             .padding(.top, Theme.sectionSpacing)
         }
-        .padding(.top, 8) // Debug: Proper spacing from rounded top edge
+        .padding(.top, Theme.cardPadding) // Debug: Even top padding matching horizontal padding (20pt)
         .padding(.bottom, 100)
         .background(
             // Debug: iOS 26 HIG - Panel background using native UnevenRoundedRectangle
@@ -499,35 +499,39 @@ struct DashboardView: View {
                     .padding(.top, 10)
             }
             .padding(.horizontal, Theme.cardPadding)
+            .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
             .padding(.bottom, -Theme.sectionSpacing) // Debug: Remove gap below placeholder since no time range selector
             .accessibilityLabel("Chart placeholder")
             .accessibilityHint("This chart will populate as your portfolio data accumulates over time.")
         } else {
-            InteractiveChartView(
-                data: filteredHistory,
-                selectedDate: $selectedDate,
-                selectedValue: $selectedValue,
-                isScrubbing: $isScrubbing,
-                timeRange: $timeRange,
-                baseValue: baseValue,
-                onValueChange: { newValue, change in
-                    portfolioChange = change
-                }
-            )
-            .padding(.horizontal, Theme.cardPadding)
-            .accessibilityHint("Drag your finger across the chart to explore values over time.")
-            
-            // Debug: Only show time range selector when there's data to filter
-            TimeRangeSelector(
-                timeRange: $timeRange,
-                customStartDate: $customStartDate,
-                customEndDate: $customEndDate,
-                showingCustomDatePicker: $showingCustomDatePicker
-            )
+            VStack(spacing: 0) {
+                InteractiveChartView(
+                    data: filteredHistory,
+                    selectedDate: $selectedDate,
+                    selectedValue: $selectedValue,
+                    isScrubbing: $isScrubbing,
+                    timeRange: $timeRange,
+                    baseValue: baseValue,
+                    onValueChange: { newValue, change in
+                        portfolioChange = change
+                    }
+                )
                 .padding(.horizontal, Theme.cardPadding)
-                .padding(.top, -Theme.sectionSpacing)
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Time range selector")
+                .accessibilityHint("Drag your finger across the chart to explore values over time.")
+                
+                // Debug: Only show time range selector when there's data to filter
+                TimeRangeSelector(
+                    timeRange: $timeRange,
+                    customStartDate: $customStartDate,
+                    customEndDate: $customEndDate,
+                    showingCustomDatePicker: $showingCustomDatePicker
+                )
+                    .padding(.horizontal, Theme.cardPadding)
+                    .padding(.top, -Theme.sectionSpacing)
+                    .accessibilityElement(children: .contain)
+                    .accessibilityLabel("Time range selector")
+            }
+            .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
         }
     }
     
