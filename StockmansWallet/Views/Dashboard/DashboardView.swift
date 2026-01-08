@@ -313,6 +313,12 @@ struct DashboardView: View {
         let userPrefs = preferences.first ?? UserPreferences()
         
         VStack(spacing: Theme.sectionSpacing) {
+            // Debug: Add top spacing when performance chart is off to prevent other cards from overlapping
+            if !userPrefs.showPerformanceChart {
+                Color.clear
+                    .frame(height: 20)
+            }
+            
             // Debug: Display cards in user's custom order from preferences
             ForEach(userPrefs.dashboardCardOrder, id: \.self) { cardId in
                 // Debug: Render each card type inline to maintain access to @State bindings

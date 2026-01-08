@@ -82,7 +82,7 @@ struct AppearanceSettingsView: View {
             } header: {
                 Text("Dashboard Cards")
             } footer: {
-                Text("Choose which cards to display on your dashboard. Changes take effect immediately.")
+                Text("Choose which cards to display on your dashboard and arrange them by long-pressing and dragging. Changes take effect immediately.")
                     .font(Theme.caption)
             }
             .listRowBackground(Theme.cardBackground)
@@ -93,7 +93,6 @@ struct AppearanceSettingsView: View {
         .navigationTitle("Dashboard")
         .navigationBarTitleDisplayMode(.inline)
         .toolbarBackground(.visible, for: .navigationBar)
-        .environment(\.editMode, .constant(.active)) // Debug: Always in edit mode for drag-and-drop
     }
     
     // MARK: - Helper Views
