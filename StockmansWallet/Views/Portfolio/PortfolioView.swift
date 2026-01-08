@@ -427,8 +427,14 @@ struct PortfolioView: View {
     
     // MARK: - Load Portfolio Summary (Parallelized)
     private func loadPortfolioSummary() async {
-        await MainActor.run {
-            self.isLoading = true
+        // Debug: Only show loading indicator if we don't have a summary yet
+        // This prevents flashing spinner when updating existing data
+        let shouldShowLoader = portfolioSummary == nil
+        
+        if shouldShowLoader {
+            await MainActor.run {
+                self.isLoading = true
+            }
         }
         
         // Performance: Only calculate valuations for herds (headCount > 1) in summary
@@ -612,7 +618,11 @@ struct PortfolioView: View {
                 valuations: valuations
             )
             self.isLoading = false
-            HapticManager.success()
+            
+            // Debug: Only provide haptic feedback on initial load, not on background updates
+            if shouldShowLoader {
+                HapticManager.success()
+            }
         }
     }
 }
