@@ -110,6 +110,13 @@ final class UserPreferences {
     var showHerdComposition: Bool // Show/hide herd composition card
     var dashboardCardOrder: [String] // Debug: Custom order of dashboard cards (drag to rearrange)
     
+    // MARK: - Portfolio Card Visibility
+    // Debug: User preferences for which portfolio overview cards to show/hide
+    var showPortfolioMarketSummary: Bool // Show/hide herd performance card on portfolio
+    var showPortfolioRecentActivity: Bool // Show/hide growth & mortality card on portfolio
+    var showPortfolioHerdComposition: Bool // Show/hide herd composition card on portfolio
+    var portfolioCardOrder: [String] // Debug: Custom order of portfolio cards (drag to rearrange)
+    
     // MARK: - Dashboard State
     // Debug: Store last known portfolio value for "crypto-style" value reveal on dashboard load
     var lastPortfolioValue: Double // Last calculated portfolio value
@@ -163,6 +170,10 @@ final class UserPreferences {
         self.showRecentActivity = true // Debug: Show by default
         self.showHerdComposition = true // Debug: Show by default
         self.dashboardCardOrder = ["performanceChart", "quickActions", "marketSummary", "recentActivity", "herdComposition"] // Debug: Default order
+        self.showPortfolioMarketSummary = true // Debug: Show by default
+        self.showPortfolioRecentActivity = true // Debug: Show by default
+        self.showPortfolioHerdComposition = true // Debug: Show by default
+        self.portfolioCardOrder = ["marketSummary", "recentActivity", "herdComposition"] // Debug: Default order
         self.lastPortfolioValue = 0.0 // Debug: Start at 0, will be updated after first calculation
         self.lastPortfolioUpdateDate = nil // Debug: No previous update
         self.lastChartData = nil // Debug: No cached chart data initially
@@ -208,6 +219,26 @@ final class UserPreferences {
         case "marketSummary": showMarketSummary = isVisible
         case "recentActivity": showRecentActivity = isVisible
         case "herdComposition": showHerdComposition = isVisible
+        default: break
+        }
+    }
+    
+    // MARK: - Portfolio Card Helpers
+    // Debug: Helper functions to check and set portfolio card visibility by ID
+    func isPortfolioCardVisible(_ cardId: String) -> Bool {
+        switch cardId {
+        case "marketSummary": return showPortfolioMarketSummary
+        case "recentActivity": return showPortfolioRecentActivity
+        case "herdComposition": return showPortfolioHerdComposition
+        default: return false
+        }
+    }
+    
+    func setPortfolioCardVisibility(_ cardId: String, isVisible: Bool) {
+        switch cardId {
+        case "marketSummary": showPortfolioMarketSummary = isVisible
+        case "recentActivity": showPortfolioRecentActivity = isVisible
+        case "herdComposition": showPortfolioHerdComposition = isVisible
         default: break
         }
     }

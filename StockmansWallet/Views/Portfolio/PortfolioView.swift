@@ -204,16 +204,47 @@ struct PortfolioView: View {
     
     // MARK: - Overview Content
     private var overviewContent: some View {
-        Group {
+        let userPrefs = preferences.first ?? UserPreferences()
+        
+        return Group {
             if let summary = portfolioSummary {
-                // Debug: Asset Breakdown moved above Capital Concentration per user request
-                AssetBreakdownCard(summary: summary)
-                    .padding(.horizontal)
-                
-                CapitalConcentrationCard(summary: summary)
-                    .padding(.horizontal)
-                
-             
+                // Debug: Display dashboard cards in user's custom order from preferences
+                ForEach(userPrefs.portfolioCardOrder, id: \.self) { cardId in
+                    if userPrefs.isPortfolioCardVisible(cardId) {
+                        switch cardId {
+                        case "marketSummary":
+                            MarketPulseView()
+                                .padding(.horizontal, Theme.cardPadding)
+                                .accessibilityElement(children: .contain)
+                                .accessibilityLabel("Herd performance")
+                            
+                        case "recentActivity":
+                            HerdDynamicsView(herds: allHerds.filter { !$0.isSold })
+                                .padding(.horizontal, Theme.cardPadding)
+                                .accessibilityElement(children: .contain)
+                                .accessibilityLabel("Growth and mortality")
+                            
+                        case "herdComposition":
+                            // Debug: Build capital concentration breakdown from portfolio summary
+                            let breakdown = summary.categoryBreakdown.map {
+                                CapitalConcentrationBreakdown(
+                                    category: $0.category,
+                                    value: $0.totalValue,
+                                    percentage: summary.totalNetWorth > 0 ? ($0.totalValue / summary.totalNetWorth) * 100 : 0
+                                )
+                            }
+                            if !breakdown.isEmpty {
+                                CapitalConcentrationView(breakdown: breakdown, totalValue: summary.totalNetWorth)
+                                    .padding(.horizontal, Theme.cardPadding)
+                                    .accessibilityElement(children: .contain)
+                                    .accessibilityLabel("Herd composition")
+                            }
+                            
+                        default:
+                            EmptyView()
+                        }
+                    }
+                }
             } else if isLoading {
                 ProgressView()
                     .tint(Theme.accent)
