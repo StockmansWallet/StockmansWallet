@@ -151,6 +151,8 @@ class MockDataService {
                 }
             }
             
+            print("🐄 MockData: Parsing '\(animal.name)' -> ID: '\(idNumber ?? "nil")', Nickname: '\(nickname)'")
+            
             let individual = HerdGroup(
                 name: nickname,
                 species: "Cattle",

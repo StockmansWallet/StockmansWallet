@@ -245,8 +245,26 @@ class HistoricalMockDataService {
         for animal in individualAnimals {
             let startDate = calendar.date(byAdding: .day, value: animal.daysAgo, to: endDate) ?? endDate
             
+            // Debug: Parse name to extract ID number and nickname
+            // Format: "Nickname #ID" or just "#ID" or just "Nickname"
+            var idNumber: String? = nil
+            var nickname: String = animal.name
+            
+            if let hashIndex = animal.name.firstIndex(of: "#") {
+                // Has an ID number
+                let beforeHash = animal.name[..<hashIndex].trimmingCharacters(in: .whitespaces)
+                let afterHash = animal.name[animal.name.index(after: hashIndex)...].trimmingCharacters(in: .whitespaces)
+                
+                if !afterHash.isEmpty {
+                    idNumber = String(afterHash)
+                    nickname = beforeHash.isEmpty ? "" : beforeHash
+                }
+            }
+            
+            print("🐄 HistoricalMockData: Parsing '\(animal.name)' -> ID: '\(idNumber ?? "nil")', Nickname: '\(nickname)'")
+            
             let individual = HerdGroup(
-                name: animal.name,
+                name: nickname,
                 species: "Cattle",
                 breed: animal.breed,
                 sex: animal.category.contains("Cow") || animal.category.contains("Heifer") ? "Female" : "Male",
@@ -256,7 +274,8 @@ class HistoricalMockDataService {
                 initialWeight: animal.weight,
                 dailyWeightGain: animal.dwg,
                 isBreeder: animal.category.contains("Breeding") || animal.category.contains("Heifer"),
-                selectedSaleyard: preferences.defaultSaleyard
+                selectedSaleyard: preferences.defaultSaleyard,
+                animalIdNumber: idNumber
             )
             
             individual.createdAt = startDate

@@ -116,12 +116,17 @@ final class HerdGroup {
         if headCount == 1, let idNumber = animalIdNumber {
             // Individual animal with ID number
             if !name.isEmpty && name != idNumber {
-                return "#\(idNumber) \"\(name)\""
+                let formatted = "#\(idNumber) \"\(name)\""
+                print("🏷️ DisplayName: ID=\(idNumber), Name=\(name) -> \(formatted)")
+                return formatted
             } else {
-                return "#\(idNumber)"
+                let formatted = "#\(idNumber)"
+                print("🏷️ DisplayName: ID=\(idNumber), No name -> \(formatted)")
+                return formatted
             }
         } else {
             // Herd or no ID number
+            print("🏷️ DisplayName: Herd or no ID -> \(name)")
             return name
         }
     }
