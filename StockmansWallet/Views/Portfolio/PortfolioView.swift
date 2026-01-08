@@ -1308,7 +1308,7 @@ struct LightweightAnimalCard: View {
                     }
                     
                     // Row 5: Saleyard and Sell Button
-                    HStack(alignment: .bottom) {
+                    HStack(alignment: .center) {
                         if let saleyard = data.selectedSaleyard, !saleyard.isEmpty {
                             HStack(spacing: 4) {
                                 Image("property_icon")
@@ -1439,7 +1439,7 @@ struct EnhancedHerdCard: View {
                 
                 // Head Count, Breeder info, and Weight/Price Row
                 if let valuation = valuation {
-                    HStack(alignment: .bottom) {
+                    HStack(alignment: .center) {
                         HStack(spacing: 4) {
                             Image("cowhead")
                                 .resizable()
@@ -1471,7 +1471,7 @@ struct EnhancedHerdCard: View {
                 }
                 
                 // Saleyard and Sell Button Row
-                HStack(alignment: .bottom) {
+                HStack(alignment: .center) {
                     if let saleyard = herdSaleyard, !saleyard.isEmpty {
                         HStack(spacing: 4) {
                             Image("property_icon")
