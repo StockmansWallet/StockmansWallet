@@ -504,34 +504,32 @@ struct DashboardView: View {
             .accessibilityLabel("Chart placeholder")
             .accessibilityHint("This chart will populate as your portfolio data accumulates over time.")
         } else {
-            VStack(spacing: 0) {
-                InteractiveChartView(
-                    data: filteredHistory,
-                    selectedDate: $selectedDate,
-                    selectedValue: $selectedValue,
-                    isScrubbing: $isScrubbing,
-                    timeRange: $timeRange,
-                    baseValue: baseValue,
-                    onValueChange: { newValue, change in
-                        portfolioChange = change
-                    }
-                )
-                .padding(.horizontal, Theme.cardPadding)
-                .accessibilityHint("Drag your finger across the chart to explore values over time.")
-                
-                // Debug: Only show time range selector when there's data to filter
-                TimeRangeSelector(
-                    timeRange: $timeRange,
-                    customStartDate: $customStartDate,
-                    customEndDate: $customEndDate,
-                    showingCustomDatePicker: $showingCustomDatePicker
-                )
-                    .padding(.horizontal, Theme.cardPadding)
-                    .padding(.top, -Theme.sectionSpacing)
-                    .accessibilityElement(children: .contain)
-                    .accessibilityLabel("Time range selector")
-            }
+            InteractiveChartView(
+                data: filteredHistory,
+                selectedDate: $selectedDate,
+                selectedValue: $selectedValue,
+                isScrubbing: $isScrubbing,
+                timeRange: $timeRange,
+                baseValue: baseValue,
+                onValueChange: { newValue, change in
+                    portfolioChange = change
+                }
+            )
+            .padding(.horizontal, Theme.cardPadding)
             .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
+            .accessibilityHint("Drag your finger across the chart to explore values over time.")
+            
+            // Debug: Only show time range selector when there's data to filter
+            TimeRangeSelector(
+                timeRange: $timeRange,
+                customStartDate: $customStartDate,
+                customEndDate: $customEndDate,
+                showingCustomDatePicker: $showingCustomDatePicker
+            )
+                .padding(.horizontal, Theme.cardPadding)
+                .padding(.top, -Theme.sectionSpacing)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Time range selector")
         }
     }
     
