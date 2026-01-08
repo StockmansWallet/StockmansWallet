@@ -133,28 +133,24 @@ struct HerdDetailView: View {
                         .padding(.horizontal)
                     }
                     
-                    // Debug: Sell button at bottom of detail page (not floating, just regular button)
+                    // Debug: Record Sale button at bottom of detail page (not floating, just regular button)
                     if !isLoading && !activeHerd.isSold {
                         Button {
                             HapticManager.tap()
                             showingSellSheet = true
                         } label: {
-                            HStack(spacing: 8) {
-                                Image(systemName: "dollarsign.circle.fill")
-                                    .font(.system(size: 18, weight: .semibold))
-                                Text("Sell Stock")
-                                    .font(Theme.headline)
-                                    .fontWeight(.semibold)
-                            }
-                            .foregroundStyle(.white)
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 16)
-                            .background(Theme.accent)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            Text("Record Sale")
+                                .font(Theme.headline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 16)
+                                .background(Theme.accent)
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
                         .buttonStyle(.plain)
                         .padding(.horizontal)
-                        .accessibilityLabel("Sell stock")
+                        .accessibilityLabel("Record sale")
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -329,36 +325,26 @@ struct HerdStatsCard: View {
     
     var body: some View {
         HStack(spacing: 24) {
-            // Head (left side)
-            HStack(spacing: 8) {
-                Text("Head")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                Text("\(herd.headCount)")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            // Debug: Head count with label as single centered text
+            Text("\(herd.headCount) Head")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(Theme.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity, alignment: .center)
             
             // Vertical divider - using Rectangle like Portfolio page
             Rectangle()
                 .fill(Theme.separator.opacity(0.3))
                 .frame(width: 1, height: 30)
             
-            // Species (right side)
-            HStack(spacing: 8) {
-                Text("Species")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                Text(herd.species)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-            }
-            .frame(maxWidth: .infinity, alignment: .trailing)
+            // Debug: Species as single centered text
+            Text(herd.species)
+                .font(.system(size: 20, weight: .bold))
+                .foregroundStyle(Theme.primaryText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+                .frame(maxWidth: .infinity, alignment: .center)
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
@@ -558,9 +544,9 @@ struct PrimaryMetricsCard: View {
                 .frame(maxWidth: .infinity)
             }
             
-            // Debug: Show herd's specific saleyard
+            // Debug: Show herd's specific saleyard with consistent icon
             HStack {
-                Image(systemName: "building.2")
+                Image(systemName: "dollarsign.bank.building")
                     .font(.system(size: 12))
                     .foregroundStyle(Theme.secondaryText)
                 Text(herd.selectedSaleyard ?? "No saleyard selected")

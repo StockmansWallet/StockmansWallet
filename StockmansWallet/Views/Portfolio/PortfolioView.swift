@@ -662,38 +662,28 @@ struct PortfolioStatsCards: View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16) // Debug: Consistent horizontal padding for breathing room
             
-            // Debug: Combined stats card with horizontal layout for cleaner, more compact design
+            // Debug: Combined stats card with horizontal layout - centered text with count + label format
             HStack(spacing: 24) {
-                // Head
-                HStack(spacing: 8) {
-                    Text("Head")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                    Text("\(summary.totalHeadCount)")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Theme.primaryText)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                // Debug: Total head count with label as single centered text
+                Text("\(summary.totalHeadCount) Head")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, alignment: .center)
                 
                 // Divider
                 Rectangle()
                     .fill(Theme.separator.opacity(0.3))
                     .frame(width: 1, height: 30)
                 
-                // Active Herds
-                HStack(spacing: 8) {
-                    Text("Herds")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                    Text("\(summary.activeHerdCount)")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Theme.primaryText)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-                .frame(maxWidth: .infinity, alignment: .trailing)
+                // Debug: Active herd count with label as single centered text
+                Text("\(summary.activeHerdCount) Herds")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, alignment: .center)
             }
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
