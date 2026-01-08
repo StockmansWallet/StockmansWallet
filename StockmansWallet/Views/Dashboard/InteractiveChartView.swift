@@ -88,39 +88,9 @@ struct InteractiveChartView: View {
     }
     
     private func edgeExtendedData(for data: [ValuationDataPoint], in range: TimeRange) -> [ValuationDataPoint] {
-        guard !data.isEmpty else { return data }
-        // Debug: Sort data chronologically (oldest to newest)
-        let sorted = data.sorted { $0.date < $1.date }
-        let first = sorted[0]
-        
-        let epsilon: TimeInterval
-        switch range {
-        case .custom:
-            // Debug: No edge extension for custom range - show exact selected dates
-            return sorted
-        case .week, .month:
-            epsilon = 60 * 60 * 12
-        case .year:
-            epsilon = 60 * 60 * 24
-        case .all:
-            // Debug: Return sorted data to ensure chronological order
-            return sorted
-        }
-        
-        // Debug: Create leading edge point before the first data point
-        // This extends the chart line to the left edge for better visual appearance
-        let leading = ValuationDataPoint(
-            date: first.date.addingTimeInterval(-epsilon),
-            value: first.value,
-            physicalValue: first.physicalValue,
-            breedingAccrual: first.breedingAccrual
-        )
-        
-        // Debug: Use sorted data (not original unsorted data) to prevent line jumping
-        // This ensures the chart draws lines in chronological order
-        var out = sorted
-        out.insert(leading, at: 0)
-        return out
+        // Debug: No edge extension to prevent chart line from overflowing container bounds
+        // Return chronologically sorted data without adding leading edge points
+        return data.sorted { $0.date < $1.date }
     }
     
     // Debug: Grid removed per user request - clean minimal chart appearance
@@ -143,7 +113,7 @@ struct InteractiveChartView: View {
                 )
                 .foregroundStyle(Theme.accent)
                 .interpolationMethod(.monotone)
-                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .butt, lineJoin: .round))
+                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)) // Debug: Round lineCap to prevent extension
             }
             
             ForEach(renderData) { point in
@@ -158,14 +128,15 @@ struct InteractiveChartView: View {
         }
         .chartXAxis(.hidden)
         .chartYAxis(.hidden)
-        .chartXScale(domain: xRange, range: .plotDimension(padding: 0))
-        .chartYScale(domain: yRange, range: .plotDimension(padding: 0))
+        .chartXScale(domain: xRange)
+        .chartYScale(domain: yRange)
         .chartPlotStyle { plotArea in
             plotArea
                 .padding(.horizontal, 0)
                 .padding(.vertical, 0)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .clipShape(Rectangle()) // Debug: Clip chart to prevent line from extending beyond bounds
         .accessibilityLabel("Portfolio value chart")
     }
     
@@ -386,12 +357,12 @@ struct InteractiveChartView: View {
                 }
             }
             .frame(height: 200)
-            .clipped()
             // Debug: Clean minimal chart styling with subtle stroke matching other cards
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                     .fill(Color.white.opacity(0.01))
             )
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)) // Debug: Clip to rounded corners to prevent overflow
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                     .strokeBorder(

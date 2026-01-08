@@ -515,6 +515,7 @@ struct DashboardView: View {
                     portfolioChange = change
                 }
             )
+            .clipped() // Debug: Clip chart content to prevent overflow beyond bounds
             .padding(.horizontal, Theme.cardPadding)
             .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
             .accessibilityHint("Drag your finger across the chart to explore values over time.")
