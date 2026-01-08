@@ -67,7 +67,7 @@ struct AppearanceSettingsView: View {
                     moveCard(from: from, to: to)
                 }
                 
-                // Debug: Reset to default order button
+                // Debug: Reset to default order button (keep accent color for action)
                 Button(action: resetToDefaultOrder) {
                     HStack(spacing: 12) {
                         Image(systemName: "arrow.counterclockwise")
@@ -110,6 +110,7 @@ struct AppearanceSettingsView: View {
                     .frame(width: 24)
                 Text(card.name)
                     .font(Theme.body)
+                    .foregroundStyle(Theme.primaryText) // Debug: Use PrimaryText instead of white
             }
         }
         .tint(Theme.accent)

@@ -313,12 +313,6 @@ struct DashboardView: View {
         let userPrefs = preferences.first ?? UserPreferences()
         
         VStack(spacing: Theme.sectionSpacing) {
-            // Debug: Add top spacing when performance chart is off to prevent other cards from overlapping
-            if !userPrefs.showPerformanceChart {
-                Color.clear
-                    .frame(height: 20)
-            }
-            
             // Debug: Display cards in user's custom order from preferences
             ForEach(userPrefs.dashboardCardOrder, id: \.self) { cardId in
                 // Debug: Render each card type inline to maintain access to @State bindings
@@ -411,7 +405,7 @@ struct DashboardView: View {
             .padding(.horizontal, Theme.cardPadding)
             .padding(.top, Theme.sectionSpacing)
         }
-        .padding(.top, -12)
+        .padding(.top, 8) // Debug: Proper spacing from rounded top edge
         .padding(.bottom, 100)
         .background(
             // Debug: iOS 26 HIG - Panel background using native UnevenRoundedRectangle
