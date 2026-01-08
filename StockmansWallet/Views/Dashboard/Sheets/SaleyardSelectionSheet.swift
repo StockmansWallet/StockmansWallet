@@ -2,7 +2,7 @@
 //  SaleyardSelectionSheet.swift
 //  StockmansWallet
 //
-//  HIG-compliant searchable sheet for selecting from 31+ saleyards
+//  HIG-compliant searchable sheet for selecting from saleyards and custom locations
 //  Follows iOS patterns: search bar, grouped list, clear selection action
 //
 
@@ -13,6 +13,7 @@ struct SaleyardSelectionSheet: View {
     @Binding var selectedSaleyard: String?
     @Environment(\.dismiss) private var dismiss
     @Query private var preferences: [UserPreferences]
+    @Query private var customLocations: [CustomSaleLocation]
     @State private var searchText = ""
     
     // Debug: Get user preferences for filtered saleyards
@@ -29,6 +30,30 @@ struct SaleyardSelectionSheet: View {
             return enabledSaleyards.filter { 
                 $0.localizedCaseInsensitiveContains(searchText) 
             }
+        }
+    }
+    
+    // Debug: Get enabled private locations
+    private var enabledPrivateLocations: [CustomSaleLocation] {
+        let locations = customLocations.filter { $0.category == "Private" && $0.isEnabled }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        
+        if searchText.isEmpty {
+            return locations
+        } else {
+            return locations.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
+    
+    // Debug: Get enabled other locations
+    private var enabledOtherLocations: [CustomSaleLocation] {
+        let locations = customLocations.filter { $0.category == "Other" && $0.isEnabled }
+            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        
+        if searchText.isEmpty {
+            return locations
+        } else {
+            return locations.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
         }
     }
     
@@ -70,6 +95,92 @@ struct SaleyardSelectionSheet: View {
                         .foregroundStyle(Theme.secondaryText)
                 }
                 
+                // Debug: Private locations section
+                if !enabledPrivateLocations.isEmpty {
+                    Section {
+                        ForEach(enabledPrivateLocations) { location in
+                            Button(action: {
+                                HapticManager.tap()
+                                selectedSaleyard = location.name
+                                dismiss()
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(location.name)
+                                            .font(Theme.body)
+                                            .foregroundStyle(Theme.primaryText)
+                                        
+                                        if let address = location.address, !address.isEmpty {
+                                            Text(address)
+                                                .font(Theme.caption)
+                                                .foregroundStyle(Theme.secondaryText)
+                                                .lineLimit(1)
+                                        }
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    if selectedSaleyard == location.name {
+                                        Image(systemName: "checkmark")
+                                            .foregroundStyle(Theme.accent)
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color.clear)
+                        }
+                    } header: {
+                        Text("Private Locations")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                }
+                
+                // Debug: Other locations section
+                if !enabledOtherLocations.isEmpty {
+                    Section {
+                        ForEach(enabledOtherLocations) { location in
+                            Button(action: {
+                                HapticManager.tap()
+                                selectedSaleyard = location.name
+                                dismiss()
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(location.name)
+                                            .font(Theme.body)
+                                            .foregroundStyle(Theme.primaryText)
+                                        
+                                        if let address = location.address, !address.isEmpty {
+                                            Text(address)
+                                                .font(Theme.caption)
+                                                .foregroundStyle(Theme.secondaryText)
+                                                .lineLimit(1)
+                                        }
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    if selectedSaleyard == location.name {
+                                        Image(systemName: "checkmark")
+                                            .foregroundStyle(Theme.accent)
+                                            .font(.system(size: 16, weight: .semibold))
+                                    }
+                                }
+                                .contentShape(Rectangle())
+                            }
+                            .buttonStyle(.plain)
+                            .listRowBackground(Color.clear)
+                        }
+                    } header: {
+                        Text("Other Locations")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                }
+                
                 // Debug: All saleyards section - filterable by search
                 Section {
                     ForEach(filteredSaleyards, id: \.self) { saleyard in
@@ -98,13 +209,13 @@ struct SaleyardSelectionSheet: View {
                         .listRowBackground(Color.clear) // Debug: Remove default list row background
                     }
                 } header: {
-                    Text("Compare with Specific Saleyard")
+                    Text("Saleyards")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                 }
                 
-                // Debug: Show helpful message if no results
-                if filteredSaleyards.isEmpty {
+                // Debug: Show helpful message if no results at all
+                if filteredSaleyards.isEmpty && enabledPrivateLocations.isEmpty && enabledOtherLocations.isEmpty {
                     Section {
                         VStack(spacing: 12) {
                             Image(systemName: "magnifyingglass")
@@ -128,7 +239,7 @@ struct SaleyardSelectionSheet: View {
             .searchable(
                 text: $searchText,
                 placement: .navigationBarDrawer(displayMode: .always),
-                prompt: "Search saleyards"
+                prompt: "Search locations"
             )
             .navigationTitle("Select Saleyard")
             .navigationBarTitleDisplayMode(.inline)

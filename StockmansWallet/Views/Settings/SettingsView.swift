@@ -52,9 +52,9 @@ struct SettingsView: View {
                         .listRowBackground(Theme.cardBackground)
                     }
                     
-                    // Debug: Saleyards settings with dollarsign.bank.building icon
-                    NavigationLink(destination: SaleyardsSettingsView()) {
-                        SettingsListRow(icon: "dollarsign.bank.building", title: "Saleyards", subtitle: nil)
+                    // Debug: Sale locations settings (saleyards, private, other)
+                    NavigationLink(destination: SaleLocationsSettingsView()) {
+                        SettingsListRow(icon: "dollarsign.bank.building", title: "Sale Locations", subtitle: nil)
                     }
                     .listRowBackground(Theme.cardBackground)
                 }

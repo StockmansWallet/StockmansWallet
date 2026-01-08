@@ -17,6 +17,7 @@ struct StockmansWalletApp: App {
             MarketPrice.self,
             SalesRecord.self,
             Property.self,
+            CustomSaleLocation.self,
         ])
         
         // Use a specific URL for the store to allow for easier migration/deletion if needed
