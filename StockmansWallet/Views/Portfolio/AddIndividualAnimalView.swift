@@ -23,11 +23,11 @@ struct AddIndividualAnimalView: View {
     @State private var selectedCategory = ""
     @State private var ageMonths = 12
     @State private var initialWeight: Double = 300
-    @State private var dailyWeightGain: Double = 1.0 // Default: 1.0 kg/day (halfway on 0-2.0 scale)
+    @State private var dailyWeightGain: Double = 0.0 // Default: 0.0 kg/day (starting at zero)
     @State private var joinedDate = Date()
     // Debug: Breeding-specific state variables (removed inCalf and isPregnant, added breedingProgramType)
     @State private var calvingRate: Int = 50 // Default: 50% (halfway on 0-100% scale)
-    @State private var breedingProgramType: BreedingProgramType = .uncontrolled
+    @State private var breedingProgramType: BreedingProgramType? = nil // Debug: No default selection - user must choose
     @State private var joiningPeriodStart = Date()
     @State private var joiningPeriodEnd = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
     @State private var selectedSaleyard: String?
@@ -702,16 +702,18 @@ struct AddIndividualAnimalView: View {
             herd.calvingRate = Double(calvingRate) / 100.0
             
             // Debug: Store breeding program info in additionalInfo
-            let formatter = DateFormatter()
-            formatter.dateStyle = .short
-            
-            switch breedingProgramType {
-            case .ai:
-                herd.additionalInfo = "Breeding: AI, Insemination Period: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))"
-            case .controlled:
-                herd.additionalInfo = "Breeding: Controlled, Joining Period: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))"
-            case .uncontrolled:
-                herd.additionalInfo = "Breeding: Uncontrolled (year-round)"
+            if let programType = breedingProgramType {
+                let formatter = DateFormatter()
+                formatter.dateStyle = .short
+                
+                switch programType {
+                case .ai:
+                    herd.additionalInfo = "Breeding: AI, Insemination Period: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))"
+                case .controlled:
+                    herd.additionalInfo = "Breeding: Controlled, Joining Period: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))"
+                case .uncontrolled:
+                    herd.additionalInfo = "Breeding: Uncontrolled (year-round)"
+                }
             }
         }
         

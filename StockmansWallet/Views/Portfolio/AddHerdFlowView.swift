@@ -26,8 +26,8 @@ struct AddHerdFlowView: View {
     @State private var headCount: Int? = nil
     @State private var averageAgeMonths: Int? = nil
     @State private var averageWeightKg: Int? = nil
-    @State private var dailyGainGrams = 15 // Default: 1.5 kg/day (halfway on 0-30 scale)
-    @State private var mortalityRate = 15 // Default: 15% (halfway on 0-30% scale)
+    @State private var dailyGainGrams = 0 // Default: 0 kg/day (starting at zero)
+    @State private var mortalityRate = 0 // Default: 0% (starting at zero)
     @State private var calvesAtFootHeadCount: Int? = nil
     @State private var calvesAtFootAgeMonths: Int? = nil
     @State private var selectedSaleyard: String? = nil
@@ -41,7 +41,7 @@ struct AddHerdFlowView: View {
     // Debug: Breeding-specific state variables
     @State private var calvingRate = 50 // Default: 50% (halfway on 0-100% scale)
     @State private var joinedDate = Date()
-    @State private var breedingProgramType: BreedingProgramType = .uncontrolled
+    @State private var breedingProgramType: BreedingProgramType? = nil // Debug: No default selection - user must choose
     @State private var joiningPeriodStart = Date()
     @State private var joiningPeriodEnd = Calendar.current.date(byAdding: .month, value: 3, to: Date()) ?? Date()
     
@@ -702,8 +702,8 @@ struct AddHerdFlowView: View {
             return !selectedBreed.isEmpty && !selectedCategory.isEmpty
         case 4:
             if isBreederCategory {
-                // Step 4 (breeders): Breeder selection - always valid (default selection exists)
-                return true
+                // Step 4 (breeders): Breeder selection - requires user to select an option
+                return breedingProgramType != nil
             } else {
                 // Step 4 (non-breeders): Physical attributes validation
                 return (headCount ?? 0) > 0 && (averageWeightKg ?? 0) > 0
@@ -799,11 +799,11 @@ struct AddHerdFlowView: View {
             infoParts.append("Calves at Foot: \(calvesCount) head, \(calvesAge) months")
         }
         // Debug: Add breeding program information to additional info
-        if isBreederCategory {
+        if isBreederCategory, let programType = breedingProgramType {
             let formatter = DateFormatter()
             formatter.dateStyle = .short
             
-            switch breedingProgramType {
+            switch programType {
             case .ai:
                 infoParts.append("Breeding: AI, Insemination Period: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))")
             case .controlled:

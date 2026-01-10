@@ -76,7 +76,7 @@ enum BreedingProgramType: String, CaseIterable {
 // MARK: - Breeder Selection Screen
 // Debug: Initial screen to select breeding program type (matches reference screenshot)
 struct BreederSelectionScreen: View {
-    @Binding var breedingProgramType: BreedingProgramType
+    @Binding var breedingProgramType: BreedingProgramType?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 24) {
@@ -166,7 +166,7 @@ struct BreederSelectionScreen: View {
 // MARK: - Breeding Details Screen
 // Debug: Second screen showing breeding-specific inputs based on selected program type
 struct BreedingDetailsScreen: View {
-    let breedingProgramType: BreedingProgramType
+    let breedingProgramType: BreedingProgramType?
     @Binding var calvingRate: Int
     @Binding var joiningPeriodStart: Date
     @Binding var joiningPeriodEnd: Date
@@ -174,24 +174,26 @@ struct BreedingDetailsScreen: View {
     @Binding var calvesAtFootAgeMonths: Int?
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 24) {
-            // Debug: Section header - breeding type title
-            Text(breedingProgramType.rawValue)
-                .font(Theme.title)
-                .foregroundStyle(Theme.primaryText)
-                .frame(maxWidth: .infinity, alignment: .center)
-            
-            // Debug: Section description
-            Text(breedingProgramType.description)
-                .font(Theme.body)
-                .foregroundStyle(Theme.secondaryText)
-                .multilineTextAlignment(.leading)
-                .frame(maxWidth: .infinity, alignment: .leading)
-            
-            // Debug: Date picker section for AI and Controlled Breeding
-            if breedingProgramType.requiresDatePicker {
+        // Debug: Show selection screen if no program type selected, otherwise show details
+        if let programType = breedingProgramType {
+            VStack(alignment: .leading, spacing: 24) {
+                // Debug: Section header - breeding type title
+                Text(programType.rawValue)
+                    .font(Theme.title)
+                    .foregroundStyle(Theme.primaryText)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                
+                // Debug: Section description
+                Text(programType.description)
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.secondaryText)
+                    .multilineTextAlignment(.leading)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                
+                // Debug: Date picker section for AI and Controlled Breeding
+                if programType.requiresDatePicker {
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(breedingProgramType.datePickerLabel)
+                    Text(programType.datePickerLabel)
                         .font(Theme.body)
                         .foregroundStyle(Theme.secondaryText)
                     
@@ -225,7 +227,7 @@ struct BreedingDetailsScreen: View {
                     .background(Theme.inputFieldBackground)
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                .accessibilityLabel("\(breedingProgramType.datePickerLabel) date range")
+                .accessibilityLabel("\(programType.datePickerLabel) date range")
             }
             
             // Debug: Estimated Calving slider (0-100% range as shown in screenshots)
@@ -294,12 +296,12 @@ struct BreedingDetailsScreen: View {
             }
             
             // Debug: Info note about calving accrual timing (only for AI and Controlled)
-            if !breedingProgramType.calvingNote.isEmpty {
+            if !programType.calvingNote.isEmpty {
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "info.circle")
                         .foregroundStyle(Theme.secondaryText)
                         .font(.system(size: 14))
-                    Text(breedingProgramType.calvingNote)
+                    Text(programType.calvingNote)
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)
@@ -309,9 +311,10 @@ struct BreedingDetailsScreen: View {
                 .background(Theme.secondaryText.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
             }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.bottom, 20)
         }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 20)
     }
 }
 
@@ -319,21 +322,26 @@ struct BreedingDetailsScreen: View {
 // Debug: Keep for backward compatibility but recommend using new screens above
 struct BreedersFormSection: View {
     @Binding var calvingRate: Int
-    @Binding var breedingProgramType: BreedingProgramType
+    @Binding var breedingProgramType: BreedingProgramType?
     @Binding var joiningPeriodStart: Date
     @Binding var joiningPeriodEnd: Date
     @Binding var calvesAtFootHeadCount: Int?
     @Binding var calvesAtFootAgeMonths: Int?
     
     var body: some View {
-        BreedingDetailsScreen(
-            breedingProgramType: breedingProgramType,
-            calvingRate: $calvingRate,
-            joiningPeriodStart: $joiningPeriodStart,
-            joiningPeriodEnd: $joiningPeriodEnd,
-            calvesAtFootHeadCount: $calvesAtFootHeadCount,
-            calvesAtFootAgeMonths: $calvesAtFootAgeMonths
-        )
+        // Debug: Show selection screen if no program type selected, otherwise show details
+        if breedingProgramType == nil {
+            BreederSelectionScreen(breedingProgramType: $breedingProgramType)
+        } else {
+            BreedingDetailsScreen(
+                breedingProgramType: breedingProgramType,
+                calvingRate: $calvingRate,
+                joiningPeriodStart: $joiningPeriodStart,
+                joiningPeriodEnd: $joiningPeriodEnd,
+                calvesAtFootHeadCount: $calvesAtFootHeadCount,
+                calvesAtFootAgeMonths: $calvesAtFootAgeMonths
+            )
+        }
     }
 }
 
