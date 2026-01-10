@@ -37,12 +37,17 @@ struct HerdReportData: Identifiable {
 }
 
 // MARK: - Sale Report Data
+// Debug: Enhanced with pricing type, sale type, and location
 struct SaleReportData: Identifiable {
     let id: UUID
     let date: Date
     let headCount: Int
     let avgWeight: Double
     let pricePerKg: Double
+    let pricePerHead: Double? // Debug: Optional price per head
+    let pricingType: PricingType // Debug: Pricing type enum
+    let saleType: String? // Debug: Sale type (Saleyard, Private Sale, Other)
+    let saleLocation: String? // Debug: Location name
     let netValue: Double
 }
 

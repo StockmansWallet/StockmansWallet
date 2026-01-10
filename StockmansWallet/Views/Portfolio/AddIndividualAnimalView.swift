@@ -269,7 +269,7 @@ struct AddIndividualAnimalView: View {
                 Text("Animal ID")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
-                TextField("e.g. S03 or A001", text: $animalName)
+                TextField("e.g. A001 etc", text: $animalName)
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .accessibilityLabel("Animal ID")
             }
@@ -283,7 +283,7 @@ struct AddIndividualAnimalView: View {
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                 }
-                TextField("e.g. Freckle", text: $animalNickname)
+                TextField("e.g. Bessie", text: $animalNickname)
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .accessibilityLabel("Animal nickname")
             }

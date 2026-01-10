@@ -325,7 +325,7 @@ struct AddHerdFlowView: View {
                 Text("Herd ID")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
-                TextField("e.g. North Paddock", text: $herdName)
+                TextField("e.g. #0000", text: $herdName)
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .accessibilityLabel("Herd ID")
             }
@@ -339,7 +339,7 @@ struct AddHerdFlowView: View {
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                 }
-                TextField("e.g. The Angus Mob", text: $herdNickname)
+                TextField("e.g. The Angus Herd", text: $herdNickname)
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .accessibilityLabel("Herd nickname")
             }

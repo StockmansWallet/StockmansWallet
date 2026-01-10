@@ -167,7 +167,7 @@ class ReportDataGenerator {
         var salesDataArray: [SaleReportData] = []
         var totalSales: Double = 0.0
         
-        // TODO: Aggregate sales data
+        // Debug: Aggregate sales data with new fields
         for sale in sales {
             let saleData = SaleReportData(
                 id: sale.id,
@@ -175,6 +175,10 @@ class ReportDataGenerator {
                 headCount: sale.headCount,
                 avgWeight: sale.averageWeight,
                 pricePerKg: sale.pricePerKg,
+                pricePerHead: sale.pricePerHead,
+                pricingType: sale.pricingTypeEnum,
+                saleType: sale.saleType,
+                saleLocation: sale.saleLocation,
                 netValue: sale.netValue
             )
             

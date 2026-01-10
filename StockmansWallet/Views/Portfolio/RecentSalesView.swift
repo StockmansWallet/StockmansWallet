@@ -3,8 +3,8 @@ import SwiftUI
 struct RecentSalesView: View {
     let sales: [SalesRecord]
     
-    private var sorted: [SalesRecord] {
-        sales.sorted { $0.saleDate > $1.saleDate }.prefix(5).map { $0 }
+    private var sortedSales: [SalesRecord] {
+        Array(sales.sorted { $0.saleDate > $1.saleDate }.prefix(5))
     }
     
     var body: some View {
@@ -18,21 +18,30 @@ struct RecentSalesView: View {
                     .foregroundStyle(Theme.accent)
             }
             
-            if sorted.isEmpty {
+            if sortedSales.isEmpty {
                 Text("No sales recorded")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.primaryText.opacity(0.7))
             } else {
                 VStack(spacing: 12) {
-                    ForEach(sorted, id: \.id) { sale in
+                    ForEach(sortedSales, id: \.id) { sale in
                         HStack {
                             VStack(alignment: .leading, spacing: 4) {
                                 Text(sale.saleDate, format: .dateTime.day().month(.abbreviated).year())
                                     .font(Theme.body)
                                     .foregroundStyle(Theme.primaryText)
-                                Text("\(sale.headCount) head • \(Int(sale.averageWeight))kg • \(sale.pricePerKg, format: .number.precision(.fractionLength(2))) $/kg")
+                                
+                                // Debug: Show pricing based on type
+                                priceText(for: sale)
                                     .font(Theme.caption)
                                     .foregroundStyle(Theme.primaryText.opacity(0.7))
+                                
+                                // Debug: Show location if available
+                                if let location = sale.saleLocation {
+                                    Text(location)
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                }
                             }
                             Spacer()
                             Text(sale.netValue, format: .currency(code: "AUD"))
@@ -41,7 +50,7 @@ struct RecentSalesView: View {
                         }
                         .padding(.vertical, 4)
                         
-                        if sale.id != sorted.last?.id {
+                        if sale.id != sortedSales.last?.id {
                             Divider().background(Theme.primaryText.opacity(0.15))
                         }
                     }
@@ -50,5 +59,18 @@ struct RecentSalesView: View {
         }
         .padding(Theme.cardPadding)
         .stitchedCard()
+    }
+    
+    // Debug: Helper function to generate price text
+    @ViewBuilder
+    private func priceText(for sale: SalesRecord) -> some View {
+        let pricingType = PricingType(rawValue: sale.pricingType) ?? .perKg
+        if pricingType == .perKg {
+            Text("\(sale.headCount) head • \(Int(sale.averageWeight))kg • \(sale.pricePerKg, format: .number.precision(.fractionLength(2))) $/kg")
+        } else if let pricePerHead = sale.pricePerHead {
+            Text("\(sale.headCount) head • \(Int(sale.averageWeight))kg • \(pricePerHead, format: .number.precision(.fractionLength(2))) $/head")
+        } else {
+            Text("\(sale.headCount) head • \(Int(sale.averageWeight))kg • N/A")
+        }
     }
 }

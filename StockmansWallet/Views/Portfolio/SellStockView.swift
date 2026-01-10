@@ -26,11 +26,16 @@ struct SellStockView: View {
     @State private var saleDate = Date()
     @State private var salePrice: Double = 0
     @State private var pricePerKg: Double = 0
+    @State private var pricePerHead: Double = 0 // Debug: Price per head option
+    @State private var pricingType: PricingType = .perKg // Debug: Pricing type selector
+    @State private var saleType: String? = nil // Debug: Sale type (Saleyard, Private Sale, Other)
+    @State private var saleLocation: String? = nil // Debug: Location name (saleyard or custom)
     @State private var notes: String = ""
     @State private var headSold: Int = 0
     @State private var freightCost: Double = 0
     @State private var showingConfirmation = false
     @State private var isLoadingValuation = false
+    @State private var showingLocationSheet = false // Debug: Sheet for location selection
     
     // Debug: Fetch preselected herd from current context using ID
     private var preselectedHerd: HerdGroup? {
@@ -214,35 +219,75 @@ struct SellStockView: View {
                                         .frame(maxWidth: .infinity)
                                     }
                                     
-                                    // Price per kg
+                                    // Debug: Pricing Type Selector
                                     VStack(alignment: .leading, spacing: 8) {
-                                        HStack(spacing: 8) {
-                                            Text("Price per kg ($/kg)")
+                                        Text("Pricing Type")
+                                            .font(Theme.headline)
+                                            .foregroundStyle(Theme.primaryText)
+                                        
+                                        Picker("Pricing Type", selection: $pricingType) {
+                                            Text("Price per kg ($/kg)").tag(PricingType.perKg)
+                                            Text("Price per head ($/head)").tag(PricingType.perHead)
+                                        }
+                                        .pickerStyle(.segmented)
+                                        .onChange(of: pricingType) { _, _ in
+                                            // Debug: Reset price when switching types
+                                            if pricingType == .perKg {
+                                                pricePerHead = 0
+                                            } else {
+                                                pricePerKg = 0
+                                            }
+                                            calculateTotalPrice()
+                                        }
+                                    }
+                                    
+                                    // Debug: Price input based on selected type
+                                    if pricingType == .perKg {
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            HStack(spacing: 8) {
+                                                Text("Price per kg ($/kg)")
+                                                    .font(Theme.headline)
+                                                    .foregroundStyle(Theme.primaryText)
+                                                
+                                                // Debug: Show loading indicator when pre-filling valuation
+                                                if isLoadingValuation {
+                                                    ProgressView()
+                                                        .scaleEffect(0.8)
+                                                        .tint(Theme.accent)
+                                                }
+                                            }
+                                            
+                                            TextField("0.00", value: $pricePerKg, format: .number)
+                                                .keyboardType(.decimalPad)
+                                                .textFieldStyle(.plain)
+                                                .padding()
+                                                .background(Theme.inputFieldBackground)
+                                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                                .onChange(of: pricePerKg) { _, _ in
+                                                    calculateTotalPrice()
+                                                }
+                                                .disabled(isLoadingValuation)
+                                        }
+                                    } else {
+                                        VStack(alignment: .leading, spacing: 8) {
+                                            Text("Price per head ($/head)")
                                                 .font(Theme.headline)
                                                 .foregroundStyle(Theme.primaryText)
                                             
-                                            // Debug: Show loading indicator when pre-filling valuation
-                                            if isLoadingValuation {
-                                                ProgressView()
-                                                    .scaleEffect(0.8)
-                                                    .tint(Theme.accent)
-                                            }
+                                            TextField("0.00", value: $pricePerHead, format: .number)
+                                                .keyboardType(.decimalPad)
+                                                .textFieldStyle(.plain)
+                                                .padding()
+                                                .background(Theme.inputFieldBackground)
+                                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                                .onChange(of: pricePerHead) { _, _ in
+                                                    calculateTotalPrice()
+                                                }
                                         }
-                                        
-                                        TextField("0.00", value: $pricePerKg, format: .number)
-                                            .keyboardType(.decimalPad)
-                                            .textFieldStyle(.plain)
-                                            .padding()
-                                            .background(Theme.inputFieldBackground)
-                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                            .onChange(of: pricePerKg) { _, _ in
-                                                calculateTotalPrice()
-                                            }
-                                            .disabled(isLoadingValuation)
                                     }
                                     
                                     // Calculated total price
-                                    if pricePerKg > 0, selectedHerd != nil {
+                                    if (pricingType == .perKg && pricePerKg > 0) || (pricingType == .perHead && pricePerHead > 0), selectedHerd != nil {
                                         VStack(alignment: .leading, spacing: 12) {
                                             HStack {
                                                 Text("Estimated Total:")
@@ -257,6 +302,108 @@ struct SellStockView: View {
                                             .background(Theme.inputFieldBackground.opacity(0.5))
                                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                         }
+                                    }
+                                    
+                                    // Debug: Sale Type Selector
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        Text("Sale Type")
+                                            .font(Theme.headline)
+                                            .foregroundStyle(Theme.primaryText)
+                                        
+                                        Menu {
+                                            Button {
+                                                HapticManager.tap()
+                                                saleType = nil
+                                            } label: {
+                                                HStack {
+                                                    Text("Not specified")
+                                                    if saleType == nil {
+                                                        Image(systemName: "checkmark")
+                                                    }
+                                                }
+                                            }
+                                            
+                                            Button {
+                                                HapticManager.tap()
+                                                saleType = "Saleyard"
+                                            } label: {
+                                                HStack {
+                                                    Text("Saleyard")
+                                                    if saleType == "Saleyard" {
+                                                        Image(systemName: "checkmark")
+                                                    }
+                                                }
+                                            }
+                                            
+                                            Button {
+                                                HapticManager.tap()
+                                                saleType = "Private Sale"
+                                            } label: {
+                                                HStack {
+                                                    Text("Private Sale")
+                                                    if saleType == "Private Sale" {
+                                                        Image(systemName: "checkmark")
+                                                    }
+                                                }
+                                            }
+                                            
+                                            Button {
+                                                HapticManager.tap()
+                                                saleType = "Other"
+                                            } label: {
+                                                HStack {
+                                                    Text("Other")
+                                                    if saleType == "Other" {
+                                                        Image(systemName: "checkmark")
+                                                    }
+                                                }
+                                            }
+                                        } label: {
+                                            HStack {
+                                                Text(saleType ?? "Select sale type")
+                                                    .font(Theme.body)
+                                                    .foregroundStyle(saleType == nil ? Theme.secondaryText : Theme.primaryText)
+                                                Spacer()
+                                                Image(systemName: "chevron.down")
+                                                    .font(.system(size: 14))
+                                                    .foregroundStyle(Theme.secondaryText)
+                                            }
+                                            .padding()
+                                            .background(Theme.inputFieldBackground)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        }
+                                        .buttonStyle(.plain)
+                                    }
+                                    
+                                    // Debug: Location Selector
+                                    VStack(alignment: .leading, spacing: 8) {
+                                        HStack(spacing: 4) {
+                                            Text("Sale Location")
+                                                .font(Theme.headline)
+                                                .foregroundStyle(Theme.primaryText)
+                                            Text("Optional")
+                                                .font(Theme.caption)
+                                                .foregroundStyle(Theme.secondaryText)
+                                        }
+                                        
+                                        Button(action: {
+                                            HapticManager.tap()
+                                            showingLocationSheet = true
+                                        }) {
+                                            HStack {
+                                                Text(saleLocation ?? "Select location (optional)")
+                                                    .font(Theme.body)
+                                                    .foregroundStyle(saleLocation == nil ? Theme.secondaryText : Theme.primaryText)
+                                                Spacer()
+                                                Image(systemName: "chevron.right")
+                                                    .font(.system(size: 14))
+                                                    .foregroundStyle(Theme.secondaryText)
+                                            }
+                                            .padding()
+                                            .background(Theme.inputFieldBackground)
+                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        }
+                                        .buttonStyle(.plain)
                                     }
                                     
                                     // Freight cost (optional)
@@ -331,6 +478,9 @@ struct SellStockView: View {
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
             )
+            .sheet(isPresented: $showingLocationSheet) {
+                SaleLocationSelectionSheet(selectedLocation: $saleLocation)
+            }
             .alert("Confirm Sale", isPresented: $showingConfirmation) {
                 Button("Cancel", role: .cancel) {
                     HapticManager.tap()
@@ -341,7 +491,10 @@ struct SellStockView: View {
                 }
             } message: {
                 if let herd = selectedHerd {
-                    Text("Record sale of \(headSold) head from \(herd.name) at $\(String(format: "%.2f", pricePerKg))/kg (Total: $\(String(format: "%.2f", salePrice)))?")
+                    let priceText = pricingType == .perKg 
+                        ? "$\(String(format: "%.2f", pricePerKg))/kg"
+                        : "$\(String(format: "%.2f", pricePerHead))/head"
+                    Text("Record sale of \(headSold) head from \(herd.name) at \(priceText) (Total: $\(String(format: "%.2f", salePrice)))?")
                 }
             }
             .onAppear {
@@ -448,17 +601,28 @@ struct SellStockView: View {
     // Debug: Validation for form fields
     private var isValid: Bool {
         guard let _ = selectedHerd else { return false }
-        return pricePerKg > 0 && headSold > 0
+        // Debug: Validate based on selected pricing type
+        if pricingType == .perKg {
+            return pricePerKg > 0 && headSold > 0
+        } else {
+            return pricePerHead > 0 && headSold > 0
+        }
     }
     
-    // Debug: Calculate total price based on weight and price per kg
+    // Debug: Calculate total price based on pricing type
     private func calculateTotalPrice() {
         guard let herd = selectedHerd else { return }
-        // Calculate current weight (initial weight + growth)
-        let daysSinceAcquisition = Calendar.current.dateComponents([.day], from: herd.createdAt, to: Date()).day ?? 0
-        let currentWeight = herd.initialWeight + (herd.dailyWeightGain * Double(daysSinceAcquisition))
-        let totalWeight = currentWeight * Double(headSold)
-        salePrice = totalWeight * pricePerKg
+        
+        if pricingType == .perKg {
+            // Debug: Calculate based on weight and price per kg
+            let daysSinceAcquisition = Calendar.current.dateComponents([.day], from: herd.createdAt, to: Date()).day ?? 0
+            let currentWeight = herd.initialWeight + (herd.dailyWeightGain * Double(daysSinceAcquisition))
+            let totalWeight = currentWeight * Double(headSold)
+            salePrice = totalWeight * pricePerKg
+        } else {
+            // Debug: Calculate based on head count and price per head
+            salePrice = Double(headSold) * pricePerHead
+        }
     }
     
     // Debug: Record the sale and update the herd
@@ -469,16 +633,38 @@ struct SellStockView: View {
         let daysSinceAcquisition = Calendar.current.dateComponents([.day], from: herd.createdAt, to: Date()).day ?? 0
         let currentWeight = herd.initialWeight + (herd.dailyWeightGain * Double(daysSinceAcquisition))
         
+        // Debug: Calculate price per kg for storage (convert from per head if needed)
+        let finalPricePerKg: Double
+        let finalPricePerHead: Double?
+        
+        if pricingType == .perKg {
+            finalPricePerKg = pricePerKg
+            finalPricePerHead = nil
+        } else {
+            // Debug: Convert price per head to price per kg for storage/comparison
+            // If we have weight, calculate equivalent price per kg
+            if currentWeight > 0 {
+                finalPricePerKg = pricePerHead / currentWeight
+            } else {
+                finalPricePerKg = 0 // Fallback if no weight
+            }
+            finalPricePerHead = pricePerHead
+        }
+        
         // Calculate net value (total price - freight)
         let netValue = salePrice - freightCost
         
-        // Create sales record
+        // Debug: Create sales record with new fields
         let saleRecord = SalesRecord(
             herdGroupId: herd.id,
             saleDate: saleDate,
             headCount: headSold,
             averageWeight: currentWeight,
-            pricePerKg: pricePerKg,
+            pricePerKg: finalPricePerKg,
+            pricePerHead: finalPricePerHead,
+            pricingType: pricingType,
+            saleType: saleType,
+            saleLocation: saleLocation,
             totalGrossValue: salePrice,
             freightCost: freightCost,
             freightDistance: 0, // Can be added later if needed
@@ -492,7 +678,8 @@ struct SellStockView: View {
         if headSold == herd.headCount {
             herd.isSold = true
             herd.soldDate = saleDate
-            herd.soldPrice = pricePerKg
+            // Debug: Store price per kg (converted if needed) for consistency
+            herd.soldPrice = finalPricePerKg
         } else {
             // Partial sale - reduce head count
             herd.headCount -= headSold

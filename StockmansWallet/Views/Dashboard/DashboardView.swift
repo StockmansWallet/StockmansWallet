@@ -537,10 +537,26 @@ struct DashboardView: View {
     @ViewBuilder
     private var saleyardSelectorCard: some View {
         // Debug: Saleyard selector - updates valuations based on selected saleyard prices
-        SaleyardSelector(selectedSaleyard: $selectedSaleyard)
-            .padding(.horizontal, Theme.cardPadding)
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel("Saleyard selector")
+        VStack(spacing: 12) {
+            SaleyardSelector(selectedSaleyard: $selectedSaleyard)
+            
+            // Debug: Info note about pricing data sources and future enhancements - reduced opacity for less prominence
+            HStack(alignment: .top, spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.secondaryText)
+                    .opacity(0.5)
+                Text("Market prices are based on available saleyard benchmark data. Additional sale channels will be progressively integrated to improve pricing accuracy.")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                    .opacity(0.5)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .padding(.horizontal, Theme.cardPadding)
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel("Saleyard selector")
     }
     
     @ViewBuilder

@@ -17,6 +17,7 @@ class SalesService {
     
     // MARK: - Mark as Sold
     /// Marks a herd as sold and triggers the Sales Learning Loop
+    // Debug: Enhanced with optional sale type and location parameters
     @MainActor
     func markHerdAsSold(
         herd: HerdGroup,
@@ -24,25 +25,42 @@ class SalesService {
         realizedPrice: Double,
         freightDistance: Double?,
         modelContext: ModelContext,
-        preferences: UserPreferences
+        preferences: UserPreferences,
+        pricingType: PricingType = .perKg,
+        pricePerHead: Double? = nil,
+        saleType: String? = nil,
+        saleLocation: String? = nil
     ) async -> SalesRecord {
         HapticManager.tap()
         
         // Calculate freight cost if distance provided
         let freightCost = (freightDistance ?? 0.0) * preferences.freightCostPerKm
         
-        // Calculate values
+        // Debug: Calculate values based on pricing type
         let averageWeight = herd.currentWeight
-        let totalGrossValue = Double(herd.headCount) * averageWeight * realizedPrice
+        let totalGrossValue: Double
+        
+        if pricingType == .perKg {
+            totalGrossValue = Double(herd.headCount) * averageWeight * realizedPrice
+        } else {
+            // Debug: Use price per head if provided, otherwise calculate from price per kg
+            let perHeadPrice = pricePerHead ?? (averageWeight * realizedPrice)
+            totalGrossValue = Double(herd.headCount) * perHeadPrice
+        }
+        
         let netValue = totalGrossValue - freightCost
         
-        // Create sales record
+        // Debug: Create sales record with new fields
         let salesRecord = SalesRecord(
             herdGroupId: herd.id,
             saleDate: saleDate,
             headCount: herd.headCount,
             averageWeight: averageWeight,
             pricePerKg: realizedPrice,
+            pricePerHead: pricePerHead,
+            pricingType: pricingType,
+            saleType: saleType,
+            saleLocation: saleLocation,
             totalGrossValue: totalGrossValue,
             freightCost: freightCost,
             freightDistance: freightDistance ?? 0.0,

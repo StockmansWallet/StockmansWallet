@@ -332,10 +332,11 @@ class ReportExportService {
     }
     
     /// Generates Sales Summary CSV
+    // Debug: Enhanced with new fields for better API data
     func generateSalesSummaryCSV(sales: [SalesRecord]) -> URL? {
         let sortedSales = sales.sorted { $0.saleDate > $1.saleDate }
         
-        var csv = "Sale Date,Head Count,Average Weight (kg),Price per kg,Gross Value,Freight Cost,Freight Distance (km),Net Value\n"
+        var csv = "Sale Date,Head Count,Average Weight (kg),Pricing Type,Price per kg,Price per head,Gross Value,Freight Cost,Freight Distance (km),Net Value,Sale Type,Sale Location\n"
         
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -345,11 +346,15 @@ class ReportExportService {
                 dateFormatter.string(from: sale.saleDate),
                 "\(sale.headCount)",
                 String(format: "%.2f", sale.averageWeight),
+                sale.pricingTypeEnum.rawValue, // Debug: Pricing type
                 String(format: "%.2f", sale.pricePerKg),
+                sale.pricePerHead != nil ? String(format: "%.2f", sale.pricePerHead!) : "", // Debug: Price per head if available
                 String(format: "%.2f", sale.totalGrossValue),
                 String(format: "%.2f", sale.freightCost),
                 String(format: "%.2f", sale.freightDistance),
-                String(format: "%.2f", sale.netValue)
+                String(format: "%.2f", sale.netValue),
+                sale.saleType ?? "", // Debug: Sale type
+                sale.saleLocation ?? "" // Debug: Sale location
             ].joined(separator: ",")
             
             csv += row + "\n"

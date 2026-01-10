@@ -104,8 +104,8 @@ struct HerdDetailView: View {
                             .padding(.horizontal)
                     }
                     
-                    // Debug: Button to open searchable animal list sheet
-                    if !isLoading {
+                    // Debug: Button to open searchable animal list sheet - only show for herds (not individual animals)
+                    if !isLoading && activeHerd.headCount > 1 {
                         Button {
                             HapticManager.tap()
                             showingAnimalsList = true
@@ -158,7 +158,7 @@ struct HerdDetailView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient)
-            .navigationTitle("Herd Details")
+            .navigationTitle(activeHerd.headCount == 1 ? "Animal Details" : "Herd Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -320,31 +320,55 @@ struct TotalValueCard: View {
 
 // MARK: - Herd Stats Card
 // Debug: Horizontal card showing total head and species - matches Portfolio page styling
+// For individual animals (headCount == 1), shows breed and species instead
 struct HerdStatsCard: View {
     let herd: HerdGroup
     
+    // Debug: Check if this is an individual animal
+    private var isIndividualAnimal: Bool {
+        herd.headCount == 1
+    }
+    
     var body: some View {
         HStack(spacing: 24) {
-            // Debug: Head count with label as single centered text
-            Text("\(herd.headCount) Head")
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(Theme.primaryText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .frame(maxWidth: .infinity, alignment: .center)
+            // Debug: For individual animals, show species; for herds, show head count
+            if isIndividualAnimal {
+                Text(herd.species)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+                Text("\(herd.headCount) Head")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
             
             // Vertical divider - using Rectangle like Portfolio page
             Rectangle()
                 .fill(Theme.separator.opacity(0.3))
                 .frame(width: 1, height: 30)
             
-            // Debug: Species as single centered text
-            Text(herd.species)
-                .font(.system(size: 20, weight: .bold))
-                .foregroundStyle(Theme.primaryText)
-                .lineLimit(1)
-                .minimumScaleFactor(0.7)
-                .frame(maxWidth: .infinity, alignment: .center)
+            // Debug: For individual animals, show breed; for herds, show species
+            if isIndividualAnimal {
+                Text(herd.breed)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            } else {
+                Text(herd.species)
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)

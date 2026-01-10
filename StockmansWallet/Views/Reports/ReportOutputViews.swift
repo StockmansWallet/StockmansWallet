@@ -187,7 +187,25 @@ struct ReportPreviewView: View {
                     Group {
                         Text("Head Count: \(saleData.headCount)")
                         Text("Average Weight: \(saleData.avgWeight, format: .number.precision(.fractionLength(0))) kg")
-                        Text("Price per kg: \(saleData.pricePerKg, format: .number.precision(.fractionLength(2))) $/kg")
+                        
+                        // Debug: Show pricing based on type
+                        if saleData.pricingType == .perKg {
+                            Text("Price per kg: \(saleData.pricePerKg, format: .number.precision(.fractionLength(2))) $/kg")
+                        } else if let pricePerHead = saleData.pricePerHead {
+                            Text("Price per head: \(pricePerHead, format: .number.precision(.fractionLength(2))) $/head")
+                            Text("(Equivalent: \(saleData.pricePerKg, format: .number.precision(.fractionLength(2))) $/kg)")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                        }
+                        
+                        // Debug: Show sale type and location if available
+                        if let saleType = saleData.saleType {
+                            Text("Sale Type: \(saleType)")
+                        }
+                        if let location = saleData.saleLocation {
+                            Text("Location: \(location)")
+                        }
+                        
                         Text("Net Value: \(saleData.netValue, format: .currency(code: "AUD"))")
                             .fontWeight(.semibold)
                     }
