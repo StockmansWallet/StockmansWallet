@@ -389,6 +389,7 @@ struct PortfolioView: View {
     // Performance: Create basic summary instantly without expensive valuations
     private func createQuickSummary() {
         let activeHerds = allHerds.filter { !$0.isSold && $0.headCount > 1 }
+        let activeIndividuals = allHerds.filter { !$0.isSold && $0.headCount == 1 }
         let allActiveAssets = allHerds.filter { !$0.isSold }
         
         guard !allActiveAssets.isEmpty else {
@@ -397,7 +398,10 @@ struct PortfolioView: View {
         }
         
         // Quick calculations without database queries
-        let totalHeadCount = allActiveAssets.reduce(0) { $0 + $1.headCount }
+        // Debug: Calculate separate head counts for herds and individuals
+        let headInHerds = activeHerds.reduce(0) { $0 + $1.headCount }
+        let headInIndividuals = activeIndividuals.reduce(0) { $0 + $1.headCount }
+        let totalHeadCount = headInHerds + headInIndividuals
         let estimatedValue = Double(totalHeadCount) * 400.0 * 4.0 // Rough estimate: 400kg × $4/kg
         
         // Create minimal summary for instant display
@@ -413,6 +417,8 @@ struct PortfolioView: View {
             unrealizedGainsPercent: 0,
             totalHeadCount: totalHeadCount,
             activeHerdCount: activeHerds.count,
+            headInHerds: headInHerds,
+            headInIndividuals: headInIndividuals,
             categoryBreakdown: [],
             speciesBreakdown: [],
             largestCategory: "",
@@ -436,6 +442,7 @@ struct PortfolioView: View {
         // Performance: Only calculate valuations for herds (headCount > 1) in summary
         // Individual animals (headCount == 1) load their valuations on-demand when viewed
         let activeHerds = allHerds.filter { !$0.isSold && $0.headCount > 1 }
+        let activeIndividuals = allHerds.filter { !$0.isSold && $0.headCount == 1 }
         let allActiveAssets = allHerds.filter { !$0.isSold } // For head count totals
         
         guard !allActiveAssets.isEmpty else {
@@ -592,6 +599,11 @@ struct PortfolioView: View {
         let largestCategory = categoryBreakdown.values.max(by: { $0.totalValue < $1.totalValue })
         let largestCategoryPercent = totalNetWorth > 0 ? ((largestCategory?.totalValue ?? 0) / totalNetWorth) * 100 : 0
         
+        // Debug: Calculate separate head counts for herds and individuals
+        let headInHerds = activeHerds.reduce(0) { $0 + $1.headCount }
+        let headInIndividuals = activeIndividuals.reduce(0) { $0 + $1.headCount }
+        let totalHeadCount = headInHerds + headInIndividuals
+        
         await MainActor.run {
             self.portfolioSummary = PortfolioSummary(
                 totalNetWorth: totalNetWorth,
@@ -604,9 +616,11 @@ struct PortfolioView: View {
                 unrealizedGains: unrealizedGains,
                 unrealizedGainsPercent: unrealizedGainsPercent,
                 // Performance: Total head count includes all animals (herds + individuals)
-                totalHeadCount: allActiveAssets.reduce(0) { $0 + $1.headCount },
+                totalHeadCount: totalHeadCount,
                 // Performance: Active herd count only includes actual herds (headCount > 1)
                 activeHerdCount: activeHerds.count,
+                headInHerds: headInHerds,
+                headInIndividuals: headInIndividuals,
                 categoryBreakdown: Array(categoryBreakdown.values),
                 speciesBreakdown: Array(speciesBreakdown.values),
                 largestCategory: largestCategory?.category ?? "",
@@ -636,6 +650,8 @@ struct PortfolioSummary {
     let unrealizedGainsPercent: Double
     let totalHeadCount: Int
     let activeHerdCount: Int
+    let headInHerds: Int // Debug: Total head count in herds (headCount > 1)
+    let headInIndividuals: Int // Debug: Total head count in individual animals (headCount == 1)
     let categoryBreakdown: [CategoryBreakdown]
     let speciesBreakdown: [SpeciesBreakdown]
     let largestCategory: String
@@ -725,31 +741,65 @@ struct PortfolioStatsCards: View {
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 16) // Debug: Consistent horizontal padding for breathing room
             
-            // Debug: Combined stats card with horizontal layout - centered text with count + label format
-            HStack(spacing: 24) {
-                // Debug: Total head count with label as single centered text
-                Text("\(summary.totalHeadCount) Head")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity, alignment: .center)
+            // Debug: Combined stats card with 3-section horizontal layout - shows Herds, Head in Herds, and Head in Individuals
+            HStack(spacing: 16) {
+                // Section 1: Herds
+                VStack(spacing: 4) {
+                    Text("\(summary.activeHerdCount)")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(Theme.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text("Herds")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(Theme.secondaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
                 
-                // Divider
+                // Divider 1
                 Rectangle()
                     .fill(Theme.separator.opacity(0.3))
-                    .frame(width: 1, height: 30)
+                    .frame(width: 1, height: 40)
                 
-                // Debug: Active herd count with label as single centered text
-                Text("\(summary.activeHerdCount) Herds")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity, alignment: .center)
+                // Section 2: Head in Herds
+                VStack(spacing: 4) {
+                    Text("\(summary.headInHerds)")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(Theme.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text("Head in Herds")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(Theme.secondaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+                
+                // Divider 2
+                Rectangle()
+                    .fill(Theme.separator.opacity(0.3))
+                    .frame(width: 1, height: 40)
+                
+                // Section 3: Head in Individuals
+                VStack(spacing: 4) {
+                    Text("\(summary.headInIndividuals)")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundStyle(Theme.primaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                    Text("Head in Individuals")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle(Theme.secondaryText)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .padding(.horizontal, 20)
-            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 16)
             .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
