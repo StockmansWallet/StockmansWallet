@@ -196,35 +196,108 @@ class MockDataService {
     // MARK: - Generate Historical Market Prices
     func generateHistoricalMarketPrices(modelContext: ModelContext, preferences: UserPreferences) async {
         let calendar = Calendar.current
-        let categories = ["Feeder Steer", "Yearling Steer", "Breeding Cow", "Weaner Steer"]
+        // Debug: Comprehensive list of all market categories to ensure complete price coverage
+        // These categories will match user-entered categories via pattern matching (contains)
+        let categories = [
+            // Cattle categories
+            "Feeder Steer", "Feeder Heifer", 
+            "Yearling Steer", "Yearling Bull",
+            "Grown Steer", "Grown Bull",
+            "Weaner Steer", "Weaner Bull", "Weaner Heifer",
+            "Breeding Cow", "Breeder", "Dry Cow", "Cull Cow",
+            "Heifer", "First Calf Heifer",
+            "Slaughter Cattle", "Calves",
+            // Sheep categories  
+            "Breeding Ewe", "Maiden Ewe", "Dry Ewe", "Cull Ewe",
+            "Weaner Ewe", "Feeder Ewe", "Slaughter Ewe",
+            "Wether Lamb", "Weaner Lamb", "Feeder Lamb", "Slaughter Lamb", "Lambs",
+            // Pig categories
+            "Breeder", "Dry Sow", "Cull Sow",
+            "Weaner Pig", "Feeder Pig", "Grower Pig", "Finisher Pig",
+            "Porker", "Baconer", "Grower Barrow", "Finisher Barrow",
+            // Goat categories
+            "Breeder Doe", "Dry Doe", "Cull Doe", "Breeder Buck", "Sale Buck",
+            "Mature Wether", "Rangeland Goat", "Capretto", "Chevon"
+        ]
         
         // Generate prices for the past year (daily)
         // Debug: Base price set to realistic market values (Grown Steer base)
-        var basePrice = 3.70 // Base price for Grown Steer at realistic market rate
-        let volatility = 0.15 // 15% volatility
+        // Adjusted to target Yearling Steer ~$4.10 and Breeding Cow/Heifer ~$3.80
+        var basePrice = 3.30 // Base price for Grown Steer - reduced further to ensure targets are met
+        let volatility = 0.10 // 10% volatility (reduced for more stable prices)
         
         for dayOffset in (0..<365).reversed() {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: Date()) else { continue }
             
             // Simulate price movement with some trend
-            let trend = sin(Double(dayOffset) / 365.0 * 2 * .pi) * 0.3 // Seasonal trend
+            let trend = sin(Double(dayOffset) / 365.0 * 2 * .pi) * 0.15 // Reduced seasonal trend
             let random = (Double.random(in: -1...1) * volatility)
-            // Debug: Price clamps set to realistic market ranges
-            basePrice = max(2.80, min(5.20, basePrice + trend + random)) // Realistic range for cattle prices
+            // Debug: Price clamps set to realistic market ranges - tighter range to keep prices lower
+            // Max 3.50 ensures Yearling (1.22x) stays around $4.27 max, average ~$4.10
+            basePrice = max(3.10, min(3.50, basePrice + trend + random)) // Realistic range for cattle prices
             
             for category in categories {
                 // Category-specific price adjustments - aligned with realistic market rates
+                // Yearling Steer target: ~$4.10, Breeding Cow/Heifer target: ~$3.80
+                // Debug: Prices set to match targets for all categories
                 var categoryPrice = basePrice
-                switch category {
-                case "Weaner Steer":
-                    categoryPrice = basePrice * 1.18 // ~$4.35/kg
-                case "Yearling Steer":
-                    categoryPrice = basePrice * 1.11 // ~$4.10/kg target
-                case "Breeding Cow":
-                    categoryPrice = basePrice * 1.03 // ~$3.80/kg target
-                case "Feeder Steer":
-                    categoryPrice = basePrice * 1.05 // ~$3.90/kg
-                default:
+                
+                // Cattle categories
+                if category.contains("Weaner") && (category.contains("Steer") || category.contains("Bull") || category.contains("Heifer")) {
+                    categoryPrice = basePrice * 1.18 // ~$3.78-4.25/kg range
+                } else if category.contains("Yearling") && (category.contains("Steer") || category.contains("Bull")) {
+                    categoryPrice = basePrice * 1.22 // ~$4.10/kg target
+                } else if category.contains("Breeding") || category.contains("Breeder") || category.contains("Heifer") || category.contains("Dry Cow") {
+                    categoryPrice = basePrice * 1.15 // ~$3.80/kg target for breeders
+                } else if category.contains("Cull Cow") {
+                    categoryPrice = basePrice * 0.95 // ~$3.14/kg (cull animals typically lower)
+                } else if category.contains("Feeder") && (category.contains("Steer") || category.contains("Heifer")) {
+                    categoryPrice = basePrice * 1.18 // ~$3.89/kg
+                } else if category.contains("Grown") && (category.contains("Steer") || category.contains("Bull")) {
+                    categoryPrice = basePrice // Base price ~$3.30/kg
+                } else if category.contains("Slaughter Cattle") {
+                    categoryPrice = basePrice * 0.92 // ~$3.04/kg (slaughter typically lower)
+                } else if category.contains("Calves") {
+                    categoryPrice = basePrice * 1.25 // ~$4.13/kg (calves premium)
+                } 
+                // Sheep categories (higher per kg than cattle)
+                else if category.contains("Breeding Ewe") || category.contains("Maiden Ewe") || category.contains("Dry Ewe") {
+                    categoryPrice = basePrice * 3.2 // ~$10.56/kg
+                } else if category.contains("Cull Ewe") || category.contains("Slaughter Ewe") {
+                    categoryPrice = basePrice * 2.8 // ~$9.24/kg
+                } else if category.contains("Wether Lamb") || category.contains("Weaner Lamb") || category.contains("Feeder Lamb") {
+                    categoryPrice = basePrice * 3.5 // ~$11.55/kg
+                } else if category.contains("Slaughter Lamb") || category.contains("Lambs") {
+                    categoryPrice = basePrice * 3.3 // ~$10.89/kg
+                }
+                // Pig categories
+                else if category.contains("Breeder") || category.contains("Dry Sow") {
+                    categoryPrice = basePrice * 0.66 // ~$2.18/kg
+                } else if category.contains("Cull Sow") {
+                    categoryPrice = basePrice * 0.60 // ~$1.98/kg
+                } else if category.contains("Weaner Pig") || category.contains("Feeder Pig") {
+                    categoryPrice = basePrice * 0.70 // ~$2.31/kg
+                } else if category.contains("Grower") || category.contains("Finisher") {
+                    categoryPrice = basePrice * 0.65 // ~$2.15/kg
+                } else if category.contains("Porker") || category.contains("Baconer") {
+                    categoryPrice = basePrice * 0.66 // ~$2.18/kg
+                }
+                // Goat categories
+                else if category.contains("Breeder Doe") || category.contains("Dry Doe") {
+                    categoryPrice = basePrice * 1.30 // ~$4.29/kg
+                } else if category.contains("Cull Doe") {
+                    categoryPrice = basePrice * 1.20 // ~$3.96/kg
+                } else if category.contains("Breeder Buck") || category.contains("Sale Buck") {
+                    categoryPrice = basePrice * 1.35 // ~$4.46/kg
+                } else if category.contains("Mature Wether") || category.contains("Rangeland Goat") {
+                    categoryPrice = basePrice * 1.30 // ~$4.29/kg
+                } else if category.contains("Capretto") {
+                    categoryPrice = basePrice * 1.53 // ~$5.05/kg (premium)
+                } else if category.contains("Chevon") {
+                    categoryPrice = basePrice * 1.25 // ~$4.13/kg
+                }
+                // Default fallback
+                else {
                     categoryPrice = basePrice
                 }
                 

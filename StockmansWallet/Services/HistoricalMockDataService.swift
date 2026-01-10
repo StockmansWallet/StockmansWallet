@@ -319,9 +319,28 @@ class HistoricalMockDataService {
     // MARK: - Generate 3 Years of Market Prices
     
     private func generate3YearMarketPrices(modelContext: ModelContext, preferences: UserPreferences) async {
+        // Debug: Comprehensive list of all market categories to ensure complete price coverage
+        // These categories will match user-entered categories via pattern matching (contains)
         let categories = [
-            "Feeder Steer", "Yearling Steer", "Grown Steer", "Weaner Steer",
-            "Breeding Cow", "Heifer", "Breeding Ewe", "Wether Lamb"
+            // Cattle categories
+            "Feeder Steer", "Feeder Heifer", 
+            "Yearling Steer", "Yearling Bull",
+            "Grown Steer", "Grown Bull",
+            "Weaner Steer", "Weaner Bull", "Weaner Heifer",
+            "Breeding Cow", "Breeder", "Dry Cow", "Cull Cow",
+            "Heifer", "First Calf Heifer",
+            "Slaughter Cattle", "Calves",
+            // Sheep categories  
+            "Breeding Ewe", "Maiden Ewe", "Dry Ewe", "Cull Ewe",
+            "Weaner Ewe", "Feeder Ewe", "Slaughter Ewe",
+            "Wether Lamb", "Weaner Lamb", "Feeder Lamb", "Slaughter Lamb", "Lambs",
+            // Pig categories
+            "Breeder", "Dry Sow", "Cull Sow",
+            "Weaner Pig", "Feeder Pig", "Grower Pig", "Finisher Pig",
+            "Porker", "Baconer", "Grower Barrow", "Finisher Barrow",
+            // Goat categories
+            "Breeder Doe", "Dry Doe", "Cull Doe", "Breeder Buck", "Sale Buck",
+            "Mature Wether", "Rangeland Goat", "Capretto", "Chevon"
         ]
         
         // Calculate days from start to end
@@ -330,7 +349,8 @@ class HistoricalMockDataService {
         
         // Base price trend: Peak in late 2022/early 2023, significant dip in 2023, then recovery
         // Debug: Base price set to realistic market values - represents Grown Steer base price
-        let basePrice = 4.50 // Peak price in early 2023 (base for Grown Steer category)
+        // Adjusted to target Yearling Steer ~$4.10 and Breeding Cow/Heifer ~$3.80
+        let basePrice = 3.30 // Base price for Grown Steer - reduced to meet targets
         
         for dayOffset in (0..<totalDays).reversed() {
             guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: endDate) else { continue }
@@ -381,33 +401,75 @@ class HistoricalMockDataService {
             
             // Calculate final price
             let adjustedPrice = basePrice * (1.0 + trend + seasonal + weeklyVolatility + dailyVolatility)
-            // Debug: Price clamps set to realistic market ranges
-            let finalPrice = max(2.80, min(5.80, adjustedPrice)) // Clamp between $2.80-$5.80/kg for realistic market ranges
+            // Debug: Price clamps set to realistic market ranges - tighter range to keep prices lower
+            // Max 3.50 ensures Yearling (1.22x) stays around $4.27 max, average ~$4.10
+            let finalPrice = max(3.10, min(3.50, adjustedPrice)) // Clamp between $3.10-$3.50/kg for realistic market ranges
             
             // Generate prices for each category
             for category in categories {
                 var categoryPrice = finalPrice
                 
                 // Category-specific multipliers - adjusted to realistic market rates
-                // Base (finalPrice) represents Grown Steer at ~$3.70/kg
-                switch category {
-                case "Weaner Steer":
-                    categoryPrice = finalPrice * 1.18 // ~$4.35/kg (highest per kg)
-                case "Yearling Steer":
-                    categoryPrice = finalPrice * 1.11 // ~$4.10/kg target
-                case "Grown Steer":
-                    categoryPrice = finalPrice * 1.0 // ~$3.70/kg (base)
-                case "Feeder Steer":
-                    categoryPrice = finalPrice * 1.05 // ~$3.90/kg
-                case "Breeding Cow":
-                    categoryPrice = finalPrice * 1.03 // ~$3.80/kg target
-                case "Heifer":
-                    categoryPrice = finalPrice * 1.04 // ~$3.85/kg
-                case "Breeding Ewe":
-                    categoryPrice = finalPrice * 3.2 // Sheep prices per kg are higher
-                case "Wether Lamb":
-                    categoryPrice = finalPrice * 3.5
-                default:
+                // Base (finalPrice) represents Grown Steer at ~$3.30/kg
+                // Targets: Yearling Steer ~$4.10, Breeding Cow/Heifer ~$3.80
+                // Debug: Prices set to match targets for all categories
+                
+                // Cattle categories
+                if category.contains("Weaner") && (category.contains("Steer") || category.contains("Bull") || category.contains("Heifer")) {
+                    categoryPrice = finalPrice * 1.18 // ~$3.66-4.25/kg range
+                } else if category.contains("Yearling") && (category.contains("Steer") || category.contains("Bull")) {
+                    categoryPrice = finalPrice * 1.22 // ~$4.10/kg target
+                } else if category.contains("Breeding") || (category.contains("Breeder") && !category.contains("Doe") && !category.contains("Buck")) || category.contains("Heifer") || category.contains("Dry Cow") {
+                    categoryPrice = finalPrice * 1.15 // ~$3.80/kg target for breeders
+                } else if category.contains("Cull Cow") {
+                    categoryPrice = finalPrice * 0.95 // ~$3.14/kg (cull animals typically lower)
+                } else if category.contains("Feeder") && (category.contains("Steer") || category.contains("Heifer")) {
+                    categoryPrice = finalPrice * 1.18 // ~$3.89/kg
+                } else if category.contains("Grown") && (category.contains("Steer") || category.contains("Bull")) {
+                    categoryPrice = finalPrice * 1.0 // Base price ~$3.30/kg
+                } else if category.contains("Slaughter Cattle") {
+                    categoryPrice = finalPrice * 0.92 // ~$3.04/kg (slaughter typically lower)
+                } else if category.contains("Calves") {
+                    categoryPrice = finalPrice * 1.25 // ~$4.13/kg (calves premium)
+                } 
+                // Sheep categories (higher per kg than cattle)
+                else if category.contains("Breeding Ewe") || category.contains("Maiden Ewe") || category.contains("Dry Ewe") {
+                    categoryPrice = finalPrice * 3.2 // ~$10.56/kg
+                } else if category.contains("Cull Ewe") || category.contains("Slaughter Ewe") {
+                    categoryPrice = finalPrice * 2.8 // ~$9.24/kg
+                } else if category.contains("Wether Lamb") || category.contains("Weaner Lamb") || category.contains("Feeder Lamb") {
+                    categoryPrice = finalPrice * 3.5 // ~$11.55/kg
+                } else if category.contains("Slaughter Lamb") || category.contains("Lambs") {
+                    categoryPrice = finalPrice * 3.3 // ~$10.89/kg
+                }
+                // Pig categories
+                else if (category.contains("Breeder") || category.contains("Dry Sow")) && category.contains("Sow") {
+                    categoryPrice = finalPrice * 0.66 // ~$2.18/kg
+                } else if category.contains("Cull Sow") {
+                    categoryPrice = finalPrice * 0.60 // ~$1.98/kg
+                } else if category.contains("Weaner Pig") || category.contains("Feeder Pig") {
+                    categoryPrice = finalPrice * 0.70 // ~$2.31/kg
+                } else if category.contains("Grower") || category.contains("Finisher") {
+                    categoryPrice = finalPrice * 0.65 // ~$2.15/kg
+                } else if category.contains("Porker") || category.contains("Baconer") {
+                    categoryPrice = finalPrice * 0.66 // ~$2.18/kg
+                }
+                // Goat categories
+                else if category.contains("Breeder Doe") || category.contains("Dry Doe") {
+                    categoryPrice = finalPrice * 1.30 // ~$4.29/kg
+                } else if category.contains("Cull Doe") {
+                    categoryPrice = finalPrice * 1.20 // ~$3.96/kg
+                } else if category.contains("Breeder Buck") || category.contains("Sale Buck") {
+                    categoryPrice = finalPrice * 1.35 // ~$4.46/kg
+                } else if category.contains("Mature Wether") || category.contains("Rangeland Goat") {
+                    categoryPrice = finalPrice * 1.30 // ~$4.29/kg
+                } else if category.contains("Capretto") {
+                    categoryPrice = finalPrice * 1.53 // ~$5.05/kg (premium)
+                } else if category.contains("Chevon") {
+                    categoryPrice = finalPrice * 1.25 // ~$4.13/kg
+                }
+                // Default fallback
+                else {
                     categoryPrice = finalPrice
                 }
                 
