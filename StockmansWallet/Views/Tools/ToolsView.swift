@@ -15,26 +15,26 @@ struct ToolsView: View {
     @State private var showingFreightCalculator = false
     @State private var showingChat = false
     @State private var showingAdvisoryHub = false
+    @State private var showingMarketplace = false
     
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: Theme.sectionSpacing) {
-                    // Debug: Header card explaining tools section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Productivity Tools")
-                            .font(Theme.title)
-                            .foregroundStyle(Theme.primaryText)
-                        Text("Access reports, calculators, and helpful resources")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-                    .padding(.top)
-                    
                     // Debug: Tools menu cards
                     VStack(spacing: 16) {
+                        // Debug: Placeholder notice for users
+                        HStack(spacing: 8) {
+                            Image(systemName: "info.circle.fill")
+                                .font(.system(size: 16))
+                                .foregroundStyle(Theme.accent)
+                            Text("These features are placeholders only and not fully functional")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 8)
+                        
                         // Reports Tool
                         ToolMenuButton(
                             title: "Reports",
@@ -89,8 +89,20 @@ struct ToolsView: View {
                             HapticManager.tap()
                             showingAdvisoryHub = true
                         }
+                        
+                        // Marketplace Tool
+                        ToolMenuButton(
+                            title: "Marketplace",
+                            description: "Buy and sell livestock with other farmers",
+                            icon: "cart.fill",
+                            iconColor: .green
+                        ) {
+                            HapticManager.tap()
+                            showingMarketplace = true
+                        }
                     }
                     .padding(.horizontal)
+                    .padding(.top)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.bottom, 100)
@@ -121,6 +133,9 @@ struct ToolsView: View {
             }
             .fullScreenCover(isPresented: $showingAdvisoryHub) {
                 AdvisoryHubToolView()
+            }
+            .fullScreenCover(isPresented: $showingMarketplace) {
+                MarketplaceToolView()
             }
             .background(Theme.backgroundGradient.ignoresSafeArea())
         }

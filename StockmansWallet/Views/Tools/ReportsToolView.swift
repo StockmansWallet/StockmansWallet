@@ -107,27 +107,16 @@ struct EnhancedReportsContentView: View {
         }
     }
     
-    // MARK: - Header Card
+    // MARK: - Header Description
+    // Debug: Description text without card, centered alignment
     private var headerCard: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Image(systemName: "doc.text.magnifyingglass")
-                    .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
-                Text("Generate Reports")
-                    .font(Theme.title)
-                    .foregroundStyle(Theme.primaryText)
-            }
-            
-            Text("Create detailed reports with custom date ranges, comparisons, and analytics. Preview before generating or print directly.")
-                .font(Theme.body)
-                .foregroundStyle(Theme.secondaryText)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(Theme.cardPadding)
-        .stitchedCard()
-        .padding(.horizontal)
-        .padding(.top)
+        Text("Create detailed reports with custom date ranges, comparisons, and analytics. Preview before generating or print directly.")
+            .font(Theme.body)
+            .foregroundStyle(Theme.secondaryText)
+            .multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity)
+            .padding(.horizontal)
+            .padding(.top)
     }
 }
 
