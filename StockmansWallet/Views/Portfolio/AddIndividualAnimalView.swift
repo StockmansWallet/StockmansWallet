@@ -697,6 +697,7 @@ struct AddIndividualAnimalView: View {
         
         // Debug: Set breeding-specific data for breeder categories
         if isBreederCategory {
+            herd.isPregnant = true // Fix: Set isPregnant to true so calving accrual shows in Growth and mortality card
             herd.joinedDate = joinedDate
             herd.calvingRate = Double(calvingRate) / 100.0
             
