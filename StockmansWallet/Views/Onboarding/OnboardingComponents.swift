@@ -80,10 +80,25 @@ struct OnboardingPageTemplate<Content: View>: View {
                                 .frame(width: controlSize, height: controlSize)
                                 .contentShape(Circle())
                                 .background(
-                                    Circle()
-                                        .fill(Color.clear)
-                                        .frame(width: controlSize, height: controlSize)
-                                        .glassEffect(.regular.interactive(), in: Circle())
+                                    // Debug: iOS 26+ uses glassEffect, fallback to blur+opacity for iOS 17-25
+                                    Group {
+                                        if #available(iOS 26.0, *) {
+                                            Circle()
+                                                .fill(Color.clear)
+                                                .frame(width: controlSize, height: controlSize)
+                                                .glassEffect(.regular.interactive(), in: Circle())
+                                        } else {
+                                            // Fallback: Blur + semi-transparent background for iOS 17-25
+                                            Circle()
+                                                .fill(Color.white.opacity(0.15))
+                                                .frame(width: controlSize, height: controlSize)
+                                                .background(
+                                                    Circle()
+                                                        .fill(.ultraThinMaterial)
+                                                        .frame(width: controlSize, height: controlSize)
+                                                )
+                                        }
+                                    }
                                 )
                         }
                         .buttonStyle(.plain)

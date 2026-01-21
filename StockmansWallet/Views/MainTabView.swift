@@ -83,8 +83,8 @@ struct MainTabView: View {
                 }
                 .accessibilityLabel("Settings tab")
         }
-        .toolbarBackground(.clear, for: .tabBar)
-        .toolbarBackground(.visible, for: .tabBar)
+        // Debug: iOS 26+ uses glass effect, iOS 17-25 needs visible background
+        .toolbarBackground(toolbarBackgroundVisibility, for: .tabBar)
         .tint(Theme.accent)
         .onAppear {
             if !tabBarAppearanceConfigured {
@@ -131,8 +131,8 @@ struct MainTabView: View {
                 }
                 .accessibilityLabel("Settings tab")
         }
-        .toolbarBackground(.clear, for: .tabBar)
-        .toolbarBackground(.visible, for: .tabBar)
+        // Debug: iOS 26+ uses glass effect, iOS 17-25 needs visible background
+        .toolbarBackground(toolbarBackgroundVisibility, for: .tabBar)
         .tint(Theme.accent)
         .onAppear {
             if !tabBarAppearanceConfigured {
@@ -142,13 +142,34 @@ struct MainTabView: View {
         }
     }
     
+    // Debug: Computed property for toolbar background visibility based on iOS version
+    private var toolbarBackgroundVisibility: Visibility {
+        if #available(iOS 26.0, *) {
+            // iOS 26+ can use transparent with glass effect
+            return .hidden
+        } else {
+            // iOS 17-25 needs visible background material
+            return .visible
+        }
+    }
+    
     // Debug: Extract UIKit appearance setup to separate method (called once on appear)
     // This is acceptable as a last resort when pure SwiftUI modifiers are insufficient
     private func configureTabBarAppearance() {
         let appearance = UITabBarAppearance()
-        appearance.configureWithTransparentBackground()
-        appearance.backgroundColor = .clear
-        appearance.shadowColor = .clear
+        
+        // Debug: iOS 26+ uses glass effect with transparency, iOS 17-25 needs material background
+        if #available(iOS 26.0, *) {
+            appearance.configureWithTransparentBackground()
+            appearance.backgroundColor = .clear
+            appearance.shadowColor = .clear
+        } else {
+            // iOS 17-25: Use default opaque appearance with blur
+            appearance.configureWithDefaultBackground()
+            // Apply dark theme with blur material
+            appearance.backgroundColor = UIColor(white: 0.1, alpha: 0.92)
+            appearance.shadowColor = UIColor.black.withAlphaComponent(0.3)
+        }
         
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
