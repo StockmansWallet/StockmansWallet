@@ -297,6 +297,12 @@ struct MarketView: View {
             // Physical Sales Report Section
             // Debug: MLA-style detailed cattle pricing table with comprehensive filtering
             VStack(alignment: .leading, spacing: 16) {
+                // Section Header
+                Text("Physical Sales Report")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundStyle(Theme.primaryText)
+                    .padding(.horizontal)
+                
                 // Filter Controls
                 VStack(spacing: 12) {
                     // Row 1: Report Date and State (Optional)
@@ -309,7 +315,7 @@ struct MarketView: View {
                                 }
                             }
                         } label: {
-                            HStack(spacing: 8) {
+                            HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Report Date")
                                         .font(.system(size: 10))
@@ -318,13 +324,16 @@ struct MarketView: View {
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundStyle(Theme.primaryText)
                                 }
+                                
+                                Spacer()
+                                
                                 Image(systemName: "chevron.down")
                                     .font(.system(size: 10))
                                     .foregroundStyle(Theme.secondaryText)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity)
                             .background(Theme.cardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
@@ -347,22 +356,25 @@ struct MarketView: View {
                                 }
                             }
                         } label: {
-                            HStack(spacing: 8) {
+                            HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("State (Optional)")
                                         .font(.system(size: 10))
                                         .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                                    Text(viewModel.selectedState ?? "QLD")
+                                    Text(viewModel.selectedState ?? "All")
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundStyle(Theme.primaryText)
                                 }
+                                
+                                Spacer()
+                                
                                 Image(systemName: "chevron.down")
                                     .font(.system(size: 10))
                                     .foregroundStyle(Theme.secondaryText)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity)
                             .background(Theme.cardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
@@ -384,7 +396,7 @@ struct MarketView: View {
                                 }
                             }
                         } label: {
-                            HStack(spacing: 8) {
+                            HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Category")
                                         .font(.system(size: 10))
@@ -393,13 +405,16 @@ struct MarketView: View {
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundStyle(Theme.primaryText)
                                 }
+                                
+                                Spacer()
+                                
                                 Image(systemName: "chevron.down")
                                     .font(.system(size: 10))
                                     .foregroundStyle(Theme.secondaryText)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity)
                             .background(Theme.cardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
@@ -418,7 +433,7 @@ struct MarketView: View {
                                 }
                             }
                         } label: {
-                            HStack(spacing: 8) {
+                            HStack {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Sale Prefix")
                                         .font(.system(size: 10))
@@ -427,13 +442,16 @@ struct MarketView: View {
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundStyle(Theme.primaryText)
                                 }
+                                
+                                Spacer()
+                                
                                 Image(systemName: "chevron.down")
                                     .font(.system(size: 10))
                                     .foregroundStyle(Theme.secondaryText)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .frame(maxWidth: .infinity)
                             .background(Theme.cardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
@@ -910,11 +928,7 @@ struct PhysicalSaleyardSelector: View {
             HapticManager.tap()
             showingSaleyardSheet = true
         }) {
-            HStack(spacing: 12) {
-                Image(systemName: "building.2")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Theme.accent)
-                
+            HStack {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("Saleyard")
                         .font(.system(size: 10))
@@ -927,12 +941,13 @@ struct PhysicalSaleyardSelector: View {
                 
                 Spacer()
                 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 12, weight: .semibold))
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 10))
                     .foregroundStyle(Theme.secondaryText)
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
             .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 8))
         }
