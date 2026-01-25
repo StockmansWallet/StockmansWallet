@@ -122,16 +122,32 @@ class MarketDataService {
     
     // MARK: - National Indicators
     // Debug: Major market indicators (EYCI, WYCI, NSI, etc.)
-    // Debug: Now fetches REAL data from MLA API when useMockData = false
+    // Debug: Fetches from Supabase (cached with daily changes), falls back to MLA API, then mock data
     func fetchNationalIndicators() async -> [NationalIndicator] {
         print("🟢 MarketDataService: fetchNationalIndicators called")
         print("🟢 useMockData = \(Config.useMockData)")
+        print("🟢 useSupabaseBackend = \(Config.useSupabaseBackend)")
         
-        // Check if we should use real MLA data
+        // Check if we should use real data (not mock)
         if !Config.useMockData {
+            // Try Supabase first (cached data with daily changes)
+            if Config.useSupabaseBackend {
+                print("🟢 Attempting to fetch from Supabase (cached data with changes)...")
+                do {
+                    let indicators = try await SupabaseMarketService.shared.fetchNationalIndicators()
+                    if !indicators.isEmpty {
+                        print("✅ Successfully fetched \(indicators.count) indicators from Supabase")
+                        return indicators
+                    }
+                    print("⚠️ Supabase returned empty, falling back to MLA API")
+                } catch {
+                    print("⚠️ Supabase fetch failed: \(error), falling back to MLA API")
+                }
+            }
+            
+            // Fallback to MLA API (direct, no daily changes)
             print("🟢 Attempting to fetch from MLA API...")
             do {
-                // Fetch real data from MLA API
                 let indicators = try await MLAAPIService.shared.fetchNationalIndicators()
                 print("✅ Successfully fetched \(indicators.count) indicators from MLA API")
                 return indicators

@@ -47,20 +47,20 @@ class SupabaseMarketService {
     // MARK: - National Indicators
     // Debug: Fetch cached national indicators (EYCI, WYCI, NSI, NHLI) from Supabase
     func fetchNationalIndicators(date: Date = Date()) async throws -> [NationalIndicator] {
-        print("🔵 Debug: Fetching national indicators for \(date)")
+        print("🔵 Debug: Fetching national indicators from Supabase")
         
-        let dateFormatter = ISO8601DateFormatter()
-        dateFormatter.formatOptions = [.withFullDate]
-        let dateString = dateFormatter.string(from: date)
-        
-        // Query Supabase for all indicators for the given date
+        // Query Supabase for the most recent indicators that haven't expired
+        // Don't filter by exact date - just get the latest data
         let response: [SupabaseNationalIndicator] = try await supabase
             .from("mla_national_indicators")
             .select()
-            .eq("report_date", value: dateString)
             .gt("expires_at", value: Date().ISO8601Format())
+            .order("report_date", ascending: false)
+            .limit(10) // Get up to 10 indicators (we only have 2 for MVP: EYCI, WYCI)
             .execute()
             .value
+        
+        print("✅ Debug: Supabase returned \(response.count) indicators")
         
         // Convert to app models
         return response.map { $0.toNationalIndicator() }
