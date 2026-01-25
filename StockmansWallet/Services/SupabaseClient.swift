@@ -23,6 +23,10 @@ class SupabaseClientManager {
         }
         
         // Debug: Create Supabase client with URL and anon key
+        // Note: The warning about emitLocalSessionAsInitialSession is a deprecation notice
+        // for future versions. Since the configuration API structure varies by SDK version,
+        // we use the simple initialization. The app works correctly with anonymous access
+        // for market data without requiring auth session management.
         self.client = SupabaseClient(
             supabaseURL: url,
             supabaseKey: Config.supabaseAnonKey

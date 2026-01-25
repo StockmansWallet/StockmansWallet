@@ -307,6 +307,8 @@ struct PhysicalSalesTableView: View {
 
 // MARK: - Speech Coordinator
 // Debug: Manages text-to-speech playback with proper state management
+// Debug: @MainActor ensures thread-safety since AVSpeechSynthesizer must run on main thread
+@MainActor
 @Observable
 class SpeechCoordinator: NSObject, AVSpeechSynthesizerDelegate {
     private let synthesizer = AVSpeechSynthesizer()
@@ -348,13 +350,18 @@ class SpeechCoordinator: NSObject, AVSpeechSynthesizerDelegate {
     
     // MARK: - AVSpeechSynthesizerDelegate
     // Debug: Called when speech finishes
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
-        isSpeaking = false
+    // Debug: nonisolated allows delegate to be called from any thread, then we update state on main
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            isSpeaking = false
+        }
     }
     
     // Debug: Called when speech is cancelled
-    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
-        isSpeaking = false
+    nonisolated func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        Task { @MainActor in
+            isSpeaking = false
+        }
     }
 }
 
