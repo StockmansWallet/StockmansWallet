@@ -122,42 +122,47 @@ class MarketDataService {
     
     // MARK: - National Indicators
     // Debug: Major market indicators (EYCI, WYCI, NSI, etc.)
-    // Debug: All values reduced by 45% (multiplied by 0.55) to reflect more realistic market conditions
+    // Debug: Now fetches REAL data from MLA API when useMockData = false
     func fetchNationalIndicators() async -> [NationalIndicator] {
-        // Simulate network delay
+        print("🟢 MarketDataService: fetchNationalIndicators called")
+        print("🟢 useMockData = \(Config.useMockData)")
+        
+        // Check if we should use real MLA data
+        if !Config.useMockData {
+            print("🟢 Attempting to fetch from MLA API...")
+            do {
+                // Fetch real data from MLA API
+                let indicators = try await MLAAPIService.shared.fetchNationalIndicators()
+                print("✅ Successfully fetched \(indicators.count) indicators from MLA API")
+                return indicators
+            } catch {
+                print("❌ Error fetching from MLA API, falling back to mock data: \(error)")
+                // Fall through to mock data if API fails
+            }
+        } else {
+            print("🟡 Using mock data (Config.useMockData = true)")
+        }
+        
+        // Simulate network delay for mock data
         try? await Task.sleep(nanoseconds: 300_000_000)
         
+        // Debug: Mock data for testing (cattle only for MVP)
+        print("🟡 Returning mock data")
         return [
             NationalIndicator(
                 name: "Eastern Young Cattle Indicator",
                 abbreviation: "EYCI",
-                value: 355.03, // Adjusted from 645.50 (×0.55)
-                change: 4.51, // Adjusted from 8.20 (×0.55)
+                value: 355.03,
+                change: 4.51,
                 trend: .up,
                 unit: "¢/kg cwt"
             ),
             NationalIndicator(
                 name: "Western Young Cattle Indicator",
                 abbreviation: "WYCI",
-                value: 341.17, // Adjusted from 620.30 (×0.55)
-                change: -2.48, // Adjusted from -4.50 (×0.55)
+                value: 341.17,
+                change: -2.48,
                 trend: .down,
-                unit: "¢/kg cwt"
-            ),
-            NationalIndicator(
-                name: "National Sheep Indicator",
-                abbreviation: "NSI",
-                value: 445.50, // Adjusted from 810.00 (×0.55)
-                change: 2.86, // Adjusted from 5.20 (×0.55)
-                trend: .up,
-                unit: "¢/kg cwt"
-            ),
-            NationalIndicator(
-                name: "National Heavy Lamb Indicator",
-                abbreviation: "NHLI",
-                value: 481.53, // Adjusted from 875.50 (×0.55)
-                change: 6.77, // Adjusted from 12.30 (×0.55)
-                trend: .up,
                 unit: "¢/kg cwt"
             )
         ]

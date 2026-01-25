@@ -22,7 +22,7 @@ class SupabaseMarketService {
     // MARK: - Physical Sales Reports
     // Debug: Fetch cached MLA physical sales report from Supabase
     func fetchPhysicalReport(saleyard: String, date: Date = Date()) async throws -> PhysicalSalesReport? {
-        print("Debug: Fetching physical report for \(saleyard) on \(date)")
+        print("🔵 Debug: Fetching physical report for \(saleyard) on \(date)")
         
         // Format date for query
         let dateFormatter = ISO8601DateFormatter()
@@ -47,7 +47,7 @@ class SupabaseMarketService {
     // MARK: - National Indicators
     // Debug: Fetch cached national indicators (EYCI, WYCI, NSI, NHLI) from Supabase
     func fetchNationalIndicators(date: Date = Date()) async throws -> [NationalIndicator] {
-        print("Debug: Fetching national indicators for \(date)")
+        print("🔵 Debug: Fetching national indicators for \(date)")
         
         let dateFormatter = ISO8601DateFormatter()
         dateFormatter.formatOptions = [.withFullDate]
@@ -69,21 +69,23 @@ class SupabaseMarketService {
     // MARK: - Saleyard Reports
     // Debug: Fetch cached saleyard reports from Supabase
     func fetchSaleyardReports(state: String? = nil, limit: Int = 10) async throws -> [SaleyardReport] {
-        print("Debug: Fetching saleyard reports for state: \(state ?? "all")")
+        print("🔵 Debug: Fetching saleyard reports for state: \(state ?? "all")")
         
-        var query = supabase
+        // Build query with all filters before executing
+        var queryBuilder = supabase
             .from("mla_saleyard_reports")
             .select()
             .gt("expires_at", value: Date().ISO8601Format())
-            .order("report_date", ascending: false)
-            .limit(limit)
         
-        // Filter by state if provided
+        // Filter by state if provided (apply before order and limit)
         if let state = state {
-            query = query.eq("state", value: state)
+            queryBuilder = queryBuilder.eq("state", value: state)
         }
         
-        let response: [SupabaseSaleyardReport] = try await query
+        // Apply order and limit at the end
+        let response: [SupabaseSaleyardReport] = try await queryBuilder
+            .order("report_date", ascending: false)
+            .limit(limit)
             .execute()
             .value
         
@@ -109,7 +111,7 @@ class SupabaseMarketService {
             
             return count > 0
         } catch {
-            print("Debug: Error checking data freshness: \(error)")
+            print("❌ Debug: Error checking data freshness: \(error)")
             return false
         }
     }
@@ -197,11 +199,12 @@ struct SupabaseNationalIndicator: Codable {
         )
     }
     
+    // Debug: Parse trend string to enum, use .neutral instead of .steady
     private func parseTrend(_ trendString: String) -> PriceTrend {
         switch trendString.lowercased() {
         case "up": return .up
         case "down": return .down
-        default: return .steady
+        default: return .neutral
         }
     }
 }
@@ -228,31 +231,4 @@ struct SupabaseSaleyardReport: Codable {
             categories: categories ?? []
         )
     }
-}
-
-// MARK: - App Models for Physical Sales
-// Debug: Models used in the iOS app UI
-
-struct PhysicalSalesReport: Identifiable, Codable {
-    let id: String
-    let saleyard: String
-    let reportDate: Date
-    let totalYarding: Int
-    let categories: [PhysicalSalesCategory]
-}
-
-struct PhysicalSalesCategory: Identifiable, Codable {
-    let id: String
-    let categoryName: String
-    let weightRange: String
-    let salePrefix: String
-    let muscleScore: String?
-    let fatScore: Int?
-    let headCount: Int
-    let minPriceCentsPerKg: Double?
-    let maxPriceCentsPerKg: Double?
-    let avgPriceCentsPerKg: Double?
-    let minPriceDollarsPerHead: Double?
-    let maxPriceDollarsPerHead: Double?
-    let avgPriceDollarsPerHead: Double?
 }

@@ -28,7 +28,7 @@ class SupabaseClientManager {
             supabaseKey: Config.supabaseAnonKey
         )
         
-        print("Debug: SupabaseClient initialized with URL: \(url)")
+        print("🔵 Debug: SupabaseClient initialized with URL: \(url)")
     }
     
     // MARK: - Health Check
@@ -43,10 +43,10 @@ class SupabaseClientManager {
                 .execute()
                 .value
             
-            print("Debug: Supabase connection successful")
+            print("✅ Debug: Supabase connection successful")
             return true
         } catch {
-            print("Debug: Supabase connection failed: \(error)")
+            print("❌ Debug: Supabase connection failed: \(error)")
             return false
         }
     }

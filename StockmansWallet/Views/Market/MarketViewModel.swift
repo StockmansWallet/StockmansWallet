@@ -64,6 +64,7 @@ class MarketViewModel {
             group.addTask { await self.loadNationalIndicators() }
             group.addTask { await self.loadSaleyardReports() }
             group.addTask { await self.loadMarketIntelligence() }
+            group.addTask { await self.loadPhysicalSalesReport() } // Debug: Added physical sales
         }
         
         await MainActor.run {
@@ -177,37 +178,39 @@ class MarketViewModel {
     }
     
     // MARK: - Load Physical Sales Report
-    /// Fetches MLA physical sales report from Supabase backend
-    /// Debug: This will show the detailed cattle physical report table with prices per kg and per head
+    /// Fetches MLA physical sales report
+    /// Debug: First tries MLA API directly, then falls back to Supabase, then mock data
     func loadPhysicalSalesReport(saleyard: String? = nil, date: Date = Date()) async {
         await MainActor.run { self.isLoadingPhysicalReport = true }
         
-        // Use Config flag to decide whether to use Supabase or mock data
-        if Config.useSupabaseBackend {
+        print("🔵 Debug: loadPhysicalSalesReport called")
+        
+        // Debug: Try MLA API first to see what data structure we get
+        if !Config.useMockData {
+            print("🔵 Debug: Attempting to fetch physical sales from MLA API...")
             do {
-                let saleyardName = saleyard ?? selectedSaleyard ?? "Mount Barker"
-                let report = try await supabaseService.fetchPhysicalReport(
-                    saleyard: saleyardName,
+                let report = try await MLAAPIService.shared.fetchPhysicalSalesReport(
+                    saleyard: saleyard,
                     date: date
                 )
+                print("✅ Debug: Successfully fetched physical sales report from MLA API")
                 await MainActor.run {
                     self.physicalSalesReport = report
                     self.isLoadingPhysicalReport = false
                 }
+                return
             } catch {
-                print("Debug: Error loading physical report from Supabase: \(error)")
-                await MainActor.run {
-                    self.errorMessage = "Failed to load physical sales report"
-                    self.physicalSalesReport = nil
-                    self.isLoadingPhysicalReport = false
-                }
+                print("⚠️ Debug: MLA API failed for physical sales: \(error)")
+                print("⚠️ Debug: Check console above for raw JSON structure")
+                // Continue to fallback options
             }
-        } else {
-            // Debug: Using mock data until Supabase backend is ready
-            await MainActor.run {
-                self.physicalSalesReport = createMockPhysicalReport()
-                self.isLoadingPhysicalReport = false
-            }
+        }
+        
+        // Fallback to mock data
+        print("🔵 Debug: Using mock physical sales data")
+        await MainActor.run {
+            self.physicalSalesReport = createMockPhysicalReport()
+            self.isLoadingPhysicalReport = false
         }
     }
     
