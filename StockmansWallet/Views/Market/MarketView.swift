@@ -384,36 +384,69 @@ struct MarketView: View {
     }
     
     // MARK: - Intelligence Content
-    // Debug: AI predictive insights with confidence levels
+    // Debug: Coming Soon - AI chat assistant for livestock and market queries
     private var intelligenceContent: some View {
-        VStack(spacing: 16) {
-            // Header with description
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Market Intelligence")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                Text("Forward-looking insights powered by live market, weather, supply and demand data")
-                    .font(.system(size: 13))
-                    .foregroundStyle(Theme.secondaryText)
-                    .lineSpacing(4)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal)
+        VStack(spacing: 24) {
+            Spacer()
             
-            if viewModel.isLoadingIntelligence {
-                ProgressView()
-                    .tint(Theme.accent)
-                    .frame(height: 200)
-            } else if viewModel.marketIntelligence.isEmpty {
-                emptyStateView(message: "No intelligence data available")
-            } else {
-                VStack(spacing: 16) {
-                    ForEach(viewModel.marketIntelligence) { intelligence in
-                        IntelligenceCard(intelligence: intelligence)
-                    }
+            // Icon
+            Image(systemName: "brain.head.profile")
+                .font(.system(size: 60))
+                .foregroundStyle(Theme.accent.gradient)
+                .padding(.bottom, 8)
+            
+            // Title
+            Text("AI Market Assistant")
+                .font(.system(size: 24, weight: .bold))
+                .foregroundStyle(Theme.primaryText)
+            
+            // Description
+            VStack(spacing: 16) {
+                Text("Coming Soon")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.accent)
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 6)
+                    .background(Theme.accent.opacity(0.15))
+                    .clipShape(Capsule())
+                
+                Text("Chat with an AI assistant that knows your herds, analyses market trends, and provides personalised insights based on your livestock, historical data, and current market conditions.")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Theme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(4)
+                    .padding(.horizontal, 32)
+                
+                // Feature highlights
+                VStack(alignment: .leading, spacing: 12) {
+                    featureRow(icon: "bubble.left.and.bubble.right.fill", text: "Ask anything about your livestock")
+                    featureRow(icon: "chart.line.uptrend.xyaxis", text: "Get market insights and predictions")
+                    featureRow(icon: "clock.arrow.circlepath", text: "Compare against historical data")
+                    featureRow(icon: "dollarsign.circle.fill", text: "Optimise sale timing and pricing")
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 40)
+                .padding(.top, 8)
             }
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
+    }
+    
+    // MARK: - Feature Row
+    private func featureRow(icon: String, text: String) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16))
+                .foregroundStyle(Theme.accent)
+                .frame(width: 24)
+            
+            Text(text)
+                .font(.system(size: 14))
+                .foregroundStyle(Theme.primaryText)
+            
+            Spacer()
         }
     }
     
