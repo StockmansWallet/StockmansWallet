@@ -171,7 +171,8 @@ class MarketDataService {
                 value: 355.03,
                 change: 4.51,
                 trend: .up,
-                unit: "¢/kg cwt"
+                unit: "¢/kg cwt",
+                changeDuration: "24h" // Debug: Daily change
             ),
             NationalIndicator(
                 name: "Western Young Cattle Indicator",
@@ -179,7 +180,8 @@ class MarketDataService {
                 value: 341.17,
                 change: -2.48,
                 trend: .down,
-                unit: "¢/kg cwt"
+                unit: "¢/kg cwt",
+                changeDuration: "24h" // Debug: Daily change
             )
         ]
     }
@@ -257,12 +259,12 @@ class MarketDataService {
         let basePrice = getBasePrice(category: category, livestockType: livestockType)
         
         return [
-            RegionalPrice(state: "NSW", price: basePrice * 1.05, change: 3.2, trend: .up),
-            RegionalPrice(state: "VIC", price: basePrice * 0.98, change: -1.5, trend: .down),
-            RegionalPrice(state: "QLD", price: basePrice * 1.02, change: 2.1, trend: .up),
-            RegionalPrice(state: "SA", price: basePrice * 0.95, change: 0.5, trend: .up),
-            RegionalPrice(state: "WA", price: basePrice * 1.08, change: 4.8, trend: .up),
-            RegionalPrice(state: "TAS", price: basePrice * 0.92, change: -0.8, trend: .down)
+            RegionalPrice(state: "NSW", price: basePrice * 1.05, change: 3.2, trend: .up, changeDuration: "24h"),
+            RegionalPrice(state: "VIC", price: basePrice * 0.98, change: -1.5, trend: .down, changeDuration: "24h"),
+            RegionalPrice(state: "QLD", price: basePrice * 1.02, change: 2.1, trend: .up, changeDuration: "24h"),
+            RegionalPrice(state: "SA", price: basePrice * 0.95, change: 0.5, trend: .up, changeDuration: "24h"),
+            RegionalPrice(state: "WA", price: basePrice * 1.08, change: 4.8, trend: .up, changeDuration: "24h"),
+            RegionalPrice(state: "TAS", price: basePrice * 0.92, change: -0.8, trend: .down, changeDuration: "24h")
         ]
     }
     
@@ -309,7 +311,8 @@ class MarketDataService {
                 change: 0.08,
                 trend: .up,
                 weightRange: "300-400kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Yearling Steer",
@@ -318,7 +321,8 @@ class MarketDataService {
                 change: -0.06,
                 trend: .down,
                 weightRange: "400-500kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Grown Steer",
@@ -327,7 +331,8 @@ class MarketDataService {
                 change: -0.03,
                 trend: .down,
                 weightRange: "500-600kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Breeding Cow",
@@ -336,7 +341,8 @@ class MarketDataService {
                 change: 0.03,
                 trend: .up,
                 weightRange: "450-550kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Heifer",
@@ -345,7 +351,8 @@ class MarketDataService {
                 change: 0.07,
                 trend: .up,
                 weightRange: "350-450kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Weaner Steer",
@@ -354,7 +361,8 @@ class MarketDataService {
                 change: 0.14,
                 trend: .up,
                 weightRange: "200-300kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             )
         ]
     }
@@ -369,7 +377,8 @@ class MarketDataService {
                 change: 0.18, // Adjusted from 0.32 (×0.55)
                 trend: .up,
                 weightRange: "22-26kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Trade Lamb",
@@ -378,7 +387,8 @@ class MarketDataService {
                 change: 0.08, // Adjusted from 0.15 (×0.55)
                 trend: .up,
                 weightRange: "18-22kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Merino Wether",
@@ -387,7 +397,8 @@ class MarketDataService {
                 change: -0.04, // Adjusted from -0.08 (×0.55)
                 trend: .down,
                 weightRange: "50-60kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Breeding Ewe",
@@ -396,7 +407,8 @@ class MarketDataService {
                 change: 0.06, // Adjusted from 0.10 (×0.55)
                 trend: .up,
                 weightRange: "45-55kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             )
         ]
     }
@@ -411,7 +423,8 @@ class MarketDataService {
                 change: 0.03, // Adjusted from 0.05 (×0.55)
                 trend: .up,
                 weightRange: "70-85kg",
-                source: "Processor Average"
+                source: "Processor Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Porker",
@@ -420,7 +433,8 @@ class MarketDataService {
                 change: 0.04, // Adjusted from 0.08 (×0.55)
                 trend: .up,
                 weightRange: "60-70kg",
-                source: "Processor Average"
+                source: "Processor Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Grower Pig",
@@ -429,7 +443,8 @@ class MarketDataService {
                 change: -0.01, // Adjusted from -0.02 (×0.55)
                 trend: .down,
                 weightRange: "30-50kg",
-                source: "Private Sale Average"
+                source: "Private Sale Average",
+                changeDuration: "24h" // Debug: Daily change
             )
         ]
     }
@@ -444,7 +459,8 @@ class MarketDataService {
                 change: 0.11, // Adjusted from 0.20 (×0.55)
                 trend: .up,
                 weightRange: "20-30kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Breeding Doe",
@@ -453,7 +469,8 @@ class MarketDataService {
                 change: 0.08, // Adjusted from 0.15 (×0.55)
                 trend: .up,
                 weightRange: "35-45kg",
-                source: saleyard ?? "National Average"
+                source: saleyard ?? "National Average",
+                changeDuration: "24h" // Debug: Daily change
             ),
             CategoryPrice(
                 category: "Capretto",
@@ -462,7 +479,8 @@ class MarketDataService {
                 change: -0.06, // Adjusted from -0.10 (×0.55)
                 trend: .down,
                 weightRange: "8-12kg",
-                source: "Processor Average"
+                source: "Processor Average",
+                changeDuration: "24h" // Debug: Daily change
             )
         ]
     }
@@ -519,6 +537,7 @@ struct NationalIndicator: Identifiable {
     let change: Double
     let trend: PriceTrend
     let unit: String
+    let changeDuration: String // Debug: Duration for price change (e.g., "24h", "7d")
 }
 
 struct CategoryPrice: Identifiable {
@@ -530,6 +549,7 @@ struct CategoryPrice: Identifiable {
     let trend: PriceTrend
     let weightRange: String
     let source: String
+    let changeDuration: String // Debug: Duration for price change (e.g., "24h", "7d")
 }
 
 struct HistoricalPricePoint: Identifiable {
@@ -544,6 +564,7 @@ struct RegionalPrice: Identifiable {
     let price: Double
     let change: Double
     let trend: PriceTrend
+    let changeDuration: String // Debug: Duration for price change (e.g., "24h", "7d")
 }
 
 struct MarketCommentary: Identifiable {

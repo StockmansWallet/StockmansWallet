@@ -212,7 +212,8 @@ struct SupabaseNationalIndicator: Codable {
             value: value,
             change: change,
             trend: parseTrend(trend),
-            unit: "¢/kg cwt"
+            unit: "¢/kg cwt",
+            changeDuration: "24h" // Debug: Daily change from Supabase
         )
     }
     

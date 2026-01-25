@@ -723,6 +723,9 @@ struct PriceCard: View {
                         .font(.system(size: 10, weight: .semibold))
                     Text("\(price.change >= 0 ? "+" : "")\(price.change, format: .number.precision(.fractionLength(2)))")
                         .font(.system(size: 12, weight: .semibold))
+                    Text(price.changeDuration)
+                        .font(.system(size: 11))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.8))
                 }
                 .foregroundStyle(price.trend == .up ? Theme.positiveChange : price.trend == .down ? Theme.negativeChange : Theme.secondaryText)
             }
@@ -759,6 +762,9 @@ struct NationalIndicatorCard: View {
                     .font(.system(size: 11, weight: .semibold))
                 Text("\(indicator.change >= 0 ? "+" : "")\(indicator.change, format: .number.precision(.fractionLength(2)))")
                     .font(.system(size: 13, weight: .semibold))
+                Text(indicator.changeDuration)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.secondaryText.opacity(0.8))
             }
             .foregroundStyle(indicator.trend == .up ? Theme.positiveChange : indicator.trend == .down ? Theme.negativeChange : Theme.secondaryText)
         }

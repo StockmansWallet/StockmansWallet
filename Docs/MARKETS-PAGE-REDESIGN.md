@@ -96,7 +96,7 @@ Show detailed price sheet with charts
 
 **Price Cards**
 - 2-column grid layout
-- Shows: Category, Weight Range, Price, Change indicator
+- Shows: Category, Weight Range, Price, Change indicator with 24h duration
 - Tappable to see historical charts and regional comparison
 
 **Data Filtering**
@@ -109,7 +109,7 @@ Show detailed price sheet with charts
 
 **National Indicators**
 - Large, prominent cards for EYCI, WYCI, NSI, NHLI
-- Shows: Value, Change, Trend (up/down/steady)
+- Shows: Value, Change with 24h duration, Trend (up/down/steady)
 - 2-column grid layout
 - Color-coded trends (green=up, red=down, gray=steady)
 
@@ -418,6 +418,8 @@ func fetchTopInsight() async -> TopInsight? {
    - Row 3: Saleyard (location selection with sheet)
 
 9. **Client-side filtering**: Category and Sale Prefix filters work client-side for instant results, while Date, State, and Saleyard trigger new report loads from the API.
+
+10. **Change duration indicators**: All price change indicators (My Markets, National Indicators, Regional Prices) display a "24h" label to clarify the time period. This aligns with MLA reporting standards where daily changes are the norm. The duration is stored in the data models for future flexibility (e.g., adding weekly/monthly views).
 
 ### Future Enhancements
 

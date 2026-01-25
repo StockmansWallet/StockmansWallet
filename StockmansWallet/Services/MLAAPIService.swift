@@ -328,7 +328,8 @@ struct MLAIndicatorData: Codable {
             value: value,
             change: change,
             trend: trend,
-            unit: indicator_units
+            unit: indicator_units,
+            changeDuration: "24h" // Debug: Daily change from MLA API
         )
     }
 }

@@ -339,6 +339,9 @@ struct RegionalPriceRow: View {
                     .font(.system(size: 11, weight: .semibold))
                 Text("\(regional.change >= 0 ? "+" : "")\(regional.change, format: .number.precision(.fractionLength(2)))")
                     .font(.system(size: 14, weight: .medium))
+                Text(regional.changeDuration)
+                    .font(.system(size: 12))
+                    .foregroundStyle(Theme.secondaryText.opacity(0.8))
             }
             .foregroundStyle(regional.trend == .up ? Theme.positiveChange : regional.trend == .down ? Theme.negativeChange : Theme.secondaryText)
         }
@@ -366,7 +369,8 @@ enum HistoricalTimeRange: String, CaseIterable, Identifiable {
             change: 0.15,
             trend: .up,
             weightRange: "300-400kg",
-            source: "National Average"
+            source: "National Average",
+            changeDuration: "24h"
         ),
         historicalPrices: [],
         regionalPrices: [],
