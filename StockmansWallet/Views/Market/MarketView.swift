@@ -288,6 +288,25 @@ struct MarketView: View {
                 }
             }
             
+            // Physical Sales Report Section
+            // Debug: Detailed cattle pricing table by category
+            if let physicalReport = viewModel.physicalSalesReport {
+                PhysicalSalesTableView(report: physicalReport)
+                    .padding(.top, 8)
+            } else if viewModel.isLoadingPhysicalReport {
+                VStack(spacing: 12) {
+                    Text("Physical Sales Report")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundStyle(Theme.primaryText)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+                    
+                    ProgressView()
+                        .tint(Theme.accent)
+                        .frame(height: 100)
+                }
+            }
+            
             // Saleyard Selector Section
             // Debug: Same saleyard selector used on dashboard for filtering market data
             VStack(spacing: 12) {
