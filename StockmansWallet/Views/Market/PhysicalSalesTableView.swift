@@ -17,6 +17,9 @@ struct PhysicalSalesTableView: View {
     // Debug: Text-to-speech coordinator
     @State private var speechCoordinator = SpeechCoordinator()
     
+    // Debug: Summary expansion state
+    @State private var isSummaryExpanded = false
+    
     // Debug: Computed property for filtered categories
     private var filteredCategories: [PhysicalSalesCategory] {
         report.categories.filter { category in
@@ -94,58 +97,76 @@ struct PhysicalSalesTableView: View {
     
     
     // MARK: - Summary Section
-    // Debug: Display text summary if available with text-to-speech
+    // Debug: Display text summary if available with text-to-speech and collapsible content
     private func summarySection(text: String) -> some View {
-        VStack(alignment: .leading, spacing: 14) {
-            // Header with doc icon, title, and audio button
-            HStack(spacing: 8) {
-                Image(systemName: "doc.text")
-                    .font(.system(size: 16))
-                    .foregroundStyle(Theme.primaryText)
-                
-                Text("Market Summary")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Theme.primaryText)
-                
-                Spacer()
-                
-                // Circular audio button with text-to-speech
-                Button {
-                    HapticManager.tap()
-                    speechCoordinator.toggleSpeech(text: text)
-                } label: {
-                    ZStack {
-                        Circle()
-                            .fill(Theme.accent.opacity(0.15))
-                            .frame(width: 40, height: 40)
-                        
-                        Image(systemName: speechCoordinator.isSpeaking ? "stop.fill" : "speaker.wave.2.fill")
-                            .font(.system(size: 16))
-                            .foregroundStyle(Theme.accent)
-                    }
+        VStack(alignment: .leading, spacing: 0) {
+            // Header - tappable to expand/collapse
+            Button(action: {
+                HapticManager.tap()
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    isSummaryExpanded.toggle()
                 }
-                .accessibilityLabel(speechCoordinator.isSpeaking ? "Stop reading" : "Read market summary aloud")
+            }) {
+                HStack(spacing: 8) {
+                    Text("Market Summary")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Theme.primaryText)
+                    
+                    Spacer()
+                    
+                    // Expansion chevron
+                    Image(systemName: "chevron.down")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(Theme.secondaryText)
+                        .rotationEffect(.degrees(isSummaryExpanded ? 180 : 0))
+                    
+                    // Circular audio button with text-to-speech
+                    Button {
+                        HapticManager.tap()
+                        speechCoordinator.toggleSpeech(text: text)
+                    } label: {
+                        ZStack {
+                            Circle()
+                                .fill(Theme.accent.opacity(0.15))
+                                .frame(width: 40, height: 40)
+                            
+                            Image(systemName: speechCoordinator.isSpeaking ? "stop.fill" : "speaker.wave.2.fill")
+                                .font(.system(size: 16))
+                                .foregroundStyle(Theme.accent)
+                        }
+                    }
+                    .accessibilityLabel(speechCoordinator.isSpeaking ? "Stop reading" : "Read market summary aloud")
+                }
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .padding(.horizontal, 18)
+            .padding(.vertical, 18)
             
-            // Parse summary text into bullet points
-            let lines = text.components(separatedBy: ". ")
-            VStack(alignment: .leading, spacing: 8) {
-                ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
-                    if !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        HStack(alignment: .top, spacing: 10) {
-                            Text("•")
-                                .font(.system(size: 15))
-                                .foregroundStyle(Theme.primaryText)
-                            Text(line.trimmingCharacters(in: .whitespacesAndNewlines))
-                                .font(.system(size: 15))
-                                .foregroundStyle(Theme.primaryText)
-                                .fixedSize(horizontal: false, vertical: true)
+            // Collapsible content
+            if isSummaryExpanded {
+                // Parse summary text into bullet points
+                let lines = text.components(separatedBy: ". ")
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                        if !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                            HStack(alignment: .top, spacing: 10) {
+                                Text("•")
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(Theme.primaryText)
+                                Text(line.trimmingCharacters(in: .whitespacesAndNewlines))
+                                    .font(.system(size: 15))
+                                    .foregroundStyle(Theme.primaryText)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
                         }
                     }
                 }
+                .padding(.horizontal, 18)
+                .padding(.bottom, 18)
+                .transition(.opacity.combined(with: .scale(scale: 0.95, anchor: .top)))
             }
         }
-        .padding(18)
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
