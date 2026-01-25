@@ -40,6 +40,12 @@ class MarketViewModel {
     var selectedState: String? = nil
     // Debug: Saleyard selector for filtering market data (same as dashboard)
     var selectedSaleyard: String? = nil
+    // Debug: Physical sales report filters
+    var selectedPhysicalSaleyard: String = "Mount Barker" // Debug: Default saleyard
+    var selectedReportDate: Date = Date() // Debug: Default to today
+    var availableReportDates: [Date] = [] // Debug: Available dates for selected saleyard
+    var selectedCategory: String = "All" // Debug: Category filter for physical sales
+    var selectedSalePrefix: String = "All" // Debug: Sale prefix filter for physical sales
     
     // MARK: - Dependencies
     private let dataService = MarketDataService.shared
@@ -57,6 +63,9 @@ class MarketViewModel {
         await MainActor.run {
             self.errorMessage = nil
         }
+        
+        // Debug: Load available report dates first
+        await loadAvailableReportDates()
         
         // Run all data fetches in parallel
         await withTaskGroup(of: Void.self) { group in
@@ -183,14 +192,15 @@ class MarketViewModel {
     func loadPhysicalSalesReport(saleyard: String? = nil, date: Date = Date()) async {
         await MainActor.run { self.isLoadingPhysicalReport = true }
         
-        print("🔵 Debug: loadPhysicalSalesReport called")
+        let selectedYard = saleyard ?? selectedPhysicalSaleyard
+        print("🔵 Debug: loadPhysicalSalesReport called for \(selectedYard)")
         
         // Debug: Try MLA API first to see what data structure we get
         if !Config.useMockData {
             print("🔵 Debug: Attempting to fetch physical sales from MLA API...")
             do {
                 let report = try await MLAAPIService.shared.fetchPhysicalSalesReport(
-                    saleyard: saleyard,
+                    saleyard: selectedYard,
                     date: date
                 )
                 print("✅ Debug: Successfully fetched physical sales report from MLA API")
@@ -209,67 +219,260 @@ class MarketViewModel {
         // Fallback to mock data
         print("🔵 Debug: Using mock physical sales data")
         await MainActor.run {
-            self.physicalSalesReport = createMockPhysicalReport()
+            self.physicalSalesReport = createMockPhysicalReport(saleyard: selectedYard, date: date)
             self.isLoadingPhysicalReport = false
         }
     }
     
     // MARK: - Mock Physical Report
     /// Debug: Mock physical sales report for testing UI
-    private func createMockPhysicalReport() -> PhysicalSalesReport {
+    private func createMockPhysicalReport(saleyard: String, date: Date) -> PhysicalSalesReport {
+        // Debug: Map saleyard to state
+        let saleyardState: [String: String] = [
+            "Mount Barker": "WA",
+            "Wagga Wagga": "NSW",
+            "Roma": "QLD",
+            "Ballarat": "VIC",
+            "Mount Gambier": "SA"
+        ]
+        
         return PhysicalSalesReport(
             id: UUID().uuidString,
-            saleyard: "Mount Barker",
-            reportDate: Date(),
-            totalYarding: 336,
+            saleyard: saleyard,
+            reportDate: date,
+            comparisonDate: Calendar.current.date(byAdding: .day, value: -1, to: date),
+            totalYarding: Int.random(in: 250...500),
             categories: [
+                // Bulls
                 PhysicalSalesCategory(
                     id: UUID().uuidString,
-                    categoryName: "Yearling Steer",
-                    weightRange: "400-500",
+                    categoryName: "Bulls",
+                    weightRange: "600+",
+                    salePrefix: "Processor",
+                    muscleScore: "C",
+                    fatScore: 4,
+                    headCount: Int.random(in: 3...8),
+                    minPriceCentsPerKg: 366.0,
+                    maxPriceCentsPerKg: 372.0,
+                    avgPriceCentsPerKg: 369.0,
+                    minPriceDollarsPerHead: 2340.0,
+                    maxPriceDollarsPerHead: 2480.0,
+                    avgPriceDollarsPerHead: 2410.0,
+                    priceChangePerKg: 10.0,
+                    priceChangePerHead: 65.0
+                ),
+                // Cows
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Cows",
+                    weightRange: "450-550",
                     salePrefix: "Processor",
                     muscleScore: "C",
                     fatScore: 3,
-                    headCount: 4,
-                    minPriceCentsPerKg: 340.0,
+                    headCount: Int.random(in: 15...25),
+                    minPriceCentsPerKg: 290.0,
                     maxPriceCentsPerKg: 340.0,
-                    avgPriceCentsPerKg: 340.0,
-                    minPriceDollarsPerHead: 1734.0,
-                    maxPriceDollarsPerHead: 1734.0,
-                    avgPriceDollarsPerHead: 1734.0
+                    avgPriceCentsPerKg: 315.0,
+                    minPriceDollarsPerHead: 1305.0,
+                    maxPriceDollarsPerHead: 1870.0,
+                    avgPriceDollarsPerHead: 1587.5,
+                    priceChangePerKg: 2.0,
+                    priceChangePerHead: 10.0
                 ),
                 PhysicalSalesCategory(
                     id: UUID().uuidString,
-                    categoryName: "Yearling Heifer",
-                    weightRange: "400-500",
+                    categoryName: "Cows",
+                    weightRange: "450-550",
+                    salePrefix: "PTIC",
+                    muscleScore: nil,
+                    fatScore: nil,
+                    headCount: Int.random(in: 8...15),
+                    minPriceCentsPerKg: 310.0,
+                    maxPriceCentsPerKg: 320.0,
+                    avgPriceCentsPerKg: 315.0,
+                    minPriceDollarsPerHead: 1550.0,
+                    maxPriceDollarsPerHead: 1760.0,
+                    avgPriceDollarsPerHead: 1655.0,
+                    priceChangePerKg: nil,
+                    priceChangePerHead: nil
+                ),
+                // Grown Heifer
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Grown Heifer",
+                    weightRange: "400-540",
                     salePrefix: "Feeder",
                     muscleScore: "C",
                     fatScore: 3,
-                    headCount: 6,
-                    minPriceCentsPerKg: 384.0,
-                    maxPriceCentsPerKg: 384.0,
-                    avgPriceCentsPerKg: 384.0,
-                    minPriceDollarsPerHead: 1536.0,
-                    maxPriceDollarsPerHead: 1536.0,
-                    avgPriceDollarsPerHead: 1536.0
+                    headCount: Int.random(in: 10...18),
+                    minPriceCentsPerKg: 330.0,
+                    maxPriceCentsPerKg: 360.0,
+                    avgPriceCentsPerKg: 345.0,
+                    minPriceDollarsPerHead: 1320.0,
+                    maxPriceDollarsPerHead: 1944.0,
+                    avgPriceDollarsPerHead: 1632.0,
+                    priceChangePerKg: -4.0,
+                    priceChangePerHead: -18.0
+                ),
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Grown Heifer",
+                    weightRange: "400-540",
+                    salePrefix: "Processor",
+                    muscleScore: "B",
+                    fatScore: 3,
+                    headCount: Int.random(in: 5...12),
+                    minPriceCentsPerKg: 325.0,
+                    maxPriceCentsPerKg: 368.0,
+                    avgPriceCentsPerKg: 346.5,
+                    minPriceDollarsPerHead: 1300.0,
+                    maxPriceDollarsPerHead: 1987.2,
+                    avgPriceDollarsPerHead: 1643.6,
+                    priceChangePerKg: -3.0,
+                    priceChangePerHead: -16.0
+                ),
+                // Grown Steer
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Grown Steer",
+                    weightRange: "500-600",
+                    salePrefix: "Feeder",
+                    muscleScore: "C",
+                    fatScore: 3,
+                    headCount: Int.random(in: 12...20),
+                    minPriceCentsPerKg: 300.0,
+                    maxPriceCentsPerKg: 370.0,
+                    avgPriceCentsPerKg: 340.0,
+                    minPriceDollarsPerHead: 1500.0,
+                    maxPriceDollarsPerHead: 2220.0,
+                    avgPriceDollarsPerHead: 1870.0,
+                    priceChangePerKg: -3.0,
+                    priceChangePerHead: -15.0
                 ),
                 PhysicalSalesCategory(
                     id: UUID().uuidString,
                     categoryName: "Grown Steer",
-                    weightRange: "400-500",
+                    weightRange: "600+",
+                    salePrefix: "Processor",
+                    muscleScore: "C",
+                    fatScore: 4,
+                    headCount: Int.random(in: 8...15),
+                    minPriceCentsPerKg: 366.0,
+                    maxPriceCentsPerKg: 372.0,
+                    avgPriceCentsPerKg: 369.0,
+                    minPriceDollarsPerHead: 2196.0,
+                    maxPriceDollarsPerHead: 2604.0,
+                    avgPriceDollarsPerHead: 2400.0,
+                    priceChangePerKg: 10.0,
+                    priceChangePerHead: 60.0
+                ),
+                // Yearling Heifer
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Yearling Heifer",
+                    weightRange: "330-400",
                     salePrefix: "Feeder",
                     muscleScore: "C",
                     fatScore: 3,
-                    headCount: 11,
-                    minPriceCentsPerKg: 300.0,
-                    maxPriceCentsPerKg: 370.0,
+                    headCount: Int.random(in: 8...14),
+                    minPriceCentsPerKg: 384.0,
+                    maxPriceCentsPerKg: 384.0,
+                    avgPriceCentsPerKg: 384.0,
+                    minPriceDollarsPerHead: 1267.2,
+                    maxPriceDollarsPerHead: 1536.0,
+                    avgPriceDollarsPerHead: 1401.6,
+                    priceChangePerKg: nil,
+                    priceChangePerHead: nil
+                ),
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Yearling Heifer",
+                    weightRange: "400+",
+                    salePrefix: "Feeder",
+                    muscleScore: "B",
+                    fatScore: 3,
+                    headCount: Int.random(in: 5...10),
+                    minPriceCentsPerKg: 366.0,
+                    maxPriceCentsPerKg: 366.0,
+                    avgPriceCentsPerKg: 366.0,
+                    minPriceDollarsPerHead: 1464.0,
+                    maxPriceDollarsPerHead: 1683.6,
+                    avgPriceDollarsPerHead: 1573.8,
+                    priceChangePerKg: nil,
+                    priceChangePerHead: nil
+                ),
+                // Yearling Steer
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Yearling Steer",
+                    weightRange: "400+",
+                    salePrefix: "Processor",
+                    muscleScore: "C",
+                    fatScore: 4,
+                    headCount: Int.random(in: 5...12),
+                    minPriceCentsPerKg: 340.0,
+                    maxPriceCentsPerKg: 340.0,
                     avgPriceCentsPerKg: 340.0,
-                    minPriceDollarsPerHead: 1245.0,
-                    maxPriceDollarsPerHead: 1586.0,
-                    avgPriceDollarsPerHead: 1454.58
+                    minPriceDollarsPerHead: 1360.0,
+                    maxPriceDollarsPerHead: 1734.0,
+                    avgPriceDollarsPerHead: 1547.0,
+                    priceChangePerKg: nil,
+                    priceChangePerHead: nil
+                ),
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Yearling Steer",
+                    weightRange: "330-400",
+                    salePrefix: "Feeder",
+                    muscleScore: "C",
+                    fatScore: 3,
+                    headCount: Int.random(in: 10...18),
+                    minPriceCentsPerKg: 342.0,
+                    maxPriceCentsPerKg: 366.0,
+                    avgPriceCentsPerKg: 354.0,
+                    minPriceDollarsPerHead: 1128.6,
+                    maxPriceDollarsPerHead: 1464.0,
+                    avgPriceDollarsPerHead: 1296.3,
+                    priceChangePerKg: nil,
+                    priceChangePerHead: nil
+                ),
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Yearling Steer",
+                    weightRange: "400+",
+                    salePrefix: "Restocker",
+                    muscleScore: "C",
+                    fatScore: 3,
+                    headCount: Int.random(in: 6...12),
+                    minPriceCentsPerKg: 342.0,
+                    maxPriceCentsPerKg: 342.0,
+                    avgPriceCentsPerKg: 342.0,
+                    minPriceDollarsPerHead: 1368.0,
+                    maxPriceDollarsPerHead: 1625.4,
+                    avgPriceDollarsPerHead: 1496.7,
+                    priceChangePerKg: nil,
+                    priceChangePerHead: nil
                 )
-            ]
+            ],
+            state: saleyardState[saleyard] ?? "NSW",
+            summary: "Numbers were down for total small yarding of \(Int.random(in: 250...500)) head with the total fire ban yesterday disrupting transport. Trade weight cattle and cows dominated the yarding with processors keeping prices mainly firm. Heavy bullocks sold to 372c while a pen of cows reached 340c/kg. Heavy bulls gained 10c to average 310c/kg. Yearling heifers weighing over 400kg sold for 342c to 366c /kg. Bullocks weighing over 600kg sold for 366c to 372c while lighter weight steers made 300c to 370c/kg. Grown heifers weighing under 540kg sold from 330c to 360c and heavier weights returned 325c to 368c /kg. Heavy weight cows gained 2c selling at 290c to 340c, medium weights sold for 306c, and store cows made 250c to 290c /kg. Heavy bulls gained selling from 250c to 320c/kg. PTIC cows sold from 310c to 320c/kg.",
+            audioURL: "https://example.com/audio/report.mp3"
         )
+    }
+    
+    // MARK: - Load Available Report Dates
+    /// Loads available report dates for physical sales
+    /// Debug: Mock implementation - in production would query API
+    func loadAvailableReportDates() async {
+        // Debug: Generate last 7 days of dates
+        let calendar = Calendar.current
+        let dates = (0..<7).compactMap { daysAgo in
+            calendar.date(byAdding: .day, value: -daysAgo, to: Date())
+        }
+        
+        await MainActor.run {
+            self.availableReportDates = dates
+        }
     }
     
     // MARK: - Filter Actions
@@ -281,6 +484,25 @@ class MarketViewModel {
         }
         HapticManager.tap()
         await loadSaleyardReports(state: state)
+    }
+    
+    /// Updates physical sales saleyard and reloads report
+    func selectPhysicalSaleyard(_ saleyard: String) async {
+        await MainActor.run {
+            self.selectedPhysicalSaleyard = saleyard
+        }
+        HapticManager.tap()
+        await loadAvailableReportDates()
+        await loadPhysicalSalesReport(saleyard: saleyard, date: selectedReportDate)
+    }
+    
+    /// Updates physical sales report date and reloads report
+    func selectReportDate(_ date: Date) async {
+        await MainActor.run {
+            self.selectedReportDate = date
+        }
+        HapticManager.tap()
+        await loadPhysicalSalesReport(saleyard: selectedPhysicalSaleyard, date: date)
     }
 }
 

@@ -3,18 +3,38 @@
 //  StockmansWallet
 //
 //  Physical Sales Table - displays detailed cattle pricing by category
-//  Debug: Shows Min/Max/Avg prices per kg and per head
+//  Debug: Shows Min/Max/Avg prices per kg and per head with filtering
 //
 
 import SwiftUI
+import AVFoundation
 
 struct PhysicalSalesTableView: View {
     let report: PhysicalSalesReport
+    let selectedCategory: String
+    let selectedSalePrefix: String
+    
+    // Debug: Text-to-speech coordinator
+    @State private var speechCoordinator = SpeechCoordinator()
+    
+    // Debug: Computed property for filtered categories
+    private var filteredCategories: [PhysicalSalesCategory] {
+        report.categories.filter { category in
+            let categoryMatch = selectedCategory == "All" || category.categoryName.contains(selectedCategory)
+            let prefixMatch = selectedSalePrefix == "All" || category.salePrefix == selectedSalePrefix
+            return categoryMatch && prefixMatch
+        }
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             // Header
             headerSection
+            
+            // Summary text if available
+            if let summary = report.summary {
+                summarySection(text: summary)
+            }
             
             // Table (no scroll, full width)
             VStack(spacing: 0) {
@@ -22,39 +42,130 @@ struct PhysicalSalesTableView: View {
                 tableHeader
                 
                 // Table Rows
-                ForEach(report.categories) { category in
-                    categoryRow(category: category)
+                if filteredCategories.isEmpty {
+                    emptyStateView
+                } else {
+                    ForEach(filteredCategories) { category in
+                        categoryRow(category: category)
+                    }
                 }
             }
             .background(Theme.cardBackground)
             .cornerRadius(12)
         }
         .padding(.horizontal)
+        .onDisappear {
+            // Debug: Stop speech when view disappears
+            speechCoordinator.stopSpeech()
+        }
     }
     
     // MARK: - Header Section
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            Text("Physical Sales Report")
-                .font(Theme.headline)
+            // Saleyard name heading (same size as National Indicators - 18pt semibold)
+            Text(report.saleyard)
+                .font(.system(size: 18, weight: .semibold))
                 .foregroundStyle(Theme.primaryText)
             
-            HStack {
-                Text(report.saleyard)
-                    .font(Theme.body)
+            // Date and yardings info row
+            HStack(alignment: .firstTextBaseline) {
+                // Report date on left
+                Text(report.reportDate, format: .dateTime.day().month().year())
+                    .font(.system(size: 15))
                     .foregroundStyle(Theme.secondaryText)
                 
                 Spacer()
                 
-                Text("\(report.totalYarding) head yarded")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.accent)
-                
-                Text(report.reportDate, style: .date)
-                    .font(Theme.caption)
+                // Head yarded on right
+                Text("\(report.totalYarding) Head Yarded")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            
+            // Comparison date
+            if let comparisonDate = report.comparisonDate {
+                Text("Comparison: \(comparisonDate, format: .dateTime.day().month().year())")
+                    .font(.system(size: 13))
                     .foregroundStyle(Theme.secondaryText.opacity(0.7))
             }
         }
+    }
+    
+    
+    // MARK: - Summary Section
+    // Debug: Display text summary if available with text-to-speech
+    private func summarySection(text: String) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            // Header with doc icon, title, and audio button
+            HStack(spacing: 8) {
+                Image(systemName: "doc.text")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Theme.primaryText)
+                
+                Text("Market Summary")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Theme.primaryText)
+                
+                Spacer()
+                
+                // Circular audio button with text-to-speech
+                Button {
+                    HapticManager.tap()
+                    speechCoordinator.toggleSpeech(text: text)
+                } label: {
+                    ZStack {
+                        Circle()
+                            .fill(Theme.accent.opacity(0.15))
+                            .frame(width: 40, height: 40)
+                        
+                        Image(systemName: speechCoordinator.isSpeaking ? "stop.fill" : "speaker.wave.2.fill")
+                            .font(.system(size: 16))
+                            .foregroundStyle(Theme.accent)
+                    }
+                }
+                .accessibilityLabel(speechCoordinator.isSpeaking ? "Stop reading" : "Read market summary aloud")
+            }
+            
+            // Parse summary text into bullet points
+            let lines = text.components(separatedBy: ". ")
+            VStack(alignment: .leading, spacing: 8) {
+                ForEach(Array(lines.enumerated()), id: \.offset) { _, line in
+                    if !line.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        HStack(alignment: .top, spacing: 10) {
+                            Text("•")
+                                .font(.system(size: 15))
+                                .foregroundStyle(Theme.primaryText)
+                            Text(line.trimmingCharacters(in: .whitespacesAndNewlines))
+                                .font(.system(size: 15))
+                                .foregroundStyle(Theme.primaryText)
+                                .fixedSize(horizontal: false, vertical: true)
+                        }
+                    }
+                }
+            }
+        }
+        .padding(18)
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+    
+    // MARK: - Empty State
+    // Debug: Show when no categories match filters
+    private var emptyStateView: some View {
+        VStack(spacing: 12) {
+            Image(systemName: "line.3.horizontal.decrease.circle")
+                .font(.system(size: 32))
+                .foregroundStyle(Theme.secondaryText.opacity(0.5))
+            Text("No Results")
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.primaryText)
+            Text("No sales match your selected filters")
+                .font(.system(size: 13))
+                .foregroundStyle(Theme.secondaryText)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 40)
     }
     
     // MARK: - Table Header
@@ -173,6 +284,59 @@ struct PhysicalSalesTableView: View {
     }
 }
 
+// MARK: - Speech Coordinator
+// Debug: Manages text-to-speech playback with proper state management
+@Observable
+class SpeechCoordinator: NSObject, AVSpeechSynthesizerDelegate {
+    private let synthesizer = AVSpeechSynthesizer()
+    var isSpeaking = false
+    
+    override init() {
+        super.init()
+        synthesizer.delegate = self
+    }
+    
+    // Debug: Toggle speech on/off
+    func toggleSpeech(text: String) {
+        if isSpeaking {
+            stopSpeech()
+        } else {
+            startSpeech(text: text)
+        }
+    }
+    
+    // Debug: Start speaking the text
+    private func startSpeech(text: String) {
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.voice = AVSpeechSynthesisVoice(language: "en-AU") // Australian English
+        utterance.rate = 0.5 // Slightly slower for clarity
+        utterance.pitchMultiplier = 1.0
+        utterance.volume = 1.0
+        
+        isSpeaking = true
+        synthesizer.speak(utterance)
+    }
+    
+    // Debug: Stop speaking
+    func stopSpeech() {
+        if synthesizer.isSpeaking {
+            synthesizer.stopSpeaking(at: .immediate)
+        }
+        isSpeaking = false
+    }
+    
+    // MARK: - AVSpeechSynthesizerDelegate
+    // Debug: Called when speech finishes
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {
+        isSpeaking = false
+    }
+    
+    // Debug: Called when speech is cancelled
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didCancel utterance: AVSpeechUtterance) {
+        isSpeaking = false
+    }
+}
+
 // MARK: - Preview
 #Preview {
     ScrollView {
@@ -181,6 +345,7 @@ struct PhysicalSalesTableView: View {
                 id: UUID().uuidString,
                 saleyard: "Mount Barker",
                 reportDate: Date(),
+                comparisonDate: Calendar.current.date(byAdding: .day, value: -1, to: Date()),
                 totalYarding: 336,
                 categories: [
                     PhysicalSalesCategory(
@@ -196,7 +361,9 @@ struct PhysicalSalesTableView: View {
                         avgPriceCentsPerKg: 340.0,
                         minPriceDollarsPerHead: 1734.0,
                         maxPriceDollarsPerHead: 1734.0,
-                        avgPriceDollarsPerHead: 1734.0
+                        avgPriceDollarsPerHead: 1734.0,
+                        priceChangePerKg: nil,
+                        priceChangePerHead: nil
                     ),
                     PhysicalSalesCategory(
                         id: UUID().uuidString,
@@ -211,7 +378,9 @@ struct PhysicalSalesTableView: View {
                         avgPriceCentsPerKg: 384.0,
                         minPriceDollarsPerHead: 1536.0,
                         maxPriceDollarsPerHead: 1536.0,
-                        avgPriceDollarsPerHead: 1536.0
+                        avgPriceDollarsPerHead: 1536.0,
+                        priceChangePerKg: nil,
+                        priceChangePerHead: nil
                     ),
                     PhysicalSalesCategory(
                         id: UUID().uuidString,
@@ -226,10 +395,51 @@ struct PhysicalSalesTableView: View {
                         avgPriceCentsPerKg: 340.0,
                         minPriceDollarsPerHead: 1245.0,
                         maxPriceDollarsPerHead: 1586.0,
-                        avgPriceDollarsPerHead: 1454.58
+                        avgPriceDollarsPerHead: 1454.58,
+                        priceChangePerKg: -3.0,
+                        priceChangePerHead: -15.0
+                    ),
+                    PhysicalSalesCategory(
+                        id: UUID().uuidString,
+                        categoryName: "Bulls",
+                        weightRange: "600+",
+                        salePrefix: "Processor",
+                        muscleScore: "C",
+                        fatScore: 4,
+                        headCount: 5,
+                        minPriceCentsPerKg: 366.0,
+                        maxPriceCentsPerKg: 372.0,
+                        avgPriceCentsPerKg: 369.0,
+                        minPriceDollarsPerHead: 2340.0,
+                        maxPriceDollarsPerHead: 2480.0,
+                        avgPriceDollarsPerHead: 2410.0,
+                        priceChangePerKg: 10.0,
+                        priceChangePerHead: 65.0
+                    ),
+                    PhysicalSalesCategory(
+                        id: UUID().uuidString,
+                        categoryName: "Cows",
+                        weightRange: "450-550",
+                        salePrefix: "PTIC",
+                        muscleScore: nil,
+                        fatScore: nil,
+                        headCount: 12,
+                        minPriceCentsPerKg: 310.0,
+                        maxPriceCentsPerKg: 320.0,
+                        avgPriceCentsPerKg: 315.0,
+                        minPriceDollarsPerHead: 1550.0,
+                        maxPriceDollarsPerHead: 1760.0,
+                        avgPriceDollarsPerHead: 1655.0,
+                        priceChangePerKg: nil,
+                        priceChangePerHead: nil
                     )
-                ]
-            )
+                ],
+                state: "WA",
+                summary: "Numbers were down for total small yarding of 336 head with the total fire ban yesterday disrupting transport. Trade weight cattle and cows dominated the yarding with processors keeping prices mainly firm.",
+                audioURL: nil
+            ),
+            selectedCategory: "All",
+            selectedSalePrefix: "All"
         )
         .padding(.vertical)
     }

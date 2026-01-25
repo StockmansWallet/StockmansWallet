@@ -113,11 +113,33 @@ Show detailed price sheet with charts
 - 2-column grid layout
 - Color-coded trends (green=up, red=down, gray=steady)
 
-**Saleyard Reports**
-- List of recent saleyard sales
-- Shows: Saleyard name, State, Yardings (head count), Summary
-- State filter dropdown (filter by NSW, VIC, QLD, etc.)
-- Includes date and categories traded
+**Physical Sales Report** *(MLA-style interface)*
+
+**Filter Layout:**
+- **Row 1:** Report Date | State (Optional)
+- **Row 2:** Category | Sale Prefix
+- **Row 3:** Saleyard (Full-width sheet selector)
+
+**Filter Controls:**
+1. **Report Date Selection**: Dropdown to select report dates (last 7 days)
+2. **State Filter** *(optional)*: Filter by state or show all
+3. **Category Filter**: All, Bulls, Cows, Grown Heifer, Grown Steer, Yearling Heifer, Yearling Steer
+4. **Sale Prefix Filter**: All, Feeder, Processor, PTIC, Restocker
+5. **Saleyard Selection**: Sheet-based selector (like dashboard)
+   - Searchable list of 24 saleyards with physical reports
+   - Full-screen sheet for easy browsing
+   - Checkmark indicates current selection
+
+**Report Display:**
+- **Market Summary**: Text summary with bullet points
+- **Audio Icon**: Play market commentary (when available)
+- **Detailed Table**: Shows pricing by category with:
+  - Category name, weight range, sale prefix
+  - Muscle score and fat score (when applicable)
+  - Head count
+  - Average price (¢/kg)
+  - Average price ($/head)
+  - Price changes from comparison date
 
 **Directional Movements**
 - Visual indicators on all cards
@@ -180,6 +202,39 @@ struct SaleyardReport {
 }
 ```
 
+### PhysicalSalesReport *(NEW - MLA-style reports)*
+```swift
+struct PhysicalSalesReport {
+    let id: String
+    let saleyard: String
+    let reportDate: Date
+    let comparisonDate: Date?    // Previous date for comparisons
+    let totalYarding: Int
+    let categories: [PhysicalSalesCategory]
+    let state: String?           // State where saleyard is located
+    let summary: String?         // Text summary of market
+    let audioURL: String?        // Audio recording URL
+}
+
+struct PhysicalSalesCategory {
+    let id: String
+    let categoryName: String     // e.g., "Yearling Steer", "Cows"
+    let weightRange: String      // e.g., "400-500", "600+"
+    let salePrefix: String       // "Feeder", "Processor", "PTIC", "Restocker"
+    let muscleScore: String?     // e.g., "A", "B", "C"
+    let fatScore: Int?           // 1-5
+    let headCount: Int
+    let minPriceCentsPerKg: Double?
+    let maxPriceCentsPerKg: Double?
+    let avgPriceCentsPerKg: Double?
+    let minPriceDollarsPerHead: Double?
+    let maxPriceDollarsPerHead: Double?
+    let avgPriceDollarsPerHead: Double?
+    let priceChangePerKg: Double?      // Change from comparison
+    let priceChangePerHead: Double?    // Change from comparison
+}
+```
+
 ### MarketIntelligence
 ```swift
 struct MarketIntelligence {
@@ -213,7 +268,49 @@ func loadMarketIntelligence(forCategories: [String] = []) async
 
 // Load prices for user's specific herd categories
 func loadCategoryPrices(forCategories: [String]) async
+
+// Load physical sales report for specific saleyard and date
+func loadPhysicalSalesReport(saleyard: String? = nil, date: Date = Date()) async
+
+// Load available report dates (last 7 days)
+func loadAvailableReportDates() async
+
+// Update physical sales saleyard filter
+func selectPhysicalSaleyard(_ saleyard: String) async
+
+// Update physical sales report date filter
+func selectReportDate(_ date: Date) async
 ```
+
+### Physical Sales Filtering
+The Market Pulse tab now includes comprehensive filtering for Physical Sales Reports:
+
+1. **Saleyard Selection**
+   - Dropdown menu with common saleyards
+   - Updates report when changed
+   - Default: "Mount Barker"
+
+2. **Report Date Selection**
+   - Dropdown showing last 7 days
+   - Allows viewing historical reports
+   - Default: Today's date
+
+3. **State Filter** *(optional)*
+   - Filter reports by state (NSW, VIC, QLD, SA, WA, TAS, NT, ACT)
+   - Capsule button style
+   - Default: All states
+
+4. **Category Filter** *(in PhysicalSalesTableView)*
+   - Filter by livestock category
+   - Options: All, Bulls, Cows, Grown Heifer, Grown Steer, Yearling Heifer, Yearling Steer
+   - Client-side filtering
+   - Default: All
+
+5. **Sale Prefix Filter** *(in PhysicalSalesTableView)*
+   - Filter by sale type
+   - Options: All, Feeder, Processor, PTIC, Restocker
+   - Client-side filtering
+   - Default: All
 
 ### Removed Methods
 - `selectLivestockType()` - No longer needed (personalized to user's herds)
@@ -310,6 +407,17 @@ func fetchTopInsight() async -> TopInsight? {
 4. **Confidence indicators**: Visual badges (High/Medium/Low) make it easy to assess prediction reliability at a glance.
 
 5. **Mock data structure**: All data models are designed to match expected MLA API structure for seamless integration.
+
+6. **Sheet-based saleyard selector**: Uses the same large, searchable sheet selector as Dashboard for consistency and better UX with long lists (iOS HIG compliance).
+
+7. **Removed duplicate sections**: Consolidated saleyard selection and reports into the Physical Sales Report section to avoid redundancy and confusion.
+
+8. **Filter grouping**: All filters are now grouped at the top in a logical 3-row layout that matches the MLA website:
+   - Row 1: Date and State (temporal/geographic)
+   - Row 2: Category and Sale Prefix (livestock classification)
+   - Row 3: Saleyard (location selection with sheet)
+
+9. **Client-side filtering**: Category and Sale Prefix filters work client-side for instant results, while Date, State, and Saleyard trigger new report loads from the API.
 
 ### Future Enhancements
 

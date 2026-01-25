@@ -107,6 +107,12 @@ struct MarketView: View {
                     await viewModel.loadCategoryPrices(forCategories: userHerdCategories)
                 }
             }
+            .onChange(of: viewModel.selectedPhysicalSaleyard) { _, newSaleyard in
+                // Debug: Reload physical sales report when saleyard changes
+                Task {
+                    await viewModel.selectPhysicalSaleyard(newSaleyard)
+                }
+            }
             .sheet(isPresented: $showingPriceDetail) {
                 if let price = selectedPriceForDetail {
                     PriceDetailSheet(
@@ -256,7 +262,7 @@ struct MarketView: View {
     }
     
     // MARK: - Market Pulse Content
-    // Debug: National indicators + saleyard reports
+    // Debug: National indicators + physical sales report with MLA-style filtering
     private var marketPulseContent: some View {
         VStack(spacing: 24) {
             // National Indicators Section
@@ -289,95 +295,171 @@ struct MarketView: View {
             }
             
             // Physical Sales Report Section
-            // Debug: Detailed cattle pricing table by category
-            if let physicalReport = viewModel.physicalSalesReport {
-                PhysicalSalesTableView(report: physicalReport)
-                    .padding(.top, 8)
-            } else if viewModel.isLoadingPhysicalReport {
+            // Debug: MLA-style detailed cattle pricing table with comprehensive filtering
+            VStack(alignment: .leading, spacing: 16) {
+                // Filter Controls
                 VStack(spacing: 12) {
-                    Text("Physical Sales Report")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Theme.primaryText)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.horizontal)
-                    
-                    ProgressView()
-                        .tint(Theme.accent)
-                        .frame(height: 100)
-                }
-            }
-            
-            // Saleyard Selector Section
-            // Debug: Same saleyard selector used on dashboard for filtering market data
-            VStack(spacing: 12) {
-                SaleyardSelector(selectedSaleyard: $viewModel.selectedSaleyard)
-                
-                // Debug: Info note about saleyard selection
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "info.circle.fill")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.secondaryText)
-                        .opacity(0.5)
-                    Text("Select a specific saleyard to view market data from that location, or use your default saleyards.")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                        .opacity(0.5)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-            }
-            .padding(.horizontal)
-            
-            // Saleyard Reports Section
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    Text("Saleyard Reports")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundStyle(Theme.primaryText)
-                    
-                    Spacer()
-                    
-                    // State filter
-                    Menu {
-                        Button("All States") {
-                            Task { await viewModel.selectState(nil) }
-                        }
-                        Divider()
-                        ForEach(ReferenceData.states, id: \.self) { state in
-                            Button(state) {
-                                Task { await viewModel.selectState(state) }
+                    // Row 1: Report Date and State (Optional)
+                    HStack(spacing: 12) {
+                        // Report Date Selector
+                        Menu {
+                            ForEach(viewModel.availableReportDates, id: \.self) { date in
+                                Button(date.formatted(date: .abbreviated, time: .omitted)) {
+                                    Task { await viewModel.selectReportDate(date) }
+                                }
                             }
+                        } label: {
+                            HStack(spacing: 8) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Report Date")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    Text(viewModel.selectedReportDate, format: .dateTime.day().month())
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                }
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
-                    } label: {
-                        HStack(spacing: 4) {
-                            Text(viewModel.selectedState ?? "All")
-                                .font(.system(size: 13))
-                                .foregroundStyle(Theme.accent)
-                            Image(systemName: "chevron.down")
-                                .font(.system(size: 10))
-                                .foregroundStyle(Theme.accent)
+                        
+                        // State Filter (Optional)
+                        Menu {
+                            Button("All") {
+                                Task { 
+                                    await viewModel.selectState(nil)
+                                    await viewModel.loadPhysicalSalesReport()
+                                }
+                            }
+                            Divider()
+                            ForEach(ReferenceData.states, id: \.self) { state in
+                                Button(state) {
+                                    Task { 
+                                        await viewModel.selectState(state)
+                                        await viewModel.loadPhysicalSalesReport()
+                                    }
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 8) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("State (Optional)")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    Text(viewModel.selectedState ?? "QLD")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                }
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 6)
-                        .background(Theme.accent.opacity(0.12))
-                        .clipShape(Capsule())
                     }
+                    
+                    // Row 2: Category and Sale Prefix
+                    HStack(spacing: 12) {
+                        // Category Filter
+                        Menu {
+                            Button("All") {
+                                HapticManager.tap()
+                                viewModel.selectedCategory = "All"
+                            }
+                            Divider()
+                            ForEach(PhysicalSalesCategories.cattle, id: \.self) { category in
+                                Button(category) {
+                                    HapticManager.tap()
+                                    viewModel.selectedCategory = category
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 8) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Category")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    Text(viewModel.selectedCategory)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                }
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        
+                        // Sale Prefix Filter
+                        Menu {
+                            Button("All") {
+                                HapticManager.tap()
+                                viewModel.selectedSalePrefix = "All"
+                            }
+                            Divider()
+                            ForEach(PhysicalSalesCategories.salePrefixes, id: \.self) { prefix in
+                                Button(prefix) {
+                                    HapticManager.tap()
+                                    viewModel.selectedSalePrefix = prefix
+                                }
+                            }
+                        } label: {
+                            HStack(spacing: 8) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Sale Prefix")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    Text(viewModel.selectedSalePrefix)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                }
+                                Image(systemName: "chevron.down")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                    }
+                    
+                    // Row 3: Saleyard Selector (Full Width Sheet-based)
+                    PhysicalSaleyardSelector(selectedSaleyard: $viewModel.selectedPhysicalSaleyard)
                 }
                 .padding(.horizontal)
                 
-                if viewModel.isLoadingReports {
-                    ProgressView()
-                        .tint(Theme.accent)
-                        .frame(height: 150)
-                } else if viewModel.saleyardReports.isEmpty {
-                    emptyStateView(message: "No saleyard reports available")
-                } else {
+                // Physical Sales Table (now without built-in filters)
+                if let physicalReport = viewModel.physicalSalesReport {
+                    PhysicalSalesTableView(
+                        report: physicalReport,
+                        selectedCategory: viewModel.selectedCategory,
+                        selectedSalePrefix: viewModel.selectedSalePrefix
+                    )
+                } else if viewModel.isLoadingPhysicalReport {
                     VStack(spacing: 12) {
-                        ForEach(viewModel.saleyardReports) { report in
-                            SaleyardReportCard(report: report)
-                        }
+                        ProgressView()
+                            .tint(Theme.accent)
+                        Text("Loading report...")
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.secondaryText)
                     }
-                    .padding(.horizontal)
+                    .frame(height: 100)
                 }
             }
         }
@@ -814,6 +896,175 @@ struct IntelligenceCard: View {
         case .medium: return .orange
         case .low: return .gray
         }
+    }
+}
+
+// MARK: - Physical Saleyard Selector
+// Debug: Sheet-based selector specifically for physical sales report saleyards
+struct PhysicalSaleyardSelector: View {
+    @Binding var selectedSaleyard: String
+    @State private var showingSaleyardSheet = false
+    
+    var body: some View {
+        Button(action: {
+            HapticManager.tap()
+            showingSaleyardSheet = true
+        }) {
+            HStack(spacing: 12) {
+                Image(systemName: "building.2")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Theme.accent)
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Saleyard")
+                        .font(.system(size: 10))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                    Text(selectedSaleyard)
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundStyle(Theme.primaryText)
+                        .lineLimit(1)
+                }
+                
+                Spacer()
+                
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
+        }
+        .buttonStyle(.plain)
+        .sheet(isPresented: $showingSaleyardSheet) {
+            PhysicalSaleyardSelectionSheet(selectedSaleyard: $selectedSaleyard)
+        }
+    }
+}
+
+// MARK: - Physical Saleyard Selection Sheet
+// Debug: Searchable sheet for selecting physical sales report saleyards
+struct PhysicalSaleyardSelectionSheet: View {
+    @Binding var selectedSaleyard: String
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+    
+    // Debug: Physical sales saleyards (subset of all saleyards that have reports)
+    private let physicalSaleyards = [
+        "Armidale",
+        "Ballarat",
+        "Bendigo",
+        "Casino",
+        "Dubbo",
+        "Forbes",
+        "Goulburn",
+        "Griffith",
+        "Killafaddy",
+        "Leongatha",
+        "Mortlake",
+        "Mount Barker",
+        "Mount Gambier",
+        "Muchea",
+        "Naracoorte",
+        "Pakenham",
+        "Roma",
+        "Shepparton",
+        "Tamworth",
+        "Wagga Wagga",
+        "Warrnambool",
+        "Warwick",
+        "Wodonga",
+        "Yea"
+    ]
+    
+    private var filteredSaleyards: [String] {
+        if searchText.isEmpty {
+            return physicalSaleyards
+        } else {
+            return physicalSaleyards.filter { 
+                $0.localizedCaseInsensitiveContains(searchText) 
+            }
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(filteredSaleyards, id: \.self) { saleyard in
+                        Button(action: {
+                            HapticManager.tap()
+                            selectedSaleyard = saleyard
+                            dismiss()
+                        }) {
+                            HStack {
+                                Text(saleyard)
+                                    .font(Theme.body)
+                                    .foregroundStyle(Theme.primaryText)
+                                
+                                Spacer()
+                                
+                                if selectedSaleyard == saleyard {
+                                    Image(systemName: "checkmark")
+                                        .foregroundStyle(Theme.accent)
+                                        .font(.system(size: 16, weight: .semibold))
+                                }
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color.clear)
+                    }
+                } header: {
+                    Text("Saleyards with Physical Reports")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                
+                // Empty state
+                if filteredSaleyards.isEmpty {
+                    Section {
+                        VStack(spacing: 12) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 40))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                            
+                            Text("No saleyards found")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            Text("Try a different search term")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 40)
+                        .listRowBackground(Color.clear)
+                    }
+                }
+            }
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Search saleyards"
+            )
+            .navigationTitle("Select Saleyard")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.backgroundColor)
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
     }
 }
 

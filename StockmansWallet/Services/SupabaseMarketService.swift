@@ -124,8 +124,11 @@ struct SupabasePhysicalReport: Codable {
     let id: String
     let saleyard_name: String
     let report_date: String
+    let comparison_date: String? // Debug: For price comparison
     let total_yarding: Int?
     let report_summary: String?
+    let state: String? // Debug: State where saleyard is located
+    let audio_url: String? // Debug: Audio recording URL
     let report_data: ReportData?
     
     struct ReportData: Codable {
@@ -144,12 +147,20 @@ struct SupabasePhysicalReport: Codable {
             let min_price_dollars_head: Double?
             let max_price_dollars_head: Double?
             let avg_price_dollars_head: Double?
+            let price_change_per_kg: Double? // Debug: Change from comparison date
+            let price_change_per_head: Double? // Debug: Change from comparison date
         }
     }
     
     func toPhysicalSalesReport() -> PhysicalSalesReport {
         let dateFormatter = ISO8601DateFormatter()
         let reportDate = dateFormatter.date(from: report_date) ?? Date()
+        
+        // Debug: Parse comparison date if available
+        let comparisonDate: Date? = {
+            guard let comparison_date = comparison_date else { return nil }
+            return dateFormatter.date(from: comparison_date)
+        }()
         
         let categories = report_data?.categories?.map { category in
             PhysicalSalesCategory(
@@ -165,7 +176,9 @@ struct SupabasePhysicalReport: Codable {
                 avgPriceCentsPerKg: category.avg_price_cents_kg,
                 minPriceDollarsPerHead: category.min_price_dollars_head,
                 maxPriceDollarsPerHead: category.max_price_dollars_head,
-                avgPriceDollarsPerHead: category.avg_price_dollars_head
+                avgPriceDollarsPerHead: category.avg_price_dollars_head,
+                priceChangePerKg: category.price_change_per_kg,
+                priceChangePerHead: category.price_change_per_head
             )
         } ?? []
         
@@ -173,8 +186,12 @@ struct SupabasePhysicalReport: Codable {
             id: id,
             saleyard: saleyard_name,
             reportDate: reportDate,
+            comparisonDate: comparisonDate,
             totalYarding: total_yarding ?? 0,
-            categories: categories
+            categories: categories,
+            state: state,
+            summary: report_summary,
+            audioURL: audio_url
         )
     }
 }
