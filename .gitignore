@@ -69,3 +69,8 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/**/*.png
 fastlane/test_output
+
+# Configuration files with API keys and secrets
+Config.swift
+.env
+*.plist.secret

@@ -1,0 +1,43 @@
+//
+//  Config.swift.example
+//  StockmansWallet
+//
+//  Example configuration file - Copy to Config.swift and add your credentials
+//  Debug: This file IS committed to git, Config.swift is NOT
+//
+
+import Foundation
+
+enum Config {
+    // MARK: - Supabase Configuration
+    // Get these from: https://supabase.com/dashboard → Your Project → Settings → API
+    static let supabaseURL = "https://YOUR_PROJECT_ID.supabase.co"
+    static let supabaseAnonKey = "YOUR_ANON_PUBLIC_KEY_HERE"
+    
+    // MARK: - MLA API Configuration
+    // These will eventually move to Supabase Edge Functions for security
+    static let mlaAPIKey = "YOUR_MLA_API_KEY_HERE"
+    static let mlaAPIBaseURL = "https://app.nlrsreports.mla.com.au/api"
+    
+    // MARK: - Environment
+    static let environment: Environment = .development
+    
+    enum Environment {
+        case development
+        case staging
+        case production
+        
+        var isProduction: Bool {
+            return self == .production
+        }
+    }
+    
+    // MARK: - Feature Flags
+    static let useSupabaseBackend = false // Set to true when backend is ready
+    static let useMockData = true // Set to false when using real data
+}
+
+// INSTRUCTIONS:
+// 1. Copy this file to "Config.swift" (without .example)
+// 2. Replace placeholder values with your actual credentials
+// 3. Never commit Config.swift to git (it's in .gitignore)

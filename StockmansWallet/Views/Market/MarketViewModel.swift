@@ -22,6 +22,7 @@ class MarketViewModel {
     var regionalPrices: [RegionalPrice] = []
     var saleyardReports: [SaleyardReport] = []
     var marketIntelligence: [MarketIntelligence] = []
+    var physicalSalesReport: PhysicalSalesReport? = nil // Debug: Physical sales data from MLA
     
     // MARK: - UI State
     var isLoadingInsight = false
@@ -31,6 +32,7 @@ class MarketViewModel {
     var isLoadingRegional = false
     var isLoadingReports = false
     var isLoadingIntelligence = false
+    var isLoadingPhysicalReport = false // Debug: Loading state for physical report
     var lastUpdated: Date? = nil
     var errorMessage: String? = nil
     
@@ -41,6 +43,7 @@ class MarketViewModel {
     
     // MARK: - Dependencies
     private let dataService = MarketDataService.shared
+    private let supabaseService = SupabaseMarketService.shared // Debug: Supabase backend service
     
     // MARK: - Initialization
     init() {
@@ -171,6 +174,99 @@ class MarketViewModel {
             self.regionalPrices = regional
             self.isLoadingRegional = false
         }
+    }
+    
+    // MARK: - Load Physical Sales Report
+    /// Fetches MLA physical sales report from Supabase backend
+    /// Debug: This will show the detailed cattle physical report table with prices per kg and per head
+    func loadPhysicalSalesReport(saleyard: String? = nil, date: Date = Date()) async {
+        await MainActor.run { self.isLoadingPhysicalReport = true }
+        
+        // Use Config flag to decide whether to use Supabase or mock data
+        if Config.useSupabaseBackend {
+            do {
+                let saleyardName = saleyard ?? selectedSaleyard ?? "Mount Barker"
+                let report = try await supabaseService.fetchPhysicalReport(
+                    saleyard: saleyardName,
+                    date: date
+                )
+                await MainActor.run {
+                    self.physicalSalesReport = report
+                    self.isLoadingPhysicalReport = false
+                }
+            } catch {
+                print("Debug: Error loading physical report from Supabase: \(error)")
+                await MainActor.run {
+                    self.errorMessage = "Failed to load physical sales report"
+                    self.physicalSalesReport = nil
+                    self.isLoadingPhysicalReport = false
+                }
+            }
+        } else {
+            // Debug: Using mock data until Supabase backend is ready
+            await MainActor.run {
+                self.physicalSalesReport = createMockPhysicalReport()
+                self.isLoadingPhysicalReport = false
+            }
+        }
+    }
+    
+    // MARK: - Mock Physical Report
+    /// Debug: Mock physical sales report for testing UI
+    private func createMockPhysicalReport() -> PhysicalSalesReport {
+        return PhysicalSalesReport(
+            id: UUID().uuidString,
+            saleyard: "Mount Barker",
+            reportDate: Date(),
+            totalYarding: 336,
+            categories: [
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Yearling Steer",
+                    weightRange: "400-500",
+                    salePrefix: "Processor",
+                    muscleScore: "C",
+                    fatScore: 3,
+                    headCount: 4,
+                    minPriceCentsPerKg: 340.0,
+                    maxPriceCentsPerKg: 340.0,
+                    avgPriceCentsPerKg: 340.0,
+                    minPriceDollarsPerHead: 1734.0,
+                    maxPriceDollarsPerHead: 1734.0,
+                    avgPriceDollarsPerHead: 1734.0
+                ),
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Yearling Heifer",
+                    weightRange: "400-500",
+                    salePrefix: "Feeder",
+                    muscleScore: "C",
+                    fatScore: 3,
+                    headCount: 6,
+                    minPriceCentsPerKg: 384.0,
+                    maxPriceCentsPerKg: 384.0,
+                    avgPriceCentsPerKg: 384.0,
+                    minPriceDollarsPerHead: 1536.0,
+                    maxPriceDollarsPerHead: 1536.0,
+                    avgPriceDollarsPerHead: 1536.0
+                ),
+                PhysicalSalesCategory(
+                    id: UUID().uuidString,
+                    categoryName: "Grown Steer",
+                    weightRange: "400-500",
+                    salePrefix: "Feeder",
+                    muscleScore: "C",
+                    fatScore: 3,
+                    headCount: 11,
+                    minPriceCentsPerKg: 300.0,
+                    maxPriceCentsPerKg: 370.0,
+                    avgPriceCentsPerKg: 340.0,
+                    minPriceDollarsPerHead: 1245.0,
+                    maxPriceDollarsPerHead: 1586.0,
+                    avgPriceDollarsPerHead: 1454.58
+                )
+            ]
+        )
     }
     
     // MARK: - Filter Actions

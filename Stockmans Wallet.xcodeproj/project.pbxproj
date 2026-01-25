@@ -8,6 +8,11 @@
 
 /* Begin PBXBuildFile section */
 		35B0293E2F06A09400FBB432 /* Lottie in Frameworks */ = {isa = PBXBuildFile; productRef = 35B0293D2F06A09400FBB432 /* Lottie */; };
+		35D2B0082F25CCFC002A96E0 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 35D2B0072F25CCFC002A96E0 /* Auth */; };
+		35D2B00A2F25CCFC002A96E0 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 35D2B0092F25CCFC002A96E0 /* Functions */; };
+		35D2B00C2F25CCFC002A96E0 /* PostgREST in Frameworks */ = {isa = PBXBuildFile; productRef = 35D2B00B2F25CCFC002A96E0 /* PostgREST */; };
+		35D2B00E2F25CCFC002A96E0 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 35D2B00D2F25CCFC002A96E0 /* Realtime */; };
+		35D2B0102F25CCFC002A96E0 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 35D2B00F2F25CCFC002A96E0 /* Storage */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -59,6 +64,11 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				35D2B0102F25CCFC002A96E0 /* Storage in Frameworks */,
+				35D2B00C2F25CCFC002A96E0 /* PostgREST in Frameworks */,
+				35D2B00A2F25CCFC002A96E0 /* Functions in Frameworks */,
+				35D2B0082F25CCFC002A96E0 /* Auth in Frameworks */,
+				35D2B00E2F25CCFC002A96E0 /* Realtime in Frameworks */,
 				35B0293E2F06A09400FBB432 /* Lottie in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -119,6 +129,11 @@
 			name = StockmansWallet;
 			packageProductDependencies = (
 				35B0293D2F06A09400FBB432 /* Lottie */,
+				35D2B0072F25CCFC002A96E0 /* Auth */,
+				35D2B0092F25CCFC002A96E0 /* Functions */,
+				35D2B00B2F25CCFC002A96E0 /* PostgREST */,
+				35D2B00D2F25CCFC002A96E0 /* Realtime */,
+				35D2B00F2F25CCFC002A96E0 /* Storage */,
 			);
 			productName = StockmansWallet;
 			productReference = 354E09A02F01C41C003AEFE8 /* StockmansWallet.app */;
@@ -198,6 +213,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				35B0293C2F06A09400FBB432 /* XCRemoteSwiftPackageReference "lottie-ios" */,
+				35D2B0062F25CCFC002A96E0 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 354E09A12F01C41C003AEFE8 /* Products */;
@@ -626,6 +642,14 @@
 				minimumVersion = 4.5.2;
 			};
 		};
+		35D2B0062F25CCFC002A96E0 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -633,6 +657,31 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 35B0293C2F06A09400FBB432 /* XCRemoteSwiftPackageReference "lottie-ios" */;
 			productName = Lottie;
+		};
+		35D2B0072F25CCFC002A96E0 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 35D2B0062F25CCFC002A96E0 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		35D2B0092F25CCFC002A96E0 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 35D2B0062F25CCFC002A96E0 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		35D2B00B2F25CCFC002A96E0 /* PostgREST */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 35D2B0062F25CCFC002A96E0 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = PostgREST;
+		};
+		35D2B00D2F25CCFC002A96E0 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 35D2B0062F25CCFC002A96E0 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		35D2B00F2F25CCFC002A96E0 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 35D2B0062F25CCFC002A96E0 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
