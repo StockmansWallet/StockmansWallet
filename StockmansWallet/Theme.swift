@@ -46,13 +46,13 @@ struct Theme {
     /// Range: 0.0 (fully transparent) to 1.0 (fully opaque)
     static let backgroundImageOpacity: CGFloat = 0.4
     
-    /// Main gradient background - orange accent radiating from top
-    /// Debug: Simple radial gradient - adjust opacity to control strength of orange glow
+    /// Main gradient background - brown accent radiating from top
+    /// Debug: Simple radial gradient - adjust opacity to control strength of brown glow
     @ViewBuilder
     static var backgroundGradient: some View {
         RadialGradient(
             colors: [
-                Color(hex: "FFA042").opacity(0.15),  // Orange accent
+                Color(hex: "7C5134").opacity(0.15),  // Brown accent
                 Color(hex: "1E1815")                // Dark brown at edges
             ],
             center: .top,
@@ -312,6 +312,21 @@ extension Theme {
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
     }
+    
+    // Debug: Landing page button style with dark brown color (#392219)
+    struct LandingButtonStyle: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .font(Theme.headline)
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.buttonHeight)
+                .contentShape(Rectangle())
+                .foregroundStyle(.white)
+                .background(Color(hex: "392219").opacity(configuration.isPressed ? 0.85 : 1.0))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+        }
+    }
 }
 
 // Optional convenience modifiers if you prefer chaining
@@ -327,6 +342,9 @@ extension View {
     }
     func destructiveCTA() -> some View {
         self.buttonStyle(Theme.DestructiveButtonStyle())
+    }
+    func landingCTA() -> some View {
+        self.buttonStyle(Theme.LandingButtonStyle())
     }
 }
 

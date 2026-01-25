@@ -15,26 +15,29 @@ import Observation
 @Observable
 class MarketViewModel {
     // MARK: - Published State
+    var topInsight: TopInsight? = nil
     var nationalIndicators: [NationalIndicator] = []
     var categoryPrices: [CategoryPrice] = []
     var historicalPrices: [HistoricalPricePoint] = []
     var regionalPrices: [RegionalPrice] = []
-    var marketCommentary: [MarketCommentary] = []
-    
-    // MARK: - Filter State
-    var selectedLivestockType: LivestockType? = nil
-    var selectedSaleyard: String? = nil
-    var selectedState: String? = nil
-    var selectedCategory: String? = nil
+    var saleyardReports: [SaleyardReport] = []
+    var marketIntelligence: [MarketIntelligence] = []
     
     // MARK: - UI State
+    var isLoadingInsight = false
     var isLoadingIndicators = false
     var isLoadingPrices = false
     var isLoadingHistory = false
     var isLoadingRegional = false
-    var isLoadingCommentary = false
+    var isLoadingReports = false
+    var isLoadingIntelligence = false
     var lastUpdated: Date? = nil
     var errorMessage: String? = nil
+    
+    // MARK: - Filter State
+    var selectedState: String? = nil
+    // Debug: Saleyard selector for filtering market data (same as dashboard)
+    var selectedSaleyard: String? = nil
     
     // MARK: - Dependencies
     private let dataService = MarketDataService.shared
@@ -45,7 +48,7 @@ class MarketViewModel {
     }
     
     // MARK: - Load All Data
-    /// Loads all market data (indicators, prices, commentary)
+    /// Loads all market data (insight, indicators, prices, reports, intelligence)
     /// Debug: Runs tasks in parallel for better performance
     func loadAllData() async {
         await MainActor.run {
@@ -54,9 +57,10 @@ class MarketViewModel {
         
         // Run all data fetches in parallel
         await withTaskGroup(of: Void.self) { group in
+            group.addTask { await self.loadTopInsight() }
             group.addTask { await self.loadNationalIndicators() }
-            group.addTask { await self.loadCategoryPrices() }
-            group.addTask { await self.loadMarketCommentary() }
+            group.addTask { await self.loadSaleyardReports() }
+            group.addTask { await self.loadMarketIntelligence() }
         }
         
         await MainActor.run {
@@ -64,6 +68,18 @@ class MarketViewModel {
         }
         
         HapticManager.success()
+    }
+    
+    // MARK: - Load Top Insight
+    /// Fetches daily market takeaway for engagement
+    func loadTopInsight() async {
+        await MainActor.run { self.isLoadingInsight = true }
+        
+        let insight = await dataService.fetchTopInsight()
+        await MainActor.run {
+            self.topInsight = insight
+            self.isLoadingInsight = false
+        }
     }
     
     // MARK: - Load National Indicators
@@ -78,19 +94,51 @@ class MarketViewModel {
         }
     }
     
-    // MARK: - Load Category Prices
-    /// Fetches category-specific prices with current filters applied
-    func loadCategoryPrices() async {
+    // MARK: - Load Category Prices (for My Markets tab)
+    /// Fetches category-specific prices filtered by user's herd categories
+    /// Debug: Takes array of category strings from user's actual herds
+    func loadCategoryPrices(forCategories categories: [String]) async {
         await MainActor.run { self.isLoadingPrices = true }
         
-        let prices = await dataService.fetchCategoryPrices(
-            livestockType: selectedLivestockType,
-            saleyard: selectedSaleyard,
+        // Fetch all prices then filter to user's categories
+        let allPrices = await dataService.fetchCategoryPrices(
+            livestockType: nil,
+            saleyard: nil,
             state: selectedState
         )
+        
+        // Filter to only show categories the user actually has
+        let filteredPrices = allPrices.filter { price in
+            categories.contains(price.category)
+        }
+        
         await MainActor.run {
-            self.categoryPrices = prices
+            self.categoryPrices = filteredPrices
             self.isLoadingPrices = false
+        }
+    }
+    
+    // MARK: - Load Saleyard Reports
+    /// Fetches saleyard reports with optional state filter
+    func loadSaleyardReports(state: String? = nil) async {
+        await MainActor.run { self.isLoadingReports = true }
+        
+        let reports = await dataService.fetchSaleyardReports(state: state)
+        await MainActor.run {
+            self.saleyardReports = reports
+            self.isLoadingReports = false
+        }
+    }
+    
+    // MARK: - Load Market Intelligence
+    /// Fetches AI predictive insights
+    func loadMarketIntelligence(forCategories categories: [String] = []) async {
+        await MainActor.run { self.isLoadingIntelligence = true }
+        
+        let intelligence = await dataService.fetchMarketIntelligence(categories: categories)
+        await MainActor.run {
+            self.marketIntelligence = intelligence
+            self.isLoadingIntelligence = false
         }
     }
     
@@ -106,7 +154,6 @@ class MarketViewModel {
         )
         await MainActor.run {
             self.historicalPrices = history
-            self.selectedCategory = category
             self.isLoadingHistory = false
         }
     }
@@ -126,80 +173,15 @@ class MarketViewModel {
         }
     }
     
-    // MARK: - Load Market Commentary
-    /// Fetches market insights and commentary
-    func loadMarketCommentary() async {
-        await MainActor.run { self.isLoadingCommentary = true }
-        
-        let commentary = await dataService.fetchMarketCommentary()
-        await MainActor.run {
-            self.marketCommentary = commentary
-            self.isLoadingCommentary = false
-        }
-    }
-    
     // MARK: - Filter Actions
     
-    /// Updates livestock type filter and reloads prices
-    func selectLivestockType(_ type: LivestockType?) async {
-        await MainActor.run {
-            self.selectedLivestockType = type
-        }
-        HapticManager.tap()
-        await loadCategoryPrices()
-    }
-    
-    /// Updates saleyard filter and reloads prices
-    func selectSaleyard(_ saleyard: String?) async {
-        await MainActor.run {
-            self.selectedSaleyard = saleyard
-        }
-        HapticManager.tap()
-        await loadCategoryPrices()
-    }
-    
-    /// Updates state filter and reloads prices
+    /// Updates state filter and reloads data
     func selectState(_ state: String?) async {
         await MainActor.run {
             self.selectedState = state
         }
         HapticManager.tap()
-        await loadCategoryPrices()
-    }
-    
-    /// Clears all filters and reloads data
-    func clearFilters() async {
-        await MainActor.run {
-            self.selectedLivestockType = nil
-            self.selectedSaleyard = nil
-            self.selectedState = nil
-        }
-        HapticManager.tap()
-        await loadCategoryPrices()
-    }
-    
-    // MARK: - Computed Properties
-    
-    /// Returns filtered prices based on selected livestock type
-    var filteredPrices: [CategoryPrice] {
-        if let type = selectedLivestockType {
-            return categoryPrices.filter { $0.livestockType == type }
-        }
-        return categoryPrices
-    }
-    
-    /// Returns true if any filters are active
-    var hasActiveFilters: Bool {
-        return selectedLivestockType != nil || selectedSaleyard != nil || selectedState != nil
-    }
-    
-    /// Returns count of active filters
-    var activeFilterCount: Int {
-        var count = 0
-        if selectedLivestockType != nil { count += 1 }
-        if selectedSaleyard != nil { count += 1 }
-        if selectedState != nil { count += 1 }
-        return count
+        await loadSaleyardReports(state: state)
     }
 }
 

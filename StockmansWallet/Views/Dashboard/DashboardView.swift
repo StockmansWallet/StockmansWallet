@@ -430,7 +430,7 @@ struct DashboardView: View {
                 .fill(
                     RadialGradient(
                         colors: [
-                            Color(hex: "FFA042").opacity(0.15),  // Orange accent from top
+                            Color(hex: "7C5134").opacity(0.15),  // Brown accent from top
                             Color(hex: "1E1815").opacity(0)      // Fade to transparent
                         ],
                         center: .top,

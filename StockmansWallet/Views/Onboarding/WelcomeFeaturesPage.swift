@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-import Lottie
 
 // MARK: - Welcome + Features Pages
 enum OnboardingStep {
@@ -29,16 +28,35 @@ struct WelcomeFeaturesPage: View {
     @State private var step: OnboardingStep = .landing
     @State private var showHeaderText = false
     @State private var showTiles = false
-    
-    // Lottie control (fallback uses the same state)
-    @State private var playLogo = false
-    @State private var logoScale: CGFloat = 1.0 // Keep landing at final size to avoid first-frame motion
+    @State private var playVideo = false
 
     var body: some View {
         ZStack {
-            // Debug: Standardized gradient background from Theme (Rule #0: avoid duplication)
-            Theme.backgroundGradient
-                .ignoresSafeArea()
+            // Debug: Video background on landing page, static image on features page
+            if step == .landing && !UIAccessibility.isReduceMotionEnabled {
+                // Debug: Animated video background with branding iron
+                LandingVideoPlayer(
+                    videoName: "LandingAnimation",
+                    videoExtension: "mp4",
+                    isPlaying: $playVideo
+                )
+            } else {
+                // Debug: Static background image (features page or Reduce Motion)
+                Image("landingBG")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .ignoresSafeArea()
+                    .accessibilityHidden(true)
+                    .blur(radius: step == .features ? 20 : 0)
+            }
+            
+            // Debug: Dark brown overlay on features page for better text legibility
+            if step == .features {
+                Color(hex: "1A1412").opacity(0.8)
+                    .ignoresSafeArea()
+                    .allowsHitTesting(false)
+                    .accessibilityHidden(true)
+            }
             
             // TEMPORARY: Dev skip buttons for Farmer/Advisor testing (DELETE BEFORE LAUNCH) ⚠️
             VStack {
@@ -88,42 +106,21 @@ struct WelcomeFeaturesPage: View {
                     Spacer(minLength: 0)
 
                     VStack(spacing: 16) {
-                        // Logo area: prefer Lottie when motion is allowed, fall back to static image
-                        Group {
-                            if UIAccessibility.isReduceMotionEnabled {
-                                // Fallback image only when Reduce Motion is enabled
-                                Image("sw_logoanim_fallback")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .accessibilityLabel("Stockman's Wallet")
-                            } else {
-                                // Debug: Lottie animation with optimal settings for smooth playback
-                                LottieView(
-                                    animationName: "sw_logoanim",
-                                    loopMode: .playOnce,
-                                    speed: 1.0, // Normal speed for smooth 60fps playback
-                                    isPlaying: $playLogo
-                                )
-                                .allowsHitTesting(false)
-                                .accessibilityHidden(true)
-                            }
+                        // Debug: Spacer to push content down on landing page
+                        if step == .landing {
+                            Spacer()
+                                .frame(height: 200)
                         }
-                        // Debug: Stable landing layout; only change when user taps to show features
-                        .frame(height: step == .features ? 240 : 320) // Increased logo size for better visual hierarchy
-                        .padding(.top, step == .features ? 0 : 40) // Push logo down from dynamic island on landing
-                        .offset(y: step == .features ? 20 : 0)
-                        .scaleEffect(logoScale)
-                        .onAppear {
-                            // No motion on first frame; start Lottie after the parent fade
-                            if !UIAccessibility.isReduceMotionEnabled {
-                                let delay: TimeInterval = introComplete ? 0.2 : 0.35
-                                DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-                                    playLogo = true
-                                }
-                            }
-                        }
-
+                        
                         if step == .features {
+                            // Wallet logo
+                            Image("wallet")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(height: 120)
+                                .padding(.bottom, 8)
+                                .accessibilityLabel("Stockman's Wallet")
+                            
                             VStack(spacing: 14) {
                                 Text("Livestock Management")
                                     .font(.title2.weight(.bold)) // Debug: Increased to title2 for proper hierarchy
@@ -159,13 +156,9 @@ struct WelcomeFeaturesPage: View {
                             HapticManager.tap()
 
                             if step == .landing {
-                                // Transition to features (user initiated) - preserve logo animation
+                                // Transition to features (user initiated)
                                 withAnimation(.spring(response: 0.55, dampingFraction: 0.9)) {
                                     step = .features
-                                    // Slightly reduce logo to create hierarchy with text below
-                                    if !UIAccessibility.isReduceMotionEnabled {
-                                        logoScale = 0.9
-                                    }
                                 }
 
                                 showHeaderText = false
@@ -185,7 +178,7 @@ struct WelcomeFeaturesPage: View {
                             Text(step == .landing ? "Get Started" : "Continue")
                                 .frame(maxWidth: .infinity)
                         }
-                        .buttonStyle(Theme.PrimaryButtonStyle())
+                        .buttonStyle(Theme.LandingButtonStyle())
                         .padding(.horizontal, 20)
 
                         Text("Powered by MLA Market Data")
@@ -202,6 +195,21 @@ struct WelcomeFeaturesPage: View {
             }
         }
         .ignoresSafeArea(.all)
+        .onAppear {
+            // Debug: Start video playback when landing page appears
+            if step == .landing && !UIAccessibility.isReduceMotionEnabled {
+                // Small delay to ensure smooth transition
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                    playVideo = true
+                }
+            }
+        }
+        .onChange(of: step) { _, newValue in
+            // Debug: Stop video when transitioning to features page
+            if newValue == .features {
+                playVideo = false
+            }
+        }
         .onChange(of: hasAcceptedTerms) { oldValue, newValue in
             // Debug: After user accepts terms (from features page), transition to full-screen sign-in
             if newValue && step == .features {

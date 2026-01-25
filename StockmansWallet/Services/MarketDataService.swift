@@ -17,6 +17,109 @@ class MarketDataService {
     
     private init() {}
     
+    // MARK: - Top Insight
+    // Debug: Daily market takeaway sentence for engagement
+    func fetchTopInsight() async -> TopInsight? {
+        // Simulate network delay
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        
+        return TopInsight(
+            text: "Market conditions for weaners in your region are improving as tightening supply supports prices",
+            date: Date(),
+            category: "Cattle"
+        )
+    }
+    
+    // MARK: - Saleyard Reports
+    // Debug: Fetch saleyard reports with summary data
+    func fetchSaleyardReports(state: String? = nil) async -> [SaleyardReport] {
+        // Simulate network delay
+        try? await Task.sleep(nanoseconds: 350_000_000)
+        
+        let allReports = [
+            SaleyardReport(
+                saleyardName: "Roma",
+                state: "QLD",
+                date: Date().addingTimeInterval(-86400 * 2), // 2 days ago
+                yardings: 4250,
+                summary: "Strong demand for quality weaners. Prices firm to 10¢ higher across most categories.",
+                categories: ["Weaner Steer", "Feeder Steer", "Yearling Steer"]
+            ),
+            SaleyardReport(
+                saleyardName: "Wagga Wagga",
+                state: "NSW",
+                date: Date().addingTimeInterval(-86400 * 1), // 1 day ago
+                yardings: 3100,
+                summary: "Mixed quality yarding with solid processor demand. Heavy steers particularly sought after.",
+                categories: ["Grown Steer", "Breeding Cow", "Heifer"]
+            ),
+            SaleyardReport(
+                saleyardName: "Ballarat",
+                state: "VIC",
+                date: Date().addingTimeInterval(-86400 * 3), // 3 days ago
+                yardings: 2800,
+                summary: "Restockers active despite wet conditions. Prime lambs holding firm.",
+                categories: ["Heavy Lamb", "Trade Lamb", "Merino Wether"]
+            ),
+            SaleyardReport(
+                saleyardName: "Dubbo",
+                state: "NSW",
+                date: Date().addingTimeInterval(-86400 * 1), // 1 day ago
+                yardings: 5200,
+                summary: "Large yarding with increased supply easing recent price pressure.",
+                categories: ["Weaner Steer", "Yearling Steer", "Breeding Cow"]
+            )
+        ]
+        
+        // Filter by state if provided
+        if let state = state {
+            return allReports.filter { $0.state == state }
+        }
+        return allReports
+    }
+    
+    // MARK: - Market Intelligence
+    // Debug: AI predictive insights with confidence levels
+    func fetchMarketIntelligence(categories: [String] = []) async -> [MarketIntelligence] {
+        // Simulate network delay
+        try? await Task.sleep(nanoseconds: 400_000_000)
+        
+        return [
+            MarketIntelligence(
+                category: "Cattle - Weaners",
+                prediction: "Weaner prices expected to strengthen by 8-12% over the next 30-45 days as seasonal supply tightens.",
+                confidence: .high,
+                timeHorizon: "30-45 days",
+                keyDrivers: ["Reduced supply from drought-affected regions", "Strong restocking demand", "Favorable seasonal outlook"],
+                lastUpdated: Date()
+            ),
+            MarketIntelligence(
+                category: "Sheep - Heavy Lambs",
+                prediction: "Heavy lamb prices likely to remain stable with slight upward pressure as export demand increases.",
+                confidence: .medium,
+                timeHorizon: "60 days",
+                keyDrivers: ["Increasing export demand", "Stable domestic supply", "Currency movements favoring exports"],
+                lastUpdated: Date()
+            ),
+            MarketIntelligence(
+                category: "Cattle - Breeding Stock",
+                prediction: "Breeding cow values to hold firm with potential for 5-8% gains as herd rebuilding continues.",
+                confidence: .high,
+                timeHorizon: "90 days",
+                keyDrivers: ["Ongoing herd rebuilding phase", "Improved seasonal conditions", "Limited quality female supply"],
+                lastUpdated: Date()
+            ),
+            MarketIntelligence(
+                category: "Sheep - Merino Wethers",
+                prediction: "Merino wether prices may soften slightly as increased yardings meet steady but not exceptional demand.",
+                confidence: .medium,
+                timeHorizon: "45 days",
+                keyDrivers: ["Increased supply from seasonal turnoff", "Moderate processor demand", "Competing with lamb market"],
+                lastUpdated: Date()
+            )
+        ]
+    }
+    
     // MARK: - National Indicators
     // Debug: Major market indicators (EYCI, WYCI, NSI, etc.)
     // Debug: All values reduced by 45% (multiplied by 0.55) to reflect more realistic market conditions
@@ -449,6 +552,62 @@ enum MarketSentiment {
         case .positive: return "green"
         case .neutral: return "gray"
         case .negative: return "red"
+        }
+    }
+}
+
+// MARK: - Top Insight Model
+// Debug: Daily market takeaway for top of Markets page
+struct TopInsight: Identifiable {
+    let id = UUID()
+    let text: String
+    let date: Date
+    let category: String // Related livestock category
+}
+
+// MARK: - Saleyard Report Model
+// Debug: Saleyard report summaries with key metrics
+struct SaleyardReport: Identifiable {
+    let id = UUID()
+    let saleyardName: String
+    let state: String
+    let date: Date
+    let yardings: Int // Number of head yarded
+    let summary: String
+    let categories: [String] // Livestock categories traded
+}
+
+// MARK: - Market Intelligence Model
+// Debug: AI predictive insights with confidence indicators
+struct MarketIntelligence: Identifiable {
+    let id = UUID()
+    let category: String // Livestock category (e.g., "Cattle - Weaners")
+    let prediction: String // Forward-looking insight
+    let confidence: ConfidenceLevel
+    let timeHorizon: String // e.g., "30-60 days"
+    let keyDrivers: [String] // Factors influencing the prediction
+    let lastUpdated: Date
+}
+
+// MARK: - Confidence Level Enum
+enum ConfidenceLevel: String, CaseIterable {
+    case high = "High"
+    case medium = "Medium"
+    case low = "Low"
+    
+    var color: String {
+        switch self {
+        case .high: return "green"
+        case .medium: return "orange"
+        case .low: return "gray"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .high: return "checkmark.seal.fill"
+        case .medium: return "exclamationmark.triangle.fill"
+        case .low: return "questionmark.circle.fill"
         }
     }
 }
