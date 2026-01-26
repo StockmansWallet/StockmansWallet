@@ -139,10 +139,11 @@ struct HerdDetailView: View {
                                         .foregroundStyle(Theme.secondaryText.opacity(0.6))
                                 }
                                 .padding(Theme.cardPadding)
-                            }
-                            .buttonStyle(PlainButtonStyle())
-                            .stitchedCard()
-                            .padding(.horizontal)
+            }
+            .buttonStyle(PlainButtonStyle())
+            // Debug: Card temporarily removed to test cleaner look
+            // .stitchedCard()
+            .padding(.horizontal)
                         }
                         
                         // Debug: Record Sale button at bottom of detail page (not floating, just regular button)
@@ -383,8 +384,9 @@ struct HerdStatsCard: View {
         }
         .padding(.horizontal, 20)
         .padding(.vertical, 12)
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        // Debug: Card temporarily removed to test cleaner look
+        // .background(Theme.cardBackground)
+        // .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 
@@ -507,7 +509,8 @@ struct WeightGrowthChart: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        // Debug: Card temporarily removed to test cleaner look
+        // .stitchedCard()
     }
 }
 
@@ -590,7 +593,8 @@ struct PrimaryMetricsCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        // Debug: Card temporarily removed to test cleaner look
+        // .stitchedCard()
     }
 }
 
@@ -607,11 +611,7 @@ struct HerdDetailsCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text(isIndividualAnimal ? "Animal Details" : "Herd Details")
-                .font(Theme.headline)
-                .foregroundStyle(Theme.primaryText)
-            
-            // Debug: Organized into clear sections for better readability
+            // Debug: Removed "Animal Details" heading since there's no card background
             
             // Physical Attributes Section
             VStack(alignment: .leading, spacing: 8) {
@@ -693,7 +693,8 @@ struct HerdDetailsCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        // Debug: Card temporarily removed to test cleaner look
+        // .stitchedCard()
     }
 }
 
@@ -702,10 +703,10 @@ struct SectionHeader: View {
     
     var body: some View {
         Text(title)
-            .font(Theme.caption)
-            .fontWeight(.semibold)
-            .foregroundStyle(Theme.secondaryText)
-            .textCase(.uppercase)
+            // Debug: Promoted to headline style now that main "Animal Details" heading is removed
+            .font(Theme.headline)
+            .foregroundStyle(Theme.primaryText)
+            // Removed uppercase and changed color for better hierarchy
     }
 }
 
@@ -933,7 +934,8 @@ struct IndividualAnimalRow: View {
             .padding(Theme.cardPadding)
         }
         .buttonStyle(PlainButtonStyle())
-        .stitchedCard()
+        // Debug: Card temporarily removed to test cleaner look
+        // .stitchedCard()
     }
 }
 
@@ -1066,7 +1068,8 @@ struct BreedingDetailsCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        // Debug: Card temporarily removed to test cleaner look
+        // .stitchedCard()
     }
 }
 
@@ -1100,7 +1103,8 @@ struct MusteringHistoryCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        // Debug: Card temporarily removed to test cleaner look
+        // .stitchedCard()
     }
 }
 
@@ -1235,7 +1239,8 @@ struct HealthRecordsCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        // Debug: Card temporarily removed to test cleaner look
+        // .stitchedCard()
     }
 }
 
