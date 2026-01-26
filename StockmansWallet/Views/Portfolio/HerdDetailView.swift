@@ -102,7 +102,13 @@ struct HerdDetailView: View {
                             .padding(.horizontal)
                     }
                     
-                    // Debug: Mustering history card - only show if there are muster records
+                    // Debug: Breeding info only if applicable - shown before other records
+                    if !isLoading, activeHerd.isBreeder {
+                        BreedingDetailsCard(herd: activeHerd)
+                            .padding(.horizontal)
+                    }
+                    
+                    // Debug: Mustering records card - only show if there are muster records
                     if !isLoading, let musterRecords = activeHerd.musterRecords, !musterRecords.isEmpty {
                         MusteringHistoryCard(herd: activeHerd)
                             .padding(.horizontal)
@@ -111,12 +117,6 @@ struct HerdDetailView: View {
                     // Debug: Health records card - only show if there are health records
                     if !isLoading, let healthRecords = activeHerd.healthRecords, !healthRecords.isEmpty {
                         HealthRecordsCard(herd: activeHerd)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Breeding info only if applicable
-                    if !isLoading, activeHerd.isBreeder {
-                        BreedingDetailsCard(herd: activeHerd)
                             .padding(.horizontal)
                     }
                     
@@ -967,23 +967,6 @@ struct BreedingDetailsCard: View {
                         
                         DetailRow(label: "Days Since Joined", value: "\(daysSinceJoined)")
                         DetailRow(label: "Est. Days to Calving", value: "\(daysRemaining)")
-                        
-                        // Progress bar for pregnancy
-                        GeometryReader { geometry in
-                            ZStack(alignment: .leading) {
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Theme.primaryText.opacity(0.1))
-                                    .frame(height: 6)
-                                
-                                RoundedRectangle(cornerRadius: 4)
-                                    .fill(Theme.accent)
-                                    .frame(
-                                        width: geometry.size.width * CGFloat(daysSinceJoined) / CGFloat(cycleLength),
-                                        height: 6
-                                    )
-                            }
-                        }
-                        .frame(height: 6)
                     }
                 }
                 
@@ -1017,15 +1000,15 @@ struct BreedingDetailsCard: View {
     }
 }
 
-// MARK: - Mustering History Card
-// Debug: Display full mustering history with dates and notes
+// MARK: - Mustering Records Card
+// Debug: Display full mustering records with dates and notes
 struct MusteringHistoryCard: View {
     let herd: HerdGroup
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Mustering History")
+                Text("Mustering Records")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
                 
