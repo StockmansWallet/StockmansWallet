@@ -20,9 +20,9 @@ struct EditHerdView: View {
     @State private var selectedBreed: String
     @State private var selectedCategory: String
     @State private var sex: String
-    @State private var ageMonths: Int
-    @State private var headCount: Int
-    @State private var initialWeight: Double
+    @State private var ageMonths: Int?
+    @State private var headCount: Int?
+    @State private var initialWeight: Int?
     @State private var dailyWeightGain: Double
     @State private var isBreeder: Bool
     @State private var isPregnant: Bool
@@ -32,6 +32,7 @@ struct EditHerdView: View {
     @State private var paddockName: String
     @State private var useCreationDateForWeight: Bool
     @State private var notes: String
+    @State private var showingSaleyardSheet = false
     // Debug: State for managing muster records
     @State private var showingAddMusterRecord = false
     @State private var newMusterDate = Date()
@@ -92,7 +93,7 @@ struct EditHerdView: View {
         _sex = State(initialValue: herd.sex)
         _ageMonths = State(initialValue: herd.ageMonths)
         _headCount = State(initialValue: herd.headCount)
-        _initialWeight = State(initialValue: herd.initialWeight)
+        _initialWeight = State(initialValue: Int(herd.initialWeight))
         _dailyWeightGain = State(initialValue: herd.dailyWeightGain)
         _isBreeder = State(initialValue: herd.isBreeder)
         _isPregnant = State(initialValue: herd.isPregnant)
@@ -115,124 +116,166 @@ struct EditHerdView: View {
                         // Basic Information
                         VStack(alignment: .leading, spacing: 20) {
                             Text("Basic Information")
-                                .font(Theme.title)
+                                .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(Theme.primaryText)
                             
+                            // Debug: Layout and styling matching Physical Sales Report format exactly
                             VStack(alignment: .leading, spacing: 12) {
-                                Text("Herd/Animal Name")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                TextField("e.g. North Paddock Herd", text: $herdName)
-                                    .textFieldStyle(.plain)
-                                    .padding()
-                                    .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Species")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
+                                // Full width: Herd Name
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Herd Name")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    TextField("", text: $herdName)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                        .textFieldStyle(.plain)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                                 
-                                // Debug: Grid of species cards with emoji icons
-                                LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                                    // Cattle - Available
-                                    SpeciesCard(
-                                        emoji: "🐄",
-                                        name: "Cattle",
-                                        isAvailable: true,
-                                        isSelected: selectedSpecies == "Cattle"
-                                    ) {
-                                        HapticManager.tap()
-                                        selectedSpecies = "Cattle"
-                                        if !breedOptions.contains(selectedBreed) {
-                                            selectedBreed = ""
+                                // Row 1: Species | Breed
+                                HStack(spacing: 12) {
+                                    // Species picker
+                                    Menu {
+                                        ForEach(speciesOptions, id: \.self) { species in
+                                            Button(species) {
+                                                HapticManager.tap()
+                                                selectedSpecies = species
+                                                if !breedOptions.contains(selectedBreed) {
+                                                    selectedBreed = ""
+                                                }
+                                                if !categoryOptions.contains(selectedCategory) {
+                                                    selectedCategory = ""
+                                                }
+                                            }
                                         }
-                                        if !categoryOptions.contains(selectedCategory) {
-                                            selectedCategory = ""
+                                    } label: {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Species")
+                                                    .font(.system(size: 10))
+                                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                                Text(selectedSpecies)
+                                                    .font(.system(size: 13, weight: .medium))
+                                                    .foregroundStyle(Theme.primaryText)
+                                            }
+                                            Spacer()
+                                            Image(systemName: "chevron.down")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(Theme.secondaryText)
                                         }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
                                     }
                                     
-                                    // Sheep - Coming Soon
-                                    SpeciesCard(
-                                        emoji: "🐑",
-                                        name: "Sheep",
-                                        isAvailable: false,
-                                        isSelected: false
-                                    ) {
-                                        // Disabled - no action
-                                    }
-                                    
-                                    // Pigs - Coming Soon
-                                    SpeciesCard(
-                                        emoji: "🐷",
-                                        name: "Pigs",
-                                        isAvailable: false,
-                                        isSelected: false
-                                    ) {
-                                        // Disabled - no action
-                                    }
-                                    
-                                    // Goats - Coming Soon
-                                    SpeciesCard(
-                                        emoji: "🐐",
-                                        name: "Goats",
-                                        isAvailable: false,
-                                        isSelected: false
-                                    ) {
-                                        // Disabled - no action
+                                    // Breed picker
+                                    Menu {
+                                        ForEach(breedOptions, id: \.self) { breed in
+                                            Button(breed) {
+                                                HapticManager.tap()
+                                                selectedBreed = breed
+                                            }
+                                        }
+                                    } label: {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Breed")
+                                                    .font(.system(size: 10))
+                                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                                Text(selectedBreed.isEmpty ? "Select" : selectedBreed)
+                                                    .font(.system(size: 13, weight: .medium))
+                                                    .foregroundStyle(Theme.primaryText)
+                                                    .lineLimit(1)
+                                            }
+                                            Spacer()
+                                            Image(systemName: "chevron.down")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(Theme.secondaryText)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
                                     }
                                 }
                                 
-                                // Debug: Helper text for coming soon animals
-                                Text("Support for Sheep, Pigs, and Goats coming soon!")
-                                    .font(Theme.caption)
-                                    .foregroundStyle(Theme.secondaryText)
-                                    .frame(maxWidth: .infinity, alignment: .center)
-                                    .padding(.top, 4)
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Breed")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Picker("Breed", selection: $selectedBreed) {
-                                    Text("Select Breed").tag("")
-                                    ForEach(breedOptions, id: \.self) { breed in
-                                        Text(breed).tag(breed)
+                                // Row 2: Category | Sex
+                                HStack(spacing: 12) {
+                                    // Category picker
+                                    Menu {
+                                        ForEach(categoryOptions, id: \.self) { category in
+                                            Button(category) {
+                                                HapticManager.tap()
+                                                selectedCategory = category
+                                            }
+                                        }
+                                    } label: {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Category")
+                                                    .font(.system(size: 10))
+                                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                                Text(selectedCategory.isEmpty ? "Select" : selectedCategory)
+                                                    .font(.system(size: 13, weight: .medium))
+                                                    .foregroundStyle(Theme.primaryText)
+                                                    .lineLimit(1)
+                                            }
+                                            Spacer()
+                                            Image(systemName: "chevron.down")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(Theme.secondaryText)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    }
+                                    
+                                    // Sex picker
+                                    Menu {
+                                        Button("Male") {
+                                            HapticManager.tap()
+                                            sex = "Male"
+                                        }
+                                        Button("Female") {
+                                            HapticManager.tap()
+                                            sex = "Female"
+                                        }
+                                        Button("Mixed") {
+                                            HapticManager.tap()
+                                            sex = "Mixed"
+                                        }
+                                    } label: {
+                                        HStack {
+                                            VStack(alignment: .leading, spacing: 2) {
+                                                Text("Sex")
+                                                    .font(.system(size: 10))
+                                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                                Text(sex)
+                                                    .font(.system(size: 13, weight: .medium))
+                                                    .foregroundStyle(Theme.primaryText)
+                                            }
+                                            Spacer()
+                                            Image(systemName: "chevron.down")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(Theme.secondaryText)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
                                     }
                                 }
-                                .pickerStyle(.menu)
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Category")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Picker("Category", selection: $selectedCategory) {
-                                    Text("Select Category").tag("")
-                                    ForEach(categoryOptions, id: \.self) { category in
-                                        Text(category).tag(category)
-                                    }
-                                }
-                                .pickerStyle(.menu)
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            }
-                            
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Sex")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Picker("Sex", selection: $sex) {
-                                    Text("Male").tag("Male")
-                                    Text("Female").tag("Female")
-                                }
-                                .pickerStyle(.segmented)
                             }
                         }
                         .padding(Theme.cardPadding)
@@ -241,92 +284,102 @@ struct EditHerdView: View {
                         // Physical Attributes
                         VStack(alignment: .leading, spacing: 20) {
                             Text("Physical Attributes")
-                                .font(Theme.title)
+                                .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(Theme.primaryText)
                             
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Head")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Stepper(value: $headCount, in: 1...10000, step: 1) {
-                                    Text("\(headCount) head")
-                                        .font(Theme.headline)
+                            // Debug: Head and Age side-by-side (matches Physical Sales Report styling)
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Head")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    TextField("", value: $headCount, format: .number)
+                                        .keyboardType(.numberPad)
+                                        .font(.system(size: 13, weight: .medium))
                                         .foregroundStyle(Theme.primaryText)
+                                        .textFieldStyle(.plain)
+                                        .multilineTextAlignment(.leading)
                                 }
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Age (months)")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    TextField("", value: $ageMonths, format: .number)
+                                        .keyboardType(.numberPad)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                        .textFieldStyle(.plain)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                             
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text("Initial Weight (kg)")
-                                    .font(Theme.headline)
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                TextField("", value: $initialWeight, format: .number)
+                                    .keyboardType(.numberPad)
+                                    .font(.system(size: 13, weight: .medium))
                                     .foregroundStyle(Theme.primaryText)
-                                HStack {
-                                    Slider(value: $initialWeight, in: 50...1000, step: 5)
-                                    Text("\(Int(initialWeight)) kg")
-                                        .font(Theme.headline)
-                                        .foregroundStyle(Theme.primaryText)
-                                        .frame(width: 80)
-                                }
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    .textFieldStyle(.plain)
+                                    .multilineTextAlignment(.leading)
                             }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                             
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Daily Weight Gain (kg/day)")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
+                            VStack(alignment: .leading, spacing: 8) {
                                 HStack {
-                                    Slider(value: $dailyWeightGain, in: 0...2.0, step: 0.1)
+                                    Text("Daily Weight Gain")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    Spacer()
                                     Text(String(format: "%.2f kg/day", dailyWeightGain))
-                                        .font(Theme.headline)
-                                        .foregroundStyle(Theme.primaryText)
-                                        .frame(width: 100)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.accent)
                                 }
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                
+                                Slider(value: $dailyWeightGain, in: 0...2.0, step: 0.01)
+                                    .tint(Theme.accent)
                             }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                             
                             // Debug: Weight gain calculation method toggle
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Weight Gain Calculation")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                
+                            VStack(alignment: .leading, spacing: 8) {
                                 Toggle(isOn: $useCreationDateForWeight) {
                                     VStack(alignment: .leading, spacing: 4) {
                                         Text("Calculate from creation date")
-                                            .font(Theme.body)
+                                            .font(.system(size: 13, weight: .medium))
                                             .foregroundStyle(Theme.primaryText)
                                         Text(useCreationDateForWeight 
                                              ? "Weight calculated from entry date (\(herd.createdAt.formatted(date: .abbreviated, time: .omitted)))"
                                              : "Weight calculated from today's date (dynamic)")
-                                            .font(Theme.caption)
-                                            .foregroundStyle(Theme.secondaryText)
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
                                     }
                                 }
                                 .tint(Theme.accent)
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             }
-                            
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Age (months)")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Stepper(value: $ageMonths, in: 1...120, step: 1) {
-                                    Text("\(ageMonths) months")
-                                        .font(Theme.headline)
-                                        .foregroundStyle(Theme.primaryText)
-                                }
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .padding(Theme.cardPadding)
                         .stitchedCard()
@@ -334,52 +387,70 @@ struct EditHerdView: View {
                         // Additional Details
                         VStack(alignment: .leading, spacing: 20) {
                             Text("Additional Details")
-                                .font(Theme.title)
+                                .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(Theme.primaryText)
                             
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 2) {
                                 Text("Paddock Name (Optional)")
-                                    .font(Theme.headline)
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                TextField("", text: $paddockName)
+                                    .font(.system(size: 13, weight: .medium))
                                     .foregroundStyle(Theme.primaryText)
-                                TextField("e.g. North Paddock", text: $paddockName)
                                     .textFieldStyle(.plain)
-                                    .padding()
-                                    .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                             
-                            VStack(alignment: .leading, spacing: 12) {
-                                Text("Saleyard (Optional)")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Picker("Saleyard", selection: $selectedSaleyard) {
-                                    Text("Use Default").tag(nil as String?)
-                                    // Debug: Use filtered saleyards from user preferences
-                                    ForEach(userPrefs.filteredSaleyards, id: \.self) { saleyard in
-                                        Text(saleyard).tag(saleyard as String?)
+                            // Debug: Saleyard selector matching Physical Sales Report style
+                            Button(action: {
+                                HapticManager.tap()
+                                showingSaleyardSheet = true
+                            }) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Saleyard (Optional)")
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                        Text(selectedSaleyard ?? "Use Default")
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundStyle(Theme.primaryText)
+                                            .lineLimit(1)
                                     }
+                                    Spacer()
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText)
                                 }
-                                .pickerStyle(.menu)
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
+                            .buttonStyle(.plain)
                             
                             // Debug: Notes field for farmer to add custom observations, reminders, etc.
-                            VStack(alignment: .leading, spacing: 12) {
+                            VStack(alignment: .leading, spacing: 8) {
                                 Text("Notes (Optional)")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                                Text("Add custom notes about this herd/animal (e.g., health observations, feeding schedule, etc.)")
-                                    .font(Theme.caption)
-                                    .foregroundStyle(Theme.secondaryText)
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                Text("Add custom notes about this herd/animal")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText.opacity(0.5))
                                 TextEditor(text: $notes)
-                                    .frame(minHeight: 100)
-                                    .padding(8)
-                                    .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(Theme.primaryText)
+                                    .frame(minHeight: 80)
                                     .scrollContentBackground(.hidden)
                             }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                             
                             // Debug: Mustering History management section
                             VStack(alignment: .leading, spacing: 12) {
@@ -709,11 +780,15 @@ struct EditHerdView: View {
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Theme.sheetBackground)
             }
+            .sheet(isPresented: $showingSaleyardSheet) {
+                SaleyardSelectionSheet(selectedSaleyard: $selectedSaleyard)
+                    .presentationBackground(Theme.sheetBackground)
+            }
         }
     }
     
     private var isValid: Bool {
-        !herdName.isEmpty && !selectedBreed.isEmpty && !selectedCategory.isEmpty && headCount > 0 && initialWeight > 0
+        !herdName.isEmpty && !selectedBreed.isEmpty && !selectedCategory.isEmpty && (headCount ?? 0) > 0 && (initialWeight ?? 0) > 0
     }
     
     private func saveChanges() {
@@ -728,9 +803,9 @@ struct EditHerdView: View {
         herd.breed = selectedBreed
         herd.category = selectedCategory
         herd.sex = sex
-        herd.ageMonths = ageMonths
-        herd.headCount = headCount
-        herd.initialWeight = initialWeight
+        herd.ageMonths = ageMonths ?? 0
+        herd.headCount = headCount ?? 1
+        herd.initialWeight = Double(initialWeight ?? 300)
         herd.dailyWeightGain = dailyWeightGain
         herd.useCreationDateForWeight = useCreationDateForWeight
         herd.isBreeder = isBreeder
