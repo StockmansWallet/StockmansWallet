@@ -98,6 +98,12 @@ struct HerdDetailView: View {
                             .padding(.horizontal)
                     }
                     
+                    // Debug: Mustering history card - only show if there are muster records
+                    if !isLoading, let musterRecords = activeHerd.musterRecords, !musterRecords.isEmpty {
+                        MusteringHistoryCard(herd: activeHerd)
+                            .padding(.horizontal)
+                    }
+                    
                     // Debug: Breeding info only if applicable
                     if !isLoading, activeHerd.isBreeder {
                         BreedingDetailsCard(herd: activeHerd)
@@ -158,7 +164,7 @@ struct HerdDetailView: View {
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient)
-            .navigationTitle(activeHerd.headCount == 1 ? "Animal Details" : "Herd Details")
+            .navigationTitle(activeHerd.headCount == 1 ? "Individual Animal" : "Herd Details")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
@@ -589,9 +595,14 @@ struct HerdDetailsCard: View {
     let herd: HerdGroup
     let valuation: HerdValuation?
     
+    // Debug: Check if this is an individual animal for title display
+    private var isIndividualAnimal: Bool {
+        herd.headCount == 1
+    }
+    
     var body: some View {
         VStack(alignment: .leading, spacing: 20) {
-            Text("Herd Details")
+            Text(isIndividualAnimal ? "Animal Details" : "Herd Details")
                 .font(Theme.headline)
                 .foregroundStyle(Theme.primaryText)
             
@@ -641,16 +652,35 @@ struct HerdDetailsCard: View {
                 SectionHeader(title: "Timeline")
                 DetailRow(label: "Days Held", value: "\(herd.daysHeld) days")
                 DetailRow(label: "Created", value: herd.createdAt.formatted(date: .abbreviated, time: .omitted))
+                DetailRow(label: "Last Updated", value: herd.updatedAt.formatted(date: .abbreviated, time: .omitted))
+                // Debug: Show most recent muster date if any muster records exist
+                if let lastMuster = herd.lastMusterDate {
+                    DetailRow(label: "Last Mustered", value: lastMuster.formatted(date: .abbreviated, time: .omitted))
+                }
             }
             
-            // Debug: Show additional notes if they exist (for non-breeders or general info)
-            if let notes = herd.additionalInfo, !notes.isEmpty, !herd.isBreeder {
+            // Debug: Show notes if they exist - general farmer notes displayed for all herds/animals
+            if let notes = herd.notes, !notes.isEmpty {
+                Divider()
+                    .background(Theme.separator.opacity(0.3))
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionHeader(title: "Notes")
+                    Text(notes)
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.primaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            
+            // Debug: Show additional info if exists (for non-breeders - breeding herds show this in BreedingDetailsCard)
+            if let additionalInfo = herd.additionalInfo, !additionalInfo.isEmpty, !herd.isBreeder {
                 Divider()
                     .background(Theme.separator.opacity(0.3))
                 
                 VStack(alignment: .leading, spacing: 8) {
                     SectionHeader(title: "Additional Information")
-                    Text(notes)
+                    Text(additionalInfo)
                         .font(Theme.body)
                         .foregroundStyle(Theme.primaryText)
                         .fixedSize(horizontal: false, vertical: true)
@@ -1032,5 +1062,81 @@ struct BreedingDetailsCard: View {
         }
         .padding(Theme.cardPadding)
         .stitchedCard()
+    }
+}
+
+// MARK: - Mustering History Card
+// Debug: Display full mustering history with dates and notes
+struct MusteringHistoryCard: View {
+    let herd: HerdGroup
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Mustering History")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                
+                Spacer()
+                
+                // Debug: Show count of muster records
+                if let recordCount = herd.musterRecords?.count, recordCount > 0 {
+                    Text("\(recordCount) record\(recordCount == 1 ? "" : "s")")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+            }
+            
+            // Debug: Display muster records in chronological order (most recent first)
+            VStack(spacing: 12) {
+                ForEach(herd.sortedMusterRecords) { record in
+                    MusterRecordRow(record: record)
+                }
+            }
+        }
+        .padding(Theme.cardPadding)
+        .stitchedCard()
+    }
+}
+
+// MARK: - Muster Record Row
+// Debug: Individual row displaying a single muster record
+struct MusterRecordRow: View {
+    let record: MusterRecord
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // Debug: Calendar icon for muster date
+            ZStack {
+                Circle()
+                    .fill(Theme.accent.opacity(0.2))
+                    .frame(width: 36, height: 36)
+                
+                Image(systemName: "calendar")
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.accent)
+            }
+            
+            VStack(alignment: .leading, spacing: 4) {
+                // Muster date
+                Text(record.formattedDate)
+                    .font(Theme.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Theme.primaryText)
+                
+                // Notes if they exist
+                if let notes = record.notes, !notes.isEmpty {
+                    Text(notes)
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(12)
+        .background(Theme.cardBackground.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }

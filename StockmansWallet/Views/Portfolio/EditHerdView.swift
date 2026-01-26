@@ -31,6 +31,11 @@ struct EditHerdView: View {
     @State private var selectedSaleyard: String?
     @State private var paddockName: String
     @State private var useCreationDateForWeight: Bool
+    @State private var notes: String
+    // Debug: State for managing muster records
+    @State private var showingAddMusterRecord = false
+    @State private var newMusterDate = Date()
+    @State private var newMusterNotes = ""
     
     private let speciesOptions = ["Cattle", "Sheep", "Pigs", "Goats"]
     
@@ -87,6 +92,7 @@ struct EditHerdView: View {
         _selectedSaleyard = State(initialValue: herd.selectedSaleyard)
         _paddockName = State(initialValue: herd.paddockName ?? "")
         _useCreationDateForWeight = State(initialValue: herd.useCreationDateForWeight)
+        _notes = State(initialValue: herd.notes ?? "")
     }
     
     var body: some View {
@@ -350,6 +356,96 @@ struct EditHerdView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             }
                             
+                            // Debug: Notes field for farmer to add custom observations, reminders, etc.
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("Notes (Optional)")
+                                    .font(Theme.headline)
+                                    .foregroundStyle(Theme.primaryText)
+                                Text("Add custom notes about this herd/animal (e.g., health observations, feeding schedule, etc.)")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                TextEditor(text: $notes)
+                                    .frame(minHeight: 100)
+                                    .padding(8)
+                                    .background(Theme.inputFieldBackground)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    .scrollContentBackground(.hidden)
+                            }
+                            
+                            // Debug: Mustering History management section
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Mustering History")
+                                            .font(Theme.headline)
+                                            .foregroundStyle(Theme.primaryText)
+                                        Text("Track muster dates and notes for this herd/animal")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    // Add button
+                                    Button {
+                                        HapticManager.tap()
+                                        newMusterDate = Date()
+                                        newMusterNotes = ""
+                                        showingAddMusterRecord = true
+                                    } label: {
+                                        Image(systemName: "plus.circle.fill")
+                                            .font(.system(size: 24))
+                                            .foregroundStyle(Theme.accent)
+                                    }
+                                }
+                                
+                                // Debug: Show existing muster records
+                                if let records = herd.musterRecords, !records.isEmpty {
+                                    VStack(spacing: 8) {
+                                        ForEach(records.sorted(by: { $0.date > $1.date })) { record in
+                                            HStack(spacing: 12) {
+                                                VStack(alignment: .leading, spacing: 2) {
+                                                    Text(record.formattedDate)
+                                                        .font(Theme.subheadline)
+                                                        .foregroundStyle(Theme.primaryText)
+                                                    if let notes = record.notes, !notes.isEmpty {
+                                                        Text(notes)
+                                                            .font(Theme.caption)
+                                                            .foregroundStyle(Theme.secondaryText)
+                                                            .lineLimit(2)
+                                                    }
+                                                }
+                                                
+                                                Spacer()
+                                                
+                                                // Delete button
+                                                Button {
+                                                    HapticManager.tap()
+                                                    deleteMusterRecord(record)
+                                                } label: {
+                                                    Image(systemName: "trash")
+                                                        .font(.system(size: 14))
+                                                        .foregroundStyle(.red)
+                                                }
+                                            }
+                                            .padding(12)
+                                            .background(Theme.cardBackground.opacity(0.5))
+                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        }
+                                    }
+                                } else {
+                                    // Empty state
+                                    Text("No muster records yet. Tap + to add one.")
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                }
+                            }
+                            .padding()
+                            .background(Theme.inputFieldBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            
                             Toggle(isOn: $isBreeder) {
                                 Text("Breeding Stock")
                                     .font(Theme.headline)
@@ -416,6 +512,18 @@ struct EditHerdView: View {
                     .disabled(!isValid)
                 }
             }
+            .sheet(isPresented: $showingAddMusterRecord) {
+                AddMusterRecordSheet(
+                    date: $newMusterDate,
+                    notes: $newMusterNotes,
+                    onSave: {
+                        addMusterRecord()
+                    }
+                )
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Theme.sheetBackground)
+            }
         }
     }
     
@@ -445,6 +553,7 @@ struct EditHerdView: View {
         herd.calvingRate = calvingRate
         herd.selectedSaleyard = selectedSaleyard
         herd.paddockName = paddockName.isEmpty ? nil : paddockName
+        herd.notes = notes.isEmpty ? nil : notes
         
         if herd.isPregnant {
             herd.joinedDate = joinedDate
@@ -452,6 +561,7 @@ struct EditHerdView: View {
             herd.joinedDate = nil
         }
         
+        // Debug: Update the updatedAt timestamp whenever changes are saved
         herd.updatedAt = Date()
         
         do {
@@ -461,6 +571,118 @@ struct EditHerdView: View {
         } catch {
             HapticManager.error()
             print("Error saving changes: \(error)")
+        }
+    }
+    
+    // Debug: Add a new muster record to the herd
+    private func addMusterRecord() {
+        let record = MusterRecord(date: newMusterDate, notes: newMusterNotes.isEmpty ? nil : newMusterNotes)
+        record.herd = herd
+        
+        if herd.musterRecords == nil {
+            herd.musterRecords = []
+        }
+        herd.musterRecords?.append(record)
+        
+        // Update the herd's updatedAt timestamp
+        herd.updatedAt = Date()
+        
+        // Save to context
+        modelContext.insert(record)
+        
+        do {
+            try modelContext.save()
+            HapticManager.success()
+            showingAddMusterRecord = false
+        } catch {
+            HapticManager.error()
+            print("Error adding muster record: \(error)")
+        }
+    }
+    
+    // Debug: Delete a muster record from the herd
+    private func deleteMusterRecord(_ record: MusterRecord) {
+        herd.musterRecords?.removeAll(where: { $0.id == record.id })
+        herd.updatedAt = Date()
+        
+        modelContext.delete(record)
+        
+        do {
+            try modelContext.save()
+            HapticManager.success()
+        } catch {
+            HapticManager.error()
+            print("Error deleting muster record: \(error)")
+        }
+    }
+}
+
+// MARK: - Add Muster Record Sheet
+// Debug: Sheet for adding a new muster record with date and notes
+struct AddMusterRecordSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var date: Date
+    @Binding var notes: String
+    let onSave: () -> Void
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.backgroundGradient.ignoresSafeArea()
+                
+                VStack(spacing: 24) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Muster Date")
+                            .font(Theme.headline)
+                            .foregroundStyle(Theme.primaryText)
+                        
+                        DatePicker("Select Date", selection: $date, displayedComponents: .date)
+                            .datePickerStyle(.graphical)
+                            .padding()
+                            .background(Theme.inputFieldBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Notes (Optional)")
+                            .font(Theme.headline)
+                            .foregroundStyle(Theme.primaryText)
+                        
+                        Text("e.g., 'Drenched', 'Tagged 5 new calves', 'Moved to South paddock'")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        
+                        TextEditor(text: $notes)
+                            .frame(minHeight: 100)
+                            .padding(8)
+                            .background(Theme.inputFieldBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .scrollContentBackground(.hidden)
+                    }
+                    
+                    Spacer()
+                }
+                .padding()
+            }
+            .navigationTitle("Add Muster Record")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add") {
+                        HapticManager.tap()
+                        onSave()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
         }
     }
 }

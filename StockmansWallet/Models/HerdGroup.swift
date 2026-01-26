@@ -56,8 +56,14 @@ final class HerdGroup {
     var locationLongitude: Double?
     
     // MARK: - Additional Information
-    var additionalInfo: String? // Notes, mortality rate, calves at foot, etc.
+    var additionalInfo: String? // Breeding-specific info: breeding program, calves at foot, etc.
+    var notes: String? // General farmer notes: custom observations, reminders, etc.
     var mortalityRate: Double? // Annual mortality rate as decimal (e.g., 0.05 for 5%)
+    
+    // MARK: - Relationships
+    // Debug: SwiftData relationship to muster records (one-to-many)
+    @Relationship(deleteRule: .cascade, inverse: \MusterRecord.herd)
+    var musterRecords: [MusterRecord]? // Array of mustering history records
     
     init(
         name: String,
@@ -104,7 +110,9 @@ final class HerdGroup {
         self.locationLatitude = nil
         self.locationLongitude = nil
         self.additionalInfo = nil
+        self.notes = nil
         self.mortalityRate = nil
+        self.musterRecords = []
     }
     
     // MARK: - Computed Properties
@@ -161,6 +169,16 @@ final class HerdGroup {
     /// Check if weight gain tracking is active
     var isTrackingWeightGain: Bool {
         return dailyWeightGain > 0
+    }
+    
+    /// Get the most recent muster date for display in timeline
+    var lastMusterDate: Date? {
+        return musterRecords?.sorted(by: { $0.date > $1.date }).first?.date
+    }
+    
+    /// Get sorted muster records (most recent first)
+    var sortedMusterRecords: [MusterRecord] {
+        return (musterRecords ?? []).sorted(by: { $0.date > $1.date })
     }
     
     /// Simple projected weight calculation (for quick display only)
