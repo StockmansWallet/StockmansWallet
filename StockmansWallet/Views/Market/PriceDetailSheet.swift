@@ -370,7 +370,8 @@ enum HistoricalTimeRange: String, CaseIterable, Identifiable {
             trend: .up,
             weightRange: "300-400kg",
             source: "National Average",
-            changeDuration: "24h"
+            changeDuration: "24h",
+            breed: "Angus"
         ),
         historicalPrices: [],
         regionalPrices: [],

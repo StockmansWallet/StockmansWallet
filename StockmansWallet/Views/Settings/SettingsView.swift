@@ -120,6 +120,15 @@ struct SettingsView: View {
                 // Debug: Temporary section for development/testing
                 // TODO: Remove this section before production release
                 Section {
+                    NavigationLink(destination: DevelopmentSettingsView()) {
+                        SettingsListRow(
+                            icon: "hammer.fill",
+                            title: "Development",
+                            subtitle: "Testing & Data Generation"
+                        )
+                    }
+                    .listRowBackground(Theme.cardBackground)
+                    
                     Button(action: {
                         HapticManager.tap()
                         goToLandingPage()

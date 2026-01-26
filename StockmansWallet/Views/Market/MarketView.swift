@@ -35,6 +35,12 @@ struct MarketView: View {
         return Array(Set(activeHerds.map { $0.category })).sorted()
     }
     
+    // Debug: Get exact category+breed combinations from user's herds
+    private var userCategoryBreedPairs: [(category: String, breed: String)] {
+        let activeHerds = allHerds.filter { !$0.isSold }
+        return activeHerds.map { (category: $0.category, breed: $0.breed) }
+    }
+    
     // MARK: - Market Tab Enum
     // Debug: Four-section market view - Overview, My Markets, Market Pulse, Intelligence
     enum MarketTab: String, CaseIterable {
@@ -96,15 +102,15 @@ struct MarketView: View {
             .task {
                 // Debug: Load initial data on appear
                 await viewModel.loadAllData()
-                // Load prices specific to user's herd categories
+                // Load prices specific to user's exact herd category+breed combinations
                 if !userHerdCategories.isEmpty {
-                    await viewModel.loadCategoryPrices(forCategories: userHerdCategories)
+                    await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs)
                 }
             }
             .refreshable {
                 await viewModel.loadAllData()
                 if !userHerdCategories.isEmpty {
-                    await viewModel.loadCategoryPrices(forCategories: userHerdCategories)
+                    await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs)
                 }
             }
             .onChange(of: viewModel.selectedPhysicalSaleyard) { _, newSaleyard in
@@ -230,16 +236,10 @@ struct MarketView: View {
                 // No prices available
                 emptyStateView(message: "No price data available for your livestock")
             } else {
-                // Price cards grid
-                LazyVGrid(
-                    columns: [
-                        GridItem(.flexible(), spacing: 12),
-                        GridItem(.flexible(), spacing: 12)
-                    ],
-                    spacing: 12
-                ) {
+                // Price cards list
+                VStack(spacing: 12) {
                     ForEach(viewModel.categoryPrices) { price in
-                        PriceCard(price: price) {
+                        PriceListRow(price: price) {
                             selectedPriceForDetail = price
                             Task {
                                 await viewModel.loadHistoricalPrices(
@@ -700,6 +700,17 @@ struct PriceCard: View {
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     
+                    // Debug: Show breed if available
+                    if let breed = price.breed {
+                        Text(breed)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(Theme.accent)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(Theme.accent.opacity(0.15))
+                            .clipShape(Capsule())
+                    }
+                    
                     Text(price.weightRange)
                         .font(.system(size: 12))
                         .foregroundStyle(Theme.secondaryText)
@@ -731,6 +742,80 @@ struct PriceCard: View {
             }
             .padding(16)
             .frame(height: 160)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Price List Row
+// Debug: Horizontal list row for market prices
+struct PriceListRow: View {
+    let price: CategoryPrice
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: {
+            HapticManager.tap()
+            action()
+        }) {
+            HStack(spacing: 16) {
+                // Left side: Category and details
+                VStack(alignment: .leading, spacing: 6) {
+                    // Category name
+                    Text(price.category)
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(Theme.primaryText)
+                        .lineLimit(1)
+                    
+                    // Breed badge and weight range
+                    HStack(spacing: 8) {
+                        if let breed = price.breed {
+                            Text(breed)
+                                .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Theme.accent)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 3)
+                                .background(Theme.accent.opacity(0.15))
+                                .clipShape(Capsule())
+                        }
+                        
+                        Text(price.weightRange)
+                            .font(.system(size: 13))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                }
+                
+                Spacer()
+                
+                // Right side: Price and change
+                VStack(alignment: .trailing, spacing: 6) {
+                    // Price
+                    HStack(alignment: .firstTextBaseline, spacing: 2) {
+                        Text("$\(price.price, format: .number.precision(.fractionLength(2)))")
+                            .font(.system(size: 24, weight: .bold))
+                            .foregroundStyle(Theme.primaryText)
+                        Text("/kg")
+                            .font(.system(size: 11))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    
+                    // Change indicator
+                    HStack(spacing: 4) {
+                        Image(systemName: price.trend == .up ? "arrow.up" : price.trend == .down ? "arrow.down" : "minus")
+                            .font(.system(size: 9, weight: .semibold))
+                        Text("\(price.change >= 0 ? "+" : "")\(price.change, format: .number.precision(.fractionLength(2)))")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text(price.changeDuration)
+                            .font(.system(size: 10))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.8))
+                    }
+                    .foregroundStyle(price.trend == .up ? Theme.positiveChange : price.trend == .down ? Theme.negativeChange : Theme.secondaryText)
+                }
+            }
+            .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

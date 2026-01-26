@@ -92,6 +92,60 @@ class SupabaseMarketService {
         return response.map { $0.toSaleyardReport() }
     }
     
+    // MARK: - Category Prices (Smart Mapped)
+    // Debug: Fetch smart-mapped category prices from Supabase
+    func fetchCategoryPrices(
+        categories: [String] = [],
+        saleyard: String? = nil,
+        state: String? = nil,
+        breed: String? = nil
+    ) async throws -> [CategoryPrice] {
+        print("🔵 Debug: Fetching category prices from Supabase")
+        print("   Categories: \(categories.isEmpty ? "All" : categories.joined(separator: ", "))")
+        print("   Saleyard: \(saleyard ?? "Any")")
+        print("   State: \(state ?? "Any")")
+        print("   Breed: \(breed ?? "General")")
+        
+        // Build query
+        var query = supabase
+            .from("category_prices")
+            .select()
+            .gt("expires_at", value: Date().ISO8601Format())
+        
+        // Apply filters
+        if !categories.isEmpty {
+            query = query.in("category", values: categories)
+        }
+        
+        if let saleyard = saleyard {
+            query = query.eq("saleyard", value: saleyard)
+        }
+        
+        if let state = state {
+            query = query.eq("state", value: state)
+        }
+        
+        // Breed filter (NULL = general prices, specific breed = breed-specific)
+        if let breed = breed {
+            query = query.or("breed.eq.\(breed),breed.is.null")
+        }
+        
+        let response: [SupabaseCategoryPrice] = try await query
+            .order("data_date", ascending: false)
+            .limit(500) // Fetch enough to include all categories
+            .execute()
+            .value
+        
+        print("✅ Debug: Supabase returned \(response.count) category prices")
+        
+        // Debug: Include both general prices AND breed-specific prices
+        // This allows the UI to show breed badges when available
+        print("🔵 Debug: Including all prices (general + breed-specific)")
+        
+        // Convert to app models
+        return response.map { $0.toCategoryPrice() }
+    }
+    
     // MARK: - Check Data Freshness
     // Debug: Check if we have fresh data for a given saleyard and date
     func hasFreshData(saleyard: String, date: Date) async -> Bool {
@@ -114,6 +168,71 @@ class SupabaseMarketService {
             print("❌ Debug: Error checking data freshness: \(error)")
             return false
         }
+    }
+    
+    // MARK: - Historical Indicator Data
+    // Debug: Fetch historical indicator data from cache (or MLA API if not cached)
+    func fetchHistoricalIndicatorData(indicatorID: Int, indicatorCode: String, days: Int = 365) async throws -> [HistoricalPricePoint] {
+        print("🔵 Debug: Fetching \(days) days of historical data for \(indicatorCode)")
+        
+        // Check if we have cached data (less than 24 hours old)
+        let oneDayAgo = Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
+        
+        let response: [SupabaseHistoricalIndicator] = try await supabase
+            .from("mla_historical_indicators")
+            .select()
+            .eq("indicator_id", value: indicatorID)
+            .gte("updated_at", value: oneDayAgo.ISO8601Format())
+            .order("calendar_date", ascending: false)
+            .limit(days)
+            .execute()
+            .value
+        
+        // If we have enough fresh cached data, use it
+        if response.count >= days - 7 { // Allow 7 days tolerance
+            print("✅ Debug: Using \(response.count) cached historical data points")
+            return response.map { $0.toHistoricalPricePoint() }
+        }
+        
+        // Otherwise, fetch from MLA API and cache it
+        print("🔵 Debug: Cache miss or stale, fetching from MLA API...")
+        let mlaData = try await MLAAPIService.shared.fetchHistoricalIndicatorData(indicatorID: indicatorID, days: days)
+        
+        // Cache the data in Supabase
+        print("🔵 Debug: Caching \(mlaData.count) historical data points...")
+        try await cacheHistoricalIndicatorData(mlaData, indicatorCode: indicatorCode)
+        
+        // Convert to HistoricalPricePoint
+        return mlaData.map { point in
+            HistoricalPricePoint(date: point.date, price: point.value)
+        }
+    }
+    
+    // MARK: - Cache Historical Data
+    // Debug: Store historical indicator data in Supabase
+    private func cacheHistoricalIndicatorData(_ dataPoints: [MLAHistoricalDataPoint], indicatorCode: String) async throws {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        
+        // Convert to cacheable struct
+        let cacheData = dataPoints.map { point in
+            SupabaseHistoricalIndicatorInsert(
+                indicator_id: point.indicatorID,
+                indicator_name: point.indicatorName,
+                indicator_code: indicatorCode,
+                calendar_date: dateFormatter.string(from: point.date),
+                value: point.value,
+                unit: "¢/kg cwt"
+            )
+        }
+        
+        // Upsert (insert or update if exists)
+        try await supabase
+            .from("mla_historical_indicators")
+            .upsert(cacheData)
+            .execute()
+        
+        print("✅ Debug: Cached \(dataPoints.count) historical data points")
     }
 }
 
@@ -247,6 +366,83 @@ struct SupabaseSaleyardReport: Codable {
             yardings: yardings ?? 0,
             summary: summary ?? "",
             categories: categories ?? []
+        )
+    }
+}
+
+struct SupabaseHistoricalIndicator: Codable {
+    let id: String
+    let indicator_id: Int
+    let indicator_name: String
+    let indicator_code: String
+    let calendar_date: String
+    let value: Double
+    let unit: String?
+    
+    func toHistoricalPricePoint() -> HistoricalPricePoint {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let date = dateFormatter.date(from: calendar_date) ?? Date()
+        
+        return HistoricalPricePoint(date: date, price: value)
+    }
+}
+
+// Debug: Model for inserting historical indicator data
+struct SupabaseHistoricalIndicatorInsert: Codable {
+    let indicator_id: Int
+    let indicator_name: String
+    let indicator_code: String
+    let calendar_date: String
+    let value: Double
+    let unit: String
+}
+
+// Debug: Smart-mapped category price from Supabase
+struct SupabaseCategoryPrice: Codable {
+    let id: String
+    let category: String
+    let species: String
+    let breed: String?
+    let breed_premium_pct: Double
+    let base_price_per_kg: Double
+    let final_price_per_kg: Double
+    let weight_range: String?
+    let saleyard: String
+    let state: String
+    let source: String
+    let mla_category: String
+    let data_date: String
+    
+    func toCategoryPrice() -> CategoryPrice {
+        // Map species string to LivestockType enum
+        let livestockType: LivestockType
+        switch species.lowercased() {
+        case "cattle":
+            livestockType = .cattle
+        case "sheep":
+            livestockType = .sheep
+        case "pigs":
+            livestockType = .pigs
+        case "goats":
+            livestockType = .goats
+        default:
+            livestockType = .cattle
+        }
+        
+        // Convert cents to dollars
+        let priceInDollars = final_price_per_kg / 100.0
+        
+        return CategoryPrice(
+            category: category,
+            livestockType: livestockType,
+            price: priceInDollars,
+            change: 0.0, // TODO: Calculate from previous day's data
+            trend: .neutral,
+            weightRange: weight_range ?? "Variable",
+            source: saleyard,
+            changeDuration: "24h",
+            breed: breed // Debug: Include breed from Supabase (nil for general prices)
         )
     }
 }

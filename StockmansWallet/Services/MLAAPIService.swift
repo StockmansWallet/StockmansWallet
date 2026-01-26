@@ -114,6 +114,43 @@ class MLAAPIService {
         }
     }
     
+    // MARK: - Fetch Historical Indicator Data
+    // Debug: Fetches historical data for a specific indicator (e.g., EYCI over last 365 days)
+    func fetchHistoricalIndicatorData(indicatorID: Int, days: Int = 365) async throws -> [MLAHistoricalDataPoint] {
+        print("🔵 Debug: Fetching \(days) days of historical data for indicator ID: \(indicatorID)")
+        
+        // Build URL - MLA API returns data in descending date order
+        let urlString = "\(baseURL)/report/5?indicatorID=\(indicatorID)"
+        print("🌐 Debug: Historical API URL: \(urlString)")
+        
+        guard let url = URL(string: urlString) else {
+            throw MLAAPIError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("application/json", forHTTPHeaderField: "Accept")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse,
+              httpResponse.statusCode == 200 else {
+            print("❌ Debug: Bad response for historical data")
+            throw MLAAPIError.badResponse
+        }
+        
+        let decoder = JSONDecoder()
+        let apiResponse = try decoder.decode(MLAIndicatorResponse.self, from: data)
+        
+        print("✅ Debug: Received \(apiResponse.data.count) historical data points")
+        
+        // Convert to historical data points and limit to requested days
+        let limitedData = Array(apiResponse.data.prefix(days))
+        let historicalPoints = limitedData.map { $0.toHistoricalDataPoint() }
+        
+        print("✅ Debug: Returning \(historicalPoints.count) historical data points")
+        return historicalPoints
+    }
+    
     // MARK: - Fetch All Available Indicators (for future use)
     // Debug: Gets list of all available indicators from MLA
     func fetchAvailableIndicators() async throws -> [MLAIndicatorInfo] {
@@ -332,6 +369,21 @@ struct MLAIndicatorData: Codable {
             changeDuration: "24h" // Debug: Daily change from MLA API
         )
     }
+    
+    // Convert to historical data point for charting
+    func toHistoricalDataPoint() -> MLAHistoricalDataPoint {
+        // Parse date from calendar_date string (format: "YYYY-MM-DD")
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
+        let date = dateFormatter.date(from: calendar_date) ?? Date()
+        
+        return MLAHistoricalDataPoint(
+            date: date,
+            value: indicator_value,
+            indicatorName: indicator_name,
+            indicatorID: indicator_id
+        )
+    }
 }
 
 struct MLAIndicatorListResponse: Codable {
@@ -344,6 +396,16 @@ struct MLAIndicatorInfo: Codable {
     let indicator_desc: String
     let species_id: String
     let indicator_units: String
+}
+
+// MARK: - Historical Data Point
+// Debug: Single data point for historical charting
+struct MLAHistoricalDataPoint: Identifiable {
+    let id = UUID()
+    let date: Date
+    let value: Double
+    let indicatorName: String
+    let indicatorID: Int
 }
 
 // MARK: - Error Types

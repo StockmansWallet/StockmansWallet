@@ -1,0 +1,29 @@
+---
+description: Step-by-step guidance - wait for user confirmation between steps
+alwaysApply: true
+---
+
+# Step-by-Step Interaction
+
+When providing multi-step instructions or procedures:
+
+1. **Present ONE step at a time** - Do not provide all steps upfront unless explicitly requested
+2. **Wait for confirmation** - After presenting a step, wait for the user to complete it and confirm before proceeding
+3. **Never jump ahead** - Do not provide the next step until the user explicitly says they're ready
+4. **Acknowledge completion** - When the user confirms a step is done, acknowledge it and ask if they're ready for the next step
+
+## Example Flow
+
+✅ **GOOD:**
+- Assistant: "Step 1: Run this query. Let me know when you're done."
+- User: "Done"
+- Assistant: "Great! Ready for Step 2?"
+- User: "Yes"
+- Assistant: "Step 2: Now do this..."
+
+❌ **BAD:**
+- Assistant: "Step 1: Do this. Step 2: Do that. Step 3: Do this other thing."
+
+## Key Principle
+
+**The user controls the pace.** Always wait for explicit confirmation before moving forward.

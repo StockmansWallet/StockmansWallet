@@ -122,150 +122,139 @@ class MarketDataService {
     
     // MARK: - National Indicators
     // Debug: Major market indicators (EYCI, WYCI, NSI, etc.)
-    // Debug: Fetches from Supabase (cached with daily changes), falls back to MLA API, then mock data
+    // Debug: Fetches REAL data from Supabase (cached with daily changes) or MLA API - no mock fallback
     func fetchNationalIndicators() async -> [NationalIndicator] {
         print("🟢 MarketDataService: fetchNationalIndicators called")
-        print("🟢 useMockData = \(Config.useMockData)")
         print("🟢 useSupabaseBackend = \(Config.useSupabaseBackend)")
         
-        // Check if we should use real data (not mock)
-        if !Config.useMockData {
-            // Try Supabase first (cached data with daily changes)
-            if Config.useSupabaseBackend {
-                print("🟢 Attempting to fetch from Supabase (cached data with changes)...")
-                do {
-                    let indicators = try await SupabaseMarketService.shared.fetchNationalIndicators()
-                    if !indicators.isEmpty {
-                        print("✅ Successfully fetched \(indicators.count) indicators from Supabase")
-                        return indicators
-                    }
-                    print("⚠️ Supabase returned empty, falling back to MLA API")
-                } catch {
-                    print("⚠️ Supabase fetch failed: \(error), falling back to MLA API")
-                }
-            }
-            
-            // Fallback to MLA API (direct, no daily changes)
-            print("🟢 Attempting to fetch from MLA API...")
+        // Try Supabase first (cached data with daily changes)
+        if Config.useSupabaseBackend {
+            print("🟢 Attempting to fetch from Supabase (cached data with changes)...")
             do {
-                let indicators = try await MLAAPIService.shared.fetchNationalIndicators()
-                print("✅ Successfully fetched \(indicators.count) indicators from MLA API")
-                return indicators
+                let indicators = try await SupabaseMarketService.shared.fetchNationalIndicators()
+                if !indicators.isEmpty {
+                    print("✅ Successfully fetched \(indicators.count) indicators from Supabase")
+                    return indicators
+                }
+                print("⚠️ Supabase returned empty, trying MLA API...")
             } catch {
-                print("❌ Error fetching from MLA API, falling back to mock data: \(error)")
-                // Fall through to mock data if API fails
+                print("⚠️ Supabase fetch failed: \(error), trying MLA API...")
             }
-        } else {
-            print("🟡 Using mock data (Config.useMockData = true)")
         }
         
-        // Simulate network delay for mock data
-        try? await Task.sleep(nanoseconds: 300_000_000)
-        
-        // Debug: Mock data for testing (cattle only for MVP)
-        print("🟡 Returning mock data")
-        return [
-            NationalIndicator(
-                name: "Eastern Young Cattle Indicator",
-                abbreviation: "EYCI",
-                value: 355.03,
-                change: 4.51,
-                trend: .up,
-                unit: "¢/kg cwt",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            NationalIndicator(
-                name: "Western Young Cattle Indicator",
-                abbreviation: "WYCI",
-                value: 341.17,
-                change: -2.48,
-                trend: .down,
-                unit: "¢/kg cwt",
-                changeDuration: "24h" // Debug: Daily change
-            )
-        ]
+        // Fallback to MLA API (direct, no daily changes)
+        print("🟢 Attempting to fetch from MLA API...")
+        do {
+            let indicators = try await MLAAPIService.shared.fetchNationalIndicators()
+            print("✅ Successfully fetched \(indicators.count) indicators from MLA API")
+            return indicators
+        } catch {
+            print("❌ Error fetching from MLA API: \(error)")
+            return [] // Return empty array on error
+        }
     }
     
     // MARK: - Category Prices
-    // Debug: Fetch prices for specific livestock categories with filtering
+    // Debug: Fetch REAL prices from Supabase only - no mock fallback
     func fetchCategoryPrices(
         livestockType: LivestockType?,
         saleyard: String?,
         state: String?
     ) async -> [CategoryPrice] {
-        // Simulate network delay
-        try? await Task.sleep(nanoseconds: 400_000_000)
+        print("🔵 Debug: fetchCategoryPrices called")
+        print("   livestockType: \(livestockType?.rawValue ?? "All")")
+        print("   saleyard: \(saleyard ?? "Any")")
+        print("   state: \(state ?? "Any")")
         
-        // Filter based on livestock type
-        var prices: [CategoryPrice] = []
-        
-        if livestockType == nil || livestockType == .cattle {
-            prices.append(contentsOf: cattlePrices(saleyard: saleyard, state: state))
+        // Fetch REAL data from Supabase only (no mock fallback)
+        if Config.useSupabaseBackend {
+            print("🔵 Debug: Fetching from Supabase category_prices...")
+            do {
+                let categories: [String] = [] // Empty = fetch all
+                let prices = try await SupabaseMarketService.shared.fetchCategoryPrices(
+                    categories: categories,
+                    saleyard: saleyard,
+                    state: state,
+                    breed: nil // General prices for now
+                )
+                
+                // Filter by livestock type if specified
+                var filteredPrices = prices
+                if let livestockType = livestockType {
+                    filteredPrices = prices.filter { $0.livestockType == livestockType }
+                }
+                
+                print("✅ Debug: Got \(filteredPrices.count) prices from Supabase")
+                return filteredPrices
+            } catch {
+                print("❌ Debug: Error fetching from Supabase: \(error)")
+                return [] // Return empty array on error
+            }
+        } else {
+            print("❌ Debug: Supabase backend disabled in Config")
+            return [] // Return empty array if backend disabled
         }
-        if livestockType == nil || livestockType == .sheep {
-            prices.append(contentsOf: sheepPrices(saleyard: saleyard, state: state))
-        }
-        if livestockType == nil || livestockType == .pigs {
-            prices.append(contentsOf: pigPrices(saleyard: saleyard, state: state))
-        }
-        if livestockType == nil || livestockType == .goats {
-            prices.append(contentsOf: goatPrices(saleyard: saleyard, state: state))
-        }
-        
-        return prices
     }
     
     // MARK: - Historical Prices
-    // Debug: Generate historical price data for charting (last 12 months)
+    // Debug: Fetch REAL historical price data from MLA API (cached in Supabase)
     func fetchHistoricalPrices(
         category: String,
         livestockType: LivestockType,
         months: Int = 12
     ) async -> [HistoricalPricePoint] {
-        // Simulate network delay
-        try? await Task.sleep(nanoseconds: 500_000_000)
+        print("🔵 Debug: fetchHistoricalPrices for \(category) (\(livestockType.rawValue))")
         
-        var points: [HistoricalPricePoint] = []
-        let calendar = Calendar.current
-        let endDate = Date()
-        
-        // Generate data points for each week
-        for weekOffset in (0..<(months * 4)).reversed() {
-            guard let date = calendar.date(byAdding: .weekOfYear, value: -weekOffset, to: endDate) else { continue }
+        // For cattle categories, use real MLA indicator data
+        if livestockType == .cattle {
+            // Map category to appropriate indicator
+            let indicatorID: Int
+            let indicatorCode: String
             
-            // Create realistic price variation based on category and time
-            let basePrice = getBasePrice(category: category, livestockType: livestockType)
-            let seasonalVariation = sin(Double(weekOffset) * 0.2) * 0.15 // ±15% seasonal swing
-            let randomVariation = Double.random(in: -0.05...0.05) // ±5% random variation
-            let trendAdjustment = Double(weekOffset) * 0.002 // Slight upward trend
+            // Yearling/Young cattle -> EYCI (Eastern Young Cattle Indicator)
+            if category.contains("Yearling") || category.contains("Weaner") {
+                indicatorID = 0
+                indicatorCode = "EYCI"
+            }
+            // All other cattle -> WYCI (Western Young Cattle Indicator) as fallback
+            else {
+                indicatorID = 1
+                indicatorCode = "WYCI"
+            }
             
-            let price = basePrice * (1 + seasonalVariation + randomVariation + trendAdjustment)
-            
-            points.append(HistoricalPricePoint(date: date, price: price))
+            // Fetch real historical data from Supabase (which caches MLA API)
+            do {
+                let days = months * 30 // Approximate days for requested months
+                let historicalData = try await SupabaseMarketService.shared.fetchHistoricalIndicatorData(
+                    indicatorID: indicatorID,
+                    indicatorCode: indicatorCode,
+                    days: days
+                )
+                print("✅ Debug: Got \(historicalData.count) real historical data points from MLA/Supabase")
+                return historicalData
+            } catch {
+                print("❌ Debug: Error fetching real historical data: \(error)")
+                return [] // Return empty array for cattle if real data fails
+            }
         }
         
-        return points.sorted { $0.date < $1.date }
+        // For non-cattle livestock (sheep, pigs, goats), return empty array
+        // Debug: We don't have MLA historical data for these yet
+        print("⚠️ Debug: No historical data available for \(livestockType.rawValue) yet")
+        return []
     }
+    
     
     // MARK: - Regional Comparison
     // Debug: Compare prices across different states for a category
+    // TODO: Implement real regional comparison from Supabase category_prices grouped by state
     func fetchRegionalComparison(
         category: String,
         livestockType: LivestockType
     ) async -> [RegionalPrice] {
-        // Simulate network delay
-        try? await Task.sleep(nanoseconds: 350_000_000)
-        
-        let basePrice = getBasePrice(category: category, livestockType: livestockType)
-        
-        return [
-            RegionalPrice(state: "NSW", price: basePrice * 1.05, change: 3.2, trend: .up, changeDuration: "24h"),
-            RegionalPrice(state: "VIC", price: basePrice * 0.98, change: -1.5, trend: .down, changeDuration: "24h"),
-            RegionalPrice(state: "QLD", price: basePrice * 1.02, change: 2.1, trend: .up, changeDuration: "24h"),
-            RegionalPrice(state: "SA", price: basePrice * 0.95, change: 0.5, trend: .up, changeDuration: "24h"),
-            RegionalPrice(state: "WA", price: basePrice * 1.08, change: 4.8, trend: .up, changeDuration: "24h"),
-            RegionalPrice(state: "TAS", price: basePrice * 0.92, change: -0.8, trend: .down, changeDuration: "24h")
-        ]
+        print("⚠️ Debug: Regional comparison not yet implemented with real data")
+        // Return empty array - no mock financial data
+        return []
     }
     
     // MARK: - Market Commentary
@@ -299,214 +288,6 @@ class MarketDataService {
         ]
     }
     
-    // MARK: - Private Helper Methods
-    
-    private func cattlePrices(saleyard: String?, state: String?) -> [CategoryPrice] {
-        // Debug: Cattle prices adjusted to realistic market values based on current Australian market rates
-        return [
-            CategoryPrice(
-                category: "Feeder Steer",
-                livestockType: .cattle,
-                price: 3.90, // Adjusted to realistic market rate
-                change: 0.08,
-                trend: .up,
-                weightRange: "300-400kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Yearling Steer",
-                livestockType: .cattle,
-                price: 4.10, // Adjusted to realistic market rate (~$4.10/kg)
-                change: -0.06,
-                trend: .down,
-                weightRange: "400-500kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Grown Steer",
-                livestockType: .cattle,
-                price: 3.70, // Adjusted to realistic market rate (base price)
-                change: -0.03,
-                trend: .down,
-                weightRange: "500-600kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Breeding Cow",
-                livestockType: .cattle,
-                price: 3.80, // Adjusted to realistic market rate (~$3.80/kg)
-                change: 0.03,
-                trend: .up,
-                weightRange: "450-550kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Heifer",
-                livestockType: .cattle,
-                price: 3.85, // Adjusted to realistic market rate
-                change: 0.07,
-                trend: .up,
-                weightRange: "350-450kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Weaner Steer",
-                livestockType: .cattle,
-                price: 4.35, // Adjusted to realistic market rate (highest per kg)
-                change: 0.14,
-                trend: .up,
-                weightRange: "200-300kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            )
-        ]
-    }
-    
-    private func sheepPrices(saleyard: String?, state: String?) -> [CategoryPrice] {
-        // Debug: All sheep prices reduced by 45% (×0.55) for realistic market values
-        return [
-            CategoryPrice(
-                category: "Heavy Lamb",
-                livestockType: .sheep,
-                price: 4.81, // Adjusted from 8.75 (×0.55)
-                change: 0.18, // Adjusted from 0.32 (×0.55)
-                trend: .up,
-                weightRange: "22-26kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Trade Lamb",
-                livestockType: .sheep,
-                price: 4.51, // Adjusted from 8.20 (×0.55)
-                change: 0.08, // Adjusted from 0.15 (×0.55)
-                trend: .up,
-                weightRange: "18-22kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Merino Wether",
-                livestockType: .sheep,
-                price: 4.13, // Adjusted from 7.50 (×0.55)
-                change: -0.04, // Adjusted from -0.08 (×0.55)
-                trend: .down,
-                weightRange: "50-60kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Breeding Ewe",
-                livestockType: .sheep,
-                price: 3.74, // Adjusted from 6.80 (×0.55)
-                change: 0.06, // Adjusted from 0.10 (×0.55)
-                trend: .up,
-                weightRange: "45-55kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            )
-        ]
-    }
-    
-    private func pigPrices(saleyard: String?, state: String?) -> [CategoryPrice] {
-        // Debug: All pig prices reduced by 45% (×0.55) for realistic market values
-        return [
-            CategoryPrice(
-                category: "Baconer",
-                livestockType: .pigs,
-                price: 2.12, // Adjusted from 3.85 (×0.55)
-                change: 0.03, // Adjusted from 0.05 (×0.55)
-                trend: .up,
-                weightRange: "70-85kg",
-                source: "Processor Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Porker",
-                livestockType: .pigs,
-                price: 2.17, // Adjusted from 3.95 (×0.55)
-                change: 0.04, // Adjusted from 0.08 (×0.55)
-                trend: .up,
-                weightRange: "60-70kg",
-                source: "Processor Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Grower Pig",
-                livestockType: .pigs,
-                price: 2.31, // Adjusted from 4.20 (×0.55)
-                change: -0.01, // Adjusted from -0.02 (×0.55)
-                trend: .down,
-                weightRange: "30-50kg",
-                source: "Private Sale Average",
-                changeDuration: "24h" // Debug: Daily change
-            )
-        ]
-    }
-    
-    private func goatPrices(saleyard: String?, state: String?) -> [CategoryPrice] {
-        // Debug: All goat prices reduced by 45% (×0.55) for realistic market values
-        return [
-            CategoryPrice(
-                category: "Rangeland Goat",
-                livestockType: .goats,
-                price: 4.29, // Adjusted from 7.80 (×0.55)
-                change: 0.11, // Adjusted from 0.20 (×0.55)
-                trend: .up,
-                weightRange: "20-30kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Breeding Doe",
-                livestockType: .goats,
-                price: 3.58, // Adjusted from 6.50 (×0.55)
-                change: 0.08, // Adjusted from 0.15 (×0.55)
-                trend: .up,
-                weightRange: "35-45kg",
-                source: saleyard ?? "National Average",
-                changeDuration: "24h" // Debug: Daily change
-            ),
-            CategoryPrice(
-                category: "Capretto",
-                livestockType: .goats,
-                price: 5.06, // Adjusted from 9.20 (×0.55)
-                change: -0.06, // Adjusted from -0.10 (×0.55)
-                trend: .down,
-                weightRange: "8-12kg",
-                source: "Processor Average",
-                changeDuration: "24h" // Debug: Daily change
-            )
-        ]
-    }
-    
-    private func getBasePrice(category: String, livestockType: LivestockType) -> Double {
-        // Debug: Base prices set to realistic market values based on current Australian market rates
-        switch livestockType {
-        case .cattle:
-            if category.contains("Weaner") { return 4.35 } // Highest per kg (youngest animals)
-            if category.contains("Yearling") { return 4.10 } // ~$4.10/kg target
-            if category.contains("Feeder") { return 3.90 } // Mid-range price
-            if category.contains("Heifer") { return 3.85 } // Similar to breeding stock
-            if category.contains("Breeding") { return 3.80 } // ~$3.80/kg target
-            return 3.70 // Grown Steer base price
-        case .sheep:
-            if category.contains("Heavy") { return 4.81 } // Adjusted from 8.75
-            if category.contains("Trade") { return 4.51 } // Adjusted from 8.20
-            return 4.13 // Adjusted from 7.50
-        case .pigs:
-            return 2.17 // Adjusted from 3.95
-        case .goats:
-            if category.contains("Capretto") { return 5.06 } // Adjusted from 9.20
-            if category.contains("Rangeland") { return 4.29 } // Adjusted from 7.80
-            return 3.58 // Adjusted from 6.50
-        }
-    }
 }
 
 // MARK: - Data Models
@@ -550,6 +331,7 @@ struct CategoryPrice: Identifiable {
     let weightRange: String
     let source: String
     let changeDuration: String // Debug: Duration for price change (e.g., "24h", "7d")
+    let breed: String? // Debug: Breed name (e.g., "Angus", "Hereford") - nil for general prices
 }
 
 struct HistoricalPricePoint: Identifiable {

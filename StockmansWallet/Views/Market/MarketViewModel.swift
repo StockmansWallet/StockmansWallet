@@ -108,10 +108,17 @@ class MarketViewModel {
     }
     
     // MARK: - Load Category Prices (for My Markets tab)
-    /// Fetches category-specific prices filtered by user's herd categories
-    /// Debug: Takes array of category strings from user's actual herds
-    func loadCategoryPrices(forCategories categories: [String]) async {
+    /// Fetches category-specific prices filtered by user's exact category+breed combinations
+    /// Debug: Only shows prices for the exact herds the user owns, plus general prices
+    func loadCategoryPrices(forCategoryBreedPairs pairs: [(category: String, breed: String)]) async {
         await MainActor.run { self.isLoadingPrices = true }
+        
+        // Extract unique categories for the query
+        let categories = Array(Set(pairs.map { $0.category }))
+        print("🔵 Debug: loadCategoryPrices called with \(pairs.count) herds:")
+        for pair in pairs {
+            print("   - \(pair.category) (\(pair.breed))")
+        }
         
         // Fetch all prices then filter to user's categories
         let allPrices = await dataService.fetchCategoryPrices(
@@ -120,13 +127,65 @@ class MarketViewModel {
             state: selectedState
         )
         
-        // Filter to only show categories the user actually has
-        let filteredPrices = allPrices.filter { price in
-            categories.contains(price.category)
+        // If fetch was cancelled or returned no data, keep existing prices
+        // Debug: Don't clear the UI on task cancellation
+        guard !allPrices.isEmpty else {
+            print("⚠️ Debug: No prices returned (possibly cancelled), keeping existing data")
+            await MainActor.run { self.isLoadingPrices = false }
+            return
         }
         
+        print("🔵 Debug: Sample price categories from database: \(allPrices.prefix(5).map { $0.category })")
+        
+        // Get unique categories from fetched data
+        let uniqueCategories = Set(allPrices.map { $0.category }).sorted()
+        print("🔵 Debug: ALL unique categories in fetched data: \(uniqueCategories)")
+        
+        // Filter to only show prices for exact category+breed combinations the user owns
+        // Debug: Only exact matches - no general prices
+        let filteredPrices = allPrices.filter { price in
+            // Must have a breed (skip general prices)
+            guard let priceBreed = price.breed else { return false }
+            
+            // Must match one of user's exact category+breed combinations
+            return pairs.contains(where: { pair in
+                pair.category == price.category && pair.breed == priceBreed
+            })
+        }
+        
+        print("🔵 Debug: After filtering by exact category+breed pairs, got \(filteredPrices.count) matching prices")
+        
+        // De-duplicate by category + breed combination
+        // Debug: Each breed gets its own card so users can see breed-specific pricing
+        var uniquePrices: [String: CategoryPrice] = [:]
+        for price in filteredPrices {
+            // Key includes breed so we keep separate cards for Angus, Hereford, etc.
+            let breedKey = price.breed ?? "general"
+            let key = "\(price.category)-\(price.weightRange)-\(breedKey)"
+            // Keep the highest price for each category+weightRange+breed combination
+            if let existing = uniquePrices[key] {
+                if price.price > existing.price {
+                    uniquePrices[key] = price
+                }
+            } else {
+                uniquePrices[key] = price
+            }
+        }
+        
+        let deduplicatedPrices = Array(uniquePrices.values).sorted { 
+            if $0.category == $1.category {
+                // Sort by breed within same category (general prices first)
+                let breed0 = $0.breed ?? ""
+                let breed1 = $1.breed ?? ""
+                return breed0 < breed1
+            }
+            return $0.category < $1.category
+        }
+        
+        print("✅ Debug: Updating UI with \(deduplicatedPrices.count) de-duplicated prices (exact user herds only)")
+        
         await MainActor.run {
-            self.categoryPrices = filteredPrices
+            self.categoryPrices = deduplicatedPrices
             self.isLoadingPrices = false
         }
     }
