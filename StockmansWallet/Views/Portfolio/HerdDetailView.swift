@@ -68,7 +68,8 @@ struct HerdDetailView: View {
                         }
                         
                         // Debug: Horizontal stats card for herd type and head count
-                        if !isLoading {
+                        // Only show for herds (headCount > 1), not for individual animals to avoid duplication
+                        if !isLoading && activeHerd.headCount > 1 {
                             HerdStatsCard(herd: activeHerd)
                                 .padding(.horizontal)
                         }
@@ -331,62 +332,23 @@ struct TotalValueCard: View {
 }
 
 // MARK: - Herd Stats Card
-// Debug: Horizontal card showing total head and species - matches Portfolio page styling
-// For individual animals (headCount == 1), shows breed and species instead
+// Debug: Simplified to show only head count in accent-colored rounded rectangle
 struct HerdStatsCard: View {
     let herd: HerdGroup
     
-    // Debug: Check if this is an individual animal
-    private var isIndividualAnimal: Bool {
-        herd.headCount == 1
-    }
-    
     var body: some View {
-        HStack(spacing: 24) {
-            // Debug: For individual animals, show species; for herds, show head count
-            if isIndividualAnimal {
-                Text(herd.species)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            } else {
-                Text("\(herd.headCount) Head")
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-            
-            // Vertical divider - using Rectangle like Portfolio page
-            Rectangle()
-                .fill(Theme.separator.opacity(0.3))
-                .frame(width: 1, height: 30)
-            
-            // Debug: For individual animals, show breed; for herds, show species
-            if isIndividualAnimal {
-                Text(herd.breed)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            } else {
-                Text(herd.species)
-                    .font(.system(size: 20, weight: .bold))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: .infinity, alignment: .center)
-            }
-        }
-        .padding(.horizontal, 20)
-        .padding(.vertical, 12)
-        // Debug: Card temporarily removed to test cleaner look
-        // .background(Theme.cardBackground)
-        // .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        Text("\(herd.headCount) Head")
+            .font(.system(size: 18, weight: .bold))
+            .foregroundStyle(.white)
+            .lineLimit(1)
+            .minimumScaleFactor(0.7)
+            .padding(.horizontal, 24)
+            .padding(.vertical, 10)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(Theme.accent)
+            )
+            .frame(maxWidth: .infinity, alignment: .center)
     }
 }
 
@@ -521,66 +483,40 @@ struct WeightDataPoint: Identifiable {
 }
 
 // MARK: - Primary Metrics Card
-// Debug: Key valuation metrics in compact layout
+// Debug: Key valuation metrics in list format to match Physical Attributes style
 struct PrimaryMetricsCard: View {
     let herd: HerdGroup
     let valuation: HerdValuation
     
+    // Format currency values as strings
+    private var formattedPricePerKg: String {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "AUD"
+        formatter.maximumFractionDigits = 2
+        return (formatter.string(from: NSNumber(value: valuation.pricePerKg)) ?? "$0.00") + "/kg"
+    }
+    
+    private var formattedValuePerHead: String {
+        let valuePerHead = valuation.netRealizableValue / Double(herd.headCount)
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "AUD"
+        formatter.maximumFractionDigits = 2
+        return formatter.string(from: NSNumber(value: valuePerHead)) ?? "$0.00"
+    }
+    
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(alignment: .leading, spacing: 8) {
             // Header
-            HStack {
-                Text("Key Metrics")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Spacer()
-            }
+            Text("Key Metrics")
+                .font(Theme.headline)
+                .foregroundStyle(Theme.primaryText)
             
-            // Key metrics in grid layout
-            HStack(spacing: 16) {
-                VStack(spacing: 4) {
-                    Text("Price/kg")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                    // Debug: iOS 26 - Use attributed string for mixed styling
-                    Text("\(valuation.pricePerKg, format: .currency(code: "AUD"))/kg")
-                        .font(Theme.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                }
-                .frame(maxWidth: .infinity)
-                
-                Divider()
-                    .frame(height: 40)
-                    .background(Theme.separator.opacity(0.3))
-                
-                VStack(spacing: 4) {
-                    Text("Avg Weight")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                    // Debug: iOS 26 - Use string interpolation instead of Text concatenation
-                    Text("\(Int(valuation.projectedWeight)) kg")
-                        .font(Theme.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                }
-                .frame(maxWidth: .infinity)
-                
-                Divider()
-                    .frame(height: 40)
-                    .background(Theme.separator.opacity(0.3))
-                
-                VStack(spacing: 4) {
-                    Text("Per Head")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                    Text(valuation.netRealizableValue / Double(herd.headCount), format: .currency(code: "AUD"))
-                        .font(Theme.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(.white)
-                }
-                .frame(maxWidth: .infinity)
-            }
+            // Key metrics in list format
+            DetailRow(label: "Price (Per Kilogram)", value: formattedPricePerKg)
+            DetailRow(label: "Average Weight", value: "\(Int(valuation.projectedWeight)) kg")
+            DetailRow(label: "Value Per Head", value: formattedValuePerHead)
             
             // Debug: Show herd's specific saleyard with consistent icon
             HStack {
@@ -591,6 +527,7 @@ struct PrimaryMetricsCard: View {
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondaryText)
             }
+            .padding(.top, 4)
         }
         .padding(Theme.cardPadding)
         // Debug: Card temporarily removed to test cleaner look
