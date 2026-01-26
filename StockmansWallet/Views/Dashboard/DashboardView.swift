@@ -54,9 +54,6 @@ struct DashboardView: View {
     @State private var showingCustomDatePicker = false
     @State private var backgroundImageTrigger = false // Debug: Trigger to force view refresh on background change
     
-    // Debug: State for clearing mock data (temporary dev feature)
-    @State private var isClearingMockData = false
-    
     // Debug: Smart refresh tracking (Coinbase-style)
     // Only reload when necessary, not on every view appearance
     @State private var hasLoadedData = false // Track if we've loaded data this session
@@ -335,75 +332,6 @@ struct DashboardView: View {
                     }
                 }
             }
-            
-            // Debug: Beta testing card with clear data button (always at the end)
-            // TODO: Remove this entire section before App Store launch (after beta testing complete)
-            VStack(spacing: 16) {
-                // Beta testing badge
-                HStack(spacing: 8) {
-                    Image(systemName: "testtube.2")
-                        .font(.system(size: 14))
-                    Text("Beta Testing Only")
-                        .font(Theme.caption)
-                        .fontWeight(.semibold)
-                }
-                .foregroundStyle(Theme.accent)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Theme.accent.opacity(0.15))
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                
-                // Clear data button
-                Button(action: {
-                    HapticManager.tap()
-                    clearMockData()
-                }) {
-                    HStack(spacing: 10) {
-                        if isClearingMockData {
-                            ProgressView()
-                                .tint(.white)
-                                .scaleEffect(0.9)
-                        } else {
-                            Image(systemName: "trash.fill")
-                                .font(.system(size: 15, weight: .semibold))
-                        }
-                        Text(isClearingMockData ? "Clearing..." : "Clear All Data")
-                            .font(.system(size: 17, weight: .semibold))
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .frame(height: 52)
-                    .background(
-                        RoundedRectangle(cornerRadius: 12, style: .continuous)
-                            .fill(.red)
-                    )
-                }
-                .disabled(isClearingMockData)
-                .opacity(isClearingMockData ? 0.6 : 1.0)
-                .accessibilityLabel("Clear Mock Data")
-                .accessibilityHint("Removes all herds and data for fresh testing")
-                
-                // Disclaimer note
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: "info.circle.fill")
-                        .font(.system(size: 14))
-                        .foregroundStyle(Theme.secondaryText)
-                    Text("Use this to reset your test mock data and start fresh. All herds, animals, and generated data will be deleted.")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.top, 4)
-            }
-            .padding(20)
-            .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .strokeBorder(Theme.accent.opacity(0.2), lineWidth: 1)
-            )
-            .padding(.horizontal, Theme.cardPadding)
-            .padding(.top, Theme.sectionSpacing)
         }
         .padding(.top, Theme.cardPadding) // Debug: Even top padding matching horizontal padding (20pt)
         .padding(.bottom, 100)
@@ -1105,20 +1033,6 @@ struct DashboardView: View {
             #if DEBUG
             print("📊 Full history loaded: \(history.count) data points")
             #endif
-        }
-    }
-    
-    // Debug: Clear all data for beta testing
-    // TODO: Remove this function before App Store launch (after beta testing complete)
-    @MainActor
-    private func clearMockData() {
-        isClearingMockData = true
-        Task { @MainActor in
-            await HistoricalMockDataService.shared.clearAllData(modelContext: modelContext)
-            // Debug: Notify dashboard to refresh after data is cleared
-            NotificationCenter.default.post(name: NSNotification.Name("DataCleared"), object: nil)
-            isClearingMockData = false
-            HapticManager.success()
         }
     }
 }

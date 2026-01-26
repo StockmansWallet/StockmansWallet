@@ -15,6 +15,9 @@ import Observation
 class ValuationEngine {
     static let shared = ValuationEngine()
     
+    // MARK: - Dependencies
+    private let supabaseService = SupabaseMarketService.shared
+    
     // MARK: - Constants
     private let cattleGestationDays = 283
     private let sheepGestationDays = 150
@@ -82,32 +85,33 @@ class ValuationEngine {
     }
     
     // MARK: - Market Pricing (Fallback Hierarchy)
-    /// Gets market price with fallback: Saleyard → State Indicator → National Benchmark
-    /// Uses historical prices if asOfDate is provided
+    /// Gets market price with fallback: Saleyard → State → National
+    /// Debug: Now fetches from Supabase category_prices table with real MLA data
     func getMarketPrice(
         category: String,
+        breed: String,
         saleyard: String?,
         state: String?,
         modelContext: ModelContext,
         asOfDate: Date = Date()
     ) async -> (price: Double, source: String) {
-        // Try direct saleyard quote first
+        // Try direct saleyard quote first (with breed-specific pricing)
         if let saleyard = saleyard {
-            if let price = await fetchSaleyardPrice(category: category, saleyard: saleyard, modelContext: modelContext, asOfDate: asOfDate) {
-                return (price, "Saleyard")
+            if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: saleyard, state: nil) {
+                return (price, "\(saleyard) - \(breed)")
             }
         }
         
-        // Fallback to state indicator
+        // Fallback to state-level pricing (with breed)
         if let state = state {
-            if let price = await fetchStateIndicator(category: category, state: state, modelContext: modelContext, asOfDate: asOfDate) {
-                return (price, "State Indicator")
+            if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: nil, state: state) {
+                return (price, "\(state) - \(breed)")
             }
         }
         
-        // Final fallback to national benchmark
-        if let price = await fetchNationalBenchmark(category: category, modelContext: modelContext, asOfDate: asOfDate) {
-            return (price, "National Benchmark")
+        // Fallback to any available price for this category+breed combination
+        if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: nil, state: nil) {
+            return (price, "National - \(breed)")
         }
         
         // Default fallback price (should rarely happen)
@@ -174,7 +178,9 @@ class ValuationEngine {
         else {
             defaultPrice = 3.30 // Grown Steer base price
         }
-        return (defaultPrice, "Default")
+        
+        print("⚠️ ValuationEngine: No Supabase price found, using default fallback: $\(defaultPrice)/kg for \(category) (\(breed))")
+        return (defaultPrice, "Default Fallback")
     }
     
     // MARK: - Complete Valuation
@@ -201,12 +207,13 @@ class ValuationEngine {
             dwgNew: herd.dailyWeightGain
         )
         
-        // 2. Get market price (use historical price if asOfDate is provided)
+        // 2. Get market price from Supabase (real MLA data with breed-specific pricing)
         // Debug: Use saleyardOverride if provided (for dashboard comparison mode), 
         // otherwise use herd's configured saleyard (normal operation)
         let effectiveSaleyard = saleyardOverride ?? herd.selectedSaleyard
         let (pricePerKg, priceSource) = await getMarketPrice(
             category: herd.category,
+            breed: herd.breed,
             saleyard: effectiveSaleyard,
             state: preferences.defaultState,
             modelContext: modelContext,
@@ -272,7 +279,36 @@ class ValuationEngine {
     
     // MARK: - Private Helper Methods
     
-    private func fetchSaleyardPrice(category: String, saleyard: String, modelContext: ModelContext, asOfDate: Date = Date()) async -> Double? {
+    /// Fetches price from Supabase category_prices table (real MLA data)
+    /// Debug: Replaces old local MarketPrice database queries
+    private func fetchSupabasePrice(category: String, breed: String, saleyard: String?, state: String?) async -> Double? {
+        do {
+            // Fetch prices from Supabase with filters
+            let prices = try await supabaseService.fetchCategoryPrices(
+                categories: [category],
+                saleyard: saleyard,
+                state: state,
+                breed: breed
+            )
+            
+            // Find exact match for this category + breed
+            if let matchingPrice = prices.first(where: { $0.category == category && $0.breed == breed }) {
+                print("✅ ValuationEngine: Found Supabase price for \(category) (\(breed)): $\(matchingPrice.price)/kg from \(matchingPrice.source)")
+                return matchingPrice.price
+            }
+            
+            // If no exact match, log and return nil to try next fallback
+            print("⚠️ ValuationEngine: No Supabase price found for \(category) (\(breed)) with saleyard=\(saleyard ?? "any"), state=\(state ?? "any")")
+            return nil
+            
+        } catch {
+            print("❌ ValuationEngine: Error fetching from Supabase: \(error)")
+            return nil
+        }
+    }
+    
+    // DEPRECATED: Old method kept for reference, now using fetchSupabasePrice
+    private func fetchSaleyardPrice_OLD(category: String, saleyard: String, modelContext: ModelContext, asOfDate: Date = Date()) async -> Double? {
         // Find the most recent price on or before the asOfDate
         let descriptor = FetchDescriptor<MarketPrice>(
             predicate: #Predicate<MarketPrice> { price in
@@ -348,7 +384,8 @@ class ValuationEngine {
         return 3.30 // Grown Steer base price (default)
     }
     
-    private func fetchStateIndicator(category: String, state: String, modelContext: ModelContext, asOfDate: Date = Date()) async -> Double? {
+    // DEPRECATED: Old method kept for reference, now using fetchSupabasePrice
+    private func fetchStateIndicator_OLD(category: String, state: String, modelContext: ModelContext, asOfDate: Date = Date()) async -> Double? {
         // Find the most recent state indicator price on or before the asOfDate
         let descriptor = FetchDescriptor<MarketPrice>(
             predicate: #Predicate<MarketPrice> { price in
@@ -424,7 +461,8 @@ class ValuationEngine {
         return 3.30 // Grown Steer base price (default)
     }
     
-    private func fetchNationalBenchmark(category: String, modelContext: ModelContext, asOfDate: Date = Date()) async -> Double? {
+    // DEPRECATED: Old method kept for reference, now using fetchSupabasePrice
+    private func fetchNationalBenchmark_OLD(category: String, modelContext: ModelContext, asOfDate: Date = Date()) async -> Double? {
         // Find the most recent national benchmark price on or before the asOfDate
         let descriptor = FetchDescriptor<MarketPrice>(
             predicate: #Predicate<MarketPrice> { price in
