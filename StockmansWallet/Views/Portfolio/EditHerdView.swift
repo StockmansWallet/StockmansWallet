@@ -36,6 +36,10 @@ struct EditHerdView: View {
     @State private var showingAddMusterRecord = false
     @State private var newMusterDate = Date()
     @State private var newMusterNotes = ""
+    @State private var newMusterHeadCount: Int?
+    @State private var newMusterCattleYard = ""
+    @State private var newMusterWeaners: Int?
+    @State private var newMusterBranders: Int?
     
     private let speciesOptions = ["Cattle", "Sheep", "Pigs", "Goats"]
     
@@ -391,6 +395,10 @@ struct EditHerdView: View {
                                         HapticManager.tap()
                                         newMusterDate = Date()
                                         newMusterNotes = ""
+                                        newMusterHeadCount = nil
+                                        newMusterCattleYard = ""
+                                        newMusterWeaners = nil
+                                        newMusterBranders = nil
                                         showingAddMusterRecord = true
                                     } label: {
                                         Image(systemName: "plus.circle.fill")
@@ -399,20 +407,80 @@ struct EditHerdView: View {
                                     }
                                 }
                                 
-                                // Debug: Show existing muster records
+                                // Debug: Show existing muster records with all details
                                 if let records = herd.musterRecords, !records.isEmpty {
                                     VStack(spacing: 8) {
                                         ForEach(records.sorted(by: { $0.date > $1.date })) { record in
-                                            HStack(spacing: 12) {
-                                                VStack(alignment: .leading, spacing: 2) {
+                                            HStack(alignment: .top, spacing: 12) {
+                                                VStack(alignment: .leading, spacing: 6) {
                                                     Text(record.formattedDate)
                                                         .font(Theme.subheadline)
+                                                        .fontWeight(.semibold)
                                                         .foregroundStyle(Theme.primaryText)
+                                                    
+                                                    // Debug: Match main view formatting - all counts on same line with full labels
+                                                    if record.totalHeadCount != nil || record.weanersCount != nil || record.brandersCount != nil {
+                                                        HStack(spacing: 8) {
+                                                            if let headCount = record.totalHeadCount {
+                                                                HStack(spacing: 4) {
+                                                                    Text("Total Head:")
+                                                                        .font(Theme.caption)
+                                                                        .foregroundStyle(Theme.secondaryText)
+                                                                    Text("\(headCount)")
+                                                                        .font(Theme.caption)
+                                                                        .fontWeight(.semibold)
+                                                                        .foregroundStyle(Theme.primaryText)
+                                                                }
+                                                            }
+                                                            if let weaners = record.weanersCount {
+                                                                HStack(spacing: 4) {
+                                                                    Text("Weaners:")
+                                                                        .font(Theme.caption)
+                                                                        .foregroundStyle(Theme.secondaryText)
+                                                                    Text("\(weaners)")
+                                                                        .font(Theme.caption)
+                                                                        .fontWeight(.semibold)
+                                                                        .foregroundStyle(Theme.primaryText)
+                                                                }
+                                                            }
+                                                            if let branders = record.brandersCount {
+                                                                HStack(spacing: 4) {
+                                                                    Text("Branders:")
+                                                                        .font(Theme.caption)
+                                                                        .foregroundStyle(Theme.secondaryText)
+                                                                    Text("\(branders)")
+                                                                        .font(Theme.caption)
+                                                                        .fontWeight(.semibold)
+                                                                        .foregroundStyle(Theme.primaryText)
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+                                                    
+                                                    // Debug: Yard on its own line - match main view format
+                                                    if let yard = record.cattleYard, !yard.isEmpty {
+                                                        HStack(spacing: 4) {
+                                                            Text("Yard:")
+                                                                .font(Theme.caption)
+                                                                .foregroundStyle(Theme.secondaryText)
+                                                            Text(yard)
+                                                                .font(Theme.caption)
+                                                                .fontWeight(.semibold)
+                                                                .foregroundStyle(Theme.primaryText)
+                                                        }
+                                                    }
+                                                    
+                                                    // Debug: Notes with label - match main view format
                                                     if let notes = record.notes, !notes.isEmpty {
-                                                        Text(notes)
-                                                            .font(Theme.caption)
-                                                            .foregroundStyle(Theme.secondaryText)
-                                                            .lineLimit(2)
+                                                        HStack(alignment: .top, spacing: 4) {
+                                                            Text("Notes:")
+                                                                .font(Theme.caption)
+                                                                .foregroundStyle(Theme.secondaryText)
+                                                            Text(notes)
+                                                                .font(Theme.caption)
+                                                                .foregroundStyle(Theme.secondaryText)
+                                                                .fixedSize(horizontal: false, vertical: true)
+                                                        }
                                                     }
                                                 }
                                                 
@@ -516,11 +584,15 @@ struct EditHerdView: View {
                 AddMusterRecordSheet(
                     date: $newMusterDate,
                     notes: $newMusterNotes,
+                    headCount: $newMusterHeadCount,
+                    cattleYard: $newMusterCattleYard,
+                    weaners: $newMusterWeaners,
+                    branders: $newMusterBranders,
                     onSave: {
                         addMusterRecord()
                     }
                 )
-                .presentationDetents([.medium])
+                .presentationDetents([.large])
                 .presentationDragIndicator(.visible)
                 .presentationBackground(Theme.sheetBackground)
             }
@@ -574,9 +646,16 @@ struct EditHerdView: View {
         }
     }
     
-    // Debug: Add a new muster record to the herd
+    // Debug: Add a new muster record to the herd with all optional details
     private func addMusterRecord() {
-        let record = MusterRecord(date: newMusterDate, notes: newMusterNotes.isEmpty ? nil : newMusterNotes)
+        let record = MusterRecord(
+            date: newMusterDate,
+            notes: newMusterNotes.isEmpty ? nil : newMusterNotes,
+            totalHeadCount: newMusterHeadCount,
+            cattleYard: newMusterCattleYard.isEmpty ? nil : newMusterCattleYard,
+            weanersCount: newMusterWeaners,
+            brandersCount: newMusterBranders
+        )
         record.herd = herd
         
         if herd.musterRecords == nil {
@@ -618,51 +697,134 @@ struct EditHerdView: View {
 }
 
 // MARK: - Add Muster Record Sheet
-// Debug: Sheet for adding a new muster record with date and notes
+// Debug: Sheet for adding a new muster record with date, notes, and optional details
 struct AddMusterRecordSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Binding var date: Date
     @Binding var notes: String
+    @Binding var headCount: Int?
+    @Binding var cattleYard: String
+    @Binding var weaners: Int?
+    @Binding var branders: Int?
     let onSave: () -> Void
+    
+    @State private var headCountText = ""
+    @State private var weanersText = ""
+    @State private var brandersText = ""
     
     var body: some View {
         NavigationStack {
             ZStack {
                 Theme.backgroundGradient.ignoresSafeArea()
                 
-                VStack(spacing: 24) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Muster Date")
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.primaryText)
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Date Picker
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Muster Date")
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            DatePicker("Select Date", selection: $date, displayedComponents: .date)
+                                .datePickerStyle(.graphical)
+                                .padding()
+                                .background(Theme.inputFieldBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
                         
-                        DatePicker("Select Date", selection: $date, displayedComponents: .date)
-                            .datePickerStyle(.graphical)
-                            .padding()
-                            .background(Theme.inputFieldBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        // Debug: Additional optional muster details
+                        VStack(alignment: .leading, spacing: 16) {
+                            Text("Muster Details (Optional)")
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            // Total Head Count
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Total Head Count")
+                                    .font(Theme.subheadline)
+                                    .foregroundStyle(Theme.primaryText)
+                                
+                                TextField("e.g., 150", text: $headCountText)
+                                    .keyboardType(.numberPad)
+                                    .textFieldStyle(.plain)
+                                    .padding()
+                                    .background(Theme.inputFieldBackground)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                    .onChange(of: headCountText) { oldValue, newValue in
+                                        headCount = Int(newValue)
+                                    }
+                            }
+                            
+                            // Cattle Yard
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Cattle Yard")
+                                    .font(Theme.subheadline)
+                                    .foregroundStyle(Theme.primaryText)
+                                
+                                TextField("e.g., Snake Paddock Yards", text: $cattleYard)
+                                    .textFieldStyle(.plain)
+                                    .padding()
+                                    .background(Theme.inputFieldBackground)
+                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            }
+                            
+                            // Weaners and Branders side by side
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("# Weaners")
+                                        .font(Theme.subheadline)
+                                        .foregroundStyle(Theme.primaryText)
+                                    
+                                    TextField("0", text: $weanersText)
+                                        .keyboardType(.numberPad)
+                                        .textFieldStyle(.plain)
+                                        .padding()
+                                        .background(Theme.inputFieldBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                        .onChange(of: weanersText) { oldValue, newValue in
+                                            weaners = Int(newValue)
+                                        }
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("# Branders")
+                                        .font(Theme.subheadline)
+                                        .foregroundStyle(Theme.primaryText)
+                                    
+                                    TextField("0", text: $brandersText)
+                                        .keyboardType(.numberPad)
+                                        .textFieldStyle(.plain)
+                                        .padding()
+                                        .background(Theme.inputFieldBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                        .onChange(of: brandersText) { oldValue, newValue in
+                                            branders = Int(newValue)
+                                        }
+                                }
+                            }
+                        }
+                        
+                        // Notes
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Notes (Optional)")
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            Text("e.g., 'Drenched', 'Tagged 5 new calves', 'Moved to South paddock'")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            TextEditor(text: $notes)
+                                .frame(minHeight: 100)
+                                .padding(8)
+                                .background(Theme.inputFieldBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .scrollContentBackground(.hidden)
+                        }
                     }
-                    
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Notes (Optional)")
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.primaryText)
-                        
-                        Text("e.g., 'Drenched', 'Tagged 5 new calves', 'Moved to South paddock'")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        
-                        TextEditor(text: $notes)
-                            .frame(minHeight: 100)
-                            .padding(8)
-                            .background(Theme.inputFieldBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            .scrollContentBackground(.hidden)
-                    }
-                    
-                    Spacer()
+                    .padding()
+                    .padding(.bottom, 40)
                 }
-                .padding()
             }
             .navigationTitle("Add Muster Record")
             .navigationBarTitleDisplayMode(.inline)

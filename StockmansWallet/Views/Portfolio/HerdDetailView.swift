@@ -1100,7 +1100,7 @@ struct MusteringHistoryCard: View {
 }
 
 // MARK: - Muster Record Row
-// Debug: Individual row displaying a single muster record
+// Debug: Individual row displaying a single muster record with all details
 struct MusterRecordRow: View {
     let record: MusterRecord
     
@@ -1117,19 +1117,78 @@ struct MusterRecordRow: View {
                     .foregroundStyle(Theme.accent)
             }
             
-            VStack(alignment: .leading, spacing: 4) {
+            VStack(alignment: .leading, spacing: 6) {
                 // Muster date
                 Text(record.formattedDate)
                     .font(Theme.subheadline)
                     .fontWeight(.semibold)
                     .foregroundStyle(Theme.primaryText)
                 
-                // Notes if they exist
+                // Debug: Compact layout - Total Head, Weaners, Branders all on same line
+                if record.totalHeadCount != nil || record.weanersCount != nil || record.brandersCount != nil {
+                    HStack(spacing: 8) {
+                        if let headCount = record.totalHeadCount {
+                            HStack(spacing: 4) {
+                                Text("Total Head:")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                Text("\(headCount)")
+                                    .font(Theme.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(Theme.primaryText)
+                            }
+                        }
+                        
+                        if let weaners = record.weanersCount {
+                            HStack(spacing: 4) {
+                                Text("Weaners:")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                Text("\(weaners)")
+                                    .font(Theme.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(Theme.primaryText)
+                            }
+                        }
+                        
+                        if let branders = record.brandersCount {
+                            HStack(spacing: 4) {
+                                Text("Branders:")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                Text("\(branders)")
+                                    .font(Theme.caption)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(Theme.primaryText)
+                            }
+                        }
+                    }
+                }
+                
+                // Debug: Yard on its own line
+                if let yard = record.cattleYard, !yard.isEmpty {
+                    HStack(spacing: 4) {
+                        Text("Yard:")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Text(yard)
+                            .font(Theme.caption)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Theme.primaryText)
+                    }
+                }
+                
+                // Notes if they exist - with "Notes:" label
                 if let notes = record.notes, !notes.isEmpty {
-                    Text(notes)
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                        .fixedSize(horizontal: false, vertical: true)
+                    HStack(alignment: .top, spacing: 4) {
+                        Text("Notes:")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Text(notes)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             
