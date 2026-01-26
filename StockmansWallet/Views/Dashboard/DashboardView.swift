@@ -377,78 +377,26 @@ struct DashboardView: View {
     
     @ViewBuilder
     private var performanceChartCard: some View {
-        // Debug: Show placeholder when insufficient data (< 2 points), otherwise show chart
-        if filteredHistory.count < 2 {
-            // Debug: Empty state for new portfolios - matches InteractiveChartView structure exactly
-            VStack(spacing: 0) {
-                // Debug: Space for date hover pill (matches InteractiveChartView)
-                Color.clear
-                    .frame(height: 32)
-                
-                // Debug: Main chart area placeholder (fixed width constraint for smaller screens)
-                VStack(spacing: 10) {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.system(size: 32))
-                        .foregroundStyle(Theme.accent.opacity(0.6))
-                    
-                    Text("New Portfolio")
-                        .font(Theme.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Theme.primaryText)
-                    
-                    Text("Your portfolio is brand new! As time passes and your herd data accumulates, this chart will automatically populate with historical valuation data.")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(4)
-                }
-                .padding(.horizontal, 24)
-                .frame(maxWidth: .infinity)
-                .frame(height: 200)
-                .clipped()
-                .background(
-                    RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                        .fill(Color.white.opacity(0.01))
-                )
-                .overlay(
-                    RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                        .strokeBorder(
-                            Color.white.opacity(0.1),
-                            style: StrokeStyle(
-                                lineWidth: 1,
-                                lineCap: .round
-                            )
-                        )
-                )
-                
-                // Debug: Space for chart date labels (matches InteractiveChartView)
-                Color.clear
-                    .frame(height: 32)
-                    .padding(.top, 10)
+        // Debug: Always show chart, even for new portfolios
+        // Chart automatically handles showing growth from zero to current value
+        InteractiveChartView(
+            data: filteredHistory,
+            selectedDate: $selectedDate,
+            selectedValue: $selectedValue,
+            isScrubbing: $isScrubbing,
+            timeRange: $timeRange,
+            baseValue: baseValue,
+            onValueChange: { newValue, change in
+                portfolioChange = change
             }
-            .padding(.horizontal, Theme.cardPadding)
-            .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
-            .padding(.bottom, -Theme.sectionSpacing) // Debug: Remove gap below placeholder since no time range selector
-            .accessibilityLabel("Chart placeholder")
-            .accessibilityHint("This chart will populate as your portfolio data accumulates over time.")
-        } else {
-            InteractiveChartView(
-                data: filteredHistory,
-                selectedDate: $selectedDate,
-                selectedValue: $selectedValue,
-                isScrubbing: $isScrubbing,
-                timeRange: $timeRange,
-                baseValue: baseValue,
-                onValueChange: { newValue, change in
-                    portfolioChange = change
-                }
-            )
-            .clipped() // Debug: Clip chart content to prevent overflow beyond bounds
-            .padding(.horizontal, Theme.cardPadding)
-            .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
-            .accessibilityHint("Drag your finger across the chart to explore values over time.")
-            
-            // Debug: Only show time range selector when there's data to filter
+        )
+        .clipped() // Debug: Clip chart content to prevent overflow beyond bounds
+        .padding(.horizontal, Theme.cardPadding)
+        .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
+        .accessibilityHint("Drag your finger across the chart to explore values over time.")
+        
+        // Debug: Only show time range selector when there's enough data to filter
+        if filteredHistory.count >= 2 {
             TimeRangeSelector(
                 timeRange: $timeRange,
                 customStartDate: $customStartDate,
@@ -919,25 +867,37 @@ struct DashboardView: View {
     // Phase 1: Current value only (instant) - only if no cached data
     // Phase 2: Full history (background - complete picture)
     private func loadHistoricalDataProgressively(activeHerds: [HerdGroup], prefs: UserPreferences, portfolioValue: Double) async {
-        // Debug: If no chart data visible, add today's point immediately for instant feedback
+        // Debug: If no chart data visible, add starting point + today's value immediately
         let hasVisibleData = await MainActor.run { !self.valuationHistory.isEmpty }
         
         if !hasVisibleData {
             #if DEBUG
-            print("📊 No visible data - adding current value immediately")
+            print("📊 No visible data - adding starting point and current value for chart")
             #endif
-            // Debug: Add today's value immediately so chart appears instantly
+            // Debug: Find the earliest herd creation date
+            let earliestHerdDate = activeHerds.map { $0.createdAt }.min() ?? Date()
+            
+            // Debug: Add starting point at herd creation (value = 0) + current value
+            // This ensures chart shows growth from zero to current value for new portfolios
             await MainActor.run {
-                self.valuationHistory = [ValuationDataPoint(
-                    date: Date(),
-                    value: portfolioValue,
-                    physicalValue: portfolioValue,
-                    breedingAccrual: self.unrealizedGains
-                )]
+                self.valuationHistory = [
+                    ValuationDataPoint(
+                        date: earliestHerdDate,
+                        value: 0,
+                        physicalValue: 0,
+                        breedingAccrual: 0
+                    ),
+                    ValuationDataPoint(
+                        date: Date(),
+                        value: portfolioValue,
+                        physicalValue: portfolioValue,
+                        breedingAccrual: self.unrealizedGains
+                    )
+                ]
             }
         }
         
-        // Debug: Now load full history (will replace the single point or cached data)
+        // Debug: Now load full history (will replace the two points or cached data)
         #if DEBUG
         print("📊 Loading full historical data...")
         #endif
@@ -1011,6 +971,24 @@ struct DashboardView: View {
                 physicalValue: dayValuations.physical,
                 breedingAccrual: dayValuations.breeding
             ))
+        }
+        
+        // Debug: Ensure chart has at least 2 points to display a line
+        // If we only have 1 point (brand new portfolio), add a starting point at $0
+        if history.count == 1, let firstPoint = history.first {
+            let startPoint = ValuationDataPoint(
+                date: earliestHerdDate,
+                value: 0,
+                physicalValue: 0,
+                breedingAccrual: 0
+            )
+            // Insert at beginning if different from first point
+            if startPoint.date < firstPoint.date {
+                history.insert(startPoint, at: 0)
+                #if DEBUG
+                print("📊 Added starting point at $0 for chart display")
+                #endif
+            }
         }
         
         // Debug: Calculate day-ago value for 24h change display
