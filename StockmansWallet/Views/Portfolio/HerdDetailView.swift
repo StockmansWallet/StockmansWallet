@@ -54,7 +54,7 @@ struct HerdDetailView: View {
     var body: some View {
         // Debug: Guard against nil herd to prevent crashes from stale SwiftData references
         if let activeHerd = herd {
-            ScrollView {
+            ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 20) {
                     // Debug: Total value card with herd name at the very top
                     if let valuation = valuation {
