@@ -368,14 +368,18 @@ struct WeightGrowthChart: View {
     
     // Debug: Generate weight progression data points from passed-in data
     private var weightData: [WeightDataPoint] {
-        // Debug: Guard against division by zero for newly created herds
-        guard daysHeld > 0 else {
-            // Return just the starting point for brand new herds
-            return [WeightDataPoint(date: createdAt, weight: initialWeight)]
+        // Debug: Generate data points for the chart
+        var points: [WeightDataPoint] = []
+        
+        // Debug: For new herds with no history, create a line from 0 to current weight
+        if daysHeld == 0 {
+            // Add starting point at 0kg
+            points.append(WeightDataPoint(date: createdAt, weight: 0))
+            // Add current point at initial weight
+            points.append(WeightDataPoint(date: createdAt, weight: initialWeight))
+            return points
         }
         
-        // Generate data points for the chart
-        var points: [WeightDataPoint] = []
         let intervals = min(daysHeld, 30) // Show up to 30 data points
         let step = max(1, daysHeld / intervals)
         
@@ -390,18 +394,18 @@ struct WeightGrowthChart: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            // Debug: Only show weight header when there's meaningful data (not brand new)
-            if daysHeld >= 2 {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Weight Growth")
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.primaryText)
-                        Text("\(Int(initialWeight)) → \(Int(projectedWeight)) kg")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                    Spacer()
+            // Debug: Weight header
+            HStack {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Weight Growth")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Text("\(Int(initialWeight)) → \(Int(projectedWeight)) kg")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                Spacer()
+                if projectedWeight > initialWeight {
                     Text("+\(Int(projectedWeight - initialWeight)) kg")
                         .font(Theme.subheadline)
                         .fontWeight(.semibold)
@@ -409,68 +413,44 @@ struct WeightGrowthChart: View {
                 }
             }
             
-            // Debug: Show empty state message OR chart depending on data availability
-            if daysHeld < 2 {
-                // Debug: Empty state for newly created herds - no background to avoid doubling up
-                VStack(spacing: 10) {
-                    Image(systemName: "chart.line.uptrend.xyaxis")
-                        .font(.system(size: 32))
-                        .foregroundStyle(Theme.accent.opacity(0.6))
-                    
-                    Text("New Herd")
-                        .font(Theme.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Theme.primaryText)
-                    
-                    Text("This herd is brand new, so there's no historical data to show yet. Your weight growth chart will populate automatically over the coming days.")
+            // Debug: Always show chart with at least 2 data points for line rendering
+            Chart(weightData) { point in
+                LineMark(
+                    x: .value("Date", point.date),
+                    y: .value("Weight", point.weight)
+                )
+                .foregroundStyle(Theme.accent)
+                .lineStyle(StrokeStyle(lineWidth: 2))
+                
+                AreaMark(
+                    x: .value("Date", point.date),
+                    y: .value("Weight", point.weight)
+                )
+                .foregroundStyle(
+                    LinearGradient(
+                        colors: [Theme.accent.opacity(0.3), Theme.accent.opacity(0.05)],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                )
+            }
+            .frame(height: 120)
+            .chartYAxis {
+                AxisMarks(position: .leading) { value in
+                    AxisGridLine()
+                        .foregroundStyle(Theme.separator.opacity(0.3))
+                    AxisValueLabel()
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 24)
-                        .lineLimit(3)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 20)
-            } else {
-                // Debug: Show chart when there's meaningful data to display
-                Chart(weightData) { point in
-                    LineMark(
-                        x: .value("Date", point.date),
-                        y: .value("Weight", point.weight)
-                    )
-                    .foregroundStyle(Theme.accent)
-                    .lineStyle(StrokeStyle(lineWidth: 2))
-                    
-                    AreaMark(
-                        x: .value("Date", point.date),
-                        y: .value("Weight", point.weight)
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Theme.accent.opacity(0.3), Theme.accent.opacity(0.05)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-                }
-                .frame(height: 120)
-                .chartYAxis {
-                    AxisMarks(position: .leading) { value in
-                        AxisGridLine()
-                            .foregroundStyle(Theme.separator.opacity(0.3))
-                        AxisValueLabel()
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                }
-                .chartXAxis {
-                    AxisMarks { value in
-                        AxisGridLine()
-                            .foregroundStyle(Theme.separator.opacity(0.3))
-                        AxisValueLabel(format: .dateTime.month().day())
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
+            }
+            .chartXAxis {
+                AxisMarks { value in
+                    AxisGridLine()
+                        .foregroundStyle(Theme.separator.opacity(0.3))
+                    AxisValueLabel(format: .dateTime.month().day())
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
                 }
             }
         }
