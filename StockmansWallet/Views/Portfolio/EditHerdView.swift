@@ -324,41 +324,45 @@ struct EditHerdView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                             
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Initial Weight (kg)")
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                                TextField("", value: $initialWeight, format: .number)
-                                    .keyboardType(.numberPad)
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundStyle(Theme.primaryText)
-                                    .textFieldStyle(.plain)
-                                    .multilineTextAlignment(.leading)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            
-                            VStack(alignment: .leading, spacing: 8) {
-                                HStack {
-                                    Text("Daily Weight Gain")
+                            // Row 2: Initial Weight | Daily Weight Gain (matches mockup)
+                            HStack(spacing: 12) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Initial Weight")
                                         .font(.system(size: 10))
                                         .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                                    Spacer()
-                                    Text(String(format: "%.2f kg/day", dailyWeightGain))
+                                    TextField("", value: $initialWeight, format: .number)
+                                        .keyboardType(.numberPad)
                                         .font(.system(size: 13, weight: .medium))
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.primaryText)
+                                        .textFieldStyle(.plain)
+                                        .multilineTextAlignment(.leading)
                                 }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                                 
-                                Slider(value: $dailyWeightGain, in: 0...2.0, step: 0.01)
-                                    .tint(Theme.accent)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Daily Weight Gain (kg/day)")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    TextField("", value: Binding(
+                                        get: { dailyWeightGain },
+                                        set: { dailyWeightGain = $0 }
+                                    ), format: .number.precision(.fractionLength(2)))
+                                        .keyboardType(.decimalPad)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                        .textFieldStyle(.plain)
+                                        .multilineTextAlignment(.leading)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
                             
                             // Debug: Weight gain calculation method toggle
                             VStack(alignment: .leading, spacing: 8) {
@@ -380,18 +384,98 @@ struct EditHerdView: View {
                             .padding(.vertical, 10)
                             .background(Theme.cardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
+                            
+                            // Breeding Stock toggle
+                            Toggle(isOn: $isBreeder) {
+                                Text("Breeding Stock")
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(Theme.primaryText)
+                            }
+                            .tint(Theme.accent)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            
+                            // Show breeding-related fields only when Breeding Stock is enabled
+                            if isBreeder {
+                                // Currently Pregnant toggle
+                                Toggle(isOn: $isPregnant) {
+                                    Text("Currently Pregnant")
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                }
+                                .tint(Theme.accent)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 10)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                
+                                // Show pregnancy-related fields only when Currently Pregnant is enabled
+                                if isPregnant {
+                                    // Row 3: Joined Date | Calving Rate
+                                    HStack(spacing: 12) {
+                                        Menu {
+                                            Button("Select Date") {
+                                                // Date picker will be shown
+                                            }
+                                        } label: {
+                                            HStack {
+                                                VStack(alignment: .leading, spacing: 2) {
+                                                    Text("Joined Date")
+                                                        .font(.system(size: 10))
+                                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                                    Text(joinedDate.formatted(date: .abbreviated, time: .omitted))
+                                                        .font(.system(size: 13, weight: .medium))
+                                                        .foregroundStyle(Theme.primaryText)
+                                                }
+                                                Spacer()
+                                                Image(systemName: "chevron.down")
+                                                    .font(.system(size: 10))
+                                                    .foregroundStyle(Theme.secondaryText)
+                                            }
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 10)
+                                            .frame(maxWidth: .infinity)
+                                            .background(Theme.cardBackground)
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        }
+                                        .buttonStyle(.plain)
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Calving Rate (%)")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                            TextField("", value: $calvingRate, format: .number)
+                                                .keyboardType(.numberPad)
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundStyle(Theme.primaryText)
+                                                .textFieldStyle(.plain)
+                                                .multilineTextAlignment(.leading)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    }
+                                }
+                            }
                         }
                         .padding(Theme.cardPadding)
                         .stitchedCard()
                         
-                        // Additional Details
+                        // Location (Optional)
                         VStack(alignment: .leading, spacing: 20) {
-                            Text("Additional Details")
+                            Text("Location")
                                 .font(.system(size: 18, weight: .semibold))
                                 .foregroundStyle(Theme.primaryText)
+                            + Text(" (Optional)")
+                                .font(.system(size: 18, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.6))
                             
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Paddock Name (Optional)")
+                                Text("Paddock/Location")
                                     .font(.system(size: 10))
                                     .foregroundStyle(Theme.secondaryText.opacity(0.7))
                                 TextField("", text: $paddockName)
@@ -405,6 +489,34 @@ struct EditHerdView: View {
                             .background(Theme.cardBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                             
+                            // Debug: Location Notes field
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Location Notes")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                TextEditor(text: $notes)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(Theme.primaryText)
+                                    .frame(minHeight: 80)
+                                    .scrollContentBackground(.hidden)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 10)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                        .padding(Theme.cardPadding)
+                        .stitchedCard()
+                        
+                        // Saleyard (Optional)
+                        VStack(alignment: .leading, spacing: 20) {
+                            Text("Saleyard")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(Theme.primaryText)
+                            + Text(" (Optional)")
+                                .font(.system(size: 18, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                            
                             // Debug: Saleyard selector matching Physical Sales Report style
                             Button(action: {
                                 HapticManager.tap()
@@ -412,7 +524,7 @@ struct EditHerdView: View {
                             }) {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
-                                        Text("Saleyard (Optional)")
+                                        Text("Saleyard")
                                             .font(.system(size: 10))
                                             .foregroundStyle(Theme.secondaryText.opacity(0.7))
                                         Text(selectedSaleyard ?? "Use Default")
@@ -432,300 +544,284 @@ struct EditHerdView: View {
                                 .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                             .buttonStyle(.plain)
-                            
-                            // Debug: Notes field for farmer to add custom observations, reminders, etc.
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Notes (Optional)")
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                                Text("Add custom notes about this herd/animal")
-                                    .font(.system(size: 10))
-                                    .foregroundStyle(Theme.secondaryText.opacity(0.5))
-                                TextEditor(text: $notes)
-                                    .font(.system(size: 13, weight: .medium))
-                                    .foregroundStyle(Theme.primaryText)
-                                    .frame(minHeight: 80)
-                                    .scrollContentBackground(.hidden)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
-                            
-                            // Debug: Mustering History management section
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Mustering History")
-                                            .font(Theme.headline)
-                                            .foregroundStyle(Theme.primaryText)
-                                        Text("Track muster dates and notes for this herd/animal")
-                                            .font(Theme.caption)
-                                            .foregroundStyle(Theme.secondaryText)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    // Add button
-                                    Button {
-                                        HapticManager.tap()
-                                        newMusterDate = Date()
-                                        newMusterNotes = ""
-                                        newMusterHeadCount = nil
-                                        newMusterCattleYard = ""
-                                        newMusterWeaners = nil
-                                        newMusterBranders = nil
-                                        showingAddMusterRecord = true
-                                    } label: {
-                                        Image(systemName: "plus.circle.fill")
-                                            .font(.system(size: 24))
-                                            .foregroundStyle(Theme.accent)
-                                    }
+                        }
+                        .padding(Theme.cardPadding)
+                        .stitchedCard()
+                        
+                        // Mustering Records
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Mustering Records")
+                                        .font(Theme.headline)
+                                        .foregroundStyle(Theme.primaryText)
+                                    Text("Track muster dates and notes for this herd")
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
                                 }
                                 
-                                // Debug: Show existing muster records with all details
-                                if let records = herd.musterRecords, !records.isEmpty {
-                                    VStack(spacing: 8) {
-                                        ForEach(records.sorted(by: { $0.date > $1.date })) { record in
-                                            HStack(alignment: .top, spacing: 12) {
-                                                VStack(alignment: .leading, spacing: 6) {
-                                                    Text(record.formattedDate)
-                                                        .font(Theme.subheadline)
-                                                        .fontWeight(.semibold)
-                                                        .foregroundStyle(Theme.primaryText)
+                                Spacer()
+                                
+                                // Add button
+                                Button {
+                                    HapticManager.tap()
+                                    newMusterDate = Date()
+                                    newMusterNotes = ""
+                                    newMusterHeadCount = nil
+                                    newMusterCattleYard = ""
+                                    newMusterWeaners = nil
+                                    newMusterBranders = nil
+                                    showingAddMusterRecord = true
+                                } label: {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.system(size: 28))
+                                        .foregroundStyle(Theme.accent)
+                                }
+                            }
+                                
+                            // Debug: Show existing muster records with all details
+                            if let records = herd.musterRecords, !records.isEmpty {
+                                VStack(spacing: 12) {
+                                    ForEach(records.sorted(by: { $0.date > $1.date })) { record in
+                                        HStack(spacing: 12) {
+                                            // Document icon on the left
+                                            Image(systemName: "doc.text.fill")
+                                                .font(.system(size: 28))
+                                                .foregroundStyle(Theme.accent)
+                                            
+                                            // Record details
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(record.formattedDate)
+                                                    .font(.system(size: 15, weight: .semibold))
+                                                    .foregroundStyle(Theme.primaryText)
                                                     
-                                                    // Debug: Match main view formatting - all counts on same line with full labels
-                                                    if record.totalHeadCount != nil || record.weanersCount != nil || record.brandersCount != nil {
-                                                        HStack(spacing: 8) {
-                                                            if let headCount = record.totalHeadCount {
-                                                                HStack(spacing: 4) {
-                                                                    Text("Total Head:")
-                                                                        .font(Theme.caption)
-                                                                        .foregroundStyle(Theme.secondaryText)
-                                                                    Text("\(headCount)")
-                                                                        .font(Theme.caption)
-                                                                        .fontWeight(.semibold)
-                                                                        .foregroundStyle(Theme.primaryText)
-                                                                }
-                                                            }
-                                                            if let weaners = record.weanersCount {
-                                                                HStack(spacing: 4) {
-                                                                    Text("Weaners:")
-                                                                        .font(Theme.caption)
-                                                                        .foregroundStyle(Theme.secondaryText)
-                                                                    Text("\(weaners)")
-                                                                        .font(Theme.caption)
-                                                                        .fontWeight(.semibold)
-                                                                        .foregroundStyle(Theme.primaryText)
-                                                                }
-                                                            }
-                                                            if let branders = record.brandersCount {
-                                                                HStack(spacing: 4) {
-                                                                    Text("Branders:")
-                                                                        .font(Theme.caption)
-                                                                        .foregroundStyle(Theme.secondaryText)
-                                                                    Text("\(branders)")
-                                                                        .font(Theme.caption)
-                                                                        .fontWeight(.semibold)
-                                                                        .foregroundStyle(Theme.primaryText)
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                    
-                                                    // Debug: Yard on its own line - match main view format
-                                                    if let yard = record.cattleYard, !yard.isEmpty {
-                                                        HStack(spacing: 4) {
-                                                            Text("Yard:")
-                                                                .font(Theme.caption)
+                                                // Counts on same line
+                                                if record.totalHeadCount != nil || record.weanersCount != nil || record.brandersCount != nil {
+                                                    HStack(spacing: 0) {
+                                                        if let headCount = record.totalHeadCount {
+                                                            Text("Head: ")
+                                                                .font(.system(size: 13))
                                                                 .foregroundStyle(Theme.secondaryText)
-                                                            Text(yard)
-                                                                .font(Theme.caption)
-                                                                .fontWeight(.semibold)
+                                                            + Text("\(headCount)")
+                                                                .font(.system(size: 13, weight: .semibold))
                                                                 .foregroundStyle(Theme.primaryText)
                                                         }
-                                                    }
-                                                    
-                                                    // Debug: Notes with label - match main view format
-                                                    if let notes = record.notes, !notes.isEmpty {
-                                                        HStack(alignment: .top, spacing: 4) {
-                                                            Text("Notes:")
-                                                                .font(Theme.caption)
+                                                        if let weaners = record.weanersCount {
+                                                            Text("  Weaners: ")
+                                                                .font(.system(size: 13))
                                                                 .foregroundStyle(Theme.secondaryText)
-                                                            Text(notes)
-                                                                .font(Theme.caption)
+                                                            + Text("\(weaners)")
+                                                                .font(.system(size: 13, weight: .semibold))
+                                                                .foregroundStyle(Theme.primaryText)
+                                                        }
+                                                        if let branders = record.brandersCount {
+                                                            Text("  Branders: ")
+                                                                .font(.system(size: 13))
                                                                 .foregroundStyle(Theme.secondaryText)
-                                                                .fixedSize(horizontal: false, vertical: true)
+                                                            + Text("\(branders)")
+                                                                .font(.system(size: 13, weight: .semibold))
+                                                                .foregroundStyle(Theme.primaryText)
                                                         }
                                                     }
                                                 }
                                                 
-                                                Spacer()
+                                                // Yard
+                                                if let yard = record.cattleYard, !yard.isEmpty {
+                                                    Text("Yard: ")
+                                                        .font(.system(size: 13))
+                                                        .foregroundStyle(Theme.secondaryText)
+                                                    + Text(yard)
+                                                        .font(.system(size: 13, weight: .semibold))
+                                                        .foregroundStyle(Theme.primaryText)
+                                                }
                                                 
-                                                // Delete button
+                                                // Notes
+                                                if let notes = record.notes, !notes.isEmpty {
+                                                    Text("Notes:")
+                                                        .font(.system(size: 13))
+                                                        .foregroundStyle(Theme.secondaryText)
+                                                } else {
+                                                    Text("Notes:")
+                                                        .font(.system(size: 13))
+                                                        .foregroundStyle(Theme.secondaryText)
+                                                }
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            // Edit and Delete buttons
+                                            HStack(spacing: 8) {
+                                                Button {
+                                                    HapticManager.tap()
+                                                    // Load record data for editing
+                                                    newMusterDate = record.date
+                                                    newMusterNotes = record.notes ?? ""
+                                                    newMusterHeadCount = record.totalHeadCount
+                                                    newMusterCattleYard = record.cattleYard ?? ""
+                                                    newMusterWeaners = record.weanersCount
+                                                    newMusterBranders = record.brandersCount
+                                                    showingAddMusterRecord = true
+                                                } label: {
+                                                    Circle()
+                                                        .fill(Theme.accent)
+                                                        .frame(width: 36, height: 36)
+                                                        .overlay(
+                                                            Image(systemName: "pencil")
+                                                                .font(.system(size: 14))
+                                                                .foregroundStyle(Theme.background)
+                                                        )
+                                                }
+                                                
                                                 Button {
                                                     HapticManager.tap()
                                                     deleteMusterRecord(record)
                                                 } label: {
-                                                    Image(systemName: "trash")
-                                                        .font(.system(size: 14))
-                                                        .foregroundStyle(.red)
+                                                    Circle()
+                                                        .fill(Theme.accent)
+                                                        .frame(width: 36, height: 36)
+                                                        .overlay(
+                                                            Image(systemName: "trash")
+                                                                .font(.system(size: 14))
+                                                                .foregroundStyle(Theme.background)
+                                                        )
                                                 }
                                             }
-                                            .padding(12)
-                                            .background(Theme.cardBackground.opacity(0.5))
-                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                         }
+                                        .padding(16)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     }
-                                } else {
-                                    // Empty state
-                                    Text("No muster records yet. Tap + to add one.")
+                                }
+                            } else {
+                                // Empty state
+                                Text("No muster records yet. Tap + to add one.")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
+                            }
+                        }
+                        .padding()
+                        .background(Theme.inputFieldBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        
+                        // Health Records
+                        VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text("Health Records")
+                                        .font(Theme.headline)
+                                        .foregroundStyle(Theme.primaryText)
+                                    Text("Track vaccinations, drenching, and treatments etc")
                                         .font(Theme.caption)
                                         .foregroundStyle(Theme.secondaryText)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                }
-                            }
-                            .padding()
-                            .background(Theme.inputFieldBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            
-                            // Debug: Health Records management section
-                            VStack(alignment: .leading, spacing: 12) {
-                                HStack {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Health Records")
-                                            .font(Theme.headline)
-                                            .foregroundStyle(Theme.primaryText)
-                                        Text("Track vaccinations, drenching, and treatments")
-                                            .font(Theme.caption)
-                                            .foregroundStyle(Theme.secondaryText)
-                                    }
-                                    
-                                    Spacer()
-                                    
-                                    // Add button
-                                    Button {
-                                        HapticManager.tap()
-                                        newHealthDate = Date()
-                                        newHealthTreatmentType = .vaccination
-                                        newHealthNotes = ""
-                                        showingAddHealthRecord = true
-                                    } label: {
-                                        Image(systemName: "plus.circle.fill")
-                                            .font(.system(size: 24))
-                                            .foregroundStyle(Theme.accent)
-                                    }
                                 }
                                 
-                                // Debug: Show existing health records
-                                if let records = herd.healthRecords, !records.isEmpty {
-                                    VStack(spacing: 8) {
-                                        ForEach(records.sorted(by: { $0.date > $1.date })) { record in
-                                            HStack(alignment: .top, spacing: 12) {
-                                                VStack(alignment: .leading, spacing: 6) {
-                                                    // Debug: Match main view - Date on first line
-                                                    Text(record.formattedDate)
-                                                        .font(Theme.subheadline)
-                                                        .fontWeight(.semibold)
-                                                        .foregroundStyle(Theme.primaryText)
-                                                    
-                                                    // Debug: Treatment type with label format
-                                                    HStack(spacing: 4) {
-                                                        Text("Treatment:")
-                                                            .font(Theme.caption)
-                                                            .foregroundStyle(Theme.secondaryText)
-                                                        Text(record.treatmentDescription)
-                                                            .font(Theme.caption)
-                                                            .fontWeight(.semibold)
-                                                            .foregroundStyle(Theme.primaryText)
-                                                    }
-                                                    
-                                                    // Debug: Notes with label - matches main view
-                                                    if let notes = record.notes, !notes.isEmpty {
-                                                        HStack(alignment: .top, spacing: 4) {
-                                                            Text("Notes:")
-                                                                .font(Theme.caption)
-                                                                .foregroundStyle(Theme.secondaryText)
-                                                            Text(notes)
-                                                                .font(Theme.caption)
-                                                                .foregroundStyle(Theme.secondaryText)
-                                                                .fixedSize(horizontal: false, vertical: true)
-                                                        }
-                                                    }
+                                Spacer()
+                                
+                                // Add button
+                                Button {
+                                    HapticManager.tap()
+                                    newHealthDate = Date()
+                                    newHealthTreatmentType = .vaccination
+                                    newHealthNotes = ""
+                                    showingAddHealthRecord = true
+                                } label: {
+                                    Image(systemName: "plus.circle.fill")
+                                        .font(.system(size: 28))
+                                        .foregroundStyle(Theme.accent)
+                                }
+                            }
+                                
+                            // Debug: Show existing health records
+                            if let records = herd.healthRecords, !records.isEmpty {
+                                VStack(spacing: 12) {
+                                    ForEach(records.sorted(by: { $0.date > $1.date })) { record in
+                                        HStack(spacing: 12) {
+                                            // Treatment type icon on the left
+                                            Image(systemName: record.treatmentType.icon)
+                                                .font(.system(size: 28))
+                                                .foregroundStyle(Theme.accent)
+                                            
+                                            // Record details
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(record.formattedDate)
+                                                    .font(.system(size: 15, weight: .semibold))
+                                                    .foregroundStyle(Theme.primaryText)
+                                                
+                                                Text("Treatment: ")
+                                                    .font(.system(size: 13))
+                                                    .foregroundStyle(Theme.secondaryText)
+                                                + Text(record.treatmentDescription)
+                                                    .font(.system(size: 13, weight: .semibold))
+                                                    .foregroundStyle(Theme.primaryText)
+                                                
+                                                // Notes
+                                                if let notes = record.notes, !notes.isEmpty {
+                                                    Text("Notes:")
+                                                        .font(.system(size: 13))
+                                                        .foregroundStyle(Theme.secondaryText)
+                                                } else {
+                                                    Text("Notes:")
+                                                        .font(.system(size: 13))
+                                                        .foregroundStyle(Theme.secondaryText)
+                                                }
+                                            }
+                                            
+                                            Spacer()
+                                            
+                                            // Edit and Delete buttons
+                                            HStack(spacing: 8) {
+                                                Button {
+                                                    HapticManager.tap()
+                                                    // Load record data for editing
+                                                    newHealthDate = record.date
+                                                    newHealthTreatmentType = record.treatmentType
+                                                    newHealthNotes = record.notes ?? ""
+                                                    showingAddHealthRecord = true
+                                                } label: {
+                                                    Circle()
+                                                        .fill(Theme.accent)
+                                                        .frame(width: 36, height: 36)
+                                                        .overlay(
+                                                            Image(systemName: "pencil")
+                                                                .font(.system(size: 14))
+                                                                .foregroundStyle(Theme.background)
+                                                        )
                                                 }
                                                 
-                                                Spacer()
-                                                
-                                                // Delete button
                                                 Button {
                                                     HapticManager.tap()
                                                     deleteHealthRecord(record)
                                                 } label: {
-                                                    Image(systemName: "trash")
-                                                        .font(.system(size: 14))
-                                                        .foregroundStyle(.red)
+                                                    Circle()
+                                                        .fill(Theme.accent)
+                                                        .frame(width: 36, height: 36)
+                                                        .overlay(
+                                                            Image(systemName: "trash")
+                                                                .font(.system(size: 14))
+                                                                .foregroundStyle(Theme.background)
+                                                        )
                                                 }
                                             }
-                                            .padding(12)
-                                            .background(Theme.cardBackground.opacity(0.5))
-                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                         }
-                                    }
-                                } else {
-                                    // Empty state
-                                    Text("No health records yet. Tap + to add one.")
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.secondaryText)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 8)
-                                }
-                            }
-                            .padding()
-                            .background(Theme.inputFieldBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            
-                            Toggle(isOn: $isBreeder) {
-                                Text("Breeding Stock")
-                                    .font(Theme.headline)
-                                    .foregroundStyle(Theme.primaryText)
-                            }
-                            .tint(Theme.accent)
-                            .padding()
-                            .background(Theme.inputFieldBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            
-                            if isBreeder {
-                                VStack(alignment: .leading, spacing: 12) {
-                                    Toggle(isOn: $isPregnant) {
-                                        Text("Currently Pregnant")
-                                            .font(Theme.headline)
-                                            .foregroundStyle(Theme.primaryText)
-                                    }
-                                    .tint(Theme.accent)
-                                    
-                                    if isPregnant {
-                                        DatePicker("Joined Date", selection: $joinedDate, displayedComponents: .date)
-                                            .datePickerStyle(.compact)
-                                        
-                                        VStack(alignment: .leading, spacing: 8) {
-                                            Text("Calving Rate: \(Int(calvingRate * 100))%")
-                                                .font(Theme.caption)
-                                                .foregroundStyle(Theme.primaryText.opacity(0.7))
-                                            Slider(value: $calvingRate, in: 0.5...1.0, step: 0.05)
-                                        }
-                                        .padding()
-                                        .background(Theme.inputFieldBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                        .padding(16)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     }
                                 }
-                                .padding()
-                                .background(Theme.cardBackground.opacity(0.5))
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            } else {
+                                // Empty state
+                                Text("No health records yet. Tap + to add one.")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 8)
                             }
                         }
-                        .padding(Theme.cardPadding)
-                        .stitchedCard()
+                        .padding()
+                        .background(Theme.inputFieldBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                     }
                     .padding()
                 }
@@ -945,6 +1041,7 @@ struct AddMusterRecordSheet: View {
     @State private var headCountText = ""
     @State private var weanersText = ""
     @State private var brandersText = ""
+    @State private var showingDatePicker = false
     
     var body: some View {
         NavigationStack {
@@ -952,109 +1049,136 @@ struct AddMusterRecordSheet: View {
                 Theme.backgroundGradient.ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(spacing: 24) {
-                        // Date Picker
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Muster Date")
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
+                    VStack(spacing: 16) {
+                        // Row 1: Muster Date | Head Count
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                HapticManager.tap()
+                                showingDatePicker = true
+                            }) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Muster Date")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Text(date.formatted(date: .abbreviated, time: .omitted))
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(height: 50)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                            .buttonStyle(.plain)
                             
-                            DatePicker("Select Date", selection: $date, displayedComponents: .date)
-                                .datePickerStyle(.graphical)
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            ZStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Head Count")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    TextField("", text: $headCountText)
+                                        .keyboardType(.numberPad)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                        .textFieldStyle(.plain)
+                                        .onChange(of: headCountText) { oldValue, newValue in
+                                            headCount = Int(newValue)
+                                        }
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .frame(height: 50)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         
-                        // Debug: Additional optional muster details
-                        VStack(alignment: .leading, spacing: 16) {
-                            Text("Muster Details (Optional)")
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            // Total Head Count
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Total Head Count")
-                                    .font(Theme.subheadline)
-                                    .foregroundStyle(Theme.primaryText)
-                                
-                                TextField("e.g., 150", text: $headCountText)
-                                    .keyboardType(.numberPad)
-                                    .textFieldStyle(.plain)
-                                    .padding()
-                                    .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                                    .onChange(of: headCountText) { oldValue, newValue in
-                                        headCount = Int(newValue)
-                                    }
-                            }
-                            
-                            // Cattle Yard
-                            VStack(alignment: .leading, spacing: 8) {
-                                Text("Cattle Yard")
-                                    .font(Theme.subheadline)
-                                    .foregroundStyle(Theme.primaryText)
-                                
-                                TextField("e.g., Snake Paddock Yards", text: $cattleYard)
-                                    .textFieldStyle(.plain)
-                                    .padding()
-                                    .background(Theme.inputFieldBackground)
-                                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                            }
-                            
-                            // Weaners and Branders side by side
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("# Weaners")
-                                        .font(Theme.subheadline)
-                                        .foregroundStyle(Theme.primaryText)
-                                    
-                                    TextField("0", text: $weanersText)
+                        // Row 2: Weaners | Branders
+                        HStack(spacing: 12) {
+                            ZStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Weaners")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    TextField("", text: $weanersText)
                                         .keyboardType(.numberPad)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
                                         .textFieldStyle(.plain)
-                                        .padding()
-                                        .background(Theme.inputFieldBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                         .onChange(of: weanersText) { oldValue, newValue in
                                             weaners = Int(newValue)
                                         }
                                 }
-                                
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("# Branders")
-                                        .font(Theme.subheadline)
-                                        .foregroundStyle(Theme.primaryText)
-                                    
-                                    TextField("0", text: $brandersText)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .frame(height: 50)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            
+                            ZStack {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Branders")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                    TextField("", text: $brandersText)
                                         .keyboardType(.numberPad)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
                                         .textFieldStyle(.plain)
-                                        .padding()
-                                        .background(Theme.inputFieldBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                         .onChange(of: brandersText) { oldValue, newValue in
                                             branders = Int(newValue)
                                         }
                                 }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
                             }
+                            .frame(height: 50)
+                            .background(Theme.cardBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         
-                        // Notes
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Notes (Optional)")
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            Text("e.g., 'Drenched', 'Tagged 5 new calves', 'Moved to South paddock'")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                            
+                        // Cattle Yard (full width)
+                        ZStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Cattle Yard")
+                                    .font(.system(size: 10))
+                                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                TextField("", text: $cattleYard)
+                                    .font(.system(size: 13, weight: .medium))
+                                    .foregroundStyle(Theme.primaryText)
+                                    .textFieldStyle(.plain)
+                            }
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 14)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        }
+                        .frame(height: 50)
+                        .background(Theme.cardBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        
+                        // Notes (full width)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Notes")
+                                .font(.system(size: 10))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
                             TextEditor(text: $notes)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(Theme.primaryText)
                                 .frame(minHeight: 100)
-                                .padding(8)
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .scrollContentBackground(.hidden)
                         }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Theme.cardBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     .padding()
                     .padding(.bottom, 40)
@@ -1079,6 +1203,9 @@ struct AddMusterRecordSheet: View {
                     .foregroundStyle(Theme.accent)
                 }
             }
+            .sheet(isPresented: $showingDatePicker) {
+                DatePickerSheet(date: $date, title: "Select Muster Date")
+            }
         }
     }
 }
@@ -1092,63 +1219,99 @@ struct AddHealthRecordSheet: View {
     @Binding var notes: String
     let onSave: () -> Void
     
+    @State private var showingDatePicker = false
+    
     var body: some View {
         NavigationStack {
             ZStack {
                 Theme.backgroundGradient.ignoresSafeArea()
                 
                 ScrollView {
-                    VStack(spacing: 24) {
-                        // Date Picker
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Treatment Date")
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
+                    VStack(spacing: 16) {
+                        // Row 1: Treatment Date | Treatment Type
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                HapticManager.tap()
+                                showingDatePicker = true
+                            }) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Treatment Date")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    Text(date.formatted(date: .abbreviated, time: .omitted))
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 14)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .frame(height: 50)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                            }
+                            .buttonStyle(.plain)
                             
-                            DatePicker("Select Date", selection: $date, displayedComponents: .date)
-                                .datePickerStyle(.graphical)
-                                .padding()
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                        }
-                        
-                        // Treatment Type Picker
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Treatment Type")
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            // Debug: Grid of treatment type cards
-                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            // Treatment Type Picker (Menu-based)
+                            Menu {
                                 ForEach(HealthTreatmentType.allCases, id: \.self) { type in
-                                    TreatmentTypeCard(
-                                        type: type,
-                                        isSelected: treatmentType == type
-                                    ) {
+                                    Button(action: {
                                         HapticManager.tap()
                                         treatmentType = type
+                                    }) {
+                                        HStack {
+                                            Image(systemName: type.icon)
+                                            Text(type.rawValue)
+                                        }
                                     }
                                 }
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Treatment Type")
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                            .fixedSize(horizontal: false, vertical: true)
+                                        HStack(spacing: 8) {
+                                            Image(systemName: treatmentType.icon)
+                                                .font(.system(size: 13))
+                                            Text(treatmentType.rawValue)
+                                                .font(.system(size: 13, weight: .medium))
+                                        }
+                                        .foregroundStyle(Theme.primaryText)
+                                        .fixedSize(horizontal: false, vertical: true)
+                                    }
+                                    Spacer()
+                                    Image(systemName: "chevron.down")
+                                        .font(.system(size: 10))
+                                        .foregroundStyle(Theme.secondaryText)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 14)
+                                .frame(maxWidth: .infinity)
+                                .frame(height: 50)
+                                .background(Theme.cardBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
+                            .buttonStyle(.plain)
                         }
                         
-                        // Notes
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("Notes (Optional)")
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            Text("e.g., '5-in-1 vaccine', 'Ivomec drench', 'Cydectin pour-on'")
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                            
+                        // Notes (full width)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Notes")
+                                .font(.system(size: 10))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
                             TextEditor(text: $notes)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundStyle(Theme.primaryText)
                                 .frame(minHeight: 100)
-                                .padding(8)
-                                .background(Theme.inputFieldBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                                 .scrollContentBackground(.hidden)
                         }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 10)
+                        .background(Theme.cardBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                     }
                     .padding()
                     .padding(.bottom, 40)
@@ -1172,6 +1335,9 @@ struct AddHealthRecordSheet: View {
                     }
                     .foregroundStyle(Theme.accent)
                 }
+            }
+            .sheet(isPresented: $showingDatePicker) {
+                DatePickerSheet(date: $date, title: "Select Treatment Date")
             }
         }
     }
@@ -1206,5 +1372,45 @@ struct TreatmentTypeCard: View {
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
+    }
+}
+
+// MARK: - Date Picker Sheet
+// Debug: Clean date picker sheet for selecting dates in add muster/health record sheets
+struct DatePickerSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var date: Date
+    let title: String
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.backgroundGradient.ignoresSafeArea()
+                
+                VStack(spacing: 16) {
+                    DatePicker("", selection: $date, displayedComponents: .date)
+                        .datePickerStyle(.graphical)
+                        .padding()
+                        .background(Theme.cardBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .padding()
+                    
+                    Spacer()
+                }
+            }
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
+        }
+        .presentationDetents([.medium])
+        .presentationDragIndicator(.visible)
     }
 }
