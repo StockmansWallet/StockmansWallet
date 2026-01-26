@@ -581,7 +581,7 @@ struct EditHerdView: View {
                                 
                             // Debug: Show existing muster records with all details
                             if let records = herd.musterRecords, !records.isEmpty {
-                                List {
+                                VStack(spacing: 12) {
                                     ForEach(records.sorted(by: { $0.date > $1.date })) { record in
                                         HStack(spacing: 12) {
                                             // Document icon on the left
@@ -648,43 +648,50 @@ struct EditHerdView: View {
                                             }
                                             
                                             Spacer()
+                                            
+                                            // Edit and Delete buttons
+                                            HStack(spacing: 8) {
+                                                Button {
+                                                    HapticManager.tap()
+                                                    // Load record data for editing
+                                                    newMusterDate = record.date
+                                                    newMusterNotes = record.notes ?? ""
+                                                    newMusterHeadCount = record.totalHeadCount
+                                                    newMusterCattleYard = record.cattleYard ?? ""
+                                                    newMusterWeaners = record.weanersCount
+                                                    newMusterBranders = record.brandersCount
+                                                    showingAddMusterRecord = true
+                                                } label: {
+                                                    Circle()
+                                                        .fill(Theme.accent)
+                                                        .frame(width: 36, height: 36)
+                                                        .overlay(
+                                                            Image(systemName: "pencil")
+                                                                .font(.system(size: 14))
+                                                                .foregroundStyle(Theme.background)
+                                                        )
+                                                }
+                                                
+                                                Button {
+                                                    HapticManager.error()
+                                                    deleteMusterRecord(record)
+                                                } label: {
+                                                    Circle()
+                                                        .fill(Theme.accent)
+                                                        .frame(width: 36, height: 36)
+                                                        .overlay(
+                                                            Image(systemName: "trash")
+                                                                .font(.system(size: 14))
+                                                                .foregroundStyle(Theme.background)
+                                                        )
+                                                }
+                                            }
                                         }
                                         .padding(16)
                                         .background(Theme.cardBackground)
                                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                        .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
-                                        .listRowSeparator(.hidden)
-                                        .listRowBackground(Color.clear)
-                                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                            Button(role: .destructive) {
-                                                HapticManager.error()
-                                                deleteMusterRecord(record)
-                                            } label: {
-                                                Label("Delete", systemImage: "trash")
-                                            }
-                                        }
-                                        .swipeActions(edge: .leading) {
-                                            Button {
-                                                HapticManager.tap()
-                                                // Load record data for editing
-                                                newMusterDate = record.date
-                                                newMusterNotes = record.notes ?? ""
-                                                newMusterHeadCount = record.totalHeadCount
-                                                newMusterCattleYard = record.cattleYard ?? ""
-                                                newMusterWeaners = record.weanersCount
-                                                newMusterBranders = record.brandersCount
-                                                showingAddMusterRecord = true
-                                            } label: {
-                                                Label("Edit", systemImage: "pencil")
-                                            }
-                                            .tint(.blue)
-                                        }
                                     }
                                 }
-                                .listStyle(.plain)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: CGFloat(records.count) * 120) // Approximate height per row
-                                .scrollDisabled(true)
                             } else {
                                 // Empty state
                                 Text("No muster records yet. Tap + to add one.")
@@ -728,7 +735,7 @@ struct EditHerdView: View {
                                 
                             // Debug: Show existing health records
                             if let records = herd.healthRecords, !records.isEmpty {
-                                List {
+                                VStack(spacing: 12) {
                                     ForEach(records.sorted(by: { $0.date > $1.date })) { record in
                                         HStack(spacing: 12) {
                                             // Treatment type icon on the left
@@ -762,40 +769,47 @@ struct EditHerdView: View {
                                             }
                                             
                                             Spacer()
+                                            
+                                            // Edit and Delete buttons
+                                            HStack(spacing: 8) {
+                                                Button {
+                                                    HapticManager.tap()
+                                                    // Load record data for editing
+                                                    newHealthDate = record.date
+                                                    newHealthTreatmentType = record.treatmentType
+                                                    newHealthNotes = record.notes ?? ""
+                                                    showingAddHealthRecord = true
+                                                } label: {
+                                                    Circle()
+                                                        .fill(Theme.accent)
+                                                        .frame(width: 36, height: 36)
+                                                        .overlay(
+                                                            Image(systemName: "pencil")
+                                                                .font(.system(size: 14))
+                                                                .foregroundStyle(Theme.background)
+                                                        )
+                                                }
+                                                
+                                                Button {
+                                                    HapticManager.error()
+                                                    deleteHealthRecord(record)
+                                                } label: {
+                                                    Circle()
+                                                        .fill(Theme.accent)
+                                                        .frame(width: 36, height: 36)
+                                                        .overlay(
+                                                            Image(systemName: "trash")
+                                                                .font(.system(size: 14))
+                                                                .foregroundStyle(Theme.background)
+                                                        )
+                                                }
+                                            }
                                         }
                                         .padding(16)
                                         .background(Theme.cardBackground)
                                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                                        .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 6, trailing: 0))
-                                        .listRowSeparator(.hidden)
-                                        .listRowBackground(Color.clear)
-                                        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
-                                            Button(role: .destructive) {
-                                                HapticManager.error()
-                                                deleteHealthRecord(record)
-                                            } label: {
-                                                Label("Delete", systemImage: "trash")
-                                            }
-                                        }
-                                        .swipeActions(edge: .leading) {
-                                            Button {
-                                                HapticManager.tap()
-                                                // Load record data for editing
-                                                newHealthDate = record.date
-                                                newHealthTreatmentType = record.treatmentType
-                                                newHealthNotes = record.notes ?? ""
-                                                showingAddHealthRecord = true
-                                            } label: {
-                                                Label("Edit", systemImage: "pencil")
-                                            }
-                                            .tint(.blue)
-                                        }
                                     }
                                 }
-                                .listStyle(.plain)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: CGFloat(records.count) * 100) // Approximate height per row
-                                .scrollDisabled(true)
                             } else {
                                 // Empty state
                                 Text("No health records yet. Tap + to add one.")

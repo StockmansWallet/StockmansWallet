@@ -56,123 +56,122 @@ struct HerdDetailView: View {
         if let activeHerd = herd {
             ScrollView(.vertical, showsIndicators: true) {
                 VStack(spacing: 20) {
-                    // Debug: Total value card with herd name at the very top
-                    if let valuation = valuation {
-                        TotalValueCard(herd: activeHerd, valuation: valuation)
-                            .padding(.horizontal)
-                    } else if isLoading {
-                        ProgressView()
-                            .tint(Theme.accent)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    }
-                    
-                    // Debug: Horizontal stats card for herd type and head count
-                    if !isLoading {
-                        HerdStatsCard(herd: activeHerd)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Weight Growth Chart for visual insight
-                    // Pass data directly to avoid SwiftData access issues
-                    if !isLoading, let valuation = valuation, activeHerd.dailyWeightGain > 0 {
-                        WeightGrowthChart(
-                            initialWeight: activeHerd.initialWeight,
-                            dailyWeightGain: activeHerd.dailyWeightGain,
-                            daysHeld: activeHerd.daysHeld,
-                            createdAt: activeHerd.createdAt,
-                            projectedWeight: valuation.projectedWeight
-                        )
-                        .padding(.horizontal)
-                    }
-                    
-                    // Debug: Primary valuation metrics
-                    if let valuation = valuation {
-                        PrimaryMetricsCard(herd: activeHerd, valuation: valuation)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Consolidated herd details - all key info in one card
-                    if !isLoading {
-                        HerdDetailsCard(herd: activeHerd, valuation: valuation)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Mustering history card - only show if there are muster records
-                    if !isLoading, let musterRecords = activeHerd.musterRecords, !musterRecords.isEmpty {
-                        MusteringHistoryCard(herd: activeHerd)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Health records card - only show if there are health records
-                    if !isLoading, let healthRecords = activeHerd.healthRecords, !healthRecords.isEmpty {
-                        HealthRecordsCard(herd: activeHerd)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Breeding info only if applicable
-                    if !isLoading, activeHerd.isBreeder {
-                        BreedingDetailsCard(herd: activeHerd)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Button to open searchable animal list sheet - only show for herds (not individual animals)
-                    if !isLoading && activeHerd.headCount > 1 {
-                        Button {
-                            HapticManager.tap()
-                            showingAnimalsList = true
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("View Individual Animals")
-                                        .font(Theme.headline)
-                                        .foregroundStyle(Theme.primaryText)
-                                    Text("Browse all individually tagged animals")
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.secondaryText)
-                                }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                            }
-                            .padding(Theme.cardPadding)
-                        }
-                        .buttonStyle(PlainButtonStyle())
-                        .stitchedCard()
-                        .padding(.horizontal)
-                    }
-                    
-                    // Debug: Record Sale button at bottom of detail page (not floating, just regular button)
-                    if !isLoading && !activeHerd.isSold {
-                        Button {
-                            HapticManager.tap()
-                            showingSellSheet = true
-                        } label: {
-                            Text("Record Sale")
-                                .font(Theme.headline)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(.white)
+                        // Debug: Total value card with herd name at the very top
+                        if let valuation = valuation {
+                            TotalValueCard(herd: activeHerd, valuation: valuation)
+                                .padding(.horizontal)
+                        } else if isLoading {
+                            ProgressView()
+                                .tint(Theme.accent)
                                 .frame(maxWidth: .infinity)
-                                .padding(.vertical, 16)
-                                .background(Theme.accent)
-                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .padding()
                         }
-                        .buttonStyle(.plain)
-                        .padding(.horizontal)
-                        .accessibilityLabel("Record sale")
-                    }
+                        
+                        // Debug: Horizontal stats card for herd type and head count
+                        if !isLoading {
+                            HerdStatsCard(herd: activeHerd)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Weight Growth Chart for visual insight
+                        // Pass data directly to avoid SwiftData access issues
+                        if !isLoading, let valuation = valuation, activeHerd.dailyWeightGain > 0 {
+                            WeightGrowthChart(
+                                initialWeight: activeHerd.initialWeight,
+                                dailyWeightGain: activeHerd.dailyWeightGain,
+                                daysHeld: activeHerd.daysHeld,
+                                createdAt: activeHerd.createdAt,
+                                projectedWeight: valuation.projectedWeight
+                            )
+                            .padding(.horizontal)
+                        }
+                        
+                        // Debug: Primary valuation metrics
+                        if let valuation = valuation {
+                            PrimaryMetricsCard(herd: activeHerd, valuation: valuation)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Consolidated herd details - all key info in one card
+                        if !isLoading {
+                            HerdDetailsCard(herd: activeHerd, valuation: valuation)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Mustering history card - only show if there are muster records
+                        if !isLoading, let musterRecords = activeHerd.musterRecords, !musterRecords.isEmpty {
+                            MusteringHistoryCard(herd: activeHerd)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Health records card - only show if there are health records
+                        if !isLoading, let healthRecords = activeHerd.healthRecords, !healthRecords.isEmpty {
+                            HealthRecordsCard(herd: activeHerd)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Breeding info only if applicable
+                        if !isLoading, activeHerd.isBreeder {
+                            BreedingDetailsCard(herd: activeHerd)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Button to open searchable animal list sheet - only show for herds (not individual animals)
+                        if !isLoading && activeHerd.headCount > 1 {
+                            Button {
+                                HapticManager.tap()
+                                showingAnimalsList = true
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("View Individual Animals")
+                                            .font(Theme.headline)
+                                            .foregroundStyle(Theme.primaryText)
+                                        Text("Browse all individually tagged animals")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                                }
+                                .padding(Theme.cardPadding)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .stitchedCard()
+                            .padding(.horizontal)
+                        }
+                        
+                        // Debug: Record Sale button at bottom of detail page (not floating, just regular button)
+                        if !isLoading && !activeHerd.isSold {
+                            Button {
+                                HapticManager.tap()
+                                showingSellSheet = true
+                            } label: {
+                                Text("Record Sale")
+                                    .font(Theme.headline)
+                                    .fontWeight(.semibold)
+                                    .foregroundStyle(.white)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 16)
+                                    .background(Theme.accent)
+                                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.horizontal)
+                            .accessibilityLabel("Record sale")
+                        }
                 }
-                .frame(maxWidth: .infinity)
                 .padding(.bottom, 100)
             }
             .scrollContentBackground(.hidden)
             .background(Theme.backgroundGradient)
             .navigationTitle(activeHerd.headCount == 1 ? "Individual Animal" : "Herd Details")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
             ToolbarItem(placement: .navigationBarTrailing) {
                 NavigationLink(destination: EditHerdView(herd: activeHerd)) {
                     Text("Edit")
