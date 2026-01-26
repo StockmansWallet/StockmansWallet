@@ -40,6 +40,11 @@ struct EditHerdView: View {
     @State private var newMusterCattleYard = ""
     @State private var newMusterWeaners: Int?
     @State private var newMusterBranders: Int?
+    // Debug: State for managing health records
+    @State private var showingAddHealthRecord = false
+    @State private var newHealthDate = Date()
+    @State private var newHealthTreatmentType: HealthTreatmentType = .vaccination
+    @State private var newHealthNotes = ""
     
     private let speciesOptions = ["Cattle", "Sheep", "Pigs", "Goats"]
     
@@ -514,6 +519,101 @@ struct EditHerdView: View {
                             .background(Theme.inputFieldBackground)
                             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                             
+                            // Debug: Health Records management section
+                            VStack(alignment: .leading, spacing: 12) {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Health Records")
+                                            .font(Theme.headline)
+                                            .foregroundStyle(Theme.primaryText)
+                                        Text("Track vaccinations, drenching, and treatments")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    // Add button
+                                    Button {
+                                        HapticManager.tap()
+                                        newHealthDate = Date()
+                                        newHealthTreatmentType = .vaccination
+                                        newHealthNotes = ""
+                                        showingAddHealthRecord = true
+                                    } label: {
+                                        Image(systemName: "plus.circle.fill")
+                                            .font(.system(size: 24))
+                                            .foregroundStyle(Theme.accent)
+                                    }
+                                }
+                                
+                                // Debug: Show existing health records
+                                if let records = herd.healthRecords, !records.isEmpty {
+                                    VStack(spacing: 8) {
+                                        ForEach(records.sorted(by: { $0.date > $1.date })) { record in
+                                            HStack(alignment: .top, spacing: 12) {
+                                                VStack(alignment: .leading, spacing: 6) {
+                                                    // Debug: Match main view - Date on first line
+                                                    Text(record.formattedDate)
+                                                        .font(Theme.subheadline)
+                                                        .fontWeight(.semibold)
+                                                        .foregroundStyle(Theme.primaryText)
+                                                    
+                                                    // Debug: Treatment type with label format
+                                                    HStack(spacing: 4) {
+                                                        Text("Treatment:")
+                                                            .font(Theme.caption)
+                                                            .foregroundStyle(Theme.secondaryText)
+                                                        Text(record.treatmentDescription)
+                                                            .font(Theme.caption)
+                                                            .fontWeight(.semibold)
+                                                            .foregroundStyle(Theme.primaryText)
+                                                    }
+                                                    
+                                                    // Debug: Notes with label - matches main view
+                                                    if let notes = record.notes, !notes.isEmpty {
+                                                        HStack(alignment: .top, spacing: 4) {
+                                                            Text("Notes:")
+                                                                .font(Theme.caption)
+                                                                .foregroundStyle(Theme.secondaryText)
+                                                            Text(notes)
+                                                                .font(Theme.caption)
+                                                                .foregroundStyle(Theme.secondaryText)
+                                                                .fixedSize(horizontal: false, vertical: true)
+                                                        }
+                                                    }
+                                                }
+                                                
+                                                Spacer()
+                                                
+                                                // Delete button
+                                                Button {
+                                                    HapticManager.tap()
+                                                    deleteHealthRecord(record)
+                                                } label: {
+                                                    Image(systemName: "trash")
+                                                        .font(.system(size: 14))
+                                                        .foregroundStyle(.red)
+                                                }
+                                            }
+                                            .padding(12)
+                                            .background(Theme.cardBackground.opacity(0.5))
+                                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                        }
+                                    }
+                                } else {
+                                    // Empty state
+                                    Text("No health records yet. Tap + to add one.")
+                                        .font(Theme.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.vertical, 8)
+                                }
+                            }
+                            .padding()
+                            .background(Theme.inputFieldBackground)
+                            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            
                             Toggle(isOn: $isBreeder) {
                                 Text("Breeding Stock")
                                     .font(Theme.headline)
@@ -590,6 +690,19 @@ struct EditHerdView: View {
                     branders: $newMusterBranders,
                     onSave: {
                         addMusterRecord()
+                    }
+                )
+                .presentationDetents([.large])
+                .presentationDragIndicator(.visible)
+                .presentationBackground(Theme.sheetBackground)
+            }
+            .sheet(isPresented: $showingAddHealthRecord) {
+                AddHealthRecordSheet(
+                    date: $newHealthDate,
+                    treatmentType: $newHealthTreatmentType,
+                    notes: $newHealthNotes,
+                    onSave: {
+                        addHealthRecord()
                     }
                 )
                 .presentationDetents([.large])
@@ -692,6 +805,52 @@ struct EditHerdView: View {
         } catch {
             HapticManager.error()
             print("Error deleting muster record: \(error)")
+        }
+    }
+    
+    // Debug: Add a new health record to the herd
+    private func addHealthRecord() {
+        let record = HealthRecord(
+            date: newHealthDate,
+            treatmentType: newHealthTreatmentType,
+            notes: newHealthNotes.isEmpty ? nil : newHealthNotes
+        )
+        record.herd = herd
+        
+        if herd.healthRecords == nil {
+            herd.healthRecords = []
+        }
+        herd.healthRecords?.append(record)
+        
+        // Update the herd's updatedAt timestamp
+        herd.updatedAt = Date()
+        
+        // Save to context
+        modelContext.insert(record)
+        
+        do {
+            try modelContext.save()
+            HapticManager.success()
+            showingAddHealthRecord = false
+        } catch {
+            HapticManager.error()
+            print("Error adding health record: \(error)")
+        }
+    }
+    
+    // Debug: Delete a health record from the herd
+    private func deleteHealthRecord(_ record: HealthRecord) {
+        herd.healthRecords?.removeAll(where: { $0.id == record.id })
+        herd.updatedAt = Date()
+        
+        modelContext.delete(record)
+        
+        do {
+            try modelContext.save()
+            HapticManager.success()
+        } catch {
+            HapticManager.error()
+            print("Error deleting health record: \(error)")
         }
     }
 }
@@ -846,5 +1005,131 @@ struct AddMusterRecordSheet: View {
                 }
             }
         }
+    }
+}
+
+// MARK: - Add Health Record Sheet
+// Debug: Sheet for adding a new health record with date, treatment type, and notes
+struct AddHealthRecordSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Binding var date: Date
+    @Binding var treatmentType: HealthTreatmentType
+    @Binding var notes: String
+    let onSave: () -> Void
+    
+    var body: some View {
+        NavigationStack {
+            ZStack {
+                Theme.backgroundGradient.ignoresSafeArea()
+                
+                ScrollView {
+                    VStack(spacing: 24) {
+                        // Date Picker
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Treatment Date")
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            DatePicker("Select Date", selection: $date, displayedComponents: .date)
+                                .datePickerStyle(.graphical)
+                                .padding()
+                                .background(Theme.inputFieldBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        }
+                        
+                        // Treatment Type Picker
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Treatment Type")
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            // Debug: Grid of treatment type cards
+                            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                                ForEach(HealthTreatmentType.allCases, id: \.self) { type in
+                                    TreatmentTypeCard(
+                                        type: type,
+                                        isSelected: treatmentType == type
+                                    ) {
+                                        HapticManager.tap()
+                                        treatmentType = type
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Notes
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text("Notes (Optional)")
+                                .font(Theme.headline)
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            Text("e.g., '5-in-1 vaccine', 'Ivomec drench', 'Cydectin pour-on'")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            
+                            TextEditor(text: $notes)
+                                .frame(minHeight: 100)
+                                .padding(8)
+                                .background(Theme.inputFieldBackground)
+                                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                                .scrollContentBackground(.hidden)
+                        }
+                    }
+                    .padding()
+                    .padding(.bottom, 40)
+                }
+            }
+            .navigationTitle("Add Health Record")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Add") {
+                        HapticManager.tap()
+                        onSave()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accent)
+                }
+            }
+        }
+    }
+}
+
+// MARK: - Treatment Type Card
+// Debug: Selectable card for treatment type selection
+struct TreatmentTypeCard: View {
+    let type: HealthTreatmentType
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 12) {
+                Image(systemName: type.icon)
+                    .font(.system(size: 28))
+                    .foregroundStyle(isSelected ? Theme.accent : Theme.secondaryText)
+                
+                Text(type.rawValue)
+                    .font(Theme.subheadline)
+                    .foregroundStyle(isSelected ? Theme.primaryText : Theme.secondaryText)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 20)
+            .background(isSelected ? Theme.accent.opacity(0.15) : Theme.inputFieldBackground)
+            .overlay(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(isSelected ? Theme.accent : Color.clear, lineWidth: 2)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 }

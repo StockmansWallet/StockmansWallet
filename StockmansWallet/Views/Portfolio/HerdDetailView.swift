@@ -104,6 +104,12 @@ struct HerdDetailView: View {
                             .padding(.horizontal)
                     }
                     
+                    // Debug: Health records card - only show if there are health records
+                    if !isLoading, let healthRecords = activeHerd.healthRecords, !healthRecords.isEmpty {
+                        HealthRecordsCard(herd: activeHerd)
+                            .padding(.horizontal)
+                    }
+                    
                     // Debug: Breeding info only if applicable
                     if !isLoading, activeHerd.isBreeder {
                         BreedingDetailsCard(herd: activeHerd)
@@ -1179,6 +1185,98 @@ struct MusterRecordRow: View {
                 }
                 
                 // Notes if they exist - with "Notes:" label
+                if let notes = record.notes, !notes.isEmpty {
+                    HStack(alignment: .top, spacing: 4) {
+                        Text("Notes:")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Text(notes)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+            }
+            
+            Spacer()
+        }
+        .padding(12)
+        .background(Theme.cardBackground.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// MARK: - Health Records Card
+// Debug: Display health treatment history with dates and treatment types
+struct HealthRecordsCard: View {
+    let herd: HerdGroup
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack {
+                Text("Health Records")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                
+                Spacer()
+                
+                // Debug: Show count of health records
+                if let recordCount = herd.healthRecords?.count, recordCount > 0 {
+                    Text("\(recordCount) record\(recordCount == 1 ? "" : "s")")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+            }
+            
+            // Debug: Display health records in chronological order (most recent first)
+            VStack(spacing: 12) {
+                ForEach(herd.sortedHealthRecords) { record in
+                    HealthRecordRow(record: record)
+                }
+            }
+        }
+        .padding(Theme.cardPadding)
+        .stitchedCard()
+    }
+}
+
+// MARK: - Health Record Row
+// Debug: Individual row displaying a single health record
+struct HealthRecordRow: View {
+    let record: HealthRecord
+    
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            // Debug: Treatment type icon
+            ZStack {
+                Circle()
+                    .fill(Theme.accent.opacity(0.2))
+                    .frame(width: 36, height: 36)
+                
+                Image(systemName: record.treatmentIcon)
+                    .font(.system(size: 14))
+                    .foregroundStyle(Theme.accent)
+            }
+            
+            VStack(alignment: .leading, spacing: 6) {
+                // Debug: Match Mustering History format - Date on first line
+                Text(record.formattedDate)
+                    .font(Theme.subheadline)
+                    .fontWeight(.semibold)
+                    .foregroundStyle(Theme.primaryText)
+                
+                // Debug: Treatment type on second line with label format
+                HStack(spacing: 4) {
+                    Text("Treatment:")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    Text(record.treatmentDescription)
+                        .font(Theme.caption)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(Theme.primaryText)
+                }
+                
+                // Debug: Notes on third line with label - matches Mustering History
                 if let notes = record.notes, !notes.isEmpty {
                     HStack(alignment: .top, spacing: 4) {
                         Text("Notes:")

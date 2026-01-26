@@ -127,12 +127,23 @@ class ReportExportService {
                     .foregroundColor: UIColor.black
                 ]
                 
+                // Debug: Format dates for display
+                let dateFormatter = DateFormatter()
+                dateFormatter.dateStyle = .medium
+                dateFormatter.timeStyle = .none
+                
                 var lines = [
                     "Category: \(herd.breed) \(herd.category)",
                     "Head Count: \(herd.headCount)",
                     "Species: \(herd.species)",
-                    "Age: \(herd.ageMonths) months"
+                    "Age: \(herd.ageMonths) months",
+                    "Herd last updated: \(dateFormatter.string(from: herd.updatedAt))"
                 ]
+                
+                // Debug: Add last muster date if available
+                if let lastMuster = herd.lastMusterDate {
+                    lines.append("Last Mustered: \(dateFormatter.string(from: lastMuster))")
+                }
                 
                 if let valuation = valuations[herd.id] {
                     lines.append(contentsOf: [
@@ -281,7 +292,11 @@ class ReportExportService {
     ) -> URL? {
         let activeHerds = herds.filter { !$0.isSold }
         
-        var csv = "Herd Name,Category,Breed,Species,Head Count,Age (months),Initial Weight (kg),Projected Weight (kg),Price per kg,Price Source,Physical Value,Breeding Accrual,Gross Value,Mortality Deduction,Cost to Carry,Net Realizable Value,Paddock,Saleyard\n"
+        var csv = "Herd Name,Category,Breed,Species,Head Count,Age (months),Initial Weight (kg),Projected Weight (kg),Price per kg,Price Source,Physical Value,Breeding Accrual,Gross Value,Mortality Deduction,Cost to Carry,Net Realizable Value,Paddock,Saleyard,Last Updated,Last Mustered\n"
+        
+        // Debug: Date formatter for CSV export
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd"
         
         for herd in activeHerds {
             let valuation = valuations[herd.id]
@@ -294,6 +309,10 @@ class ReportExportService {
             let mortalityDeduction = valuation?.mortalityDeduction ?? 0.0
             let costToCarry = valuation?.costToCarry ?? 0.0
             let netValue = valuation?.netRealizableValue ?? 0.0
+            
+            // Debug: Format dates for CSV
+            let lastUpdated = dateFormatter.string(from: herd.updatedAt)
+            let lastMustered = herd.lastMusterDate != nil ? dateFormatter.string(from: herd.lastMusterDate!) : ""
             
             let row = [
                 escapeCSV(herd.name),
@@ -313,7 +332,9 @@ class ReportExportService {
                 String(format: "%.2f", costToCarry),
                 String(format: "%.2f", netValue),
                 escapeCSV(herd.paddockName ?? ""),
-                escapeCSV(herd.selectedSaleyard ?? "")
+                escapeCSV(herd.selectedSaleyard ?? ""),
+                lastUpdated,
+                lastMustered
             ].joined(separator: ",")
             
             csv += row + "\n"

@@ -65,6 +65,10 @@ final class HerdGroup {
     @Relationship(deleteRule: .cascade, inverse: \MusterRecord.herd)
     var musterRecords: [MusterRecord]? // Array of mustering history records
     
+    // Debug: SwiftData relationship to health records (one-to-many)
+    @Relationship(deleteRule: .cascade, inverse: \HealthRecord.herd)
+    var healthRecords: [HealthRecord]? // Array of health treatment records
+    
     init(
         name: String,
         species: String,
@@ -113,6 +117,7 @@ final class HerdGroup {
         self.notes = nil
         self.mortalityRate = nil
         self.musterRecords = []
+        self.healthRecords = []
     }
     
     // MARK: - Computed Properties
@@ -179,6 +184,16 @@ final class HerdGroup {
     /// Get sorted muster records (most recent first)
     var sortedMusterRecords: [MusterRecord] {
         return (musterRecords ?? []).sorted(by: { $0.date > $1.date })
+    }
+    
+    /// Get the most recent health record date for display
+    var lastHealthRecordDate: Date? {
+        return healthRecords?.sorted(by: { $0.date > $1.date }).first?.date
+    }
+    
+    /// Get sorted health records (most recent first)
+    var sortedHealthRecords: [HealthRecord] {
+        return (healthRecords ?? []).sorted(by: { $0.date > $1.date })
     }
     
     /// Simple projected weight calculation (for quick display only)
