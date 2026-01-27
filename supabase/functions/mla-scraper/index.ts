@@ -16,12 +16,18 @@ const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const MLA_API_BASE = 'https://api-mlastatistics.mla.com.au'
 
 // Indicator IDs for fetching from MLA API
+// Using multiple indicators for category-specific base prices
 const INDICATOR_IDS = {
-  EYCI: 0,   // Eastern Young Cattle Indicator
-  WYCI: 1,   // Western Young Cattle Indicator
-  NRYSI: 2,  // National Restocker Yearling Steer Indicator
-  NFSI: 3,   // National Feeder Steer Indicator
-  NHSI: 4,   // National Heavy Steer Indicator
+  NRYSI: 2,  // National Restocker Yearling Steer Indicator (¢/kg live weight) - for Yearling Steer
+  NFSI: 3,   // National Feeder Steer Indicator (¢/kg live weight) - for Feeder Steer
+  NHSI: 4,   // National Heavy Steer Indicator (¢/kg live weight) - for Grown Steer, Cows, etc.
+}
+
+// Map MLA indicators to MLA categories
+const INDICATOR_CATEGORY_MAP: Record<string, string[]> = {
+  'NRYSI': ['Yearling Steer', 'Yearling Bull'],  // Younger cattle get yearling prices
+  'NFSI': ['Feeder Steer'],  // Feeders
+  'NHSI': ['Grown Steer', 'Grown Bull', 'Breeding Cow', 'Dry Cow', 'Heifer', 'Weaner Steer', 'Weaner Bull'],  // Everything else
 }
 
 // State to saleyard mapping (simplified)
@@ -96,19 +102,26 @@ serve(async (req) => {
 
     console.log('🚀 Starting MLA data fetch and smart mapping...')
     console.log('🔑 Request method:', req.method)
-    console.log('🔑 Request headers:', Object.fromEntries(req.headers.entries()))
 
     // Step 1: Fetch MLA indicator data
     console.log('📊 Fetching MLA indicators...')
     const indicatorData = await fetchMLAIndicators()
+    console.log(`✅ Fetched ${indicatorData.length} MLA indicators`)
+    
+    if (indicatorData.length === 0) {
+      console.error('❌ No MLA indicator data fetched! Aborting.')
+      throw new Error('Failed to fetch MLA indicators')
+    }
 
     // Step 2: Load smart mapping rules
     console.log('🗺️ Loading smart mapping rules...')
     const mappingRules = await loadSmartMappingRules(supabase)
+    console.log(`✅ Loaded ${mappingRules.length} mapping rules`)
 
     // Step 3: Load breed premiums
     console.log('🏆 Loading breed premiums...')
     const breedPremiums = await loadBreedPremiums(supabase)
+    console.log(`✅ Loaded ${breedPremiums.length} breed premiums`)
 
     // Step 4: Apply smart mapping
     console.log('✨ Applying smart mapping...')
@@ -117,10 +130,12 @@ serve(async (req) => {
       mappingRules,
       breedPremiums
     )
+    console.log(`✅ Generated ${mappedPrices.length} mapped prices`)
 
     // Step 5: Store in database
     console.log('💾 Storing mapped prices...')
     await storeCategoryPrices(supabase, mappedPrices)
+    console.log('✅ Prices stored successfully')
 
     // Step 6: Cleanup old data
     console.log('🧹 Cleaning up expired prices...')
@@ -143,11 +158,14 @@ serve(async (req) => {
     )
 
   } catch (error) {
-    console.error('❌ Error:', error)
+    console.error('❌ Fatal Error:', error)
+    console.error('❌ Error stack:', error.stack)
+    console.error('❌ Error message:', error.message)
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error.message,
+        stack: error.stack
       }),
       {
         headers: { 
@@ -251,21 +269,22 @@ async function applySmartMapping(
   const mappedPrices: CategoryPrice[] = []
   const today = new Date().toISOString().split('T')[0]
 
-  // For each indicator, create prices for all relevant categories
+  // For each indicator, create prices for its assigned categories only
   for (const indicator of indicatorData) {
     const basePriceCentsPerKg = indicator.price_cents_per_kg
+    const indicatorName = indicator.indicator_name
+    
+    // Get the categories that should use this indicator
+    const categoriesForThisIndicator = INDICATOR_CATEGORY_MAP[indicatorName] || []
+    
+    console.log(`📊 Indicator ${indicatorName} (${basePriceCentsPerKg}¢/kg) → Categories: ${categoriesForThisIndicator.join(', ')}`)
 
-    // Find all mapping rules that could use this indicator
+    // Find mapping rules for categories assigned to this indicator
     const allRelevantRules = mappingRules.filter(rule => {
-      // Match based on MLA category or indicator name
-      return rule.target_mla_category && (
-        rule.target_mla_category.includes('Steer') ||
-        rule.target_mla_category.includes('Heifer') ||
-        rule.target_mla_category.includes('Cow')
-      )
+      return rule.target_mla_category && categoriesForThisIndicator.includes(rule.target_mla_category)
     })
     
-    // Debug: De-duplicate rules by target_mla_category to avoid duplicate prices
+    // De-duplicate rules by target_mla_category to avoid duplicate prices
     const seenCategories = new Set<string>()
     const relevantRules = allRelevantRules.filter(rule => {
       if (seenCategories.has(rule.target_mla_category)) {
@@ -275,7 +294,7 @@ async function applySmartMapping(
       return true
     })
     
-    console.log(`🎯 Processing ${relevantRules.length} unique MLA categories (de-duplicated from ${allRelevantRules.length} rules)`)
+    console.log(`🎯 Processing ${relevantRules.length} categories for ${indicatorName}`)
 
     // For each state and saleyard, create category prices
     for (const [state, saleyards] of Object.entries(SALEYARDS_BY_STATE)) {
@@ -361,16 +380,31 @@ function getWeightRangeForCategory(category: string): string {
 // ============================================
 
 async function storeCategoryPrices(supabase: any, prices: CategoryPrice[]): Promise<void> {
+  // Debug: Deduplicate prices in-memory before inserting to avoid ON CONFLICT errors
+  const uniquePrices = new Map<string, CategoryPrice>()
+  
+  for (const price of prices) {
+    // Create unique key: category + breed + saleyard + state
+    const breed = price.breed || 'null'
+    const key = `${price.category}|${breed}|${price.saleyard}|${price.state}`
+    
+    // Keep only the first occurrence of each unique combination
+    if (!uniquePrices.has(key)) {
+      uniquePrices.set(key, price)
+    }
+  }
+  
+  const deduplicatedPrices = Array.from(uniquePrices.values())
+  console.log(`🧹 Deduplicated ${prices.length} prices down to ${deduplicatedPrices.length} unique entries`)
+  
   // Insert in batches of 100
   const batchSize = 100
-  for (let i = 0; i < prices.length; i += batchSize) {
-    const batch = prices.slice(i, i + batchSize)
+  for (let i = 0; i < deduplicatedPrices.length; i += batchSize) {
+    const batch = deduplicatedPrices.slice(i, i + batchSize)
 
     const { error } = await supabase
       .from('category_prices')
-      .upsert(batch, {
-        onConflict: 'category,breed,saleyard,data_date'
-      })
+      .insert(batch)
 
     if (error) {
       console.error(`Error inserting batch ${i / batchSize + 1}:`, error)

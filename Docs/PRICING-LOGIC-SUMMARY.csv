@@ -1,0 +1,9 @@
+Step,Component,Current Value,Questions for Luke & Mil,Action Needed
+1. Base Price,MLA National Indicator,NHSI=356¢ NRYSI=383¢ NFSI=370¢,Are these the right indicators for each category?,Review CATEGORY-MAPPINGS-REVIEW.csv
+2. Category Mapping,App Category → MLA Category,19 app categories → 10 MLA categories,Is each mapping correct? (e.g. Breeder→Breeding Cow),Check if any categories are wrong
+3. Breed Premium,Breed adjustment on base,Angus +12% Wagyu +22% Droughtmaster +5%,Are these premiums realistic for your market?,Review breed-premiums-final.csv
+4. Final Calculation,Base × (1 + Breed Premium),Example: 356 × 1.12 = $3.99,Does this match real prices you see?,"If too low, increase premiums more"
+ISSUE 1,Breeding vs Slaughter,Breeding Cow = Grown Steer price,Breeding stock should be 15-25% higher,Add category multipliers?
+ISSUE 2,Young cattle,Weaners using NHSI (heavy cattle),Weaners typically $5-6/kg not $3.99,Should weaners use different indicator?
+ISSUE 3,Regional variation,Using national averages,NSW/VIC 20-30% higher than NT/WA,Add regional multipliers later?
+ISSUE 4,MLA data gap,No breed-specific data from MLA,Waiting for MLA response,Consider paid data service?

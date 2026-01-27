@@ -1,0 +1,36 @@
+Breed,National Average %,Your Adjustment %,FINAL Premium % (Rounded),Tier,Rationale
+Angus,10,9,10,Premium,Rounded from 9.5
+Red Angus,10,8,9,Premium,Already whole number
+Black Angus,10,9,10,Premium,Rounded from 9.5
+Wagyu,22,14,18,Premium,Already whole number
+Angus X Friesian,8,6,7,Premium Crossbreed,Already whole number
+Charolais X Angus,10,7,9,Premium Crossbreed,Rounded from 8.5
+Black Baldy,8,6,7,Premium Crossbreed,Already whole number
+Black Hereford,8,5,7,Premium Crossbreed,Rounded from 6.5
+Limousin X Friesian,6,4,5,Standard Crossbreed,Already whole number
+Murray Grey X Friesian,6,5,6,Standard Crossbreed,Rounded from 5.5
+Brangus,8,3,6,Tropical Premium,Rounded from 5.5
+Charolais,6,4,5,European,Already whole number
+Limousin,4,4,4,European,Already whole number
+Hereford,4,3,4,European,Rounded from 3.5
+Poll Hereford,4,3,4,European,Rounded from 3.5
+Shorthorn,2,2,2,European,Already whole number
+Murray Grey,6,4,5,European,Already whole number
+Simmental,6,4,5,European,Already whole number
+Holstein,1,-4,-2,Dairy,Rounded from -1.5
+Brahman,4,-2,1,Tropical,Already whole number
+Droughtmaster,6,1,4,Tropical,Rounded from 3.5
+Santa Gertrudis,4,2,3,Tropical,Already whole number
+Charbray,4,3,4,Tropical,Rounded from 3.5
+Friesian,1,-3,-1,Dairy,Already whole number
+Friesian Cross,2,-1,1,Dairy Cross,Rounded from 0.5
+Speckle Park,8,7,8,Specialty,Rounded from 7.5
+Gelbvieh,6,3,5,European,Rounded from 4.5
+Lowline Angus,10,6,8,Specialty,Already whole number
+Senepol,4,2,3,Tropical,Already whole number
+Devon,4,1,3,European,Rounded from 2.5
+Belted Galloway,6,0,3,Specialty,Already whole number
+Square Meaters,6,1,4,Specialty,Rounded from 3.5
+Cross Breed,0,0,0,BASELINE,Baseline - no premium
+European Cross,0,0,0,BASELINE,Baseline - no premium
+Mixed Breed,0,0,0,BASELINE,Baseline - no premium

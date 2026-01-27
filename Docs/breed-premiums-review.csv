@@ -1,0 +1,101 @@
+Category,Breed,Current %,Proposed %,Tier,Rationale,Notes
+Breeding Cow,Angus,28,28,Premium,Gold standard for meat quality marbling temperament,Keep as is
+Breeding Cow,Red Angus,28,28,Premium,Same quality as Angus heat tolerance bonus,Keep as is
+Breeding Cow,Black Angus,28,28,Premium,Same as Angus (just color variant),Keep as is
+Breeding Cow,Wagyu,28,35,Premium,HIGHEST marbling/value rare export premium,INCREASE
+Breeding Cow,Angus X Friesian,20,20,Premium Crossbreed,Combines Angus quality with Friesian size,Keep as is
+Breeding Cow,Charolais X Angus,20,22,Premium Crossbreed,Excellent growth hybrid vigor,INCREASE slightly
+Breeding Cow,Black Baldy,20,18,Premium Crossbreed,(Hereford X Angus) Good all-rounder,DECREASE slightly
+Breeding Cow,Black Hereford,20,18,Premium Crossbreed,Good beef qualities,DECREASE slightly
+Breeding Cow,Limousin X Friesian,0,15,Premium Crossbreed,Lean meat good for crossbreeding,ADD
+Breeding Cow,Murray Grey X Friesian,0,15,Premium Crossbreed,Docile good growth,ADD
+Breeding Cow,Hereford,0,10,Standard European,Classic beef breed good mothering,ADD
+Breeding Cow,Poll Hereford,0,10,Standard European,Polled version (no horns),ADD
+Breeding Cow,Charolais,0,12,Standard European,Excellent growth muscling,ADD
+Breeding Cow,Limousin,0,10,Standard European,Lean meat good yield,ADD
+Breeding Cow,Murray Grey,0,10,Standard European,Silver color docile tender meat,ADD
+Breeding Cow,Simmental,0,10,Standard European,Large frame good milk production,ADD
+Breeding Cow,Shorthorn,0,8,Standard European,Dual purpose (beef/milk),ADD
+Breeding Cow,Brahman,12,12,Tropical/Composite,Heat/tick tolerant northern markets,Keep as is
+Breeding Cow,Droughtmaster,12,15,Tropical/Composite,(Brahman X Shorthorn) Tropical adaptation + beef quality,INCREASE
+Breeding Cow,Brangus,12,18,Tropical/Composite,(Brahman X Angus) Best of both - quality + adaptation,INCREASE
+Breeding Cow,Santa Gertrudis,12,12,Tropical/Composite,(Brahman X Shorthorn) Good for harsh climates,Keep as is
+Breeding Cow,Charbray,12,12,Tropical/Composite,(Charolais X Brahman) Size + adaptation,Keep as is
+Breeding Cow,Friesian,8,5,Dairy/Dual Purpose,Dairy breed lower meat quality but good milk,DECREASE
+Breeding Cow,Friesian Cross,8,5,Dairy/Dual Purpose,Mixed dairy genetics,DECREASE
+Breeding Cow,Holstein,0,5,Dairy/Dual Purpose,Similar to Friesian,ADD
+Breeding Cow,Cross Breed,15,0,BASELINE,THIS SHOULD BE BASELINE,SET AS BASELINE
+Breeding Cow,European Cross,15,0,BASELINE,Generic European mix,SET AS BASELINE
+Breeding Cow,Mixed Breed,0,0,BASELINE,Unknown genetics = baseline,ADD
+Grown Steer,Angus,28,28,Premium,Highest marbling best eating quality,Keep as is
+Grown Steer,Red Angus,28,28,Premium,Same as Angus,Keep as is
+Grown Steer,Black Angus,28,28,Premium,Same as Angus,Keep as is
+Grown Steer,Wagyu,28,40,Premium,EXTREME marbling export premium,INCREASE
+Grown Steer,Angus X Friesian,20,20,Premium Crossbreed,Good size + quality,Keep as is
+Grown Steer,Charolais X Angus,20,22,Premium Crossbreed,Excellent meat yield,INCREASE
+Grown Steer,Black Baldy,20,18,Premium Crossbreed,Consistent quality,DECREASE
+Grown Steer,Charolais,0,15,European,Excellent muscling lean,ADD
+Grown Steer,Limousin,0,12,European,Lean high yield,ADD
+Grown Steer,Hereford,0,8,European,Traditional beef,ADD
+Grown Steer,Simmental,0,10,European,Large frame good growth,ADD
+Grown Steer,Shorthorn,0,6,European,Older genetics,ADD
+Grown Steer,Brahman,12,8,Tropical,Lower quality meat but valuable in north,DECREASE
+Grown Steer,Droughtmaster,12,12,Tropical,Better meat than pure Brahman,Keep as is
+Grown Steer,Brangus,12,18,Tropical,Good meat + hardiness,INCREASE
+Grown Steer,Cross Breed,15,0,BASELINE,Average market steer,SET AS BASELINE
+Yearling Steer,Angus,28,28,Premium,Premium quality yearling,Keep as is
+Yearling Steer,Red Angus,28,28,Premium,Premium quality yearling,Keep as is
+Yearling Steer,Wagyu,28,40,Premium,Extreme marbling potential,INCREASE
+Yearling Steer,Charolais X Angus,20,22,Premium Crossbreed,Excellent growth,INCREASE
+Yearling Steer,Brahman,12,8,Tropical,Tropical adaptation,DECREASE
+Yearling Steer,Droughtmaster,12,12,Tropical,Good tropical steer,Keep as is
+Yearling Steer,Brangus,12,18,Tropical,Best tropical quality,INCREASE
+Yearling Steer,Cross Breed,15,0,BASELINE,Baseline yearling,SET AS BASELINE
+Weaner Steer,Angus,0,28,Premium,Premium genetics early,ADD
+Weaner Steer,Red Angus,0,28,Premium,Premium genetics early,ADD
+Weaner Steer,Wagyu,0,40,Premium,Extreme value weaner,ADD
+Weaner Steer,Brahman,0,8,Tropical,Tropical weaner,ADD
+Weaner Steer,Droughtmaster,0,12,Tropical,Good tropical weaner,ADD
+Weaner Steer,Brangus,0,18,Tropical,Best tropical weaner,ADD
+Weaner Steer,Cross Breed,0,0,BASELINE,Baseline weaner,ADD
+Feeder Steer,Angus,0,28,Premium,Feedlot premium,ADD
+Feeder Steer,Red Angus,0,28,Premium,Feedlot premium,ADD
+Feeder Steer,Wagyu,0,40,Premium,Feedlot extreme premium,ADD
+Feeder Steer,Charolais,0,15,European,Good feedlot growth,ADD
+Feeder Steer,Brahman,0,8,Tropical,Tropical feedlot,ADD
+Feeder Steer,Droughtmaster,0,12,Tropical,Good tropical feedlot,ADD
+Feeder Steer,Cross Breed,0,0,BASELINE,Baseline feeder,ADD
+Heifer,Angus,20,28,Premium,Breeding + meat value,Keep as is
+Heifer,Red Angus,20,28,Premium,Breeding + meat value,Keep as is
+Heifer,Wagyu,20,35,Premium,Breeding program value,INCREASE
+Heifer,Charolais X Angus,20,22,Premium Crossbreed,Good crossbreeding prospect,Keep as is
+Heifer,Brangus,12,18,Tropical,Versatile genetics,INCREASE
+Heifer,Hereford,0,10,European,Classic breeding,ADD
+Heifer,Droughtmaster,12,15,Tropical,Tropical breeding value,INCREASE
+Heifer,Cross Breed,15,0,BASELINE,Baseline heifer,SET AS BASELINE
+Dry Cow,Angus,0,20,Premium,Still good meat quality,ADD
+Dry Cow,Red Angus,0,20,Premium,Still good meat quality,ADD
+Dry Cow,Wagyu,0,25,Premium,Premium even as cull,ADD
+Dry Cow,Brahman,0,5,Tropical,Lower meat quality,ADD
+Dry Cow,Droughtmaster,0,8,Tropical,Decent meat,ADD
+Dry Cow,Brangus,0,12,Tropical,Good cull meat,ADD
+Dry Cow,Friesian,0,0,Dairy,Dairy cull = low value,ADD
+Dry Cow,Cross Breed,0,0,BASELINE,Baseline cull cow,ADD
+Grown Bull,Angus,0,40,Premium,Proven genetics high demand,ADD
+Grown Bull,Red Angus,0,40,Premium,Proven genetics high demand,ADD
+Grown Bull,Wagyu,0,60,Premium,Extreme breeding value,ADD
+Grown Bull,Charolais,0,25,European,Good growth genetics,ADD
+Grown Bull,Brahman,0,20,Tropical,Tropical breeding value,ADD
+Grown Bull,Droughtmaster,0,20,Tropical,Tropical breeding value,ADD
+Grown Bull,Cross Breed,0,0,BASELINE,Baseline bull,ADD
+Yearling Bull,Angus,0,35,Premium,Young breeding prospect,ADD
+Yearling Bull,Red Angus,0,35,Premium,Young breeding prospect,ADD
+Yearling Bull,Wagyu,0,50,Premium,Young Wagyu genetics,ADD
+Yearling Bull,Charolais,0,20,European,Good young bull,ADD
+Yearling Bull,Brahman,0,18,Tropical,Tropical young bull,ADD
+Yearling Bull,Cross Breed,0,0,BASELINE,Baseline young bull,ADD
+Weaner Bull,Angus,0,30,Premium,Early genetics value,ADD
+Weaner Bull,Red Angus,0,30,Premium,Early genetics value,ADD
+Weaner Bull,Wagyu,0,45,Premium,Early Wagyu value,ADD
+Weaner Bull,Brahman,0,15,Tropical,Tropical weaner bull,ADD
+Weaner Bull,Cross Breed,0,0,BASELINE,Baseline weaner bull,ADD

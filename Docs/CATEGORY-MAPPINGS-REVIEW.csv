@@ -1,0 +1,20 @@
+App Category,MLA Category,MLA Indicator Used,Current Base Price (¢/kg),Purpose/Type,Notes for Review
+Breeder,Breeding Cow,NHSI,356,Breeding Stock,Should breeding stock use different indicator? Higher value than slaughter
+First Calf Heifer,Breeding Cow,NHSI,356,Breeding Stock,Young breeding females
+Breeding Cow,Breeding Cow,NHSI,356,Breeding Stock,Mature breeding females
+Calves,Weaner Steer,NHSI,356,Young Stock,Very young cattle - should this use different indicator?
+Weaner Steer,Weaner Steer,NHSI,356,Young Stock,Weaners typically higher $/kg than heavies
+Weaner Heifer,Heifer,NHSI,356,Young Female,Young females
+Weaner Bull,Weaner Bull,NHSI,356,Young Male,Young bulls
+Yearling Steer,Yearling Steer,NRYSI,383,Growing Stock,Uses Yearling indicator - CORRECT
+Yearling Heifer,Heifer,NHSI,356,Growing Female,Should this use NRYSI like yearling steers?
+Heifer (Unjoined),Heifer,NHSI,356,Growing Female,Virgin heifers
+Heifer (Joined),Heifer,NHSI,356,Breeding Prospect,Pregnant heifers - higher value?
+Yearling Bull,Yearling Bull,NRYSI,383,Growing Male,Uses Yearling indicator
+Feeder Heifer,Heifer,NHSI,356,Feedlot,Destined for feedlot
+Feeder Steer,Feeder Steer,NFSI,~370,Feedlot,Uses Feeder indicator - CORRECT
+Grown Steer,Grown Steer,NHSI,356,Slaughter,Heavy steers for processing
+Slaughter Cattle,Grown Steer,NHSI,356,Slaughter,General slaughter cattle
+Grown Bull,Grown Bull,NHSI,356,Slaughter/Breeding,Mature bulls - breeding or cull?
+Cull Cow,Dry Cow,NHSI,356,Slaughter,End of breeding life
+Dry Cow,Dry Cow,NHSI,356,Slaughter,Not currently pregnant/producing

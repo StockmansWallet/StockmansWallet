@@ -1,0 +1,36 @@
+Breed,National Average Premium %,Your Adjustment %,Tier,Rationale
+Angus,10,,Premium,National average includes all grades (Elite: 20%)
+Red Angus,10,,Premium,Same as Angus with heat tolerance
+Black Angus,10,,Premium,Same as Angus
+Wagyu,22,,Premium,Most are crosses not pure (Elite pure: 35-40%)
+Angus X Friesian,8,,Premium Crossbreed,Dairy influence lowers from elite
+Charolais X Angus,10,,Premium Crossbreed,Good growth cross
+Black Baldy,8,,Premium Crossbreed,Hereford X Angus - consistent
+Black Hereford,8,,Premium Crossbreed,Good crossbreed
+Limousin X Friesian,6,,Standard Crossbreed,Lean meat + dairy influence
+Murray Grey X Friesian,6,,Standard Crossbreed,Docile + dairy influence
+Brangus,8,,Tropical Premium,Good tropical cross
+Charolais,6,,European,Muscling and growth
+Limousin,4,,European,Lean high yield
+Hereford,4,,European,Traditional - middle of pack
+Poll Hereford,4,,European,Same as Hereford
+Shorthorn,2,,European,Dual purpose - lower value
+Murray Grey,6,,European,Tender meat docile
+Simmental,6,,European,Large frame
+Holstein,1,,Dairy,Dairy - minimal beef value
+Brahman,4,,Tropical,Northern: 5-8% Southern: 0-3% National: 4%
+Droughtmaster,6,,Tropical,Better meat than Brahman
+Santa Gertrudis,4,,Tropical,Tropical adaptation
+Charbray,4,,Tropical,Tropical
+Friesian,1,,Dairy,Dairy breed
+Friesian Cross,2,,Dairy Cross,Dairy cross
+Speckle Park,8,,Specialty,Growing market
+Gelbvieh,6,,European,Continental breed
+Lowline Angus,10,,Specialty,Premium eating - niche
+Senepol,4,,Tropical,Heat tolerant
+Devon,4,,European,Heritage breed
+Belted Galloway,6,,Specialty,Niche market
+Square Meaters,6,,Specialty,Compact breed
+Cross Breed,0,,BASELINE,National indicators reflect this
+European Cross,0,,BASELINE,Generic mix
+Mixed Breed,0,,BASELINE,Unknown genetics

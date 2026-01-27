@@ -1,7 +1,7 @@
 
 [functions.mla-scraper]
 enabled = true
-verify_jwt = true
+verify_jwt = false  # Changed to false to allow public access (no JWT required)
 import_map = "./functions/mla-scraper/deno.json"
 # Uncomment to specify a custom file path to the entrypoint.
 # Supported file extensions are: .ts, .js, .mjs, .jsx, .tsx
