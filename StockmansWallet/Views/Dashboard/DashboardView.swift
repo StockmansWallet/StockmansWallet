@@ -275,7 +275,7 @@ struct DashboardView: View {
             VStack(spacing: 0) {
                 PortfolioValueCard(
                     value: selectedValue ?? displayValue,
-                    change: isScrubbing ? (selectedValue ?? displayValue) - baseValue : timeRangeChange,
+                    change: isScrubbing ? (selectedValue ?? displayValue) - baseValue : (portfolioValue - baseValue),
                     baseValue: baseValue,
                     isLoading: isLoading,
                     isScrubbing: isScrubbing,
