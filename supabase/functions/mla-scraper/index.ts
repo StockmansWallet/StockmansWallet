@@ -86,10 +86,17 @@ interface BreedPremium {
 // ============================================
 
 serve(async (req) => {
+  // Allow OPTIONS for CORS
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } })
+  }
+  
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
 
     console.log('🚀 Starting MLA data fetch and smart mapping...')
+    console.log('🔑 Request method:', req.method)
+    console.log('🔑 Request headers:', Object.fromEntries(req.headers.entries()))
 
     // Step 1: Fetch MLA indicator data
     console.log('📊 Fetching MLA indicators...')
@@ -127,7 +134,10 @@ serve(async (req) => {
         timestamp: new Date().toISOString()
       }),
       {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
         status: 200
       }
     )
@@ -140,7 +150,10 @@ serve(async (req) => {
         error: error.message 
       }),
       {
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        },
         status: 500
       }
     )
@@ -243,7 +256,7 @@ async function applySmartMapping(
     const basePriceCentsPerKg = indicator.price_cents_per_kg
 
     // Find all mapping rules that could use this indicator
-    const relevantRules = mappingRules.filter(rule => {
+    const allRelevantRules = mappingRules.filter(rule => {
       // Match based on MLA category or indicator name
       return rule.target_mla_category && (
         rule.target_mla_category.includes('Steer') ||
@@ -251,19 +264,32 @@ async function applySmartMapping(
         rule.target_mla_category.includes('Cow')
       )
     })
+    
+    // Debug: De-duplicate rules by target_mla_category to avoid duplicate prices
+    const seenCategories = new Set<string>()
+    const relevantRules = allRelevantRules.filter(rule => {
+      if (seenCategories.has(rule.target_mla_category)) {
+        return false
+      }
+      seenCategories.add(rule.target_mla_category)
+      return true
+    })
+    
+    console.log(`🎯 Processing ${relevantRules.length} unique MLA categories (de-duplicated from ${allRelevantRules.length} rules)`)
 
     // For each state and saleyard, create category prices
     for (const [state, saleyards] of Object.entries(SALEYARDS_BY_STATE)) {
       for (const saleyard of saleyards) {
         for (const rule of relevantRules) {
           // Create base price (no breed)
+          // Debug: Store MLA category in database, not app category
           mappedPrices.push({
-            category: rule.target_category,
+            category: rule.target_mla_category,
             species: 'Cattle',
             breed_premium_pct: 0,
             base_price_per_kg: basePriceCentsPerKg,
             final_price_per_kg: basePriceCentsPerKg,
-            weight_range: getWeightRangeForCategory(rule.target_category),
+            weight_range: getWeightRangeForCategory(rule.target_mla_category),
             saleyard,
             state,
             source: 'MLA API + Smart Mapping',
@@ -272,23 +298,27 @@ async function applySmartMapping(
           })
 
           // Create breed-specific prices
+          // Debug: Look up breed premiums using MLA category, not app category
+          console.log(`🔍 Looking for breed premiums for category="${rule.target_mla_category}"`)
           const relevantBreedPremiums = breedPremiums.filter(bp =>
             bp.species === 'Cattle' &&
-            bp.category === rule.target_category
+            bp.category === rule.target_mla_category
           )
+          console.log(`✅ Found ${relevantBreedPremiums.length} breed premiums for ${rule.target_mla_category}`)
 
           for (const breedPremium of relevantBreedPremiums) {
             const premiumMultiplier = 1 + (breedPremium.premium_pct / 100)
             const finalPrice = basePriceCentsPerKg * premiumMultiplier
 
+            // Debug: Store MLA category in database, not app category
             mappedPrices.push({
-              category: rule.target_category,
+              category: rule.target_mla_category,
               species: 'Cattle',
               breed: breedPremium.breed,
               breed_premium_pct: breedPremium.premium_pct,
               base_price_per_kg: basePriceCentsPerKg,
               final_price_per_kg: finalPrice,
-              weight_range: getWeightRangeForCategory(rule.target_category),
+              weight_range: getWeightRangeForCategory(rule.target_mla_category),
               saleyard,
               state,
               source: 'MLA API + Smart Mapping + Breed Premium',

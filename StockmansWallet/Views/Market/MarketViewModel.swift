@@ -110,14 +110,36 @@ class MarketViewModel {
     // MARK: - Load Category Prices (for My Markets tab)
     /// Fetches category-specific prices filtered by user's exact category+breed combinations
     /// Debug: Only shows prices for the exact herds the user owns, plus general prices
+    // MARK: - Category Mapping Helper
+    /// Maps app categories to MLA database categories
+    private func mapCategoryToMLACategory(_ appCategory: String) -> String {
+        switch appCategory {
+        case "Breeder":
+            return "Breeding Cow"
+        case "Weaner Heifer", "Heifer (Unjoined)", "Heifer (Joined)", "Feeder Heifer":
+            return "Heifer"
+        case "First Calf Heifer":
+            return "Breeding Cow"
+        case "Cull Cow":
+            return "Dry Cow"
+        case "Calves":
+            return "Weaner Steer"
+        case "Slaughter Cattle":
+            return "Grown Steer"
+        default:
+            return appCategory
+        }
+    }
+    
     func loadCategoryPrices(forCategoryBreedPairs pairs: [(category: String, breed: String)]) async {
         await MainActor.run { self.isLoadingPrices = true }
         
-        // Extract unique categories for the query
-        let categories = Array(Set(pairs.map { $0.category }))
+        // Debug: Map app categories to MLA categories for comparison
+        let mappedPairs = pairs.map { (category: mapCategoryToMLACategory($0.category), breed: $0.breed, originalCategory: $0.category) }
+        
         print("🔵 Debug: loadCategoryPrices called with \(pairs.count) herds:")
-        for pair in pairs {
-            print("   - \(pair.category) (\(pair.breed))")
+        for pair in mappedPairs {
+            print("   - \(pair.originalCategory) → \(pair.category) (\(pair.breed))")
         }
         
         // Fetch all prices then filter to user's categories
@@ -142,37 +164,39 @@ class MarketViewModel {
         print("🔵 Debug: ALL unique categories in fetched data: \(uniqueCategories)")
         
         // Filter to only show prices for exact category+breed combinations the user owns
-        // Debug: Only exact matches - no general prices
+        // Debug: Use mapped MLA categories for comparison
         let filteredPrices = allPrices.filter { price in
             // Must have a breed (skip general prices)
             guard let priceBreed = price.breed else { return false }
             
-            // Must match one of user's exact category+breed combinations
-            return pairs.contains(where: { pair in
+            // Must match one of user's exact category+breed combinations (using mapped MLA categories)
+            return mappedPairs.contains(where: { pair in
                 pair.category == price.category && pair.breed == priceBreed
             })
         }
         
         print("🔵 Debug: After filtering by exact category+breed pairs, got \(filteredPrices.count) matching prices")
         
-        // De-duplicate by category + breed combination
-        // Debug: Each breed gets its own card so users can see breed-specific pricing
-        var uniquePrices: [String: CategoryPrice] = [:]
+        // De-duplicate by user's original herd category + breed combination
+        // Debug: Show one card per unique herd type the user owns (e.g., separate cards for Breeder vs Weaner Heifer)
+        var uniquePrices: [String: (price: CategoryPrice, originalCategory: String)] = [:]
         for price in filteredPrices {
-            // Key includes breed so we keep separate cards for Angus, Hereford, etc.
-            let breedKey = price.breed ?? "general"
-            let key = "\(price.category)-\(price.weightRange)-\(breedKey)"
-            // Keep the highest price for each category+weightRange+breed combination
-            if let existing = uniquePrices[key] {
-                if price.price > existing.price {
-                    uniquePrices[key] = price
+            // Find which original user category this price matches
+            if let matchedPair = mappedPairs.first(where: { pair in
+                pair.category == price.category && pair.breed == price.breed
+            }) {
+                // Key based on ORIGINAL app category + breed
+                let key = "\(matchedPair.originalCategory)-\(matchedPair.breed)"
+                
+                // Keep the first price found for each unique herd type
+                if uniquePrices[key] == nil {
+                    uniquePrices[key] = (price: price, originalCategory: matchedPair.originalCategory)
                 }
-            } else {
-                uniquePrices[key] = price
             }
         }
         
-        let deduplicatedPrices = Array(uniquePrices.values).sorted { 
+        // Convert back to CategoryPrice array
+        let deduplicatedPrices = uniquePrices.values.map { $0.price }.sorted { 
             if $0.category == $1.category {
                 // Sort by breed within same category (general prices first)
                 let breed0 = $0.breed ?? ""

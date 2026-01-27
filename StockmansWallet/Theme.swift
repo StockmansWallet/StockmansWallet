@@ -196,7 +196,16 @@ struct StitchedCard: ViewModifier {
     
     func body(content: Content) -> some View {
         content
-            // Debug: Clean card style without stroke - matches herd details page design
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                    .strokeBorder(
+                        Theme.separator.opacity(0.2),
+                        style: StrokeStyle(
+                            lineWidth: 1,
+                            lineCap: .round
+                        )
+                    )
+            )
     }
 }
 

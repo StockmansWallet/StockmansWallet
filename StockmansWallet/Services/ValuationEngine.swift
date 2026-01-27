@@ -84,6 +84,30 @@ class ValuationEngine {
         return netValue
     }
     
+    // MARK: - Category Mapping
+    /// Maps app categories to MLA database categories
+    /// Debug: Handles cases where app UI uses different terminology than MLA data
+    private func mapCategoryToMLACategory(_ appCategory: String) -> String {
+        // Map app categories to MLA categories used in database
+        switch appCategory {
+        case "Breeder":
+            return "Breeding Cow"
+        case "Weaner Heifer", "Heifer (Unjoined)", "Heifer (Joined)", "Feeder Heifer":
+            return "Heifer"
+        case "First Calf Heifer":
+            return "Breeding Cow"
+        case "Cull Cow":
+            return "Dry Cow"
+        case "Calves":
+            return "Weaner Steer"
+        case "Slaughter Cattle":
+            return "Grown Steer"
+        default:
+            // Categories that match MLA directly (Yearling Steer, Grown Steer, etc.)
+            return appCategory
+        }
+    }
+    
     // MARK: - Market Pricing (Fallback Hierarchy)
     /// Gets market price with fallback: Saleyard → State → National
     /// Debug: Now fetches from Supabase category_prices table with real MLA data
@@ -283,22 +307,25 @@ class ValuationEngine {
     /// Debug: Replaces old local MarketPrice database queries
     private func fetchSupabasePrice(category: String, breed: String, saleyard: String?, state: String?) async -> Double? {
         do {
+            // Debug: Map app category to MLA category for database query
+            let mlaCategory = mapCategoryToMLACategory(category)
+            
             // Fetch prices from Supabase with filters
             let prices = try await supabaseService.fetchCategoryPrices(
-                categories: [category],
+                categories: [mlaCategory],
                 saleyard: saleyard,
                 state: state,
                 breed: breed
             )
             
             // Find exact match for this category + breed
-            if let matchingPrice = prices.first(where: { $0.category == category && $0.breed == breed }) {
-                print("✅ ValuationEngine: Found Supabase price for \(category) (\(breed)): $\(matchingPrice.price)/kg from \(matchingPrice.source)")
+            if let matchingPrice = prices.first(where: { $0.category == mlaCategory && $0.breed == breed }) {
+                print("✅ ValuationEngine: Found Supabase price for \(category) [→\(mlaCategory)] (\(breed)): $\(matchingPrice.price)/kg from \(matchingPrice.source)")
                 return matchingPrice.price
             }
             
             // If no exact match, log and return nil to try next fallback
-            print("⚠️ ValuationEngine: No Supabase price found for \(category) (\(breed)) with saleyard=\(saleyard ?? "any"), state=\(state ?? "any")")
+            print("⚠️ ValuationEngine: No Supabase price found for \(category) [→\(mlaCategory)] (\(breed)) with saleyard=\(saleyard ?? "any"), state=\(state ?? "any")")
             return nil
             
         } catch {
