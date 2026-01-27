@@ -138,14 +138,14 @@ struct PortfolioView: View {
             } else {
                 ScrollView {
                     VStack(spacing: Theme.sectionSpacing) {
-                        if let summary = portfolioSummary {
-                            PortfolioStatsCards(summary: summary, isLoading: isLoading)
-                                .padding(.horizontal)
-                        }
+                        // Always render stats card to prevent layout shift during loading
+                        PortfolioStatsCards(summary: portfolioSummary, isLoading: isLoading)
+                            .padding(.horizontal, Theme.cardPadding)
+                           
                         
                         PortfolioViewModeSelector(selectedView: $selectedView)
                             .padding(.horizontal)
-                            .padding(.vertical, -8)
+                           
                         
                         if selectedView == .overview {
                             overviewContent
@@ -572,75 +572,76 @@ struct SpeciesBreakdown {
 // MARK: - Portfolio Stats Cards
 // Debug: Stacked cards showing total portfolio value, total head, and active herds
 struct PortfolioStatsCards: View {
-    let summary: PortfolioSummary
+    let summary: PortfolioSummary?
     let isLoading: Bool
     
-    // Debug: Format currency value with grey decimal portion to match Dashboard/Detail pages
-    private var formattedValue: (whole: String, decimal: String) {
-        let value = summary.totalNetWorth
-        let numberFormatter = NumberFormatter()
-        numberFormatter.numberStyle = .decimal
-        numberFormatter.maximumFractionDigits = 0
-        numberFormatter.groupingSeparator = ","
-        numberFormatter.usesGroupingSeparator = true
-        
-        let whole = numberFormatter.string(from: NSNumber(value: abs(value))) ?? "0"
-        let decimal = String(format: "%02d", Int((abs(value) - floor(abs(value))) * 100))
-        
-        return (whole: whole, decimal: decimal)
+    // Calculate change from initial purchase cost
+    private var totalChange: Double {
+        (summary?.totalNetWorth ?? 0) - (summary?.totalInitialValue ?? 0)
+    }
+    
+    private var percentageChange: Double {
+        guard let summary = summary, summary.totalInitialValue > 0 else { return 0 }
+        return (totalChange / summary.totalInitialValue) * 100
     }
     
     var body: some View {
-        VStack(spacing: Theme.sectionSpacing) {
-            // Debug: Total Value - simplified title, no background for cleaner look
-            VStack(spacing: 8) {
-                Text("Total Value")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
+        VStack(spacing: 12) {
+            // Debug: Match Dashboard's PortfolioValueCard exactly for consistent positioning
+            VStack(spacing: 0) {
+                // Always show value (no loader overlay)
+                AnimatedCurrencyValue(
+                    value: summary?.totalNetWorth ?? 0,
+                    isScrubbing: false
+                )
+                .frame(height: 58)
+                .opacity(isLoading ? 0.5 : 1.0) // Subtle fade during loading
+                .animation(.easeInOut(duration: 0.3), value: isLoading)
+                .padding(.bottom, 8)
+                .accessibilityLabel("Total portfolio value")
                 
-                if isLoading {
-                    ProgressView()
-                        .tint(Theme.accent)
-                } else {
-                    // Debug: Formatted currency with grey decimal to match Dashboard/Detail pages
-                    HStack(alignment: .firstTextBaseline, spacing: 0) {
-                        Text("$")
-                            .font(.system(size: 36, weight: .bold))
-                            .foregroundStyle(.white)
-                            .tracking(-2)
-                            .baselineOffset(3)
-                            .padding(.trailing, 6)
-                        
-                        Text(formattedValue.whole)
-                            .font(.system(size: 44, weight: .bold))
-                            .foregroundStyle(.white)
-                            .tracking(-2)
-                            .monospacedDigit()
-                        
-                        Text(".")
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundStyle(Color(hex: "9E9E9E"))
-                            .tracking(-2)
-                        
-                        Text(formattedValue.decimal)
-                            .font(.system(size: 22, weight: .bold))
-                            .foregroundStyle(Color(hex: "9E9E9E"))
-                            .tracking(-1)
-                            .monospacedDigit()
-                    }
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
+                // Change pill (matches Dashboard)
+                HStack(spacing: 6) {
+                    Image(systemName: totalChange >= 0 ? "arrow.up.right" : "arrow.down.right")
+                        .font(.system(size: 10, weight: .regular))
+                        .foregroundStyle(totalChange >= 0 ? Theme.positiveChange : Theme.negativeChange)
+                        .accessibilityHidden(true)
+                    
+                    Text(totalChange, format: .currency(code: "AUD"))
+                        .font(.system(size: 11, weight: .regular))
+                        .monospacedDigit()
+                        .foregroundStyle(totalChange >= 0 ? Theme.positiveChange : Theme.negativeChange)
+                    
+                    Text("|")
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundStyle((totalChange >= 0 ? Theme.positiveChange : Theme.negativeChange).opacity(0.5))
+                        .accessibilityHidden(true)
+                    
+                    Text("\(percentageChange >= 0 ? "+" : "")\(percentageChange, specifier: "%.2f")%")
+                        .font(.system(size: 11, weight: .regular))
+                        .monospacedDigit()
+                        .foregroundStyle(totalChange >= 0 ? Theme.positiveChange : Theme.negativeChange)
                 }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(totalChange >= 0 ? Theme.positiveChangeBg : Theme.negativeChangeBg)
+                )
+                .fixedSize()
+                .opacity(isLoading ? 0.3 : 1.0)
+                .animation(.easeInOut(duration: 0.3), value: isLoading)
+                .accessibilityLabel("Change since purchase")
+                .accessibilityValue("\(totalChange.formatted(.currency(code: "AUD"))), \(percentageChange, specifier: "%.2f") percent")
             }
+            .padding(.vertical, Theme.cardPadding)
             .frame(maxWidth: .infinity)
-            .padding(.horizontal, 16) // Debug: Consistent horizontal padding for breathing room
             
             // Debug: Combined stats card with 3-section horizontal layout - shows Herds, Head in Herds, and Head in Individuals
             HStack(spacing: 16) {
                 // Section 1: Herds
                 VStack(spacing: 4) {
-                    Text("\(summary.activeHerdCount)")
+                    Text("\(summary?.activeHerdCount ?? 0)")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
@@ -660,7 +661,7 @@ struct PortfolioStatsCards: View {
                 
                 // Section 2: Head in Herds
                 VStack(spacing: 4) {
-                    Text("\(summary.headInHerds)")
+                    Text("\(summary?.headInHerds ?? 0)")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
@@ -680,7 +681,7 @@ struct PortfolioStatsCards: View {
                 
                 // Section 3: Head in Individuals
                 VStack(spacing: 4) {
-                    Text("\(summary.headInIndividuals)")
+                    Text("\(summary?.headInIndividuals ?? 0)")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
@@ -697,6 +698,7 @@ struct PortfolioStatsCards: View {
             .padding(.vertical, 16)
             .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .opacity(isLoading ? 0.3 : 1.0) // Fade during loading
         }
     }
 }

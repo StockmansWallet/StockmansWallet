@@ -23,12 +23,6 @@ struct PortfolioValueCard: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            Text("Total Portfolio Value")
-                .font(Theme.caption)
-                .foregroundStyle(.white.opacity(0.7))
-                .padding(.bottom, 4)
-                .accessibilityAddTraits(.isHeader)
-            
             // Debug: Always show the number - never hide it with ProgressView
             // Use pulsing effect (isUpdating) to indicate loading instead
             // Fixed height container prevents layout shifts
@@ -48,6 +42,7 @@ struct PortfolioValueCard: View {
             )
             .animation(.easeInOut(duration: 0.8).repeatCount(3, autoreverses: true), value: isUpdating)
             .padding(.bottom, 8)
+            .accessibilityLabel("Total portfolio value")
             
             // Debug: Change pill with both dollar amount and percentage
             // Fixed width container prevents layout shifts when values change

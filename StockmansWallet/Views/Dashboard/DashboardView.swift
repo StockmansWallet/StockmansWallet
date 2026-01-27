@@ -282,7 +282,7 @@ struct DashboardView: View {
                     isUpdating: isUpdatingValue
                 )
                 .padding(.horizontal, Theme.cardPadding)
-                .padding(.top, 30)
+                .padding(.top, 54) // Debug: Increased to align with Portfolio page value positioning
                 .accessibilityElement(children: .combine)
                 .accessibilityLabel("Total portfolio value")
                 .accessibilityValue("\(portfolioValue.formatted(.currency(code: "AUD")))")
