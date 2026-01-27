@@ -523,11 +523,6 @@ struct PortfolioView: View {
                 valuations: valuations
             )
             self.isLoading = false
-            
-            // Debug: Only provide haptic feedback on initial load, not on background updates
-            if shouldShowLoader {
-                HapticManager.success()
-            }
         }
     }
 }

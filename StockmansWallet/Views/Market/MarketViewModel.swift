@@ -79,8 +79,6 @@ class MarketViewModel {
         await MainActor.run {
             self.lastUpdated = Date()
         }
-        
-        HapticManager.success()
     }
     
     // MARK: - Load Top Insight
