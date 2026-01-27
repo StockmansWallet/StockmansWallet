@@ -99,16 +99,12 @@ struct PortfolioView: View {
                     // Performance: Update filtered caches
                     updateFilteredCaches()
                     
-                    // Performance: Show UI immediately with basic stats, calculate valuations in background
                     await MainActor.run {
-                        self.isLoading = false
-                        // Create minimal summary to show UI immediately
-                        createQuickSummary()
                         self.hasInitiallyLoaded = true
                     }
                     
-                    // Performance: Calculate full valuations in background (low priority)
-                    loadingTask = Task(priority: .utility) {
+                    // Calculate valuations (now uses ValuationEngine like Dashboard for consistency)
+                    loadingTask = Task(priority: .userInitiated) {
                         await loadPortfolioSummary()
                     }
                 }
@@ -385,48 +381,6 @@ struct PortfolioView: View {
         }
     }
     
-    // MARK: - Quick Summary (Instant Display)
-    // Performance: Create basic summary instantly without expensive valuations
-    private func createQuickSummary() {
-        let activeHerds = allHerds.filter { !$0.isSold && $0.headCount > 1 }
-        let activeIndividuals = allHerds.filter { !$0.isSold && $0.headCount == 1 }
-        let allActiveAssets = allHerds.filter { !$0.isSold }
-        
-        guard !allActiveAssets.isEmpty else {
-            self.portfolioSummary = nil
-            return
-        }
-        
-        // Quick calculations without database queries
-        // Debug: Calculate separate head counts for herds and individuals
-        let headInHerds = activeHerds.reduce(0) { $0 + $1.headCount }
-        let headInIndividuals = activeIndividuals.reduce(0) { $0 + $1.headCount }
-        let totalHeadCount = headInHerds + headInIndividuals
-        let estimatedValue = Double(totalHeadCount) * 400.0 * 4.0 // Rough estimate: 400kg × $4/kg
-        
-        // Create minimal summary for instant display
-        self.portfolioSummary = PortfolioSummary(
-            totalNetWorth: estimatedValue,
-            totalPhysicalValue: estimatedValue,
-            totalBreedingAccrual: 0,
-            totalGrossValue: estimatedValue,
-            totalMortalityDeduction: 0,
-            totalCostToCarry: 0,
-            totalInitialValue: estimatedValue,
-            unrealizedGains: 0,
-            unrealizedGainsPercent: 0,
-            totalHeadCount: totalHeadCount,
-            activeHerdCount: activeHerds.count,
-            headInHerds: headInHerds,
-            headInIndividuals: headInIndividuals,
-            categoryBreakdown: [],
-            speciesBreakdown: [],
-            largestCategory: "",
-            largestCategoryPercent: 0,
-            valuations: [:]
-        )
-    }
-    
     // MARK: - Load Portfolio Summary (Parallelized)
     private func loadPortfolioSummary() async {
         // Debug: Only show loading indicator if we don't have a summary yet
@@ -453,22 +407,13 @@ struct PortfolioView: View {
             return
         }
         
-        // Performance: Pre-fetch all market prices in ONE query to avoid 45+ individual queries
-        let allCategories = Set(activeHerds.map { $0.category })
-        // Performance: Fetch all prices for relevant categories, filter by date after
-        let priceDescriptor = FetchDescriptor<MarketPrice>(
-            sortBy: [SortDescriptor(\.priceDate, order: .reverse)]
-        )
-        
-        let allPrices = (try? modelContext.fetch(priceDescriptor)) ?? []
-        // Filter to relevant categories and recent prices
-        let relevantPrices = allPrices.filter { allCategories.contains($0.category) }
-        let priceCache = Dictionary(grouping: relevantPrices) { $0.category }
+        // Debug: Get user preferences for ValuationEngine
+        let prefs = preferences.first ?? UserPreferences()
         
         // Create a mapping of herd IDs to herds for later lookup
         let herdMap = Dictionary(uniqueKeysWithValues: activeHerds.map { ($0.id, $0) })
         
-        // Performance: Calculate valuations with cached prices (no more database queries per herd)
+        // Calculate valuations using ValuationEngine (same as Dashboard for consistency)
         var results: [(herdId: UUID, valuation: HerdValuation)] = []
         
         for herd in activeHerds {
@@ -480,61 +425,11 @@ struct PortfolioView: View {
                 break
             }
             
-            // Get price from cache (instant, no database query)
-            let categoryPrices = priceCache[herd.category] ?? []
-            let pricePerKg = categoryPrices.first?.pricePerKg ?? 4.0
-            
-            // Calculate projected weight
-            let calculationDate = herd.useCreationDateForWeight ? herd.createdAt : Date()
-            let projectedWeight = valuationEngine.calculateProjectedWeight(
-                initialWeight: herd.initialWeight,
-                dateStart: herd.createdAt,
-                dateChange: herd.dwgChangeDate,
-                dateCurrent: calculationDate,
-                dwgOld: herd.previousDWG,
-                dwgNew: herd.dailyWeightGain
-            )
-            
-            // Calculate physical value
-            let physicalValue = Double(herd.headCount) * projectedWeight * pricePerKg
-            
-            // Calculate breeding accrual if applicable
-            var breedingAccrual: Double = 0.0
-            if herd.isPregnant, let joinedDate = herd.joinedDate {
-                let daysPregnant = Calendar.current.dateComponents([.day], from: joinedDate, to: Date()).day ?? 0
-                let gestationDays = 283
-                if daysPregnant < gestationDays {
-                    let calfValue = 250.0 * pricePerKg
-                    let accrualRate = Double(daysPregnant) / Double(gestationDays)
-                    breedingAccrual = calfValue * accrualRate * herd.calvingRate * Double(herd.headCount)
-                }
-            }
-            
-            let grossValue = physicalValue + breedingAccrual
-            // Performance: Use default 2% mortality rate if not set
-            let mortalityRate = 0.02 // 2% default mortality rate
-            let mortalityDeduction = grossValue * mortalityRate
-            let netValue = grossValue - mortalityDeduction
-            
-            let monthsHeld = Double(Calendar.current.dateComponents([.day], from: herd.createdAt, to: Date()).day ?? 0) / 30.0
-            // Performance: Use default costs if not set
-            let monthlyCost = 100.0 // Default $100/month total cost
-            let costToCarry = monthlyCost * monthsHeld
-            let netRealizableValue = netValue - costToCarry
-            
-            let valuation = HerdValuation(
-                herdId: herd.id,
-                physicalValue: physicalValue,
-                breedingAccrual: breedingAccrual,
-                grossValue: grossValue,
-                mortalityDeduction: mortalityDeduction,
-                netValue: netValue,
-                costToCarry: costToCarry,
-                netRealizableValue: netRealizableValue,
-                pricePerKg: pricePerKg,
-                priceSource: "Cached",
-                projectedWeight: projectedWeight,
-                valuationDate: Date()
+            // Use ValuationEngine to ensure Portfolio and Dashboard match exactly
+            let valuation = await valuationEngine.calculateHerdValue(
+                herd: herd,
+                preferences: prefs,
+                modelContext: modelContext
             )
             
             results.append((herdId: herd.id, valuation: valuation))

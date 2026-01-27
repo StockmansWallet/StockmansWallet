@@ -242,12 +242,6 @@ class MarketViewModel {
             // Use MLA category as key (so Weaner Heifer and Heifer (Unjoined) both map to single "Heifer" card)
             let key = price.category
             
-            // Check if this price matches any user's breed for this category
-            let userHasThisBreed = mappedPairs.contains(where: { pair in
-                pair.category == price.category && 
-                (price.breed == nil || pair.breed == price.breed)
-            })
-            
             // Priority: breed-specific match > general price
             if let existingPrice = uniquePrices[key] {
                 // If current price has breed that matches user's herd, prefer it over general
