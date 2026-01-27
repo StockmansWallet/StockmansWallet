@@ -84,8 +84,8 @@ struct ReferenceData {
     // MARK: - Livestock Categories (From ADD HERD Flow PDF)
     static let cattleCategories = [
         "Yearling Steer", "Grown Steer", "Yearling Bull", "Weaner Bull",
-        "Grown Bull", "Heifer (Unjoined)", "Heifer (Joined)", "First Calf Heifer",
-        "Breeder", "Dry Cow",
+        "Grown Bull", "Feeder Steer", "Heifer (Unjoined)", "Heifer (Joined)", 
+        "First Calf Heifer", "Breeder", "Dry Cow",
         "Weaner Heifer", "Feeder Heifer", "Cull Cow", "Calves", "Slaughter Cattle"
     ]
     

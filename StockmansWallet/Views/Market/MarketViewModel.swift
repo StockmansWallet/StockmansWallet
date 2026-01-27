@@ -131,22 +131,59 @@ class MarketViewModel {
         }
     }
     
-    func loadCategoryPrices(forCategoryBreedPairs pairs: [(category: String, breed: String)]) async {
+    func loadCategoryPrices(forCategoryBreedPairs pairs: [(category: String, breed: String, state: String)]) async {
         await MainActor.run { self.isLoadingPrices = true }
         
         // Debug: Map app categories to MLA categories for comparison
-        let mappedPairs = pairs.map { (category: mapCategoryToMLACategory($0.category), breed: $0.breed, originalCategory: $0.category) }
+        let mappedPairs = pairs.map { (category: mapCategoryToMLACategory($0.category), breed: $0.breed, state: $0.state, originalCategory: $0.category) }
         
         print("🔵 Debug: loadCategoryPrices called with \(pairs.count) herds:")
         for pair in mappedPairs {
-            print("   - \(pair.originalCategory) → \(pair.category) (\(pair.breed))")
+            print("   - \(pair.originalCategory) → \(pair.category) (\(pair.breed)) in \(pair.state)")
         }
         
-        // Fetch all prices then filter to user's categories
+        // Debug: Fetch prices for ALL unique breeds in user's herds
+        let uniqueBreeds = Set(pairs.map { $0.breed })
+        print("🔵 Debug: Fetching prices for breeds: \(uniqueBreeds)")
+        
+        // Get unique MLA categories from user's herds
+        let uniqueMLACategories = Set(mappedPairs.map { $0.category })
+        print("🔵 Debug: Fetching prices for MLA categories: \(uniqueMLACategories.sorted())")
+        
+        // Smart state filtering - handles single state, multiple states, or manual filter
+        // This dramatically reduces query size (e.g., QLD only = ~280 prices vs all states = ~1400)
+        let uniqueStates = Set(mappedPairs.map { $0.state })
+        print("🔵 Debug: User's herd states: \(uniqueStates.sorted())")
+        
+        let (singleState, multipleStates): (String?, [String]?) = {
+            if let selected = selectedState {
+                // User manually selected a state filter
+                return (selected, nil)
+            } else if uniqueStates.count == 1, let single = uniqueStates.first {
+                // All herds in same state - use single state filter
+                return (single, nil)
+            } else if uniqueStates.count > 1 {
+                // Multiple states - pass array of states (e.g., ["NSW", "VIC"])
+                return (nil, Array(uniqueStates))
+            } else {
+                // No states (shouldn't happen) - fetch all
+                return (nil, nil)
+            }
+        }()
+        
+        if let states = multipleStates {
+            print("🔵 Debug: Fetching prices for MULTIPLE states: \(states.joined(separator: ", "))")
+        } else {
+            print("🔵 Debug: Fetching prices for state: \(singleState ?? "All states")")
+        }
+        
+        // Fetch prices for ONLY the categories and states we need
         let allPrices = await dataService.fetchCategoryPrices(
+            categories: Array(uniqueMLACategories),
             livestockType: nil,
             saleyard: nil,
-            state: selectedState
+            state: singleState,
+            states: multipleStates
         )
         
         // If fetch was cancelled or returned no data, keep existing prices
@@ -163,40 +200,71 @@ class MarketViewModel {
         let uniqueCategories = Set(allPrices.map { $0.category }).sorted()
         print("🔵 Debug: ALL unique categories in fetched data: \(uniqueCategories)")
         
-        // Filter to only show prices for exact category+breed combinations the user owns
-        // Debug: Use mapped MLA categories for comparison
-        let filteredPrices = allPrices.filter { price in
-            // Must have a breed (skip general prices)
-            guard let priceBreed = price.breed else { return false }
-            
-            // Must match one of user's exact category+breed combinations (using mapped MLA categories)
-            return mappedPairs.contains(where: { pair in
-                pair.category == price.category && pair.breed == priceBreed
-            })
+        // Debug: Check specifically for Yearling Steer
+        let yearlingPrices = allPrices.filter { $0.category == "Yearling Steer" }
+        print("🔵 Debug: Found \(yearlingPrices.count) Yearling Steer prices")
+        if !yearlingPrices.isEmpty {
+            print("🔵 Debug: Yearling Steer breeds available: \(yearlingPrices.compactMap { $0.breed })")
         }
         
-        print("🔵 Debug: After filtering by exact category+breed pairs, got \(filteredPrices.count) matching prices")
+        // Filter to show prices for user's categories
+        // Debug: Include both breed-specific AND general prices for relevant categories
+        let filteredPrices = allPrices.filter { price in
+            // Check if price category matches any of user's categories (using mapped MLA categories)
+            let categoryMatches = mappedPairs.contains(where: { pair in
+                pair.category == price.category
+            })
+            
+            if !categoryMatches {
+                return false // Category doesn't match any user herd
+            }
+            
+            // If price has a breed, it must match one of the user's breeds for that category
+            if let priceBreed = price.breed {
+                return mappedPairs.contains(where: { pair in
+                    pair.category == price.category && pair.breed == priceBreed
+                })
+            }
+            
+            // If price has no breed (general price), include it for matching category
+            return true
+        }
         
-        // De-duplicate by user's original herd category + breed combination
-        // Debug: Show one card per unique herd type the user owns (e.g., separate cards for Breeder vs Weaner Heifer)
-        var uniquePrices: [String: (price: CategoryPrice, originalCategory: String)] = [:]
+        print("🔵 Debug: After filtering by user categories (breed-specific + general), got \(filteredPrices.count) matching prices")
+        
+        // De-duplicate by MLA category (so all app categories that map to same MLA category show as one card)
+        // Debug: Show one card per unique MLA category (e.g., "Heifer (Unjoined)" and "Weaner Heifer" both show as one "Heifer" card)
+        // Priority: breed-specific match for user's herds > general price
+        var uniquePrices: [String: CategoryPrice] = [:]
+        
+        // First pass: Add all filtered prices
         for price in filteredPrices {
-            // Find which original user category this price matches
-            if let matchedPair = mappedPairs.first(where: { pair in
-                pair.category == price.category && pair.breed == price.breed
-            }) {
-                // Key based on ORIGINAL app category + breed
-                let key = "\(matchedPair.originalCategory)-\(matchedPair.breed)"
-                
-                // Keep the first price found for each unique herd type
-                if uniquePrices[key] == nil {
-                    uniquePrices[key] = (price: price, originalCategory: matchedPair.originalCategory)
+            // Use MLA category as key (so Weaner Heifer and Heifer (Unjoined) both map to single "Heifer" card)
+            let key = price.category
+            
+            // Check if this price matches any user's breed for this category
+            let userHasThisBreed = mappedPairs.contains(where: { pair in
+                pair.category == price.category && 
+                (price.breed == nil || pair.breed == price.breed)
+            })
+            
+            // Priority: breed-specific match > general price
+            if let existingPrice = uniquePrices[key] {
+                // If current price has breed that matches user's herd, prefer it over general
+                if let priceBreed = price.breed,
+                   mappedPairs.contains(where: { $0.category == price.category && $0.breed == priceBreed }),
+                   existingPrice.breed == nil {
+                    uniquePrices[key] = price
                 }
+                // If both have breeds or both are general, keep first one
+            } else {
+                // First price for this MLA category
+                uniquePrices[key] = price
             }
         }
         
-        // Convert back to CategoryPrice array
-        let deduplicatedPrices = uniquePrices.values.map { $0.price }.sorted { 
+        // Convert back to CategoryPrice array and sort
+        let deduplicatedPrices = uniquePrices.values.sorted { 
             if $0.category == $1.category {
                 // Sort by breed within same category (general prices first)
                 let breed0 = $0.breed ?? ""

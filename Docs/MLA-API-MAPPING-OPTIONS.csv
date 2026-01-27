@@ -1,0 +1,25 @@
+Your App Category,Best MLA Indicator to Map To,Indicator ID,Current Mapping,Recommendation
+Calves,Young Cattle Indicator,14,NHSI (ID 4),CHANGE to ID 14 for better accuracy
+Weaner Steer,Young Cattle Indicator,14,NHSI (ID 4),CHANGE to ID 14 for better accuracy
+Weaner Heifer,Young Cattle Indicator,14,NHSI (ID 4),CHANGE to ID 14 for better accuracy
+Weaner Bull,Young Cattle Indicator,14,NHSI (ID 4),CHANGE to ID 14 for better accuracy
+Yearling Steer,Restocker Yearling Steer Indicator,2,NRYSI (ID 2),✅ KEEP - Already correct
+Yearling Bull,Restocker Yearling Steer Indicator,2,NRYSI (ID 2),✅ KEEP - Already correct
+Yearling Heifer,Restocker Yearling Heifer Indicator,12,NHSI (ID 4),CHANGE to ID 12 for better accuracy
+Heifer,Restocker Yearling Heifer Indicator,12,NHSI (ID 4),CHANGE to ID 12 for better accuracy
+Heifer (Unjoined),Restocker Yearling Heifer Indicator,12,NHSI (ID 4),CHANGE to ID 12 for better accuracy
+Heifer (Joined),Restocker Yearling Heifer Indicator,12,NHSI (ID 4),CHANGE to ID 12 for better accuracy
+Feeder Steer,Feeder Steer Indicator,3,NFSI (ID 3),✅ KEEP - Already correct
+Feeder Heifer,Feeder Heifer Indicator,17,NHSI (ID 4),CHANGE to ID 17 for better accuracy
+Grown Steer,Heavy Steer Indicator,4,NHSI (ID 4),✅ KEEP - Already correct
+Slaughter Cattle,Heavy Steer Indicator,4,NHSI (ID 4),✅ KEEP - Already correct
+Grown Bull,Heavy Steer Indicator,4,NHSI (ID 4),✅ KEEP - Works for bulls too
+Breeder,Processor Cow Indicator,13,NHSI (ID 4),CHANGE to ID 13 for better accuracy
+First Calf Heifer,Processor Cow Indicator,13,NHSI (ID 4),CHANGE to ID 13 for better accuracy
+Breeding Cow,Processor Cow Indicator,13,NHSI (ID 4),CHANGE to ID 13 for better accuracy
+Dry Cow,Processor Cow Indicator,13,NHSI (ID 4),CHANGE to ID 13 for better accuracy
+Cull Cow,Processor Cow Indicator,13,NHSI (ID 4),CHANGE to ID 13 for better accuracy
+Wether Lamb,Trade Lamb Indicator,7,Not mapped,ADD if supporting sheep
+Merino Wether,Merino Lamb Indicator,9,Not mapped,ADD if supporting sheep
+Breeding Ewe,Mutton Indicator,11,Not mapped,ADD if supporting sheep
+Maiden Ewe,Restocker Lamb Indicator,10,Not mapped,ADD if supporting sheep

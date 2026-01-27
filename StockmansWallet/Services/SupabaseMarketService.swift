@@ -98,12 +98,17 @@ class SupabaseMarketService {
         categories: [String] = [],
         saleyard: String? = nil,
         state: String? = nil,
+        states: [String]? = nil,
         breed: String? = nil
     ) async throws -> [CategoryPrice] {
         print("🔵 Debug: Fetching category prices from Supabase")
         print("   Categories: \(categories.isEmpty ? "All" : categories.joined(separator: ", "))")
         print("   Saleyard: \(saleyard ?? "Any")")
-        print("   State: \(state ?? "Any")")
+        if let states = states {
+            print("   States: \(states.joined(separator: ", "))")
+        } else {
+            print("   State: \(state ?? "Any")")
+        }
         print("   Breed: \(breed ?? "General")")
         
         // Build query
@@ -121,7 +126,10 @@ class SupabaseMarketService {
             query = query.eq("saleyard", value: saleyard)
         }
         
-        if let state = state {
+        // State filter - supports single state or multiple states
+        if let states = states, !states.isEmpty {
+            query = query.in("state", values: states)
+        } else if let state = state {
             query = query.eq("state", value: state)
         }
         
@@ -132,7 +140,7 @@ class SupabaseMarketService {
         
         let response: [SupabaseCategoryPrice] = try await query
             .order("data_date", ascending: false)
-            .limit(500) // Fetch enough to include all categories
+            .limit(5000) // Increased to accommodate all categories and breeds (scraper generates ~3600)
             .execute()
             .value
         

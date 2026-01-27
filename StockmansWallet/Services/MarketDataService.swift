@@ -157,24 +157,31 @@ class MarketDataService {
     // MARK: - Category Prices
     // Debug: Fetch REAL prices from Supabase only - no mock fallback
     func fetchCategoryPrices(
+        categories: [String] = [],
         livestockType: LivestockType?,
         saleyard: String?,
-        state: String?
+        state: String? = nil,
+        states: [String]? = nil
     ) async -> [CategoryPrice] {
         print("🔵 Debug: fetchCategoryPrices called")
+        print("   categories: \(categories.isEmpty ? "All" : categories.joined(separator: ", "))")
         print("   livestockType: \(livestockType?.rawValue ?? "All")")
         print("   saleyard: \(saleyard ?? "Any")")
-        print("   state: \(state ?? "Any")")
+        if let states = states {
+            print("   states: \(states.joined(separator: ", "))")
+        } else {
+            print("   state: \(state ?? "Any")")
+        }
         
         // Fetch REAL data from Supabase only (no mock fallback)
         if Config.useSupabaseBackend {
             print("🔵 Debug: Fetching from Supabase category_prices...")
             do {
-                let categories: [String] = [] // Empty = fetch all
                 let prices = try await SupabaseMarketService.shared.fetchCategoryPrices(
                     categories: categories,
                     saleyard: saleyard,
                     state: state,
+                    states: states,
                     breed: nil // General prices for now
                 )
                 

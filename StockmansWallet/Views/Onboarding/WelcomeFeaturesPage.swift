@@ -26,13 +26,12 @@ struct WelcomeFeaturesPage: View {
     var onSkipAsAdvisor: (() -> Void)? = nil
 
     @State private var step: OnboardingStep = .landing
-    @State private var showHeaderText = false
-    @State private var showTiles = false
     @State private var playVideo = false
+    @State private var showFeaturesPage = false // Debug: Controls slide-in animation
 
     var body: some View {
         ZStack {
-            // Debug: Video background on landing page, static image on features page
+            // Debug: Video background on landing page only
             if step == .landing && !UIAccessibility.isReduceMotionEnabled {
                 // Debug: Animated video background with branding iron
                 LandingVideoPlayer(
@@ -40,58 +39,33 @@ struct WelcomeFeaturesPage: View {
                     videoExtension: "mp4",
                     isPlaying: $playVideo
                 )
-            } else {
-                // Debug: Static background image (features page or Reduce Motion)
+            } else if step == .landing {
+                // Debug: Static background image for landing page (Reduce Motion)
                 Image("landingBG")
                     .resizable()
                     .aspectRatio(contentMode: .fill)
                     .ignoresSafeArea()
                     .accessibilityHidden(true)
-                    .blur(radius: step == .features ? 20 : 0)
             }
             
-            // Debug: Dark brown overlay on features page for better text legibility
-            if step == .features {
-                Color(hex: "1A1412").opacity(0.8)
-                    .ignoresSafeArea()
-                    .allowsHitTesting(false)
-                    .accessibilityHidden(true)
-            }
-            
-            // TEMPORARY: Dev skip buttons for Farmer/Advisor testing (DELETE BEFORE LAUNCH) ⚠️
+            // TEMPORARY: Dev skip button for testing (DELETE BEFORE LAUNCH) ⚠️
             VStack {
-                HStack(spacing: 12) {
+                HStack {
                     Spacer()
                     
-                    // Debug: Skip as Farmer - goes to farmer dashboard (no icon, stroke style)
+                    // Debug: Skip to Dashboard - goes to farmer dashboard for testing
                     Button(action: {
                         HapticManager.tap()
                         onSkipAsFarmer?()
                     }) {
-                        Text("Farmer")
+                        Text("Skip to Dashboard")
                             .font(.caption2)
-                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                            .foregroundStyle(Theme.primaryText)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 7)
                             .background(
                                 Capsule()
-                                    .strokeBorder(Theme.secondaryText.opacity(0.3), lineWidth: 1)
-                            )
-                    }
-                    
-                    // Debug: Skip as Advisor - goes to advisory dashboard (no icon, stroke style)
-                    Button(action: {
-                        HapticManager.tap()
-                        onSkipAsAdvisor?()
-                    }) {
-                        Text("Advisor")
-                            .font(.caption2)
-                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 7)
-                            .background(
-                                Capsule()
-                                    .strokeBorder(Theme.secondaryText.opacity(0.3), lineWidth: 1)
+                                    .fill(Theme.accent)
                             )
                     }
                     
@@ -101,97 +75,124 @@ struct WelcomeFeaturesPage: View {
                 Spacer()
             }
 
-            GeometryReader { geometry in
-                VStack(spacing: 0) {
-                    Spacer(minLength: 0)
+            // Debug: Features page slides in from right with solid background
+            if step == .features {
+                ZStack {
+                    // Solid background for features page
+                    Theme.backgroundColor
+                        .ignoresSafeArea()
+                        .accessibilityHidden(true)
+                    
+                    VStack(spacing: 0) {
+                        Spacer()
 
-                    VStack(spacing: 16) {
-                        // Debug: Spacer to push content down on landing page
-                        if step == .landing {
-                            Spacer()
-                                .frame(height: 200)
-                        }
-                        
-                        if step == .features {
-                            // Wallet logo
-                            Image("wallet")
+                        VStack(spacing: 0) {
+                            // Stockman's Wallet logo
+                            Image("stockmanswallet")
                                 .resizable()
+                                .renderingMode(.template)
                                 .scaledToFit()
-                                .frame(height: 120)
-                                .padding(.bottom, 8)
+                                .frame(height: 90)
+                                .foregroundStyle(Theme.primaryText)
                                 .accessibilityLabel("Stockman's Wallet")
+                                .padding(.bottom, 40)
                             
-                            VStack(spacing: 14) {
-                                Text("Livestock Management")
-                                    .font(.title2.weight(.bold)) // Debug: Increased to title2 for proper hierarchy
-                                    .foregroundStyle(Theme.primaryText)
+                            VStack(spacing: 16) {
+                                Text("Live. Stock. Value.")
+                                    .font(.title2.weight(.bold))
+                                    .foregroundStyle(Theme.accent)
                                     .multilineTextAlignment(.center)
-                                    .minimumScaleFactor(0.8)
-                                    .opacity(showHeaderText ? 1 : 0)
-                                    .offset(y: showHeaderText ? 0 : 8)
 
                                 Text("Manage your livestock assets like a share trading exchange. Real-time valuations, comprehensive reporting, and insights designed for primary producers.")
-                                    .font(.subheadline) // Debug: Smaller font size for better hierarchy
+                                    .font(.subheadline)
                                     .foregroundStyle(Theme.secondaryText)
                                     .multilineTextAlignment(.center)
                                     .lineLimit(nil)
-                                    .frame(maxWidth: .infinity)
-                                    .opacity(showHeaderText ? 1 : 0)
-                                    .offset(y: showHeaderText ? 0 : 8)
                             }
-                            .padding(.top, 10)
-                            .animation(.easeOut(duration: 0.30), value: showHeaderText)
+                            .padding(.bottom, 40)
 
                             featureTiles
-                                .padding(.top, 18)
                         }
+                        .padding(.horizontal, 24)
+
+                        Spacer()
+
+                        // Primary CTA with centralized style
+                        VStack(spacing: 16) {
+                            Button {
+                                HapticManager.tap()
+                                // Debug: Show Terms & Privacy sheet after "Continue" on features page
+                                showingTermsPrivacy = true
+                            } label: {
+                                Text("Continue")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(Theme.LandingButtonStyle())
+                            .padding(.horizontal, 20)
+
+                            Text("Powered by MLA Market Data")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.primaryText)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 20)
+                        }
+                        .buttonStyle(.automatic) // cancel any parent buttonStyle override
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 60)
                     }
-                    .padding(.horizontal, 24)
+                }
+                .offset(x: showFeaturesPage ? 0 : UIScreen.main.bounds.width)
+                .animation(.spring(response: 0.55, dampingFraction: 0.9), value: showFeaturesPage)
+            }
+            
+            // Debug: Landing page content
+            if step == .landing {
+                GeometryReader { geometry in
+                    VStack(spacing: 0) {
+                        Spacer(minLength: 0)
 
-                    Spacer()
+                        VStack(spacing: 16) {
+                            Spacer()
+                                .frame(height: 200)
+                        }
+                        .padding(.horizontal, 24)
 
-                    // Primary CTA with centralized style
-                    VStack(spacing: 16) {
-                        Button {
-                            HapticManager.tap()
+                        Spacer()
 
-                            if step == .landing {
+                        // Primary CTA for landing
+                        VStack(spacing: 16) {
+                            Button {
+                                HapticManager.tap()
+                                
                                 // Transition to features (user initiated)
                                 withAnimation(.spring(response: 0.55, dampingFraction: 0.9)) {
                                     step = .features
                                 }
+                                
+                                showFeaturesPage = false
 
-                                showHeaderText = false
-                                showTiles = false
-
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.10) {
-                                    showHeaderText = true
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                                    showFeaturesPage = true
                                 }
-                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.22) {
-                                    showTiles = true
-                                }
-                            } else {
-                                // Debug: Show Terms & Privacy sheet after "Continue" on features page (Option 2)
-                                showingTermsPrivacy = true
+                            } label: {
+                                Text("Get Started")
+                                    .frame(maxWidth: .infinity)
                             }
-                        } label: {
-                            Text(step == .landing ? "Get Started" : "Continue")
-                                .frame(maxWidth: .infinity)
-                        }
-                        .buttonStyle(Theme.LandingButtonStyle())
-                        .padding(.horizontal, 20)
-
-                        Text("Powered by MLA Market Data")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                            .multilineTextAlignment(.center)
+                            .buttonStyle(Theme.LandingButtonStyle())
                             .padding(.horizontal, 20)
+
+                            Text("Powered by MLA Market Data")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.primaryText)
+                                .multilineTextAlignment(.center)
+                                .padding(.horizontal, 20)
+                        }
+                        .buttonStyle(.automatic) // cancel any parent buttonStyle override
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 60)
                     }
-                    .buttonStyle(.automatic) // cancel any parent buttonStyle override
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 60)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
                 }
-                .frame(width: geometry.size.width, height: geometry.size.height)
             }
         }
         .ignoresSafeArea(.all)
@@ -231,9 +232,6 @@ struct WelcomeFeaturesPage: View {
             }
         }
         .padding(.horizontal, 0)
-        .opacity(showTiles ? 1 : 0)
-        .offset(y: showTiles ? 0 : 10)
-        .animation(.easeOut(duration: 0.25), value: showTiles)
     }
 }
 
@@ -249,15 +247,20 @@ struct FeatureTile: View {
                 .foregroundStyle(Theme.accent)
             
             Text(title)
-                .font(.callout.weight(.medium)) // Debug: Increased to callout for better readability
-                .foregroundStyle(Theme.primaryText)
+                .font(.callout.weight(.medium))
+                .foregroundStyle(Theme.primaryText.opacity(0.9))
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.9)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 120)
         .padding(.horizontal, 0)
-        .stitchedCard() // Uses stitched design with transparent background and dashed border
+        .background(Theme.accent.opacity(0.1))
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .strokeBorder(Theme.accent.opacity(0.2), lineWidth: 1)
+        )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)
     }

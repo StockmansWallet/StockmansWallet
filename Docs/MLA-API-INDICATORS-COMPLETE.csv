@@ -1,0 +1,20 @@
+Indicator ID,Indicator Name,Units,Category Type,Currently Used,Species,Notes
+0,Eastern Young Cattle Indicator (EYCI),c/kg cwt,Young Cattle - Carcass Weight,NO ❌,Cattle,Carcass weight - not suitable for live weight pricing
+1,Western Young Cattle Indicator (WYCI),c/kg cwt,Young Cattle - Carcass Weight,NO ❌,Cattle,Carcass weight - not suitable for live weight pricing
+2,National Restocker Yearling Steer Indicator (NRYSI),c/kg lwt,Yearling Steer - Live Weight,YES ✅,Cattle,Used for Yearling Steer & Yearling Bull categories
+3,National Feeder Steer Indicator (NFSI),c/kg lwt,Feeder Steer - Live Weight,YES ✅,Cattle,Used for Feeder Steer category
+4,National Heavy Steer Indicator (NHSI),c/kg lwt,Heavy/Grown Cattle - Live Weight,YES ✅,Cattle,"Used for Grown Steer, Grown Bull, Breeding Cow, Dry Cow, Heifer, Weaner Steer, Weaner Bull"
+5,National Heavy Dairy Cow Indicator,c/kg lwt,Dairy Cows - Live Weight,NO ❌,Cattle,Could be used for dairy cattle if needed
+12,National Restocker Yearling Heifer Indicator,c/kg lwt,Yearling Heifer - Live Weight,NO ❌,Cattle,COULD use for Heifer categories instead of NHSI
+13,National Processor Cow Indicator,c/kg lwt,Cows for Processing - Live Weight,NO ❌,Cattle,COULD use for Breeding Cow/Dry Cow/Cull Cow instead of NHSI
+14,National Young Cattle Indicator,c/kg lwt,Young Cattle - Live Weight,NO ❌,Cattle,COULD use for Weaner categories instead of NHSI
+15,Online Young Cattle Indicator,c/kg lwt,Young Cattle - Online Sales,NO ❌,Cattle,Online sales data - different market channel
+17,National Feeder Heifer Indicator,c/kg lwt,Feeder Heifer - Live Weight,NO ❌,Cattle,COULD use for Feeder Heifer instead of NHSI
+6,National Light Lamb Indicator,c/kg cwt,Light Lamb - Carcass Weight,NO ❌,Sheep,Not currently mapped to any app category
+7,National Trade Lamb Indicator,c/kg cwt,Trade Lamb - Carcass Weight,NO ❌,Sheep,Not currently mapped to any app category
+8,National Heavy Lamb Indicator,c/kg cwt,Heavy Lamb - Carcass Weight,NO ❌,Sheep,Not currently mapped to any app category
+9,National Merino Lamb Indicator,c/kg cwt,Merino Lamb - Carcass Weight,NO ❌,Sheep,Not currently mapped to any app category
+10,National Restocker Lamb Indicator,c/kg cwt,Restocker Lamb - Carcass Weight,NO ❌,Sheep,Not currently mapped to any app category
+11,National Mutton Indicator,c/kg cwt,Mutton - Carcass Weight,NO ❌,Sheep,Not currently mapped to any app category
+16,Online Lamb Indicator,$/head,Lamb - Online Sales,NO ❌,Sheep,Online sales - different pricing model (per head)
+18,Online Sheep Indicator,$/head,Sheep - Online Sales,NO ❌,Sheep,Online sales - different pricing model (per head)

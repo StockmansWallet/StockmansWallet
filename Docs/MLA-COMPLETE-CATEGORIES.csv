@@ -1,0 +1,52 @@
+MLA Category,Typical Age/Weight,Sale Purpose Options,MLA Indicator Available,Currently Mapped in App,Notes
+CATTLE - YOUNG STOCK,,,,,,
+Calves,0-200kg,"Restocker, Paddock",None,YES (→Weaner Steer),Very young cattle
+Vealer Steer,0-280kg,"Restocker, Paddock",None,NO,Same as Weaner Steer - could map Calves here
+Vealer Heifer,0-280kg,"Restocker, Paddock",None,NO,Same as Weaner Heifer
+Weaner Steer,200-330kg,"Restocker, Paddock",None,YES,Young male cattle post-weaning
+Weaner Bull,200-330kg,"Restocker, Breeding",None,YES,Young intact males
+CATTLE - YEARLINGS,,,,,,
+Yearling Steer,280-450kg,"Feeder, Restocker, Processor",NRYSI (383¢/kg),YES,12-24 month old castrated males
+Yearling Heifer,280-450kg,"Feeder, Restocker, Processor",None,YES (→Heifer),12-24 month old females
+Yearling Bull,280-450kg,"Restocker, Breeding",None,YES,12-24 month old intact males
+CATTLE - FEEDERS,,,,,,
+Feeder Steer,330-500kg,Feeder (feedlot),NFSI (~370¢/kg),YES,Destined for feedlot finishing
+Feeder Heifer,330-500kg,Feeder (feedlot),None,YES (→Heifer),Females for feedlot
+CATTLE - HEAVY/GROWN,,,,,,
+Grown Steer,400-750kg,"Processor, Heavy",NHSI (356¢/kg),YES,Mature steers for slaughter
+Grown Heifer,400-750kg,Processor,None,NO,Mature heifers for slaughter - not currently mapped
+Grown Bull,450-750kg,"Processor, Breeding",None,YES,Mature bulls
+CATTLE - FEMALES,,,,,,
+Heifer,280-450kg,"Various purposes",None,YES,General category for young females
+Heifer (Unjoined),280-450kg,Breeding prospect,None,YES (→Heifer),Virgin heifers
+Heifer (Joined),280-450kg,Breeding (pregnant),None,YES (→Heifer),Pregnant heifers - typically worth more
+CATTLE - BREEDING STOCK,,,,,,
+Breeding Cow,450-750kg,Breeding (active),None,YES,Mature females in breeding program
+First Calf Heifer,450-650kg,Breeding (first pregnancy),None,YES (→Breeding Cow),First-time mothers - typically worth less
+Cows,400-750kg,"Processor, Restocker",None,YES (→Dry Cow or Breeding Cow),Generic cow category
+CATTLE - CULL STOCK,,,,,,
+Dry Cow,450-750kg,Processor (slaughter),None,YES,Not pregnant/producing - for slaughter
+Cull Cow,450-750kg,Processor (slaughter),None,YES (→Dry Cow),End of productive life
+SHEEP - LAMBS,,,,,,
+Trade Lamb,16-22kg,Processor,Trade Lamb Indicator,NO,Prime lambs for domestic consumption
+Export Lamb,22-26kg,Processor,None,NO,Heavier lambs for export
+Light Lamb,12-18kg,Processor,None,NO,Lighter lambs
+Heavy Lamb,24-30kg,Processor,None,NO,Heavy lambs
+SHEEP - WETHERS,,,,,,
+Weaner Lamb,12-22kg,"Restocker, Store",None,NO,Young lambs post-weaning
+Wether Lamb,18-30kg,"Restocker, Processor",None,YES,Castrated male lambs
+Merino Wether,25-50kg,"Wool, Processor",Merino Wether Indicator,YES,Merino castrated males
+SHEEP - BREEDING STOCK,,,,,,
+Breeding Ewe,40-70kg,Breeding,None,YES,Mature females in breeding program
+Maiden Ewe,35-55kg,Breeding (first time),None,YES,Young females not yet bred
+Ewe Lamb,20-35kg,"Breeding prospect, Store",None,NO,Young females for future breeding
+SHEEP - RAMS,,,,,,
+Ram,60-120kg,Breeding,None,NO,Intact males for breeding
+Wether Ram,50-100kg,Processor,None,NO,Castrated rams
+GOATS,,,,,,
+Boer Goat,25-60kg,"Processor, Breeding",None,NO,Meat goat breed
+Rangeland Goat,20-50kg,Processor,None,NO,Feral/rangeland goats
+Dairy Goat,40-70kg,"Dairy, Breeding",None,NO,Dairy breeds
+SPECIALTY,,,,,,
+Stud Stock,Various,Breeding (premium),None,NO,Elite breeding animals - much higher prices
+Replacement Heifers,350-500kg,Breeding (entering herd),None,NO,Quality heifers for breeding programs

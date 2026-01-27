@@ -36,9 +36,10 @@ struct MarketView: View {
     }
     
     // Debug: Get exact category+breed combinations from user's herds
-    private var userCategoryBreedPairs: [(category: String, breed: String)] {
+    private var userCategoryBreedPairs: [(category: String, breed: String, state: String)] {
         let activeHerds = allHerds.filter { !$0.isSold }
-        return activeHerds.map { (category: $0.category, breed: $0.breed) }
+        let userState = preferences.first?.defaultState ?? "QLD" // Use user's default state
+        return activeHerds.map { (category: $0.category, breed: $0.breed, state: userState) }
     }
     
     // MARK: - Market Tab Enum
