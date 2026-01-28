@@ -37,10 +37,11 @@ struct AnimatedCurrencyValue: View {
     
     var body: some View {
         // Debug: Responsive scaling - HStack scales down to fit available width
+        // Debug: Dark brown text for light theme using Theme colors
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text("$")
                 .font(.system(size: 50, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.primaryText)  // Dark brown from asset
                 .tracking(-2)
                 .padding(.trailing, 4)
                 .accessibilityHidden(true)
@@ -51,26 +52,25 @@ struct AnimatedCurrencyValue: View {
             Text(formattedValue.whole)
                 .font(.system(size: 50, weight: .bold, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(.white)
+                .foregroundStyle(Theme.primaryText)  // Dark brown from asset
                 .tracking(-2)
                 .contentTransition(isScrubbing ? .identity : .numericText(countsDown: isDecreasing))
                 .animation(isScrubbing ? .none : .default, value: formattedValue.whole)
             
             Text(".")
                 .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundStyle(Color(hex: "9E9E9E"))
+                .foregroundStyle(Theme.secondaryText)  // Medium brown from asset
                 .tracking(-2)
                 .accessibilityHidden(true)
             
             Text(formattedValue.decimal)
                 .font(.system(size: 24, weight: .bold, design: .rounded))
                 .monospacedDigit()
-                .foregroundStyle(Color(hex: "9E9E9E"))
+                .foregroundStyle(Theme.secondaryText)  // Medium brown from asset
                 .tracking(-1)
                 .contentTransition(isScrubbing ? .identity : .numericText(countsDown: isDecreasing))
                 .animation(isScrubbing ? .none : .default, value: formattedValue.decimal)
         }
-        .shadow(color: .black.opacity(0.3), radius: 12, x: 0, y: 4)
         .frame(maxWidth: .infinity)
         .minimumScaleFactor(0.5) // Debug: Scale down to 50% if needed to fit screen width
         .lineLimit(1) // Debug: Keep on single line, scale instead of wrapping

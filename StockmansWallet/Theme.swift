@@ -17,43 +17,43 @@ struct Theme {
     static let destructive = Color("Destructive")
     
     // MARK: - Code-based Colors (not from assets)
-    // Debug: Defined in code for maximum flexibility and maintainability
-    static let cardBackground = Color.white.opacity(0.03)  // For buttons and UI components
-    static let inputFieldBackground = Color.white.opacity(0.03)  // For text fields, pickers, etc.
-    static let separator = Color.white.opacity(0.2)  // Subtle divider lines and borders
+    // Debug: Warm light theme with cream and brown tones
+    static let cardBackground = Color(hex: "59341B").opacity(0.05)  // Subtle brown tint for cards (button color)
+    static let inputFieldBackground = Color(hex: "59341B").opacity(0.05)  // Subtle brown tint for inputs
+    static let separator = Color(hex: "59341B").opacity(0.15)  // Brown divider lines and borders
     
     // Debug: Custom colors for positive/negative change indicators (total change, percent change, tickers)
     // Rule #0: Single source of truth for change colors used throughout change indicators
-    static let positiveChange = Color(hex: "9CD563")  // Bright green for positive changes (text)
-    static let positiveChangeBg = Color(hex: "29321F")  // Dark green background for positive change pills
-    static let negativeChange = Color(hex: "D64F41")  // Bright red for negative changes (text)
-    static let negativeChangeBg = Color(hex: "432522")  // Dark red background for negative change pills
+    static let positiveChange = Color(hex: "6B8E23")  // Olive green for positive changes (text) - works on light bg
+    static let positiveChangeBg = Color(hex: "E8F5E9")  // Light green background for positive change pills
+    static let negativeChange = Color(hex: "D32F2F")  // Rich red for negative changes (text)
+    static let negativeChangeBg = Color(hex: "FFEBEE")  // Light red background for negative change pills
    
     // MARK: - Backgrounds
     // Debug: Standardized backgrounds for consistent visual identity across the app
     // Rule #0: Single source of truth for background color used throughout main pages
     
     /// Main solid background color for all primary app screens (Dashboard, Portfolio, Market, etc.)
-    /// Dark brown (#1E1815) that creates depth and visual hierarchy
-    static let backgroundColor = Color(hex: "1E1815")
+    /// Warm cream/beige (#E5D3BB) that creates a welcoming, earthy aesthetic
+    static let backgroundColor = Color(hex: "E5D3BB")
     
-    /// Debug: Almost black background for when no background image is selected
-    /// Much darker than standard backgroundColor to create stronger contrast
-    static let noBackgroundColor = Color(hex: "0A0908")
+    /// Debug: Slightly darker cream for when no background image is selected
+    /// Maintains warm tone while providing subtle contrast
+    static let noBackgroundColor = Color(hex: "D5C9B5")
     
     /// Debug: Background image opacity for dashboard parallax images
     /// Rule #0: Single source of truth for background image transparency
     /// Range: 0.0 (fully transparent) to 1.0 (fully opaque)
     static let backgroundImageOpacity: CGFloat = 0.4
     
-    /// Main gradient background - brown accent radiating from top
-    /// Debug: Simple radial gradient - adjust opacity to control strength of brown glow
+    /// Main gradient background - warm brown accent radiating from top
+    /// Debug: Subtle gradient for light theme
     @ViewBuilder
     static var backgroundGradient: some View {
         RadialGradient(
             colors: [
-                Color(hex: "7C5134").opacity(0.15),  // Brown accent
-                Color(hex: "1E1815")                // Dark brown at edges
+                Color(hex: "CC7126").opacity(0.08),  // Accent color
+                Color(hex: "E5D3BB")                 // Cream background at edges
             ],
             center: .top,
             startRadius: 0,
@@ -63,8 +63,8 @@ struct Theme {
     }
     
     /// Solid background color for sheets, modals, and overlays
-    /// Uses #130F0D for consistency
-    static let sheetBackground = Color(hex: "1E1815")
+    /// Slightly lighter cream for layering
+    static let sheetBackground = Color(hex: "EDE7DC")
 
     // MARK: - Typography
     // Debug: Using system fonts with .rounded design - the correct Apple HIG way
@@ -254,8 +254,8 @@ extension Theme {
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.buttonHeight)
                 .contentShape(Rectangle())
-                .foregroundStyle(.white)
-                .background(Theme.accent.opacity(configuration.isPressed ? 0.85 : 1.0))
+                .foregroundStyle(Theme.background)  // Cream text from asset
+                .background(Theme.primaryText.opacity(configuration.isPressed ? 0.85 : 1.0))  // Button color #59341B
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
@@ -268,13 +268,13 @@ extension Theme {
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.buttonHeight)
                 .contentShape(Rectangle())
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.primaryText)  // Button color #59341B for text
                 .background(
                     RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                        .stroke(Theme.accent.opacity(configuration.isPressed ? 0.6 : 1.0), lineWidth: 1.0)
+                        .stroke(Theme.primaryText.opacity(configuration.isPressed ? 0.6 : 1.0), lineWidth: 1.5)
                         .background(
                             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                                .fill(Theme.cardBackground.opacity(0.6))
+                                .fill(Color.clear)
                         )
                 )
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
@@ -288,7 +288,7 @@ extension Theme {
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(height: Theme.buttonHeight)
                 .padding(.horizontal, 16)
-                .background(Theme.cardBackground.opacity(configuration.isPressed ? 0.85 : 1.0))
+                .background(Theme.primaryText.opacity(configuration.isPressed ? 0.08 : 0.05))
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
@@ -310,7 +310,7 @@ extension Theme {
         }
     }
     
-    // Debug: Landing page button style with dark brown color (#392219)
+    // Debug: Landing page button style with dark brown color matching light theme
     struct LandingButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
@@ -318,8 +318,8 @@ extension Theme {
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.buttonHeight)
                 .contentShape(Rectangle())
-                .foregroundStyle(.white)
-                .background(Color(hex: "392219").opacity(configuration.isPressed ? 0.85 : 1.0))
+                .foregroundStyle(Theme.background)  // Cream text from asset
+                .background(Theme.primaryText.opacity(configuration.isPressed ? 0.85 : 1.0))  // Button color #59341B
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
