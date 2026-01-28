@@ -34,20 +34,26 @@ This file contains important Apple documentation URLs for quick reference during
 - [MainActor](https://developer.apple.com/documentation/swift/mainactor)
 
 ## iOS Design Guidelines
-- [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/)
+
+### iOS 26 Specific
+- [iOS 26 Overview](https://www.apple.com/os/ios/) - Official iOS 26 features and Liquid Glass design language
+- [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/) - Complete HIG reference
+- [iOS 26 Design Resources](https://developer.apple.com/design/resources/) - UI kits, templates, and assets
+- [Liquid Glass Design Language](https://developer.apple.com/design/human-interface-guidelines/ios/visual-design/materials/) - Materials and translucency
+
+### Performance & Best Practices
 - [Performance Best Practices](https://developer.apple.com/documentation/xcode/improving-your-app-s-performance)
+- [Optimizing SwiftUI Performance](https://developer.apple.com/documentation/swiftui/optimizing-your-swiftui-app-s-performance)
 
 ---
 
-## Add Your URLs Below
+## Project-Specific Design Documentation
 
-Please add any specific documentation URLs you want referenced:
+Internal documentation about our design decisions and iOS 26 compliance:
 
-1. 
-2. 
-3. 
-4. 
-5. 
+1. [FLAT-DESIGN-VS-LIQUID-GLASS.md](./FLAT-DESIGN-VS-LIQUID-GLASS.md) - Why we use flat colors instead of Liquid Glass
+2. [IOS26-BUTTON-AUDIT.md](./IOS26-BUTTON-AUDIT.md) - Complete button system HIG compliance
+3. [HIG-COMPLIANCE-FIXES.md](./HIG-COMPLIANCE-FIXES.md) - Comprehensive HIG compliance audit
 
 ---
 

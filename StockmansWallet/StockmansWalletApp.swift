@@ -58,6 +58,7 @@ struct StockmansWalletApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .font(.system(.body, design: .rounded)) // Debug: SF Rounded as default app font (correct Apple HIG way)
                 .preferredColorScheme(.dark) // Always dark mode
         }
         .modelContainer(sharedModelContainer)

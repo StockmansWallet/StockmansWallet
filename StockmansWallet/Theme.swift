@@ -67,17 +67,18 @@ struct Theme {
     static let sheetBackground = Color(hex: "1E1815")
 
     // MARK: - Typography
+    // Debug: Using system fonts with .rounded design - the correct Apple HIG way
+    // This gives us SF Rounded (SF Pro Rounded), the rounded system font for iOS
     // Prefer semantic SwiftUI text styles to support Dynamic Type automatically.
-    // Keep these as convenience aliases so the rest of the app can migrate incrementally.
-    static let largeTitle: Font = .largeTitle               // ~34pt - For major headings
-    static let title: Font = .title.weight(.semibold)       // ~28pt - For hero values (portfolio total)
-    static let title2: Font = .title2.weight(.semibold)     // ~22pt - For emphasized card values
-    static let title3: Font = .title3.weight(.semibold)     // ~20pt - For primary card values
-    static let headline: Font = .headline.weight(.semibold) // ~17pt - For card headers
-    static let body: Font = .body                           // ~17pt - For regular content, labels
-    static let callout: Font = .callout                     // ~16pt - For secondary values in lists
-    static let subheadline: Font = .subheadline             // ~15pt - For de-emphasized values
-    static let caption: Font = .caption                     // ~12pt - For metadata and small labels
+    static let largeTitle: Font = .system(.largeTitle, design: .rounded)               // ~34pt - For major headings
+    static let title: Font = .system(.title, design: .rounded).weight(.semibold)       // ~28pt - For hero values (portfolio total)
+    static let title2: Font = .system(.title2, design: .rounded).weight(.semibold)     // ~22pt - For emphasized card values
+    static let title3: Font = .system(.title3, design: .rounded).weight(.semibold)     // ~20pt - For primary card values
+    static let headline: Font = .system(.headline, design: .rounded).weight(.semibold) // ~17pt - For card headers
+    static let body: Font = .system(.body, design: .rounded)                           // ~17pt - For regular content, labels
+    static let callout: Font = .system(.callout, design: .rounded)                     // ~16pt - For secondary values in lists
+    static let subheadline: Font = .system(.subheadline, design: .rounded)             // ~15pt - For de-emphasized values
+    static let caption: Font = .system(.caption, design: .rounded)                     // ~12pt - For metadata and small labels
     
     // MARK: - Spacing
     // iOS 26 HIG - Corner radii for different component types

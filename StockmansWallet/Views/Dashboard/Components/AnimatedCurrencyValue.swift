@@ -39,18 +39,17 @@ struct AnimatedCurrencyValue: View {
         // Debug: Responsive scaling - HStack scales down to fit available width
         HStack(alignment: .firstTextBaseline, spacing: 0) {
             Text("$")
-                .font(.system(size: 40, weight: .bold))
+                .font(.system(size: 50, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .tracking(-2)
-                .baselineOffset(4)
-                .padding(.trailing, 8)
+                .padding(.trailing, 4)
                 .accessibilityHidden(true)
             
             // Performance: While finger is down (isScrubbing) → instant updates, no animation
             // When finger lifts → beautiful .numericText() rolling animation
-            // Debug: monospacedDigit() handles width changes properly
+            // Debug: monospacedDigit() for proper alignment during number changes
             Text(formattedValue.whole)
-                .font(.system(size: 50, weight: .bold))
+                .font(.system(size: 50, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(.white)
                 .tracking(-2)
@@ -58,13 +57,13 @@ struct AnimatedCurrencyValue: View {
                 .animation(isScrubbing ? .none : .default, value: formattedValue.whole)
             
             Text(".")
-                .font(.system(size: 18, weight: .bold))
+                .font(.system(size: 18, weight: .bold, design: .rounded))
                 .foregroundStyle(Color(hex: "9E9E9E"))
                 .tracking(-2)
                 .accessibilityHidden(true)
             
             Text(formattedValue.decimal)
-                .font(.system(size: 24, weight: .bold))
+                .font(.system(size: 24, weight: .bold, design: .rounded))
                 .monospacedDigit()
                 .foregroundStyle(Color(hex: "9E9E9E"))
                 .tracking(-1)
