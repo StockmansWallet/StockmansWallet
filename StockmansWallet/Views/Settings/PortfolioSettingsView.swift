@@ -127,7 +127,7 @@ struct PortfolioSettingsView: View {
         prefs.portfolioCardOrder = newOrder
         try? modelContext.save()
         
-        HapticManager.selection()
+        HapticManager.selectionChanged()
     }
     
     /// Debug: Reset card order to default

@@ -45,7 +45,7 @@ struct AssetSummaryView: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }
 

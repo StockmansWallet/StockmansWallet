@@ -279,7 +279,7 @@ struct EditHerdView: View {
                             }
                         }
                         .padding(Theme.cardPadding)
-                        .stitchedCard()
+                        .cardStyle()
                         
                         // Physical Attributes
                         VStack(alignment: .leading, spacing: 20) {
@@ -469,7 +469,7 @@ struct EditHerdView: View {
                             }
                         }
                         .padding(Theme.cardPadding)
-                        .stitchedCard()
+                        .cardStyle()
                         
                         // Location (Optional)
                         VStack(alignment: .leading, spacing: 20) {
@@ -512,7 +512,7 @@ struct EditHerdView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 8))
                         }
                         .padding(Theme.cardPadding)
-                        .stitchedCard()
+                        .cardStyle()
                         
                         // Saleyard (Optional)
                         VStack(alignment: .leading, spacing: 20) {
@@ -552,7 +552,7 @@ struct EditHerdView: View {
                             .buttonStyle(.plain)
                         }
                         .padding(Theme.cardPadding)
-                        .stitchedCard()
+                        .cardStyle()
                         
                         // Mustering Records
                         VStack(alignment: .leading, spacing: 12) {

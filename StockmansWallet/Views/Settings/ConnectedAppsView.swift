@@ -38,7 +38,7 @@ struct ConnectedAppsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
                 .padding(.top)
                 
@@ -94,7 +94,7 @@ struct ConnectedAppsView: View {
                     )
                 }
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
                 
                 // Debug: Logistics & Transport section
@@ -130,7 +130,7 @@ struct ConnectedAppsView: View {
                     )
                 }
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
                 
                 // Debug: Info footer

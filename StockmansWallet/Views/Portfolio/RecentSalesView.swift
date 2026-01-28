@@ -58,7 +58,7 @@ struct RecentSalesView: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
     
     // Debug: Helper function to generate price text

@@ -248,7 +248,7 @@ struct MarketPulseView: View {
         }
         .padding(Theme.cardPadding)
         // Debug: No card background/stroke for cleaner dashboard look
-        // .stitchedCard()
+        // .cardStyle()
         .sheet(isPresented: $showingCustomDatePicker) {
             CustomDateRangeSheet(
                 startDate: $customStartDate,
@@ -600,7 +600,7 @@ struct HerdDynamicsView: View {
         }
         .padding(Theme.cardPadding)
         // Debug: No card background/stroke for cleaner dashboard look
-        // .stitchedCard()
+        // .cardStyle()
         .sheet(isPresented: $showingCustomDatePicker) {
             CustomDateRangeSheet(
                 startDate: $customStartDate,

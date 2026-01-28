@@ -2,459 +2,407 @@
 //  Theme.swift
 //  StockmansWallet
 //
-//  Design System: Liquid Glass Aesthetic (Semantic Colors)
+//  Design System: Centralized theming for colors, typography, spacing, and components.
+//  Follows Apple Human Interface Guidelines and supports Dynamic Type, accessibility,
+//  and dark mode (via Asset Catalog).
 //
 
 import SwiftUI
 
-struct Theme {
-    // MARK: - Semantic Colors (from Asset Catalog)
-    // These colors should have Light/Dark and High-Contrast variants in the asset catalog.
+// MARK: - Theme
+
+/// Single source of truth for the app's visual design system.
+/// Use semantic color names from the Asset Catalog for automatic dark mode support.
+enum Theme {
+    
+    // MARK: - Semantic Colors (Asset Catalog)
+    
+    /// Primary background color. Use for main screens.
     static let background = Color("Background")
+    
+    /// Primary text color. Use for headings and important content.
     static let primaryText = Color("PrimaryText")
+    
+    /// Secondary text color. Use for subtitles and less prominent content.
     static let secondaryText = Color("SecondaryText")
+    
+    /// Accent color for interactive elements and highlights.
     static let accent = Color("AccentColor")
+    
+    /// Destructive action color. Use for delete/remove actions.
     static let destructive = Color("Destructive")
     
-    // MARK: - Code-based Colors (not from assets)
-    // Debug: Warm light theme with cream and brown tones
-    static let cardBackground = Color(hex: "59341B").opacity(0.05)  // Subtle brown tint for cards (button color)
-    static let inputFieldBackground = Color(hex: "59341B").opacity(0.05)  // Subtle brown tint for inputs
-    static let separator = Color(hex: "59341B").opacity(0.15)  // Brown divider lines and borders
+    // MARK: - Derived Colors
     
-    // Debug: Custom colors for positive/negative change indicators (total change, percent change, tickers)
-    // Rule #0: Single source of truth for change colors used throughout change indicators
-    static let positiveChange = Color(hex: "6B8E23")  // Olive green for positive changes (text) - works on light bg
-    static let positiveChangeBg = Color(hex: "E8F5E9")  // Light green background for positive change pills
-    static let negativeChange = Color(hex: "D32F2F")  // Rich red for negative changes (text)
-    static let negativeChangeBg = Color(hex: "FFEBEE")  // Light red background for negative change pills
-   
-    // MARK: - Backgrounds
-    // Debug: Standardized backgrounds for consistent visual identity across the app
-    // Rule #0: Single source of truth for background color used throughout main pages
+    /// Subtle background for cards and containers.
+    static let cardBackground = primaryText.opacity(0.05)
     
-    /// Main solid background color for all primary app screens (Dashboard, Portfolio, Market, etc.)
-    /// Warm cream/beige (#E5D3BB) that creates a welcoming, earthy aesthetic
+    /// Subtle background for input fields.
+    static let inputFieldBackground = primaryText.opacity(0.05)
+    
+    /// Separator and border color.
+    static let separator = primaryText.opacity(0.15)
+    
+    // MARK: - Change Indicator Colors
+    
+    /// Positive change text color (gains, increases).
+    static let positiveChange = Color(hex: "6B8E23")
+    
+    /// Positive change background for pills/badges.
+    static let positiveChangeBg = Color(hex: "E8F5E9")
+    
+    /// Negative change text color (losses, decreases).
+    static let negativeChange = Color(hex: "D32F2F")
+    
+    /// Negative change background for pills/badges.
+    static let negativeChangeBg = Color(hex: "FFEBEE")
+    
+    // MARK: - Surface Colors
+    
+    /// Main background color (code-based fallback).
     static let backgroundColor = Color(hex: "E5D3BB")
     
-    /// Debug: Slightly darker cream for when no background image is selected
-    /// Maintains warm tone while providing subtle contrast
+    /// Background when no image is selected.
     static let noBackgroundColor = Color(hex: "D5C9B5")
     
-    /// Debug: Background image opacity for dashboard parallax images
-    /// Rule #0: Single source of truth for background image transparency
-    /// Range: 0.0 (fully transparent) to 1.0 (fully opaque)
+    /// Sheet and modal background.
+    static let sheetBackground = Color(hex: "EDE7DC")
+    
+    /// Background image opacity for parallax effects.
     static let backgroundImageOpacity: CGFloat = 0.4
     
-    /// Main gradient background - warm brown accent radiating from top
-    /// Debug: Subtle gradient for light theme
+    // MARK: - Typography
+    
+    /// All fonts use SF Rounded with semantic text styles for Dynamic Type support.
+    static let largeTitle = Font.system(.largeTitle, design: .rounded)
+    static let title = Font.system(.title, design: .rounded).weight(.semibold)
+    static let title2 = Font.system(.title2, design: .rounded).weight(.semibold)
+    static let title3 = Font.system(.title3, design: .rounded).weight(.semibold)
+    static let headline = Font.system(.headline, design: .rounded).weight(.semibold)
+    static let body = Font.system(.body, design: .rounded)
+    static let callout = Font.system(.callout, design: .rounded)
+    static let subheadline = Font.system(.subheadline, design: .rounded)
+    static let caption = Font.system(.caption, design: .rounded)
+    
+    // MARK: - Spacing & Layout
+    
+    /// Standard corner radius for cards and UI components.
+    static let cornerRadius: CGFloat = 16
+    
+    /// Larger corner radius for sheets and modals.
+    static let sheetCornerRadius: CGFloat = 32
+    
+    /// Standard internal padding for cards.
+    static let cardPadding: CGFloat = 20
+    
+    /// Spacing between sections.
+    static let sectionSpacing: CGFloat = 24
+    
+    /// Standard button height (exceeds 44pt minimum touch target).
+    static let buttonHeight: CGFloat = 52
+    
+    /// Minimum touch target per Apple HIG.
+    static let minimumTouchTarget: CGFloat = 44
+    
+    // MARK: - Materials
+    
+    /// Adaptive glass material respecting Reduce Transparency.
+    static var glassMaterial: Material {
+        UIAccessibility.isReduceTransparencyEnabled ? .thickMaterial : .ultraThinMaterial
+    }
+    
+    // MARK: - Background Gradient
+    
+    /// Radial gradient background for primary screens.
     @ViewBuilder
     static var backgroundGradient: some View {
         RadialGradient(
-            colors: [
-                Color(hex: "CC7126").opacity(0.08),  // Accent color
-                Color(hex: "E5D3BB")                 // Cream background at edges
-            ],
+            colors: [accent.opacity(0.08), backgroundColor],
             center: .top,
             startRadius: 0,
             endRadius: 500
         )
         .ignoresSafeArea()
     }
-    
-    /// Solid background color for sheets, modals, and overlays
-    /// Slightly lighter cream for layering
-    static let sheetBackground = Color(hex: "EDE7DC")
-
-    // MARK: - Typography
-    // Debug: Using system fonts with .rounded design - the correct Apple HIG way
-    // This gives us SF Rounded (SF Pro Rounded), the rounded system font for iOS
-    // Prefer semantic SwiftUI text styles to support Dynamic Type automatically.
-    static let largeTitle: Font = .system(.largeTitle, design: .rounded)               // ~34pt - For major headings
-    static let title: Font = .system(.title, design: .rounded).weight(.semibold)       // ~28pt - For hero values (portfolio total)
-    static let title2: Font = .system(.title2, design: .rounded).weight(.semibold)     // ~22pt - For emphasized card values
-    static let title3: Font = .system(.title3, design: .rounded).weight(.semibold)     // ~20pt - For primary card values
-    static let headline: Font = .system(.headline, design: .rounded).weight(.semibold) // ~17pt - For card headers
-    static let body: Font = .system(.body, design: .rounded)                           // ~17pt - For regular content, labels
-    static let callout: Font = .system(.callout, design: .rounded)                     // ~16pt - For secondary values in lists
-    static let subheadline: Font = .system(.subheadline, design: .rounded)             // ~15pt - For de-emphasized values
-    static let caption: Font = .system(.caption, design: .rounded)                     // ~12pt - For metadata and small labels
-    
-    // MARK: - Spacing
-    // iOS 26 HIG - Corner radii for different component types
-    static let cornerRadius: CGFloat = 16.0        // Standard cards and UI components
-    static let sheetCornerRadius: CGFloat = 32.0   // Sheets, modals, and large panels
-    static let cardPadding: CGFloat = 20.0
-    static let sectionSpacing: CGFloat = 24.0
-
-    // MARK: - Controls
-    // Single source of truth for button height across the app.
-    static let buttonHeight: CGFloat = 52.0
-
-    // MARK: - Glass Effect Material
-    // Consider providing an opaque fallback when Reduce Transparency is enabled.
-    static var glassMaterial: Material {
-        if UIAccessibility.isReduceTransparencyEnabled {
-            // Fallback to an opaque background when transparency is reduced.
-            return .thickMaterial
-        } else {
-            return .ultraThinMaterial
-        }
-    }
 }
 
-// MARK: - Background Image Modifier
-struct BackgroundImageModifier: ViewModifier {
-    let imageName: String?
-    
-    func body(content: Content) -> some View {
-        ZStack {
-            // Always paint fallback color first - extend to all edges including safe areas
-            Theme.background
-                .ignoresSafeArea(edges: .all)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .accessibilityHidden(true)
-            
-            // Try to paint the image if provided - extend to all edges including safe areas
-            if let imageName, !imageName.isEmpty {
-                Image(imageName)
-                    .resizable()
-                    .scaledToFill()
-                    .ignoresSafeArea(edges: .all)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityHidden(true)
-            }
-            
-            content
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea(edges: .all)
-    }
-}
+// MARK: - Accessibility Helpers
 
-extension View {
-    // Idiomatic SwiftUI API for your screens
-    func backgroundImage(imageName: String?) -> some View {
-        modifier(BackgroundImageModifier(imageName: imageName))
-    }
-}
-
-// MARK: - Color Extension
-extension Color {
-    // Hex initializer retained for non-UI/brand-only cases (e.g., charts).
-    // Prefer asset colors for UI surfaces and text.
-    init(hex: String) {
-        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
-        var int: UInt64 = 0
-        Scanner(string: hex).scanHexInt64(&int)
-        let a, r, g, b: UInt64
-        switch hex.count {
-        case 3: // RGB (12-bit)
-            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
-        case 6: // RGB (24-bit)
-            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
-        case 8: // ARGB (32-bit)
-            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
-        default:
-            (a, r, g, b) = (255, 0, 0, 0)
-        }
-        self.init(
-            .sRGB,
-            red: Double(r) / 255.0,
-            green: Double(g) / 255.0,
-            blue: Double(b) / 255.0,
-            opacity: Double(a) / 255.0
-        )
-    }
-    
-    // Adaptive color for light/dark mode (kept for completeness; prefer asset colors).
-    init(light: String, dark: String) {
-        self.init(
-            UIColor { traitCollection in
-                if traitCollection.userInterfaceStyle == .dark {
-                    return UIColor(Color(hex: dark))
-                } else {
-                    return UIColor(Color(hex: light))
-                }
-            }
-        )
-    }
-}
-
-// MARK: - View Modifiers
-// Debug: Legacy SquircleCard - replaced by StitchedCard for new design system
-struct SquircleCard: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-    }
-}
-
-// MARK: - Card Style
-struct StitchedCard: ViewModifier {
-    var showShadow: Bool = true
-    
-    func body(content: Content) -> some View {
-        content
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        Theme.separator.opacity(0.2),
-                        style: StrokeStyle(
-                            lineWidth: 1,
-                            lineCap: .round
-                        )
-                    )
-            )
-    }
-}
-
-struct ProgressiveLensing: ViewModifier {
-    func body(content: Content) -> some View {
-        // Respect Reduce Motion/Transparency by disabling heavy visual effects
-        if UIAccessibility.isReduceMotionEnabled || UIAccessibility.isReduceTransparencyEnabled {
-            return AnyView(content)
-        }
-        
-        return AnyView(
-            content
-                .visualEffect { content, proxy in
-                    let scrollOffset = proxy.bounds(of: .scrollView)?.minY ?? 0.0
-                    let offsetCGFloat = CGFloat(scrollOffset)
-                    return content
-                        .blur(radius: max(0.0, min(20.0, abs(offsetCGFloat) / 3.0)))
-                        .opacity(max(0.7, min(1.0, 1.0 - abs(offsetCGFloat) / 200.0)))
-                }
-        )
-    }
-}
-
-extension View {
-    func squircleCard() -> some View {
-        modifier(SquircleCard())
-    }
-    
-    /// New card style with subtle stitching effect and drop shadow
-    func stitchedCard(showShadow: Bool = true) -> some View {
-        modifier(StitchedCard(showShadow: showShadow))
-    }
-    
-    func progressiveLensing() -> some View {
-        modifier(ProgressiveLensing())
-    }
-}
-
-// MARK: - Reusable Button Styles (single source of truth)
 extension Theme {
+    
+    /// Check if user prefers larger accessibility text sizes.
+    static var prefersLargeText: Bool {
+        UIApplication.shared.preferredContentSizeCategory >= .accessibilityMedium
+    }
+    
+    /// Check if high contrast mode is enabled.
+    static var prefersHighContrast: Bool {
+        UIAccessibility.isDarkerSystemColorsEnabled
+    }
+    
+    /// Check if VoiceOver is running.
+    static var isVoiceOverRunning: Bool {
+        UIAccessibility.isVoiceOverRunning
+    }
+    
+    /// Check if Reduce Motion is enabled.
+    static var prefersReducedMotion: Bool {
+        UIAccessibility.isReduceMotionEnabled
+    }
+    
+    /// Returns 0 duration if Reduce Motion is enabled, otherwise the specified duration.
+    static func animationDuration(_ duration: Double) -> Double {
+        prefersReducedMotion ? 0 : duration
+    }
+}
+
+// MARK: - Button Styles
+
+extension Theme {
+    
+    /// Primary call-to-action button. Solid background with contrasting text.
     struct PrimaryButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .font(Theme.headline)
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.buttonHeight)
-                .contentShape(Rectangle())
-                .foregroundStyle(Theme.background)  // Cream text from asset
-                .background(Theme.primaryText.opacity(configuration.isPressed ? 0.85 : 1.0))  // Button color #59341B
+                .foregroundStyle(Theme.background)
+                .background(Theme.primaryText.opacity(configuration.isPressed ? 0.85 : 1.0))
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                .contentShape(Rectangle())
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
     }
     
+    /// Secondary button with outline style.
     struct SecondaryButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .font(Theme.headline)
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.buttonHeight)
-                .contentShape(Rectangle())
-                .foregroundStyle(Theme.primaryText)  // Button color #59341B for text
+                .foregroundStyle(Theme.primaryText)
                 .background(
                     RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                        .stroke(Theme.primaryText.opacity(configuration.isPressed ? 0.6 : 1.0), lineWidth: 1.5)
-                        .background(
-                            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                                .fill(Color.clear)
-                        )
+                        .strokeBorder(Theme.primaryText.opacity(configuration.isPressed ? 0.6 : 1.0), lineWidth: 1.5)
                 )
+                .contentShape(Rectangle())
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
     }
     
-    // For row-like actions (selectable rows, connect integrations, etc.)
+    /// Row-style button for list items and selectable rows.
     struct RowButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .frame(height: Theme.buttonHeight)
                 .padding(.horizontal, 16)
-                .background(Theme.primaryText.opacity(configuration.isPressed ? 0.08 : 0.05))
+                .background(Theme.cardBackground.opacity(configuration.isPressed ? 1.6 : 1.0))
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                .contentShape(Rectangle())
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
     }
     
-    // Debug: iOS 26 HIG - Destructive button style for delete/remove actions
-    // Uses red color to signal danger, requires user confirmation before critical actions
+    /// Destructive action button. Use for delete/remove with confirmation.
     struct DestructiveButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .font(Theme.headline)
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.buttonHeight)
-                .contentShape(Rectangle())
                 .foregroundStyle(.white)
                 .background(Theme.destructive.opacity(configuration.isPressed ? 0.85 : 1.0))
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-                .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
-        }
-    }
-    
-    // Debug: Landing page button style with dark brown color matching light theme
-    struct LandingButtonStyle: ButtonStyle {
-        func makeBody(configuration: Configuration) -> some View {
-            configuration.label
-                .font(Theme.headline)
-                .frame(maxWidth: .infinity)
-                .frame(height: Theme.buttonHeight)
                 .contentShape(Rectangle())
-                .foregroundStyle(Theme.background)  // Cream text from asset
-                .background(Theme.primaryText.opacity(configuration.isPressed ? 0.85 : 1.0))  // Button color #59341B
-                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
     }
+    
+    /// Alias for PrimaryButtonStyle. Use on landing/onboarding screens.
+    typealias LandingButtonStyle = PrimaryButtonStyle
 }
 
-// Optional convenience modifiers if you prefer chaining
-extension View {
-    func primaryCTA() -> some View {
-        self.buttonStyle(Theme.PrimaryButtonStyle())
-    }
-    func secondaryCTA() -> some View {
-        self.buttonStyle(Theme.SecondaryButtonStyle())
-    }
-    func rowAction() -> some View {
-        self.buttonStyle(Theme.RowButtonStyle())
-    }
-    func destructiveCTA() -> some View {
-        self.buttonStyle(Theme.DestructiveButtonStyle())
-    }
-    func landingCTA() -> some View {
-        self.buttonStyle(Theme.LandingButtonStyle())
-    }
-}
+// MARK: - View Modifiers
 
-// MARK: - Haptic Feedback
-// Debug: Respects accessibility settings (isReduceMotionEnabled) before triggering haptics
-struct HapticManager {
-    static let impact = UIImpactFeedbackGenerator(style: .light)
-    static let notification = UINotificationFeedbackGenerator()
-    static let selectionFeedback = UISelectionFeedbackGenerator()
-    
-    /// Light haptic for button taps and interactions
-    static func tap() {
-        guard !UIAccessibility.isReduceMotionEnabled else { return }
-        impact.prepare()
-        impact.impactOccurred()
-    }
-    
-    /// Success haptic for completed actions
-    static func success() {
-        guard !UIAccessibility.isReduceMotionEnabled else { return }
-        notification.prepare()
-        notification.notificationOccurred(.success)
-    }
-    
-    /// Error haptic for failed actions
-    static func error() {
-        guard !UIAccessibility.isReduceMotionEnabled else { return }
-        notification.prepare()
-        notification.notificationOccurred(.error)
-    }
-    
-    /// Warning haptic for caution states
-    static func warning() {
-        guard !UIAccessibility.isReduceMotionEnabled else { return }
-        notification.prepare()
-        notification.notificationOccurred(.warning)
-    }
-    
-    /// Selection haptic for picker/segmented control changes
-    static func selection() {
-        guard !UIAccessibility.isReduceMotionEnabled else { return }
-        selectionFeedback.prepare()
-        selectionFeedback.selectionChanged()
+/// Standard card style with background and subtle border.
+struct CardStyleModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(Theme.cardBackground)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                    .strokeBorder(Theme.separator.opacity(0.5), lineWidth: 1)
+            )
     }
 }
 
-// MARK: - Accessibility Helpers
-// Debug: Comprehensive accessibility support for HIG compliance
-extension Theme {
-    /// Dynamic Type scaled font - automatically respects user's text size preferences
-    static func scaledFont(style: Font.TextStyle, weight: Font.Weight = .regular) -> Font {
-        return Font.system(style).weight(weight)
-    }
+/// Background image modifier for screens with optional background images.
+struct BackgroundImageModifier: ViewModifier {
+    let imageName: String?
     
-    /// Check if user prefers larger text (for custom layout adjustments)
-    static var isLargeTextEnabled: Bool {
-        let category = UIApplication.shared.preferredContentSizeCategory
-        return category >= .accessibilityMedium
-    }
-    
-    /// Minimum touch target size per Apple HIG (44x44 points)
-    static let minimumTouchTarget: CGFloat = 44.0
-    
-    /// Check if device is in high contrast mode
-    static var isHighContrastEnabled: Bool {
-        return UIAccessibility.isDarkerSystemColorsEnabled
-    }
-    
-    /// Get appropriate animation duration (0 if Reduce Motion is enabled)
-    static func animationDuration(_ duration: Double) -> Double {
-        return UIAccessibility.isReduceMotionEnabled ? 0 : duration
-    }
-    
-    /// Check if VoiceOver is running
-    static var isVoiceOverRunning: Bool {
-        return UIAccessibility.isVoiceOverRunning
-    }
-}
-
-// MARK: - View Extensions for Accessibility
-extension View {
-    /// Apply minimum touch target size for better accessibility
-    func accessibleTapTarget() -> some View {
-        self.frame(minWidth: Theme.minimumTouchTarget, minHeight: Theme.minimumTouchTarget)
-    }
-    
-    /// Conditionally apply animation based on Reduce Motion setting
-    func accessibleAnimation<V: Equatable>(_ animation: Animation?, value: V) -> some View {
-        if UIAccessibility.isReduceMotionEnabled {
-            return AnyView(self)
-        } else {
-            return AnyView(self.animation(animation, value: value))
+    func body(content: Content) -> some View {
+        ZStack {
+            Theme.background
+                .ignoresSafeArea()
+                .accessibilityHidden(true)
+            
+            if let imageName, !imageName.isEmpty {
+                Image(imageName)
+                    .resizable()
+                    .scaledToFill()
+                    .ignoresSafeArea()
+                    .accessibilityHidden(true)
+            }
+            
+            content
         }
     }
 }
 
-// MARK: - Input Field Style
-// Debug: Unified text field style for consistent input backgrounds across the app
+/// Scroll-based blur effect that respects Reduce Motion.
+struct ScrollBlurModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        if Theme.prefersReducedMotion || UIAccessibility.isReduceTransparencyEnabled {
+            content
+        } else {
+            content
+                .visualEffect { view, proxy in
+                    let scrollOffset = proxy.bounds(of: .scrollView)?.minY ?? 0.0
+                    let blurAmount = max(0.0, min(20.0, abs(scrollOffset) / 3.0))
+                    let opacityAmount = max(0.7, min(1.0, 1.0 - abs(scrollOffset) / 200.0))
+                    return view
+                        .blur(radius: blurAmount)
+                        .opacity(opacityAmount)
+                }
+        }
+    }
+}
+
+/// Standard input field text style.
 struct InputFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
-            .frame(minHeight: Theme.minimumTouchTarget) // iOS 26 HIG: 44pt minimum
+            .frame(minHeight: Theme.minimumTouchTarget)
             .background(Theme.inputFieldBackground)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .foregroundStyle(Theme.primaryText)
     }
 }
 
+// MARK: - View Extensions
+
 extension View {
-    /// Apply standard input field styling
+    
+    /// Apply standard card styling with background and border.
+    func cardStyle() -> some View {
+        modifier(CardStyleModifier())
+    }
+    
+    /// Apply background image with fallback color.
+    func backgroundImage(_ imageName: String?) -> some View {
+        modifier(BackgroundImageModifier(imageName: imageName))
+    }
+    
+    /// Apply scroll-based blur effect.
+    func scrollBlurEffect() -> some View {
+        modifier(ScrollBlurModifier())
+    }
+    
+    /// Apply standard input field styling.
     func inputFieldStyle() -> some View {
-        self.textFieldStyle(InputFieldStyle())
+        textFieldStyle(InputFieldStyle())
+    }
+    
+    /// Ensure minimum touch target size for accessibility.
+    func accessibleTapTarget() -> some View {
+        frame(minWidth: Theme.minimumTouchTarget, minHeight: Theme.minimumTouchTarget)
+    }
+    
+    /// Apply animation only if Reduce Motion is disabled.
+    @ViewBuilder
+    func accessibleAnimation<V: Equatable>(_ animation: Animation?, value: V) -> some View {
+        if Theme.prefersReducedMotion {
+            self
+        } else {
+            self.animation(animation, value: value)
+        }
+    }
+}
+
+// MARK: - Color Extension
+
+extension Color {
+    
+    /// Initialize Color from hex string. Supports RGB (3), RRGGBB (6), and AARRGGBB (8) formats.
+    init(hex: String) {
+        let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
+        var int: UInt64 = 0
+        Scanner(string: hex).scanHexInt64(&int)
+        
+        let a, r, g, b: UInt64
+        switch hex.count {
+        case 3: // RGB (12-bit)
+            (a, r, g, b) = (255, (int >> 8) * 17, (int >> 4 & 0xF) * 17, (int & 0xF) * 17)
+        case 6: // RRGGBB (24-bit)
+            (a, r, g, b) = (255, int >> 16, int >> 8 & 0xFF, int & 0xFF)
+        case 8: // AARRGGBB (32-bit)
+            (a, r, g, b) = (int >> 24, int >> 16 & 0xFF, int >> 8 & 0xFF, int & 0xFF)
+        default:
+            (a, r, g, b) = (255, 0, 0, 0)
+        }
+        
+        self.init(
+            .sRGB,
+            red: Double(r) / 255,
+            green: Double(g) / 255,
+            blue: Double(b) / 255,
+            opacity: Double(a) / 255
+        )
+    }
+}
+
+// MARK: - Haptic Feedback
+
+/// Centralized haptic feedback respecting accessibility settings.
+enum HapticManager {
+    
+    private static let impact = UIImpactFeedbackGenerator(style: .light)
+    private static let notification = UINotificationFeedbackGenerator()
+    private static let selection = UISelectionFeedbackGenerator()
+    
+    /// Light haptic for button taps.
+    static func tap() {
+        guard !Theme.prefersReducedMotion else { return }
+        impact.impactOccurred()
+    }
+    
+    /// Success haptic for completed actions.
+    static func success() {
+        guard !Theme.prefersReducedMotion else { return }
+        notification.notificationOccurred(.success)
+    }
+    
+    /// Error haptic for failed actions.
+    static func error() {
+        guard !Theme.prefersReducedMotion else { return }
+        notification.notificationOccurred(.error)
+    }
+    
+    /// Warning haptic for caution states.
+    static func warning() {
+        guard !Theme.prefersReducedMotion else { return }
+        notification.notificationOccurred(.warning)
+    }
+    
+    /// Selection haptic for picker changes.
+    static func selectionChanged() {
+        guard !Theme.prefersReducedMotion else { return }
+        selection.selectionChanged()
     }
 }

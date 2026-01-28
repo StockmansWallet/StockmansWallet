@@ -146,7 +146,7 @@ struct HerdDetailView: View {
                         }
                         .buttonStyle(PlainButtonStyle())
                         // Debug: Card temporarily removed to test cleaner look
-                        // .stitchedCard()
+                        // .cardStyle()
                         .padding(.horizontal)
                     }
                     
@@ -456,7 +456,7 @@ struct WeightGrowthChart: View {
         }
         .padding(Theme.cardPadding)
         // Debug: Card temporarily removed to test cleaner look
-        // .stitchedCard()
+        // .cardStyle()
     }
 }
 
@@ -515,7 +515,7 @@ struct PrimaryMetricsCard: View {
         }
         .padding(Theme.cardPadding)
         // Debug: Card temporarily removed to test cleaner look
-        // .stitchedCard()
+        // .cardStyle()
     }
 }
 
@@ -615,7 +615,7 @@ struct HerdDetailsCard: View {
         }
         .padding(Theme.cardPadding)
         // Debug: Card temporarily removed to test cleaner look
-        // .stitchedCard()
+        // .cardStyle()
     }
 }
 
@@ -859,7 +859,7 @@ struct IndividualAnimalRow: View {
         }
         .buttonStyle(PlainButtonStyle())
         // Debug: Card temporarily removed to test cleaner look
-        // .stitchedCard()
+        // .cardStyle()
     }
 }
 
@@ -976,7 +976,7 @@ struct BreedingDetailsCard: View {
         }
         .padding(Theme.cardPadding)
         // Debug: Card temporarily removed to test cleaner look
-        // .stitchedCard()
+        // .cardStyle()
     }
 }
 
@@ -1011,7 +1011,7 @@ struct MusteringHistoryCard: View {
         }
         .padding(Theme.cardPadding)
         // Debug: Card temporarily removed to test cleaner look
-        // .stitchedCard()
+        // .cardStyle()
     }
 }
 
@@ -1147,7 +1147,7 @@ struct HealthRecordsCard: View {
         }
         .padding(Theme.cardPadding)
         // Debug: Card temporarily removed to test cleaner look
-        // .stitchedCard()
+        // .cardStyle()
     }
 }
 

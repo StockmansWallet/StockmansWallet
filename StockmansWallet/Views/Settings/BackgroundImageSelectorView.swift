@@ -242,7 +242,7 @@ struct BackgroundImageSelectorView: View {
         .pickerStyle(.segmented)
         .onChange(of: selectedMode) { oldValue, newValue in
             // Debug: Haptic feedback on selection change
-            HapticManager.selection()
+            HapticManager.selectionChanged()
             
             // Debug: Update and save when switching modes
             if newValue == .none {

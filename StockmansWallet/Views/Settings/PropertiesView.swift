@@ -65,7 +65,7 @@ struct PropertiesView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
                 .padding(.top)
                 
@@ -362,7 +362,7 @@ struct PropertyCard: View {
                 }
             }
             .padding(Theme.cardPadding)
-            .stitchedCard()
+            .cardStyle()
         }
         .buttonStyle(.plain)
     }

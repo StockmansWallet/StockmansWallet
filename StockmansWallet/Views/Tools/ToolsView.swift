@@ -185,7 +185,7 @@ struct ToolMenuButton: View {
                     .accessibilityHidden(true)
             }
             .padding(Theme.cardPadding)
-            .stitchedCard()
+            .cardStyle()
         }
         .buttonStyle(.plain)
         .accessibilityElement(children: .combine)

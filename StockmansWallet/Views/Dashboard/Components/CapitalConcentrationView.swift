@@ -161,7 +161,7 @@ struct CapitalConcentrationView: View {
         }
         .padding(Theme.cardPadding)
         // Debug: No card background/stroke for cleaner dashboard look
-        // .stitchedCard()
+        // .cardStyle()
         .sheet(isPresented: $showingCustomDatePicker) {
             CustomDateRangeSheet(
                 startDate: $customStartDate,

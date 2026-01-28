@@ -52,7 +52,7 @@ struct NotificationsSettingsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
                 .padding(.top)
                 
@@ -134,7 +134,7 @@ struct NotificationsSettingsView: View {
                         .padding(.top, 4)
                 }
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
                 
                 // Debug: Behaviour information
@@ -158,7 +158,7 @@ struct NotificationsSettingsView: View {
                     }
                 }
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
             }
             .padding(.bottom, 100)
@@ -310,7 +310,7 @@ struct NotificationCategoryCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }
 

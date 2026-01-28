@@ -76,7 +76,7 @@ struct PerformanceMetricsView: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
         .accessibilityElement(children: .contain)
     }
 }

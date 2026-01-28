@@ -56,7 +56,7 @@ struct ChatToolView: View {
                             FeatureRow(icon: "person.2", text: "Community discussions")
                         }
                         .padding(Theme.cardPadding)
-                        .stitchedCard()
+                        .cardStyle()
                     }
                     .padding(.horizontal)
                 }

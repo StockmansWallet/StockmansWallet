@@ -763,7 +763,7 @@ struct NetWorthCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }
 
@@ -877,7 +877,7 @@ struct CapitalConcentrationCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
         .sheet(isPresented: $showingCustomDatePicker) {
             CustomDateRangeSheet(
                 startDate: $customStartDate,
@@ -994,7 +994,7 @@ struct PerformanceMetricsCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }
 
@@ -1107,7 +1107,7 @@ struct AssetBreakdownCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
         .sheet(isPresented: $showingCustomDatePicker) {
             CustomDateRangeSheet(
                 startDate: $customStartDate,
@@ -1196,7 +1196,7 @@ struct AssetRegisterHeader: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }
 
@@ -1344,7 +1344,7 @@ struct LightweightAnimalCard: View {
         }
         .buttonStyle(PlainButtonStyle())
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
         .sheet(isPresented: $showingSellSheet) {
             SellStockView(preselectedHerdId: data.id)
         }
@@ -1509,7 +1509,7 @@ struct EnhancedHerdCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
         .onAppear {
             // Performance: Load valuation only when card appears, and only once
             if !hasStartedLoading {
@@ -1785,7 +1785,7 @@ struct PortfolioSearchPanel: View {
                         }
                     }
                     .padding(Theme.cardPadding)
-                    .stitchedCard()
+                    .cardStyle()
                     .padding(.horizontal)
                     
                     // Search Results
@@ -1919,7 +1919,7 @@ struct SearchResultCard: View {
             .padding(Theme.cardPadding)
         }
         .buttonStyle(PlainButtonStyle())
-        .stitchedCard()
+        .cardStyle()
     }
 }
 

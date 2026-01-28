@@ -56,6 +56,6 @@ struct ReportOptionsView: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }

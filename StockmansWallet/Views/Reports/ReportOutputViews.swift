@@ -82,7 +82,7 @@ struct ReportPreviewView: View {
             }
         }
         .padding()
-        .stitchedCard()
+        .cardStyle()
     }
     
     // Debug: Report header with title and metadata

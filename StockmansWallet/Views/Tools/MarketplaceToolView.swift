@@ -412,7 +412,7 @@ struct MarketplaceListingCard: View {
                 }
             }
             .padding(Theme.cardPadding)
-            .stitchedCard()
+            .cardStyle()
         }
         .buttonStyle(.plain)
     }

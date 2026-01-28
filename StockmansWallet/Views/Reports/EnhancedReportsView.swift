@@ -98,7 +98,7 @@ struct EnhancedReportsView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
         .padding(.horizontal)
         .padding(.top)
     }
@@ -142,7 +142,7 @@ struct ReportTypeCard: View {
                     .foregroundStyle(Theme.secondaryText)
             }
             .padding(Theme.cardPadding)
-            .stitchedCard()
+            .cardStyle()
         }
         .buttonStyle(.plain)
     }

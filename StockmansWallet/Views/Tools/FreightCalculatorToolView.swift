@@ -56,7 +56,7 @@ struct FreightCalculatorToolView: View {
                             FeatureRow(icon: "arrow.triangle.2.circlepath", text: "Return trip optimization")
                         }
                         .padding(Theme.cardPadding)
-                        .stitchedCard()
+                        .cardStyle()
                     }
                     .padding(.horizontal)
                 }

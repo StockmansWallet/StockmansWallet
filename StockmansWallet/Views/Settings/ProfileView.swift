@@ -151,7 +151,7 @@ struct ProfileView: View {
                     )
                 }
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
             }
             .padding(.bottom, 100)

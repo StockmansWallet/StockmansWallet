@@ -65,7 +65,7 @@ struct CSVImportView: View {
                             }
                         }
                         .padding(Theme.cardPadding)
-                        .stitchedCard()
+                        .cardStyle()
                         
                         // Import Status
                         if importStatus != .ready {
@@ -112,7 +112,7 @@ struct CSVImportView: View {
                                 }
                             }
                             .padding(Theme.cardPadding)
-                            .stitchedCard() // New card style with subtle stitching effect
+                            .cardStyle() // Standard card styling
                         }
                         
                         // Import Button - Debug: Using Theme.PrimaryButtonStyle for iOS 26 HIG compliance
@@ -147,7 +147,7 @@ Bessie,Cattle,Hereford,Breeding Cow,Female,36,1,550,0.3,South Paddock
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
                         .padding(Theme.cardPadding)
-                        .stitchedCard() // New card style with subtle stitching effect
+                        .cardStyle() // Standard card styling
                     }
                     .padding()
                 }

@@ -56,7 +56,7 @@ struct SimulatorToolView: View {
                             FeatureRow(icon: "dollarsign.circle", text: "ROI calculations")
                         }
                         .padding(Theme.cardPadding)
-                        .stitchedCard()
+                        .cardStyle()
                     }
                     .padding(.horizontal)
                 }

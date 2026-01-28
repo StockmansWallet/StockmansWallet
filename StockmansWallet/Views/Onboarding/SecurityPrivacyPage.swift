@@ -51,7 +51,7 @@ struct SecurityPrivacyPage: View {
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
                         .frame(minHeight: Theme.buttonHeight)
-                        .stitchedCard()
+                        .cardStyle()
                         .accessibilityLabel("Two-factor authentication")
                         .accessibilityValue(userPrefs.twoFactorEnabled ? "Enabled" : "Disabled")
                     }

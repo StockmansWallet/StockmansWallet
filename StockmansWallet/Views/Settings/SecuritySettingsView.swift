@@ -38,7 +38,7 @@ struct SecuritySettingsView: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
                 .padding(.top)
                 
@@ -81,7 +81,7 @@ struct SecuritySettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
                 
                 // Debug: APPS Compliance section
@@ -124,7 +124,7 @@ struct SecuritySettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
                 
                 // Debug: Additional security options (for future implementation)
@@ -155,7 +155,7 @@ struct SecuritySettingsView: View {
                     )
                 }
                 .padding(Theme.cardPadding)
-                .stitchedCard()
+                .cardStyle()
                 .padding(.horizontal)
             }
             .padding(.bottom, 100)

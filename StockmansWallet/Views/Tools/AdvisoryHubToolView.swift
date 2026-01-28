@@ -48,7 +48,7 @@ struct AdvisoryHubToolView: View {
                             .foregroundStyle(Theme.primaryText)
                             .multilineTextAlignment(.leading)
                             .padding(Theme.cardPadding)
-                            .stitchedCard()
+                            .cardStyle()
                     }
                     .padding(.horizontal)
                     
@@ -134,7 +134,7 @@ struct AdvisoryHubToolView: View {
                         }
                     }
                     .padding(Theme.cardPadding)
-                    .stitchedCard()
+                    .cardStyle()
                     .padding(.horizontal)
                     
                     // Debug: Coming soon badge
@@ -220,7 +220,7 @@ struct AdvisorySection: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }
 

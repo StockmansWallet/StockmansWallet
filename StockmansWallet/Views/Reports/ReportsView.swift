@@ -197,7 +197,7 @@ struct ReportsOptionsCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }
 
@@ -234,7 +234,7 @@ struct RecentSalesCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }
 
@@ -339,6 +339,6 @@ struct AssetSummaryCard: View {
             }
         }
         .padding(Theme.cardPadding)
-        .stitchedCard()
+        .cardStyle()
     }
 }

@@ -150,7 +150,7 @@ struct MarketPreferencesPage: View {
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .frame(minHeight: Theme.buttonHeight) // iOS 26 HIG: Consistent with button heights
-                    .stitchedCard()
+                    .cardStyle()
                     .padding(.horizontal, 20)
                     .accessibilityLabel("TruckIt API")
                     .accessibilityValue(userPrefs.truckItEnabled ? "Enabled" : "Disabled")
