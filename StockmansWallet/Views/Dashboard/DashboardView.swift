@@ -229,7 +229,7 @@ struct DashboardView: View {
             // Only show background if backgroundImageName is not nil
             if let imageName = backgroundImageName {
                 // Debug: Slightly reduce background image opacity for flatter look
-                let backgroundImageOpacity = Theme.backgroundImageOpacity * 0.3
+                let backgroundImageOpacity = Theme.backgroundImageOpacity * 0.4
                 if userPrefs.isCustomBackground {
                     // Debug: Load custom background from document directory
                     CustomParallaxImageView(
@@ -354,7 +354,7 @@ struct DashboardView: View {
                 style: .continuous
             )
             .fill(Theme.tertiaryBackground)
-            .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
+            .shadow(color: .black.opacity(0.8), radius: 20, y: -8)
         )
     }
     

@@ -364,16 +364,21 @@ struct InteractiveChartView: View {
                                             p.move(to: CGPoint(x: x, y: plotFrame.minY))
                                             p.addLine(to: CGPoint(x: x, y: plotFrame.maxY))
                                         }
-                                        .stroke(.white.opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
+                                        // Debug: Solid, thin scrubber line with brand color
+                                        .stroke(Color(hex: "F3B887").opacity(0.3), style: StrokeStyle(lineWidth: 1))
                                         
                                         // Scrubber dot at data point
                                         Circle()
                                             .fill(.white)
-                                            .frame(width: 12, height: 12)
-                                            .shadow(color: Theme.accentColor.opacity(1), radius: 6)
-                                            .shadow(color: Theme.accentColor.opacity(0.4), radius: 12)
-                                            .position(x: x, y: y)
-                                            .accessibilityHidden(true)
+                                            .frame(width: 10, height: 10)
+                                            .overlay(
+                                                // Debug: Brand-color stroke for scrubber dot
+                                                Circle()
+                                                    .stroke(Theme.accentColor, lineWidth: 1)
+                                            )
+                                       
+                                        .position(x: x, y: y)
+                                        .accessibilityHidden(true)
                                     }
                                     // Performance: drawingGroup() renders all elements as single texture
                                     // Critical for 60fps scrubbing performance
