@@ -67,6 +67,49 @@ struct DashboardView: View {
     // Performance: Race condition prevention - ensures only one data load at a time
     private let loadCoordinator = LoadCoordinator()
     
+    // Debug: Bottom fade overlay to blend image into base background color
+    private var backgroundImageBottomFadeOverlay: LinearGradient {
+        LinearGradient(
+            stops: [
+                .init(color: Color(hex: "1B150E"), location: 0.0),
+                .init(color: Color(hex: "1B150E"), location: 0.45),
+                .init(color: Color(hex: "1B150E").opacity(0.0), location: 1.0)
+            ],
+            startPoint: .bottom,
+            endPoint: .top
+        )
+    }
+    
+    // Debug: Render background image with bottom fade aligned to image edge
+    // Apple-style: compute fade using the same image geometry (scale + offset)
+    @ViewBuilder
+    private func backgroundImageWithBottomFade<Content: View>(
+        scale: CGFloat,
+        intensity: CGFloat,
+        verticalOffset: CGFloat,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        ZStack(alignment: .topLeading) {
+            content()
+            
+            GeometryReader { geometry in
+                // Debug: Match UIKit image layout math so fade starts at image bottom edge
+                let imageHeight = (geometry.size.height * scale) + (intensity * 2)
+                let imageBottom = verticalOffset + imageHeight
+                let fadeHeight = imageHeight * 0.4
+                
+                backgroundImageBottomFadeOverlay
+                    .frame(height: fadeHeight)
+                    .frame(maxWidth: .infinity)
+                    .position(
+                        x: geometry.size.width / 2,
+                        y: imageBottom - (fadeHeight / 2) + 1
+                    )
+                    .allowsHitTesting(false)
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             mainContentWithModifiers
@@ -232,26 +275,48 @@ struct DashboardView: View {
                 let backgroundImageOpacity = Theme.backgroundImageOpacity * 0.4
                 if userPrefs.isCustomBackground {
                     // Debug: Load custom background from document directory
-                    CustomParallaxImageView(
-                        imageName: imageName,
-                        intensity: 25,                          // Movement amount (20-40)
-                        opacity: backgroundImageOpacity,        // Background opacity (10% reduced)
-                        scale: 0.5,                             // Image takes 50% of screen height
-                        verticalOffset: -60,                    // Move image up to show more middle/lower area
-                        blur: 0                                 // BG Image Blur radius
-                    )
+                    backgroundImageWithBottomFade(
+                        scale: 0.5,
+                        intensity: 25,
+                        verticalOffset: -60
+                    ) {
+                        CustomParallaxImageView(
+                            imageName: imageName,
+                            intensity: 25,                          // Movement amount (20-40)
+                            opacity: backgroundImageOpacity,        // Background opacity (10% reduced)
+                            scale: 0.5,                             // Image takes 50% of screen height
+                            verticalOffset: -60,                    // Move image up to show more middle/lower area
+                            blur: 0                                 // BG Image Blur radius
+                        )
+                    }
                     .id("custom_\(imageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
+                    .onAppear {
+                        #if DEBUG
+                        print("🖼️ DashboardView: Applied bottom fade (shared container) to custom background")
+                        #endif
+                    }
                 } else {
                     // Debug: Load built-in background from Assets
-                    ParallaxImageView(
-                        imageName: imageName,
-                        intensity: 25,                          // Movement amount (20-40)
-                        opacity: backgroundImageOpacity,        // Background opacity (10% reduced)
-                        scale: 0.5,                             // Image takes 50% of screen height
-                        verticalOffset: -60,                    // Move image up to show more middle/lower area
-                        blur: 0                                 // BG Image Blur radius
-                    )
+                    backgroundImageWithBottomFade(
+                        scale: 0.5,
+                        intensity: 25,
+                        verticalOffset: -60
+                    ) {
+                        ParallaxImageView(
+                            imageName: imageName,
+                            intensity: 25,                          // Movement amount (20-40)
+                            opacity: backgroundImageOpacity,        // Background opacity (10% reduced)
+                            scale: 0.5,                             // Image takes 50% of screen height
+                            verticalOffset: -60,                    // Move image up to show more middle/lower area
+                            blur: 0                                 // BG Image Blur radius
+                        )
+                    }
                     .id("builtin_\(imageName)_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
+                    .onAppear {
+                        #if DEBUG
+                        print("🖼️ DashboardView: Applied bottom fade (shared container) to built-in background")
+                        #endif
+                    }
                 }
             } else {
                 // Debug: Almost black background with subtle orange radial glow from top when no background is selected
@@ -363,41 +428,51 @@ struct DashboardView: View {
     
     @ViewBuilder
     private var performanceChartCard: some View {
-        // Debug: Always show chart, even for new portfolios
-        // Chart automatically handles showing growth from zero to current value
-        InteractiveChartView(
-            data: filteredHistory,
-            selectedDate: $selectedDate,
-            selectedValue: $selectedValue,
-            isScrubbing: $isScrubbing,
-            timeRange: $timeRange,
-            // Debug: Provide custom range dates so labels match date picker selection
-            customStartDate: customStartDate,
-            customEndDate: customEndDate,
-            baseValue: baseValue,
-            onValueChange: { newValue, change in
-                portfolioChange = change
-            }
-        )
-        .clipped() // Debug: Clip chart content to prevent overflow beyond bounds
-        .padding(.horizontal, Theme.cardPadding)
-        .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
-        .accessibilityHint("Drag your finger across the chart to explore values over time.")
-        
-        // Debug: Keep time range selector visible when overall history exists
-        // This prevents the selector from disappearing when a custom range is empty
-        if valuationHistory.count >= 2 {
-            TimeRangeSelector(
+        // Debug: Unified card background for chart + range selector
+        VStack(spacing: 0) {
+            // Debug: Always show chart, even for new portfolios
+            // Chart automatically handles showing growth from zero to current value
+            InteractiveChartView(
+                data: filteredHistory,
+                selectedDate: $selectedDate,
+                selectedValue: $selectedValue,
+                isScrubbing: $isScrubbing,
                 timeRange: $timeRange,
-                customStartDate: $customStartDate,
-                customEndDate: $customEndDate,
-                showingCustomDatePicker: $showingCustomDatePicker
+                // Debug: Provide custom range dates so labels match date picker selection
+                customStartDate: customStartDate,
+                customEndDate: customEndDate,
+                baseValue: baseValue,
+                onValueChange: { newValue, change in
+                    portfolioChange = change
+                }
             )
+            .clipped() // Debug: Clip chart content to prevent overflow beyond bounds
+            .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
+            .padding(.horizontal, 0) // Debug: Chart line should reach card edges
+            .accessibilityHint("Drag your finger across the chart to explore values over time.")
+            
+            // Debug: Keep time range selector visible when overall history exists
+            // This prevents the selector from disappearing when a custom range is empty
+            if valuationHistory.count >= 2 {
+                TimeRangeSelector(
+                    timeRange: $timeRange,
+                    customStartDate: $customStartDate,
+                    customEndDate: $customEndDate,
+                    showingCustomDatePicker: $showingCustomDatePicker
+                )
                 .padding(.horizontal, Theme.cardPadding)
-                .padding(.top, -20) // Apple HIG: Align with section spacing
+                .padding(.top, 6) // Debug: Keep selector below date labels
+                .padding(.bottom, 12) // Debug: Breathing room above rounded corners
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Time range selector")
+            }
         }
+        .background(
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .fill(Theme.secondaryBackground)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+        .padding(.horizontal, Theme.cardPadding)
     }
     
     @ViewBuilder
@@ -421,6 +496,7 @@ struct DashboardView: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, Theme.cardPadding)
+            .padding(.horizontal, 8)
         }
     }
     
