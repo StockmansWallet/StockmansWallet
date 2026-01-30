@@ -220,16 +220,22 @@ struct DashboardView: View {
         let _ = backgroundImageTrigger
         
         ZStack(alignment: .top) {
+            // Debug: Base background color behind dashboard image for flatter look
+            Color(hex: "1B150E")
+                .ignoresSafeArea()
+            
             // Debug: Background image with parallax effect (like iOS home screen wallpapers)
             // Uses user's selected background from preferences (built-in or custom)
             // Only show background if backgroundImageName is not nil
             if let imageName = backgroundImageName {
+                // Debug: Slightly reduce background image opacity for flatter look
+                let backgroundImageOpacity = Theme.backgroundImageOpacity * 0.3
                 if userPrefs.isCustomBackground {
                     // Debug: Load custom background from document directory
                     CustomParallaxImageView(
                         imageName: imageName,
                         intensity: 25,                          // Movement amount (20-40)
-                        opacity: Theme.backgroundImageOpacity,  // Background opacity (from Theme)
+                        opacity: backgroundImageOpacity,        // Background opacity (10% reduced)
                         scale: 0.5,                             // Image takes 50% of screen height
                         verticalOffset: -60,                    // Move image up to show more middle/lower area
                         blur: 0                                 // BG Image Blur radius
@@ -240,7 +246,7 @@ struct DashboardView: View {
                     ParallaxImageView(
                         imageName: imageName,
                         intensity: 25,                          // Movement amount (20-40)
-                        opacity: Theme.backgroundImageOpacity,  // Background opacity (from Theme)
+                        opacity: backgroundImageOpacity,        // Background opacity (10% reduced)
                         scale: 0.5,                             // Image takes 50% of screen height
                         verticalOffset: -60,                    // Move image up to show more middle/lower area
                         blur: 0                                 // BG Image Blur radius

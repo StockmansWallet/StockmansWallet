@@ -2,8 +2,9 @@
 //  InteractiveChartView.swift
 //  StockmansWallet
 //
-//  Interactive chart with scrubbing for portfolio valuations
-//  Performance: Optimized for 60fps scrubbing with binary search and cached formatters
+//  Interactive chart with scrubbing for portfolio valuations.
+//  Uses Swift Charts ChartProxy (chartOverlay) only; prioritised for iOS 26, fallback for 18 and 17.
+//  Performance: Optimized for 60fps scrubbing with binary search and cached formatters.
 //
 
 import SwiftUI
@@ -46,6 +47,18 @@ struct InteractiveChartView: View {
         let date: Date
         let value: Double
         let xPosition: CGFloat
+    }
+
+    // Debug: Clamp scrubber to chart bounds so it never renders off-screen
+    private func clampedX(_ x: CGFloat, in plotFrame: CGRect) -> CGFloat {
+        let dotRadius: CGFloat = 6
+        return min(max(x, plotFrame.minX + dotRadius), plotFrame.maxX - dotRadius)
+    }
+
+    // Debug: Clamp scrubber to chart bounds so it never renders off-screen
+    private func clampedY(_ y: CGFloat, in plotFrame: CGRect) -> CGFloat {
+        let dotRadius: CGFloat = 6
+        return min(max(y, plotFrame.minY + dotRadius), plotFrame.maxY - dotRadius)
     }
     
     // Performance: Binary search for fast data point lookup during scrubbing (O(log n) vs O(n))
@@ -108,8 +121,8 @@ struct InteractiveChartView: View {
                     y: .value("Value", point.value)
                 )
                 .foregroundStyle(Theme.accentColor)
-                .interpolationMethod(.monotone)
-                .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)) // Debug: Round lineCap to prevent extension
+                .interpolationMethod(.linear) // Debug: Linear interpolation keeps scrubber aligned with line
+                .lineStyle(StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round)) // Debug: Thicker line for visibility; round lineCap to prevent extension
             }
             
             ForEach(renderData) { point in
@@ -119,7 +132,7 @@ struct InteractiveChartView: View {
                     yEnd: .value("Value", point.value)
                 )
                 .foregroundStyle(chartAreaFill)
-                .interpolationMethod(.monotone)
+                .interpolationMethod(.linear) // Debug: Match line interpolation for consistent fill
             }
         }
         .chartXAxis(.hidden)
@@ -190,6 +203,8 @@ struct InteractiveChartView: View {
                     chartGrid
                     
                     chartContent()
+                        // Swift Charts: ChartProxy (chartOverlay) is the official API for custom scrubbing.
+                        // Prioritised for iOS 26; same implementation runs on iOS 18 and 17 (no @available needed).
                         .chartOverlay { proxy in
                             GeometryReader { geo in
                                 Rectangle()
@@ -228,30 +243,33 @@ struct InteractiveChartView: View {
                                                 // Handle edge cases: before first or after last data point
                                                 if let first = sorted.first, date <= first.date {
                                                     let xPlot = proxy.position(forX: first.date) ?? location.x
+                                                    let rawX = plotFrame.origin.x + xPlot
                                                     position = ScrubberPosition(
                                                         date: first.date,
                                                         value: first.value,
-                                                        xPosition: plotFrame.origin.x + xPlot
+                                                        xPosition: clampedX(rawX, in: plotFrame)
                                                     )
                                                 } else if let last = sorted.last, date >= last.date {
                                                     let xPlot = proxy.position(forX: last.date) ?? location.x
+                                                    let rawX = plotFrame.origin.x + xPlot
                                                     position = ScrubberPosition(
                                                         date: last.date,
                                                         value: last.value,
-                                                        xPosition: plotFrame.origin.x + xPlot
+                                                        xPosition: clampedX(rawX, in: plotFrame)
                                                     )
                                                 } else {
                                                     // Performance: Binary search for surrounding points (O(log n))
                                                     let (before, after) = findSurroundingPoints(for: date, in: sorted)
                                                     
                                                     if let b = before, let a = after {
-                                                        // Linear interpolation between data points
+                                                        // Swift Charts: Use linear interpolation so the scrubber moves smoothly (good UX).
+                                                        // ChartProxy.value(atX:) gives us the date; we derive value from data so dot position matches chart scale.
+                                                        // Dot may sit slightly off the monotone curve between points but moves continuously (iOS 26 / 18 / 17).
                                                         let timeDiff = a.date.timeIntervalSince(b.date)
                                                         let timeFromB = date.timeIntervalSince(b.date)
                                                         let t = timeDiff > 0 ? timeFromB / timeDiff : 0.0
                                                         let interpolatedValue = b.value + (a.value - b.value) * t
                                                         
-                                                        // Calculate x position
                                                         let xPos: CGFloat
                                                         if let xPlot = proxy.position(forX: date) {
                                                             xPos = plotFrame.origin.x + xPlot
@@ -263,10 +281,11 @@ struct InteractiveChartView: View {
                                                             xPos = location.x
                                                         }
                                                         
+                                                        let clampedXPos = clampedX(xPos, in: plotFrame)
                                                         position = ScrubberPosition(
                                                             date: date,
                                                             value: interpolatedValue,
-                                                            xPosition: xPos
+                                                            xPosition: clampedXPos
                                                         )
                                                     } else {
                                                         // Fallback: shouldn't happen with binary search
@@ -327,8 +346,10 @@ struct InteractiveChartView: View {
                                    let plotFrameAnchor = proxy.plotFrame {
                                     
                                     let plotFrame = geo[plotFrameAnchor]
-                                    let x = plotFrame.origin.x + xInPlot
-                                    let y = plotFrame.origin.y + yInPlot
+                                    let rawX = plotFrame.origin.x + xInPlot
+                                    let rawY = plotFrame.origin.y + yInPlot
+                                    let x = clampedX(rawX, in: plotFrame)
+                                    let y = clampedY(rawY, in: plotFrame)
                                     
                                     // Performance: Use Group with .drawingGroup() to batch GPU operations
                                     // Apple HIG: Minimize render passes for smooth 60fps interaction
@@ -357,7 +378,7 @@ struct InteractiveChartView: View {
                         }
                 }
             }
-            .frame(height: 200)
+            .frame(height: 160)
             // Debug: Clean minimal chart styling with card background
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
