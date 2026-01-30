@@ -10,9 +10,6 @@ import SwiftUI
 struct LandingPageView: View {
     /// Called when user taps "Continue" – coordinator slides landing left to reveal features.
     var onContinue: () -> Void
-    /// Debug: Skip onboarding (development only).
-    var onSkipToDashboard: (() -> Void)? = nil
-
     var body: some View {
         ZStack {
             // Background base – shows through transparent parts of bg_landing
@@ -34,7 +31,8 @@ struct LandingPageView: View {
                         .resizable()
                         .renderingMode(.template)
                         .scaledToFit()
-                        .foregroundStyle(Theme.primaryText)
+                        // Debug: Match logo tint to tertiary background for landing look.
+                        .foregroundStyle(Theme.tertiaryBackground)
                         .frame(maxWidth: 220)
                         .accessibilityLabel("Stockman's Wallet")
                 }
@@ -51,22 +49,9 @@ struct LandingPageView: View {
 
     private var landingBottomBar: some View {
         VStack(spacing: 12) {
-            if let onSkip = onSkipToDashboard {
-                Button {
-                    HapticManager.tap()
-                    onSkip()
-                } label: {
-                    Text("Skip to Dashboard")
-                        .font(.caption)
-                        .foregroundStyle(Theme.background)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(Capsule().fill(Theme.primaryText))
-                }
-                .padding(.bottom, 4)
-            }
-
             Button {
+                // Debug: Track continue taps on landing.
+                print("LandingPageView: Continue tapped")
                 HapticManager.tap()
                 onContinue()
             } label: {
@@ -77,7 +62,8 @@ struct LandingPageView: View {
 
             Text("Powered by MLA Market Data")
                 .font(Theme.caption)
-                .foregroundStyle(Theme.secondaryText)
+                // Debug: Use primary text color for landing credit.
+                .foregroundStyle(Theme.primaryText)
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 24)

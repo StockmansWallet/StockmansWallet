@@ -135,8 +135,8 @@ struct CapitalConcentrationView: View {
                                 angularInset: 2.0 // Small gap between segments
                             )
                             .foregroundStyle(chartColors[index % chartColors.count])
-                            // Debug: iOS 26 HIG - continuous curve for chart segment corners.
-                            .clipShape(Theme.continuousRoundedRect(4))
+                            // Debug: iOS 26 HIG - use native chart corner radius.
+                            .cornerRadius(4)
                             .accessibilityLabel("\(item.category)")
                             .accessibilityValue("\(item.percentage.formatted(.number.precision(.fractionLength(1)))) percent")
                         }

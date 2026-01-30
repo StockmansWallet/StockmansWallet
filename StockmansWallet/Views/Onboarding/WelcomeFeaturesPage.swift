@@ -37,7 +37,8 @@ struct WelcomeFeaturesPage: View {
                         withAnimation(.spring(response: 0.55, dampingFraction: 0.9)) {
                             step = .landing
                         }
-                    }
+                    },
+                    onSkipToDashboard: onSkipAsFarmer
                 )
 
                 // 2. Landing page on top; animates off to the left when user taps Continue
@@ -46,8 +47,7 @@ struct WelcomeFeaturesPage: View {
                         withAnimation(.spring(response: 0.55, dampingFraction: 0.9)) {
                             step = .features
                         }
-                    },
-                    onSkipToDashboard: onSkipAsFarmer
+                    }
                 )
                 .offset(x: step == .landing ? 0 : -geo.size.width)
                 .animation(.spring(response: 0.55, dampingFraction: 0.9), value: step)

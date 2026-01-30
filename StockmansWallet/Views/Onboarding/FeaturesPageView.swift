@@ -12,6 +12,8 @@ struct FeaturesPageView: View {
     var onContinue: () -> Void
     /// Called when user taps back (chevron) – coordinator slides landing back in from the left.
     var onBack: () -> Void
+    /// Debug: Skip onboarding directly to dashboard (development only).
+    var onSkipToDashboard: (() -> Void)? = nil
 
     // iOS 26 HIG: 44pt minimum touch target for controls
     private let controlSize: CGFloat = 44
@@ -52,6 +54,26 @@ struct FeaturesPageView: View {
                     .padding(.bottom, 40)
 
                     featureTiles
+
+                    if let onSkip = onSkipToDashboard {
+                        Button {
+                            // Debug: Track skip to dashboard taps on features page.
+                            print("FeaturesPageView: Skip to Dashboard tapped")
+                            HapticManager.tap()
+                            onSkip()
+                        } label: {
+                            Text("Skip to Dashboard")
+                                .font(.caption)
+                                .foregroundStyle(Theme.primaryText)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                // Debug: Darker brown capsule for skip action.
+                                .background(Capsule().fill(Theme.Accent.quaternary))
+                        }
+                        // Debug: Place skip button under the feature grid.
+                        .frame(maxWidth: .infinity, alignment: .trailing)
+                        .padding(.top, 16)
+                    }
                 }
                 .padding(.horizontal, 24)
 
