@@ -290,8 +290,8 @@ struct DashboardView: View {
                 Spacer()
             }
             
-            // Debug: Scrollable content panel - starts lower to show more background
-            ScrollView {
+            // Debug: Scrollable content panel - vertical only, full width (Apple HIG: no horizontal drag)
+            ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     // Debug: Top spacing to position content panel lower and clear the fixed header
                     Color.clear
@@ -299,6 +299,7 @@ struct DashboardView: View {
                     
                     contentPanel
                 }
+                .frame(maxWidth: .infinity)
             }
             .scrollIndicators(.hidden)
         }
@@ -333,6 +334,7 @@ struct DashboardView: View {
                 }
             }
         }
+        .frame(maxWidth: .infinity)
         .padding(.top, 20) // Apple HIG: Consistent 20pt padding
         .padding(.bottom, 100)
         .background(

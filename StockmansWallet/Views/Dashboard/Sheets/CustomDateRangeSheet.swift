@@ -103,9 +103,10 @@ struct CustomDateRangeSheet: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.background)
+            .background(Theme.tertiaryBackground)
         }
         .presentationDetents([.large])
+        .presentationBackground(Theme.tertiaryBackground)
         .presentationDragIndicator(.visible)
     }
     
