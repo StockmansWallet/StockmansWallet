@@ -284,8 +284,8 @@ struct MarketPulseView: View {
                     }
                 }
             }
-            // Debug: Keep header edge-to-edge, pad only the content area.
-            .padding(.horizontal, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
+            // Debug: Slightly more horizontal padding for bottom content area.
+            .padding(.horizontal, showsDashboardHeader ? Theme.dashboardCardPadding + 4 : 0)
             .padding(.bottom, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
         }
         // Debug: Use standard padding for non-dashboard usage.
@@ -670,8 +670,8 @@ struct HerdDynamicsView: View {
                         .padding(.vertical, 4)
                 }
             }
-            // Debug: Keep header edge-to-edge, pad only the content area.
-            .padding(.horizontal, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
+            // Debug: Slightly more horizontal padding for bottom content area.
+            .padding(.horizontal, showsDashboardHeader ? Theme.dashboardCardPadding + 4 : 0)
             .padding(.bottom, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
         }
         // Debug: Use standard padding for non-dashboard usage.

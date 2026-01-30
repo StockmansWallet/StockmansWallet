@@ -43,14 +43,14 @@ struct CapitalConcentrationView: View {
     
     // Debug: Color palette for pie chart segments (darker earthy, muted tones)
     private let chartColors: [Color] = [
-        Color(red: 0.70, green: 0.45, blue: 0.30), // Dark terracotta
-        Color(red: 0.45, green: 0.55, blue: 0.65), // Muted blue
-        Color(red: 0.50, green: 0.60, blue: 0.45), // Dark sage
-        Color(red: 0.75, green: 0.63, blue: 0.40), // Dark sand
-        Color(red: 0.60, green: 0.50, blue: 0.63), // Deep lavender
-        Color(red: 0.70, green: 0.50, blue: 0.45), // Brick rose
-        Color(red: 0.45, green: 0.63, blue: 0.63), // Deep teal
-        Color(red: 0.67, green: 0.57, blue: 0.43)  // Dark tan
+        Theme.sectionAmber,
+        Theme.sectionPasture,
+        Theme.sectionRiver,
+        Theme.sectionClay,
+        Theme.sectionSoil,
+        Theme.sectionSky,
+        Theme.sectionHarvest,
+        Theme.sectionStone
     ]
     
     var body: some View {
@@ -190,8 +190,8 @@ struct CapitalConcentrationView: View {
                     }
                 }
             }
-            // Debug: Keep header edge-to-edge, pad only the content area.
-            .padding(.horizontal, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
+            // Debug: Slightly more horizontal padding for bottom content area.
+            .padding(.horizontal, showsDashboardHeader ? Theme.dashboardCardPadding + 4 : 0)
             .padding(.bottom, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
         }
         // Debug: Use standard padding for non-dashboard usage.

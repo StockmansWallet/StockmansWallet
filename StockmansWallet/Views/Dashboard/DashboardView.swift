@@ -322,27 +322,10 @@ struct DashboardView: View {
                     }
                 }
             } else {
-                // Debug: Almost black background with subtle orange radial glow from top when no background is selected
-                // Much darker base color for stronger contrast, with minimal orange accent for warmth
-                ZStack {
-                    // Debug: Almost black base layer
-                    Theme.secondaryBackground
-                        .ignoresSafeArea()
-                    
-                    // Debug: Very subtle orange glow at top for minimal warmth
-                    RadialGradient(
-                        colors: [
-                            Theme.accentColor.opacity(0.08),  // Minimal orange glow at top
-                            Theme.accentColor.opacity(0.02),  // Fade to barely visible
-                            Color.clear                   // Fade to transparent
-                        ],
-                        center: .top,
-                        startRadius: 0,
-                        endRadius: 200
-                    )
+                // Debug: Solid dark brown background when no image is selected.
+                Color(hex: "1B150E")
                     .ignoresSafeArea()
-                }
-                .id("glow_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
+                    .id("glow_\(backgroundImageTrigger)") // Debug: Force view recreation on background change
             }
             
             // Debug: Fixed portfolio value header - stays in place while content scrolls beneath
@@ -443,15 +426,33 @@ struct DashboardView: View {
     private var performanceChartCard: some View {
         // Debug: Unified card background for chart + range selector
         VStack(spacing: 0) {
-            DashboardCardHeader(
-                title: "Portfolio Performance",
-                iconName: "chart.line.uptrend.xyaxis",
-                iconColor: Theme.dashboardPerformanceAccent,
-                timeRangeLabel: nil
-            ) {
-                // Debug: No time range menu for the performance card title bar.
-                EmptyView()
+            // Debug: Range selector pill only (no title bar heading).
+            HStack {
+                Spacer()
+                DashboardTimeRangePill(label: dashboardTimeRangeLabel) {
+                    ForEach(TimeRange.allCases, id: \.self) { range in
+                        Button {
+                            HapticManager.tap()
+                            if range == .custom {
+                                showingCustomDatePicker = true
+                            } else {
+                                timeRange = range
+                            }
+                        } label: {
+                            HStack {
+                                Text(range.rawValue)
+                                if timeRange == range {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
+                }
             }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(Color.clear)
             
             // Debug: Always show chart, even for new portfolios
             // Chart automatically handles showing growth from zero to current value
@@ -476,19 +477,19 @@ struct DashboardView: View {
             
             // Debug: Keep time range selector visible when overall history exists
             // This prevents the selector from disappearing when a custom range is empty
-            if valuationHistory.count >= 2 {
-                TimeRangeSelector(
-                    timeRange: $timeRange,
-                    customStartDate: $customStartDate,
-                    customEndDate: $customEndDate,
-                    showingCustomDatePicker: $showingCustomDatePicker
-                )
-                .padding(.horizontal, Theme.dashboardCardPadding)
-                .padding(.top, 6) // Debug: Keep selector below date labels
-                .padding(.bottom, 12) // Debug: Breathing room above rounded corners
-                .accessibilityElement(children: .contain)
-                .accessibilityLabel("Time range selector")
-            }
+//            if valuationHistory.count >= 2 {
+//                TimeRangeSelector(
+//                    timeRange: $timeRange,
+//                    customStartDate: $customStartDate,
+//                    customEndDate: $customEndDate,
+//                    showingCustomDatePicker: $showingCustomDatePicker
+//                )
+//                .padding(.horizontal, Theme.dashboardCardPadding)
+//                .padding(.top, 6) // Debug: Keep selector below date labels
+//                .padding(.bottom, 12) // Debug: Breathing room above rounded corners
+//                .accessibilityElement(children: .contain)
+//                .accessibilityLabel("Time range selector")
+//            }
         }
         .background(
             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)

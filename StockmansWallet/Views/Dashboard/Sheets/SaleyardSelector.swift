@@ -18,19 +18,20 @@ struct SaleyardSelector: View {
             showingSaleyardSheet = true
         }) {
             HStack {
-                Image(systemName: "dollarsign.bank.building")
-                    .foregroundStyle(Theme.accentColor)
-                    .font(.system(size: 16))
-                
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Saleyard")
-                        .font(.system(size: 13))
-                        .foregroundStyle(Theme.secondaryText)
-                    Text(selectedSaleyard ?? "Your Selected Saleyards")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Theme.primaryText)
-                        .lineLimit(1)
+                ZStack {
+                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                        .fill(Theme.dashboardIconBackground)
+                    Image(systemName: "dollarsign.bank.building")
+                        .foregroundStyle(Theme.sectionHarvest)
+                        .font(.system(size: 14, weight: .semibold))
                 }
+                .frame(width: 28, height: 28)
+                .accessibilityHidden(true)
+                
+                Text(selectedSaleyard ?? "Your Favourite Saleyards")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineLimit(1)
                 
                 Spacer()
                 

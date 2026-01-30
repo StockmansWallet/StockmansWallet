@@ -59,10 +59,7 @@ struct DashboardCardHeader<TimeRangeMenu: View>: View {
             .padding(.horizontal, Theme.dashboardCardPadding)
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
-            .background(Theme.dashboardHeaderBackground)
-            
-            Divider()
-                .background(Theme.separator.opacity(0.35))
+            .background(Theme.tertiaryBackground)
         }
         .accessibilityElement(children: .contain)
     }
@@ -90,11 +87,11 @@ struct DashboardTimeRangePill<MenuContent: View>: View {
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(Theme.accentColor)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
             .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Theme.accentColor.opacity(0.15))
+                Capsule(style: .continuous)
+                    .fill(Theme.accentColor.opacity(0.18))
             )
         }
         .accessibilityLabel("Select time range")
