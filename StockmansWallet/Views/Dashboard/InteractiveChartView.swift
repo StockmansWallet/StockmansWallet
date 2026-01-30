@@ -26,6 +26,9 @@ struct InteractiveChartView: View {
     @Binding var selectedValue: Double?
     @Binding var isScrubbing: Bool
     @Binding var timeRange: TimeRange
+    // Debug: Pass custom range dates for accurate label display
+    let customStartDate: Date?
+    let customEndDate: Date?
     let baseValue: Double
     let onValueChange: (Double, Double) -> Void
     
@@ -392,7 +395,9 @@ struct InteractiveChartView: View {
             
             ChartDateLabelsView(
                 data: data,
-                timeRange: timeRange
+                timeRange: timeRange,
+                customStartDate: customStartDate,
+                customEndDate: customEndDate
             )
             .padding(.horizontal, Theme.cardPadding)
             .padding(.top, 10)

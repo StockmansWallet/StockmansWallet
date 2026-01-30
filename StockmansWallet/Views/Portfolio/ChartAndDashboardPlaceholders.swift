@@ -49,13 +49,22 @@ func calculateYPosition(for value: Double, in height: CGFloat, data: [ValuationD
 struct ChartDateLabelsView: View {
     let data: [ValuationDataPoint]
     let timeRange: TimeRange
+    // Debug: Use custom date picker values when applicable
+    let customStartDate: Date?
+    let customEndDate: Date?
     
     private var startDate: Date? {
-        data.first?.date
+        if timeRange == .custom, let customStartDate {
+            return customStartDate
+        }
+        return data.first?.date
     }
     
     private var endDate: Date? {
-        data.last?.date
+        if timeRange == .custom, let customEndDate {
+            return customEndDate
+        }
+        return data.last?.date
     }
     
     var body: some View {
@@ -126,10 +135,8 @@ struct TimeRangeSelector: View {
                         timeRange = range
                     }
                 } label: {
-                    // Debug: Show condensed dates when custom range is active
-                    Text(range == .custom && timeRange == .custom && customStartDate != nil && customEndDate != nil 
-                        ? customDateRangeLabel 
-                        : range.rawValue)
+                    // Debug: Keep "Custom" label when active for clear state
+                    Text(range.rawValue)
                         .font(Theme.caption)
                         .foregroundStyle(timeRange == range ? Theme.accentColor : Theme.secondaryText)
                         .padding(.horizontal, 10) // Reduced from 12 for smaller screens

@@ -371,6 +371,9 @@ struct DashboardView: View {
             selectedValue: $selectedValue,
             isScrubbing: $isScrubbing,
             timeRange: $timeRange,
+            // Debug: Provide custom range dates so labels match date picker selection
+            customStartDate: customStartDate,
+            customEndDate: customEndDate,
             baseValue: baseValue,
             onValueChange: { newValue, change in
                 portfolioChange = change
