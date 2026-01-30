@@ -13,7 +13,6 @@ import Charts
 struct CapitalConcentrationView: View {
     // Debug: Enable dashboard-style title bar when embedded in dashboard.
     var showsDashboardHeader: Bool = false
-    var isReorderMode: Bool = false
     let breakdown: [CapitalConcentrationBreakdown]
     let totalValue: Double
     @State private var compositionTimeRange: CompositionTimeRange = .current
@@ -62,9 +61,7 @@ struct CapitalConcentrationView: View {
                     title: "Herd Composition",
                     iconName: "chart.pie.fill",
                     iconColor: Theme.dashboardCompositionAccent,
-                    timeRangeLabel: customDateRangeLabel,
-                    showsDragHandle: true,
-                    isReorderMode: isReorderMode
+                    timeRangeLabel: customDateRangeLabel
                 ) {
                     ForEach(CompositionTimeRange.allCases, id: \.self) { range in
                         Button {

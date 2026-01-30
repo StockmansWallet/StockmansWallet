@@ -158,7 +158,6 @@ struct TimeRangeSelector: View {
 struct MarketPulseView: View {
     // Debug: Enable dashboard-style title bar when embedded in dashboard.
     var showsDashboardHeader: Bool = false
-    var isReorderMode: Bool = false
     @Environment(\.modelContext) private var modelContext
     // Performance: Only query herds (headCount > 1), not individual animals
     @Query(filter: #Predicate<HerdGroup> { $0.headCount > 1 }) private var herds: [HerdGroup]
@@ -199,9 +198,7 @@ struct MarketPulseView: View {
                     title: "Herd Performance",
                     iconName: "chart.line.uptrend.xyaxis",
                     iconColor: Theme.dashboardMarketAccent,
-                    timeRangeLabel: customDateRangeLabel,
-                    showsDragHandle: true,
-                    isReorderMode: isReorderMode
+                    timeRangeLabel: customDateRangeLabel
                 ) {
                     ForEach(PerformanceTimeRange.allCases, id: \.self) { range in
                         Button {
@@ -522,7 +519,6 @@ struct IndicatorRow: View {
 struct HerdDynamicsView: View {
     // Debug: Enable dashboard-style title bar when embedded in dashboard.
     var showsDashboardHeader: Bool = false
-    var isReorderMode: Bool = false
     let herds: [HerdGroup]
     @State private var dynamicsTimeRange: DynamicsTimeRange = .week
     @State private var showingCustomDatePicker = false
@@ -572,9 +568,7 @@ struct HerdDynamicsView: View {
                     title: "Growth & Mortality",
                     iconName: "heart.fill",
                     iconColor: Theme.dashboardDynamicsAccent,
-                    timeRangeLabel: customDateRangeLabel,
-                    showsDragHandle: true,
-                    isReorderMode: isReorderMode
+                    timeRangeLabel: customDateRangeLabel
                 ) {
                     ForEach(DynamicsTimeRange.allCases, id: \.self) { range in
                         Button {

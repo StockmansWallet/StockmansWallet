@@ -47,21 +47,21 @@ enum Theme {
     /// Primary accent color for interactive elements, buttons, and highlights.
     static let accentColor = Accent.primary
     
-    /// Destructive/Error colors.
-    static let destructive = Color(hex: "7E2D1C")
-    static let destructiveLight = Color(hex: "E59781")
+    /// Destructive/Error colors (Debug: Increased saturation for clearer status).
+    static let destructive = Color(hex: "8E2B17")
+    static let destructiveLight = Color(hex: "F19A7A")
     
-    /// Success colors.
-    static let success = Color(hex: "384224")
-    static let successLight = Color(hex: "BAC99C")
+    /// Success colors (Debug: Increased saturation for clearer status).
+    static let success = Color(hex: "2E6B35")
+    static let successLight = Color(hex: "A6D77F")
     
-    /// Warning/Alert colors.
-    static let warning = Color(hex: "D4A944")
-    static let warningLight = Color(hex: "F3E8C8")
+    /// Warning/Alert colors (Debug: Increased saturation for clearer status).
+    static let warning = Color(hex: "C9871F")
+    static let warningLight = Color(hex: "F1D48A")
     
-    /// Informational colors.
-    static let info = Color(hex: "5B7C8D")
-    static let infoLight = Color(hex: "D3DDE2")
+    /// Informational colors (Debug: Increased saturation for clearer status).
+    static let info = Color(hex: "2F6B87")
+    static let infoLight = Color(hex: "9EC6DA")
     
     // MARK: - System Colors (Apple HIG semantic naming)
     
@@ -113,13 +113,13 @@ enum Theme {
     // MARK: - Status Colors
     
     /// Positive change indicator color.
-    static let positiveChange = successLight
+    static let positiveChange = Color(hex: "93D35C")
     
     /// Positive change background color.
     static let positiveChangeBackground = success
     
     /// Negative change indicator color.
-    static let negativeChange = destructiveLight
+    static let negativeChange = Color(hex: "F07D6A")
     
     /// Negative change background color.
     static let negativeChangeBackground = destructive
@@ -169,10 +169,21 @@ enum Theme {
 
     // MARK: - Dashboard Accent Colors (Nature/Farm Tone)
     /// Debug: Per-card accent colors for dashboard title bar icons.
-    static let dashboardPerformanceAccent = Color(hex: "D1843B") // Warm amber
-    static let dashboardMarketAccent = Color(hex: "7FA76A") // Pasture green
-    static let dashboardDynamicsAccent = Color(hex: "C36B5A") // Rustic clay
-    static let dashboardCompositionAccent = Color(hex: "6E8E9D") // Muted blue/teal
+    static let dashboardPerformanceAccent = Color(hex: "D27D2B") // Warm amber
+    static let dashboardMarketAccent = Color(hex: "6FB36D") // Pasture green
+    static let dashboardDynamicsAccent = Color(hex: "C76A4A") // Rustic clay
+    static let dashboardCompositionAccent = Color(hex: "4F8DA5") // Muted blue/teal
+    
+    // MARK: - Section Colors (Nature/Farm Tone, Harmonized)
+    /// Debug: Use for section headers, icons, and category accents.
+    static let sectionAmber = Color(hex: "D27D2B")
+    static let sectionPasture = Color(hex: "6FB36D")
+    static let sectionRiver = Color(hex: "4F8DA5")
+    static let sectionClay = Color(hex: "C76A4A")
+    static let sectionSoil = Color(hex: "8B5A3C")
+    static let sectionSky = Color(hex: "5B7FAF")
+    static let sectionHarvest = Color(hex: "C9A23B")
+    static let sectionStone = Color(hex: "7E8E7A")
     
     /// Spacing between major sections.
     static let sectionSpacing: CGFloat = 24

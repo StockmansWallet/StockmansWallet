@@ -14,8 +14,6 @@ struct DashboardCardHeader<TimeRangeMenu: View>: View {
     let iconName: String
     let iconColor: Color
     let timeRangeLabel: String?
-    let showsDragHandle: Bool
-    let isReorderMode: Bool
     let timeRangeMenu: TimeRangeMenu
     
     init(
@@ -23,16 +21,12 @@ struct DashboardCardHeader<TimeRangeMenu: View>: View {
         iconName: String,
         iconColor: Color,
         timeRangeLabel: String? = nil,
-        showsDragHandle: Bool,
-        isReorderMode: Bool,
         @ViewBuilder timeRangeMenu: () -> TimeRangeMenu
     ) {
         self.title = title
         self.iconName = iconName
         self.iconColor = iconColor
         self.timeRangeLabel = timeRangeLabel
-        self.showsDragHandle = showsDragHandle
-        self.isReorderMode = isReorderMode
         self.timeRangeMenu = timeRangeMenu()
     }
     
@@ -61,9 +55,6 @@ struct DashboardCardHeader<TimeRangeMenu: View>: View {
                     }
                 }
                 
-                if showsDragHandle {
-                    DashboardDragHandle(isActive: isReorderMode)
-                }
             }
             .padding(.horizontal, Theme.dashboardCardPadding)
             .padding(.vertical, 10)
@@ -110,19 +101,3 @@ struct DashboardTimeRangePill<MenuContent: View>: View {
     }
 }
 
-// MARK: - Drag Handle
-struct DashboardDragHandle: View {
-    let isActive: Bool
-    
-    var body: some View {
-        Image(systemName: "chevron.up.chevron.down")
-            .font(.system(size: 12, weight: .semibold))
-            .foregroundStyle(isActive ? Theme.accentColor : Theme.secondaryText.opacity(0.7))
-            .padding(6)
-            .background(
-                RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Theme.secondaryBackground.opacity(isActive ? 0.7 : 0.4))
-            )
-            .accessibilityLabel("Reorder card")
-    }
-}

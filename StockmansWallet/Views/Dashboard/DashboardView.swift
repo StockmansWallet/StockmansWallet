@@ -275,7 +275,7 @@ struct DashboardView: View {
             // Only show background if backgroundImageName is not nil
             if let imageName = backgroundImageName {
                 // Debug: Slightly reduce background image opacity for flatter look
-                let backgroundImageOpacity = Theme.backgroundImageOpacity * 0.4
+                let backgroundImageOpacity = Theme.backgroundImageOpacity * 0.6
                 if userPrefs.isCustomBackground {
                     // Debug: Load custom background from document directory
                     backgroundImageWithBottomFade(
@@ -393,24 +393,24 @@ struct DashboardView: View {
                 if userPrefs.isCardVisible(cardId) {
                     switch cardId {
                     case "performanceChart":
-                        dashboardCardWrapper(cardId: cardId) {
+                        dashboardCardWrapper(cardId: cardId, isReorderable: false) {
                             performanceChartCard
                         }
                     case "quickActions":
-                        dashboardCardWrapper(cardId: cardId) {
+                        dashboardCardWrapper(cardId: cardId, isReorderable: true) {
                             saleyardSelectorCard
                         }
                     case "marketSummary":
-                        dashboardCardWrapper(cardId: cardId) {
+                        dashboardCardWrapper(cardId: cardId, isReorderable: true) {
                             marketPulseCard
                         }
                     case "recentActivity":
-                        dashboardCardWrapper(cardId: cardId) {
+                        dashboardCardWrapper(cardId: cardId, isReorderable: true) {
                             herdDynamicsCard
                         }
                     case "herdComposition":
                         if !capitalConcentration.isEmpty {
-                            dashboardCardWrapper(cardId: cardId) {
+                            dashboardCardWrapper(cardId: cardId, isReorderable: true) {
                                 capitalConcentrationCard
                             }
                         }
@@ -447,27 +447,10 @@ struct DashboardView: View {
                 title: "Portfolio Performance",
                 iconName: "chart.line.uptrend.xyaxis",
                 iconColor: Theme.dashboardPerformanceAccent,
-                timeRangeLabel: dashboardTimeRangeLabel,
-                showsDragHandle: true,
-                isReorderMode: isReorderMode
+                timeRangeLabel: nil
             ) {
-                ForEach(TimeRange.allCases, id: \.self) { range in
-                    Button {
-                        HapticManager.tap()
-                        if range == .custom {
-                            showingCustomDatePicker = true
-                        } else {
-                            timeRange = range
-                        }
-                    } label: {
-                        HStack {
-                            Text(range.rawValue)
-                            if timeRange == range {
-                                Image(systemName: "checkmark")
-                            }
-                        }
-                    }
-                }
+                // Debug: No time range menu for the performance card title bar.
+                EmptyView()
             }
             
             // Debug: Always show chart, even for new portfolios
@@ -542,7 +525,7 @@ struct DashboardView: View {
     
     @ViewBuilder
     private var marketPulseCard: some View {
-        MarketPulseView(showsDashboardHeader: true, isReorderMode: isReorderMode)
+        MarketPulseView(showsDashboardHeader: true)
             .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)
@@ -553,7 +536,6 @@ struct DashboardView: View {
     private var herdDynamicsCard: some View {
         HerdDynamicsView(
             showsDashboardHeader: true,
-            isReorderMode: isReorderMode,
             herds: herds.filter { !$0.isSold }
         )
             .cardStyle()
@@ -566,7 +548,6 @@ struct DashboardView: View {
     private var capitalConcentrationCard: some View {
         CapitalConcentrationView(
             showsDashboardHeader: true,
-            isReorderMode: isReorderMode,
             breakdown: capitalConcentration,
             totalValue: portfolioValue
         )
@@ -580,6 +561,7 @@ struct DashboardView: View {
     @ViewBuilder
     private func dashboardCardWrapper<Content: View>(
         cardId: String,
+        isReorderable: Bool,
         @ViewBuilder content: () -> Content
     ) -> some View {
         content()
@@ -591,6 +573,7 @@ struct DashboardView: View {
             }
             .onDrag {
                 // Debug: Drag starts with long-press gesture (system default).
+                guard isReorderable else { return NSItemProvider() }
                 isReorderMode = true
                 draggedCardId = cardId
                 return NSItemProvider(object: cardId as NSString)
