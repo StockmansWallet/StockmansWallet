@@ -71,11 +71,11 @@ struct AppearanceSettingsView: View {
                 Button(action: resetToDefaultOrder) {
                     HStack(spacing: 12) {
                         Image(systemName: "arrow.counterclockwise")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .frame(width: 24)
                         Text("Reset to Default Order")
                             .font(Theme.body)
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                 }
                 .accessibilityLabel("Reset card order to default")
@@ -106,14 +106,14 @@ struct AppearanceSettingsView: View {
         )) {
             HStack(spacing: 12) {
                 Image(systemName: card.icon)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .frame(width: 24)
                 Text(card.name)
                     .font(Theme.body)
                     .foregroundStyle(Theme.primaryText) // Debug: Use PrimaryText instead of white
             }
         }
-        .tint(Theme.accent)
+        .tint(Theme.accentColor)
         .accessibilityLabel(card.accessibilityLabel)
     }
     

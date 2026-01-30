@@ -56,10 +56,10 @@ struct ParallaxImageView: View {
                     LinearGradient(
                         colors: [
                             Color.clear,                          // Transparent at top
-                            Theme.backgroundColor.opacity(0.2),   // Gentle start
-                            Theme.backgroundColor.opacity(0.5),   // Mid fade
-                            Theme.backgroundColor.opacity(0.8),   // Strong fade
-                            Theme.backgroundColor                 // Solid at bottom
+                            Theme.background.opacity(0.2),   // Gentle start
+                            Theme.background.opacity(0.5),   // Mid fade
+                            Theme.background.opacity(0.8),   // Strong fade
+                            Theme.background                 // Solid at bottom
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -225,10 +225,10 @@ struct CustomParallaxImageView: View {
                     LinearGradient(
                         colors: [
                             Color.clear,                          // Transparent at top
-                            Theme.backgroundColor.opacity(0.2),   // Gentle start
-                            Theme.backgroundColor.opacity(0.5),   // Mid fade
-                            Theme.backgroundColor.opacity(0.8),   // Strong fade
-                            Theme.backgroundColor                 // Solid at bottom
+                            Theme.background.opacity(0.2),   // Gentle start
+                            Theme.background.opacity(0.5),   // Mid fade
+                            Theme.background.opacity(0.8),   // Strong fade
+                            Theme.background                 // Solid at bottom
                         ],
                         startPoint: .top,
                         endPoint: .bottom

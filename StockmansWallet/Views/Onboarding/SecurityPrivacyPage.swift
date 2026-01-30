@@ -35,7 +35,7 @@ struct SecurityPrivacyPage: View {
                         Toggle(isOn: $userPrefs.twoFactorEnabled) {
                             HStack(spacing: 12) {
                                 Image(systemName: "lock.shield.fill")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                                     .frame(width: 24)
                                 VStack(alignment: .leading, spacing: 4) {
                                     Text("Enable Two-Factor Authentication")
@@ -47,7 +47,7 @@ struct SecurityPrivacyPage: View {
                                 }
                             }
                         }
-                        .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
+                        .toggleStyle(SwitchToggleStyle(tint: Theme.accentColor))
                         .padding(.horizontal, 16)
                         .padding(.vertical, 12)
                         .frame(minHeight: Theme.buttonHeight)
@@ -69,7 +69,7 @@ struct SecurityPrivacyPage: View {
                                 userPrefs.appsComplianceAccepted.toggle()
                             }) {
                                 Image(systemName: userPrefs.appsComplianceAccepted ? "checkmark.square.fill" : "square")
-                                    .foregroundStyle(userPrefs.appsComplianceAccepted ? Theme.accent : Theme.secondaryText)
+                                    .foregroundStyle(userPrefs.appsComplianceAccepted ? Theme.accentColor : Theme.secondaryText)
                                     .font(.system(size: 24))
                                     .frame(width: Theme.minimumTouchTarget, height: Theme.minimumTouchTarget)
                                     .contentShape(Rectangle())
@@ -89,7 +89,7 @@ struct SecurityPrivacyPage: View {
                                 }) {
                                     Text("Learn more")
                                         .font(Theme.subheadline) // match line height and size
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.accentColor)
                                         .frame(height: Theme.minimumTouchTarget)
                                         .contentShape(Rectangle())
                                 }

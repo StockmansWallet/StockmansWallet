@@ -65,7 +65,7 @@ struct CustomDateRangeSheet: View {
                     // Debug: Show date range summary
                     HStack {
                         Image(systemName: "calendar")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Selected Range")
                                 .font(Theme.caption)
@@ -98,12 +98,12 @@ struct CustomDateRangeSheet: View {
                         timeRange = .custom
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .fontWeight(.semibold)
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.backgroundColor)
+            .background(Theme.background)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)

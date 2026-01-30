@@ -46,7 +46,7 @@ struct ConnectedAppsView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "chart.bar.doc.horizontal.fill")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Text("Accounting Software")
                             .font(Theme.headline)
                             .foregroundStyle(Theme.primaryText)
@@ -101,7 +101,7 @@ struct ConnectedAppsView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "shippingbox.fill")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Text("Logistics & Transport")
                             .font(Theme.headline)
                             .foregroundStyle(Theme.primaryText)

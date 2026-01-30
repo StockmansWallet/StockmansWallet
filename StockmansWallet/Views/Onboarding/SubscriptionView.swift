@@ -168,7 +168,7 @@ struct SubscriptionView: View {
                     HStack(spacing: 8) {
                         ForEach(availableTiers, id: \.self) { tier in
                             Circle()
-                                .fill(selectedTier == tier ? Theme.accent : Theme.secondaryText.opacity(0.3))
+                                .fill(selectedTier == tier ? Theme.accentColor : Theme.secondaryText.opacity(0.3))
                                 .frame(width: 8, height: 8)
                         }
                     }
@@ -295,7 +295,7 @@ struct SubscriptionTierCard: View {
                         HStack(alignment: .firstTextBaseline, spacing: 4) {
                             Text(tier.price)
                                 .font(.system(size: 34, weight: .bold))
-                                .foregroundStyle(tier.isFree ? Theme.positiveChange : Theme.accent)
+                                .foregroundStyle(tier.isFree ? Theme.positiveChange : Theme.accentColor)
                             
                             if !tier.isFree {
                                 Text("/ month")
@@ -340,7 +340,7 @@ struct SubscriptionTierCard: View {
                                 HStack(alignment: .top, spacing: 10) {
                                     Image(systemName: "checkmark.circle.fill")
                                         .font(.body)
-                                        .foregroundStyle(tier.isFree ? Theme.positiveChange : Theme.accent)
+                                        .foregroundStyle(tier.isFree ? Theme.positiveChange : Theme.accentColor)
                                         .frame(width: 18)
                                     
                                     Text(feature)
@@ -372,7 +372,7 @@ struct SubscriptionTierCard: View {
                     )
             )
             .shadow(
-                color: isPaginated ? Theme.accent.opacity(0.15) : (isSelected ? Theme.accent.opacity(0.2) : .clear),
+                color: isPaginated ? Theme.accentColor.opacity(0.15) : (isSelected ? Theme.accentColor.opacity(0.2) : .clear),
                 radius: isPaginated ? 20 : (isSelected ? 12 : 0),
                 x: 0,
                 y: isPaginated ? 8 : (isSelected ? 4 : 0)

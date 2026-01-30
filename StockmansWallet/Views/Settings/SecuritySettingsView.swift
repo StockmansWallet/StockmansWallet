@@ -89,11 +89,11 @@ struct SecuritySettingsView: View {
                     HStack(spacing: 12) {
                         ZStack {
                             Circle()
-                                .fill(Theme.accent.opacity(0.15))
+                                .fill(Theme.accentColor.opacity(0.15))
                                 .frame(width: 44, height: 44)
                             Image(systemName: "checkmark.shield.fill")
                                 .font(.system(size: 18, weight: .semibold))
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                         }
                         
                         VStack(alignment: .leading, spacing: 4) {

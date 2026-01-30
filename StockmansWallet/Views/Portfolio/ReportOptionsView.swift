@@ -12,7 +12,7 @@ struct ReportOptionsView: View {
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
                 Image(systemName: "doc.text.fill")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
             }
             
             VStack(spacing: 12) {
@@ -22,7 +22,7 @@ struct ReportOptionsView: View {
                 } label: {
                     HStack {
                         Image(systemName: "doc.richtext.fill")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Text("Asset Register (PDF)")
                             .font(Theme.headline)
                             .foregroundStyle(Theme.primaryText)
@@ -41,7 +41,7 @@ struct ReportOptionsView: View {
                 } label: {
                     HStack {
                         Image(systemName: "chart.bar.doc.horizontal.fill")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Text("Sales Summary (PDF)")
                             .font(Theme.headline)
                             .foregroundStyle(Theme.primaryText)

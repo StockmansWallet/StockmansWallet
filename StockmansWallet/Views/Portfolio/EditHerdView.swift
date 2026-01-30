@@ -384,7 +384,7 @@ struct EditHerdView: View {
                                             .foregroundStyle(Theme.secondaryText.opacity(0.7))
                                     }
                                 }
-                                .tint(Theme.accent)
+                                .tint(Theme.accentColor)
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
@@ -397,7 +397,7 @@ struct EditHerdView: View {
                                     .font(.system(size: 13, weight: .medium))
                                     .foregroundStyle(Theme.primaryText)
                             }
-                            .tint(Theme.accent)
+                            .tint(Theme.accentColor)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background(Theme.cardBackground)
@@ -411,7 +411,7 @@ struct EditHerdView: View {
                                         .font(.system(size: 13, weight: .medium))
                                         .foregroundStyle(Theme.primaryText)
                                 }
-                                .tint(Theme.accent)
+                                .tint(Theme.accentColor)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .background(Theme.cardBackground)
@@ -581,7 +581,7 @@ struct EditHerdView: View {
                                 } label: {
                                     Image(systemName: "plus.circle.fill")
                                         .font(.system(size: 28))
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.accentColor)
                                 }
                             }
                                 
@@ -593,7 +593,7 @@ struct EditHerdView: View {
                                             // Document icon on the left
                                             Image(systemName: "doc.text.fill")
                                                 .font(.system(size: 28))
-                                                .foregroundStyle(Theme.accent)
+                                                .foregroundStyle(Theme.accentColor)
                                             
                                             // Record details
                                             VStack(alignment: .leading, spacing: 4) {
@@ -669,7 +669,7 @@ struct EditHerdView: View {
                                                     showingAddMusterRecord = true
                                                 } label: {
                                                     Circle()
-                                                        .fill(Theme.accent)
+                                                        .fill(Theme.accentColor)
                                                         .frame(width: 36, height: 36)
                                                         .overlay(
                                                             Image(systemName: "pencil")
@@ -683,7 +683,7 @@ struct EditHerdView: View {
                                                     deleteMusterRecord(record)
                                                 } label: {
                                                     Circle()
-                                                        .fill(Theme.accent)
+                                                        .fill(Theme.accentColor)
                                                         .frame(width: 36, height: 36)
                                                         .overlay(
                                                             Image(systemName: "trash")
@@ -735,7 +735,7 @@ struct EditHerdView: View {
                                 } label: {
                                     Image(systemName: "plus.circle.fill")
                                         .font(.system(size: 28))
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.accentColor)
                                 }
                             }
                                 
@@ -747,7 +747,7 @@ struct EditHerdView: View {
                                             // Treatment type icon on the left
                                             Image(systemName: record.treatmentType.icon)
                                                 .font(.system(size: 28))
-                                                .foregroundStyle(Theme.accent)
+                                                .foregroundStyle(Theme.accentColor)
                                             
                                             // Record details
                                             VStack(alignment: .leading, spacing: 4) {
@@ -787,7 +787,7 @@ struct EditHerdView: View {
                                                     showingAddHealthRecord = true
                                                 } label: {
                                                     Circle()
-                                                        .fill(Theme.accent)
+                                                        .fill(Theme.accentColor)
                                                         .frame(width: 36, height: 36)
                                                         .overlay(
                                                             Image(systemName: "pencil")
@@ -801,7 +801,7 @@ struct EditHerdView: View {
                                                     deleteHealthRecord(record)
                                                 } label: {
                                                     Circle()
-                                                        .fill(Theme.accent)
+                                                        .fill(Theme.accentColor)
                                                         .frame(width: 36, height: 36)
                                                         .overlay(
                                                             Image(systemName: "trash")
@@ -841,7 +841,7 @@ struct EditHerdView: View {
                         dismiss()
                     }
                     .buttonBorderShape(.roundedRectangle)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
@@ -849,7 +849,7 @@ struct EditHerdView: View {
                         saveChanges()
                     }
                     .buttonBorderShape(.roundedRectangle)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .disabled(!isValid)
                 }
             }
@@ -1198,7 +1198,7 @@ struct AddMusterRecordSheet: View {
                         HapticManager.tap()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add") {
@@ -1206,7 +1206,7 @@ struct AddMusterRecordSheet: View {
                         onSave()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
             .sheet(isPresented: $showingDatePicker) {
@@ -1331,7 +1331,7 @@ struct AddHealthRecordSheet: View {
                         HapticManager.tap()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Add") {
@@ -1339,7 +1339,7 @@ struct AddHealthRecordSheet: View {
                         onSave()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
             .sheet(isPresented: $showingDatePicker) {
@@ -1361,7 +1361,7 @@ struct TreatmentTypeCard: View {
             VStack(spacing: 12) {
                 Image(systemName: type.icon)
                     .font(.system(size: 28))
-                    .foregroundStyle(isSelected ? Theme.accent : Theme.secondaryText)
+                    .foregroundStyle(isSelected ? Theme.accentColor : Theme.secondaryText)
                 
                 Text(type.rawValue)
                     .font(Theme.subheadline)
@@ -1370,10 +1370,10 @@ struct TreatmentTypeCard: View {
             }
             .frame(maxWidth: .infinity)
             .padding(.vertical, 20)
-            .background(isSelected ? Theme.accent.opacity(0.15) : Theme.inputFieldBackground)
+            .background(isSelected ? Theme.accentColor.opacity(0.15) : Theme.inputFieldBackground)
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(isSelected ? Theme.accent : Color.clear, lineWidth: 2)
+                    .stroke(isSelected ? Theme.accentColor : Color.clear, lineWidth: 2)
             )
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
@@ -1412,7 +1412,7 @@ struct DatePickerSheet: View {
                         HapticManager.tap()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
         }

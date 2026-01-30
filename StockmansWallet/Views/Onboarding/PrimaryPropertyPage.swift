@@ -128,7 +128,7 @@ struct PrimaryPropertyPage: View {
                     HStack(spacing: 8) {
                         ForEach(0..<3, id: \.self) { index in
                             Circle()
-                                .fill(index <= propertyStepIndex ? Theme.accent : Theme.secondaryText.opacity(0.3))
+                                .fill(index <= propertyStepIndex ? Theme.accentColor : Theme.secondaryText.opacity(0.3))
                                 .frame(width: 8, height: 8)
                                 .accessibilityHidden(true)
                         }
@@ -393,13 +393,13 @@ struct PrimaryPropertyPage: View {
                 HStack(spacing: 12) {
                     ZStack {
                         Circle()
-                            .fill(Theme.accent.opacity(0.15))
+                            .fill(Theme.accentColor.opacity(0.15))
                             .frame(width: 44, height: 44)
                         Image("property_icon")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 20, height: 20)
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                     
                     VStack(alignment: .leading, spacing: 2) {
@@ -412,7 +412,7 @@ struct PrimaryPropertyPage: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
-                                .background(Theme.accent)
+                                .background(Theme.accentColor)
                                 .clipShape(RoundedRectangle(cornerRadius: 4))
                         }
                         Text(state)
@@ -431,7 +431,7 @@ struct PrimaryPropertyPage: View {
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                        .strokeBorder(Theme.accent.opacity(0.3), lineWidth: 1)
+                        .strokeBorder(Theme.accentColor.opacity(0.3), lineWidth: 1)
                 )
                 .padding(.horizontal, 20)
             }
@@ -497,10 +497,10 @@ struct PrimaryPropertyPage: View {
                         .font(Theme.body)
                         .fontWeight(.semibold)
                 }
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 12)
-                .background(Theme.accent.opacity(0.1))
+                .background(Theme.accentColor.opacity(0.1))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .padding(.horizontal, 20)
@@ -752,7 +752,7 @@ struct RolePickerSheet: View {
                             Spacer()
                             if selectedRole == role && !isOtherSelected {
                                 Image(systemName: "checkmark")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                             }
                         }
                         .contentShape(Rectangle())
@@ -775,7 +775,7 @@ struct RolePickerSheet: View {
                             Spacer()
                             if isOtherSelected {
                                 Image(systemName: "checkmark")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                             }
                         }
                         .contentShape(Rectangle())

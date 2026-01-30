@@ -18,8 +18,8 @@ struct FeaturesPageView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            // Dark Theme background
-            Theme.DarkTheme.background
+            // App background
+            Theme.background
                 .ignoresSafeArea()
                 .accessibilityHidden(true)
 
@@ -33,19 +33,19 @@ struct FeaturesPageView: View {
                         .renderingMode(.template)
                         .scaledToFit()
                         .frame(height: 90)
-                        .foregroundStyle(Theme.DarkTheme.primaryText)
+                        .foregroundStyle(Theme.primaryText)
                         .accessibilityLabel("Stockman's Wallet")
                         .padding(.bottom, 40)
 
                     VStack(spacing: 16) {
                         Text("Live. Stock. Value.")
                             .font(.title2.weight(.bold))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .multilineTextAlignment(.center)
 
                         Text("Manage your livestock assets like a share trading exchange. Real-time valuations, comprehensive reporting, and insights designed for primary producers.")
                             .font(.subheadline)
-                            .foregroundStyle(Theme.DarkTheme.secondaryText)
+                            .foregroundStyle(Theme.secondaryText)
                             .multilineTextAlignment(.center)
                             .lineLimit(nil)
                     }
@@ -70,7 +70,7 @@ struct FeaturesPageView: View {
 
                     Text("Powered by MLA Market Data")
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.DarkTheme.secondaryText)
+                        .foregroundStyle(Theme.secondaryText)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 20)
                 }
@@ -88,7 +88,7 @@ struct FeaturesPageView: View {
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(Theme.DarkTheme.primaryText)
+                            .foregroundStyle(Theme.primaryText)
                             .frame(width: controlSize, height: controlSize)
                             .contentShape(Circle())
                             .background(
@@ -100,9 +100,9 @@ struct FeaturesPageView: View {
                                             .frame(width: controlSize, height: controlSize)
                                             .glassEffect(.regular.interactive(), in: Circle())
                                     } else {
-                                        // Fallback: cream circle for dark theme
+                                        // Fallback: subtle background
                                         Circle()
-                                            .fill(Theme.DarkTheme.primaryText.opacity(0.15))
+                                            .fill(Theme.primaryText.opacity(0.15))
                                             .frame(width: controlSize, height: controlSize)
                                     }
                                 }
@@ -138,7 +138,7 @@ struct FeaturesPageView: View {
     }
 }
 
-// MARK: - Feature Tile (used only on features page - Dark Theme)
+// MARK: - Feature Tile
 struct FeatureTile: View {
     let icon: String
     let title: String
@@ -147,22 +147,22 @@ struct FeatureTile: View {
         VStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 32))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
 
             Text(title)
                 .font(.callout.weight(.medium))
-                .foregroundStyle(Theme.DarkTheme.primaryText.opacity(0.9))
+                .foregroundStyle(Theme.primaryText.opacity(0.9))
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.9)
         }
         .frame(maxWidth: .infinity)
         .frame(height: 120)
         .padding(.horizontal, 0)
-        .background(Theme.accent.opacity(0.1))
+        .background(Theme.accentColor.opacity(0.1))
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                .strokeBorder(Theme.accent.opacity(0.2), lineWidth: 1)
+                .strokeBorder(Theme.accentColor.opacity(0.2), lineWidth: 1)
         )
         .accessibilityElement(children: .combine)
         .accessibilityLabel(title)

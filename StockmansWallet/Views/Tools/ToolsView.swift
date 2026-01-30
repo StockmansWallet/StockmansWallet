@@ -27,7 +27,7 @@ struct ToolsView: View {
                         HStack(spacing: 8) {
                             Image(systemName: "info.circle.fill")
                                 .font(.system(size: 16))
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                             Text("These features are placeholders only and not fully functional")
                                 .font(Theme.caption)
                                 .foregroundStyle(Theme.secondaryText)
@@ -40,7 +40,7 @@ struct ToolsView: View {
                             title: "Reports",
                             description: "Generate asset registers and sales summaries",
                             icon: "doc.text.fill",
-                            iconColor: Theme.accent
+                            iconColor: Theme.accentColor
                         ) {
                             HapticManager.tap()
                             showingReports = true

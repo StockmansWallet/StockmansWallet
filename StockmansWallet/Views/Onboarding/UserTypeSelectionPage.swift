@@ -36,12 +36,12 @@ struct UserTypeSelectionCard: View {
                             .frame(width: 64, height: 64)
                     }
                 }
-                .foregroundStyle(isSelected ? Theme.accent : Theme.secondaryText)
+                .foregroundStyle(isSelected ? Theme.accentColor : Theme.secondaryText)
                 
                 // Type label
                 Text(userType == .farmer ? "Farmer" : "Advisor")
                     .font(Theme.headline)
-                    .foregroundStyle(isSelected ? Theme.accent : Theme.secondaryText)
+                    .foregroundStyle(isSelected ? Theme.accentColor : Theme.secondaryText)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
@@ -163,7 +163,7 @@ struct UserTypeSelectionPage: View {
                 HStack(spacing: 8) {
                     ForEach(0..<4, id: \.self) { index in
                         Circle()
-                            .fill(index == 0 ? Theme.accent : Theme.secondaryText.opacity(0.3))
+                            .fill(index == 0 ? Theme.accentColor : Theme.secondaryText.opacity(0.3))
                             .frame(width: 8, height: 8)
                             .accessibilityHidden(true)
                     }

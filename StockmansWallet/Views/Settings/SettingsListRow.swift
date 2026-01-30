@@ -14,11 +14,11 @@ struct SettingsListRow: View {
                     .resizable()
                     .scaledToFit()
                     .frame(width: 20, height: 20)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .frame(width: 24)
             } else {
                 Image(systemName: icon)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .frame(width: 24)
             }
 

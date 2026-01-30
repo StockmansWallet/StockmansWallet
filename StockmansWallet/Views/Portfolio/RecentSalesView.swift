@@ -15,7 +15,7 @@ struct RecentSalesView: View {
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
                 Image(systemName: "dollarsign.circle.fill")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
             }
             
             if sortedSales.isEmpty {
@@ -46,7 +46,7 @@ struct RecentSalesView: View {
                             Spacer()
                             Text(sale.netValue, format: .currency(code: "AUD"))
                                 .font(Theme.headline)
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                         }
                         .padding(.vertical, 4)
                         

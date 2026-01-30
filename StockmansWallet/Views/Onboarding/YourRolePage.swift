@@ -39,13 +39,13 @@ struct RoleSelectionCard: View {
                 ZStack {
                     // Background circle
                     Circle()
-                        .fill(isSelected ? Theme.accent.opacity(0.2) : Theme.cardBackground)
+                        .fill(isSelected ? Theme.accentColor.opacity(0.2) : Theme.cardBackground)
                         .frame(width: 56, height: 56)
                     
                     // Role icon
                     Image(systemName: roleIcon)
                         .font(.system(size: 24, weight: .medium))
-                        .foregroundStyle(isSelected ? Theme.accent : Theme.secondaryText)
+                        .foregroundStyle(isSelected ? Theme.accentColor : Theme.secondaryText)
                     
                     // Selection checkmark overlay
                     if isSelected {
@@ -55,10 +55,10 @@ struct RoleSelectionCard: View {
                                 Spacer()
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 20))
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                                     .background(
                                         Circle()
-                                            .fill(Theme.backgroundColor) // Debug: Use solid background color instead
+                                            .fill(Theme.background) // Debug: Use solid background color instead
                                             .frame(width: 24, height: 24)
                                     )
                             }
@@ -81,12 +81,12 @@ struct RoleSelectionCard: View {
             .padding(.horizontal, 12)
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .fill(isSelected ? Theme.accent.opacity(0.1) : Theme.cardBackground)
+                    .fill(isSelected ? Theme.accentColor.opacity(0.1) : Theme.cardBackground)
             )
             .overlay(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                     .strokeBorder(
-                        isSelected ? Theme.accent.opacity(0.5) : Theme.separator.opacity(0.3),
+                        isSelected ? Theme.accentColor.opacity(0.5) : Theme.separator.opacity(0.3),
                         lineWidth: isSelected ? 2 : 1
                     )
             )

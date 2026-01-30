@@ -208,7 +208,7 @@ struct AddIndividualAnimalView: View {
                     HStack(spacing: 8) {
                         ForEach(1...totalSteps, id: \.self) { step in
                             Circle()
-                                .fill(step <= currentStep ? Theme.accent : Theme.primaryText.opacity(0.3))
+                                .fill(step <= currentStep ? Theme.accentColor : Theme.primaryText.opacity(0.3))
                                 .frame(width: 8, height: 8)
                                 .accessibilityHidden(true)
                         }
@@ -484,7 +484,7 @@ struct AddIndividualAnimalView: View {
                     .font(Theme.body)
                     .foregroundStyle(Theme.primaryText)
             }
-            .tint(Theme.accent)
+            .tint(Theme.accentColor)
             .padding()
             .background(Theme.inputFieldBackground)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -542,12 +542,12 @@ struct AddIndividualAnimalView: View {
                     Spacer()
                     Text(String(format: "%.1f kg/day", dailyWeightGain))
                         .font(Theme.body)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .fontWeight(.semibold)
                 }
                 
                 Slider(value: $dailyWeightGain, in: 0...2.0, step: 0.1)
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 8)
                     .background(Theme.inputFieldBackground)

@@ -54,7 +54,7 @@ struct SignInPage: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 64, height: 64)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .padding(.bottom, 4)
                     
                     // Header text
@@ -73,10 +73,10 @@ struct SignInPage: View {
                         Text("Beta Testing - No user authentication")
                             .font(.caption)
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 8)
-                    .background(Theme.accent.opacity(0.15))
+                    .background(Theme.accentColor.opacity(0.15))
                     .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
                 .frame(maxWidth: .infinity)
@@ -174,7 +174,7 @@ struct SignInPage: View {
                     } label: {
                         Text("Terms")
                             .font(.caption)
-                            .foregroundStyle(Theme.accent.opacity(0.5))
+                            .foregroundStyle(Theme.accentColor.opacity(0.5))
                     }
                     .buttonStyle(.plain)
                     
@@ -188,7 +188,7 @@ struct SignInPage: View {
                     } label: {
                         Text("Privacy")
                             .font(.caption)
-                            .foregroundStyle(Theme.accent.opacity(0.5))
+                            .foregroundStyle(Theme.accentColor.opacity(0.5))
                     }
                     .buttonStyle(.plain)
                 }

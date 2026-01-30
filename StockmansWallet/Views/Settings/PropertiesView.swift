@@ -58,7 +58,7 @@ struct PropertiesView: View {
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Theme.accent)
+                        .background(Theme.accentColor)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .padding(.top, 8)
@@ -126,7 +126,7 @@ struct PropertiesView: View {
                         HStack(spacing: 6) {
                             Image(systemName: "flask.fill")
                                 .font(.system(size: 14))
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                             Text("Simulated Properties")
                                 .font(Theme.subheadline)
                                 .fontWeight(.semibold)
@@ -189,10 +189,10 @@ struct PropertiesView: View {
                                 .font(Theme.body)
                                 .fontWeight(.semibold)
                         }
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 12)
-                        .background(Theme.accent.opacity(0.1))
+                        .background(Theme.accentColor.opacity(0.1))
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                     .padding(.horizontal)
@@ -257,19 +257,19 @@ struct PropertyCard: View {
                     HStack(spacing: 12) {
                         ZStack {
                             Circle()
-                                .fill(Theme.accent.opacity(0.15))
+                                .fill(Theme.accentColor.opacity(0.15))
                                 .frame(width: 44, height: 44)
                             // Debug: Different icons for real vs simulated properties
                             if property.isSimulated {
                                 Image(systemName: "flask.fill")
                                     .font(.system(size: 18, weight: .semibold))
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                             } else {
                                 Image("property_icon")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 20, height: 20)
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                             }
                         }
                         
@@ -283,10 +283,10 @@ struct PropertyCard: View {
                                 if property.isSimulated {
                                     Text("SIMULATED")
                                         .font(.system(size: 9, weight: .bold))
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.accentColor)
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
-                                        .background(Theme.accent.opacity(0.1))
+                                        .background(Theme.accentColor.opacity(0.1))
                                         .clipShape(RoundedRectangle(cornerRadius: 4))
                                 }
                             }
@@ -309,7 +309,7 @@ struct PropertyCard: View {
                             .foregroundStyle(.white)
                             .padding(.vertical, 4)
                             .padding(.horizontal, 10)
-                            .background(Theme.accent)
+                            .background(Theme.accentColor)
                             .clipShape(Capsule())
                     }
                     
@@ -340,7 +340,7 @@ struct PropertyCard: View {
                             } label: {
                                 Text("Set as Primary")
                                     .font(Theme.caption)
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                             }
                             .buttonStyle(.plain)
                         }
@@ -413,7 +413,7 @@ struct AddPropertyView: View {
                     Section {
                         HStack(spacing: 12) {
                             Image(systemName: "flask.fill")
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                             VStack(alignment: .leading, spacing: 4) {
                                 Text("Simulated Property")
                                     .font(Theme.caption)
@@ -426,7 +426,7 @@ struct AddPropertyView: View {
                         }
                         .padding(.vertical, 4)
                     }
-                    .listRowBackground(Theme.accent.opacity(0.1))
+                    .listRowBackground(Theme.accentColor.opacity(0.1))
                 }
                 
                 Section("Property Details") {

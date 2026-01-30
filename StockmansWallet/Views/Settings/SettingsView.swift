@@ -135,12 +135,12 @@ struct SettingsView: View {
                     }) {
                         HStack {
                             Image(systemName: "arrow.counterclockwise.circle.fill")
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .frame(width: 24)
                             
                             Text("Go to Landing Page")
                                 .font(Theme.body)
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                             
                             Spacer()
                         }

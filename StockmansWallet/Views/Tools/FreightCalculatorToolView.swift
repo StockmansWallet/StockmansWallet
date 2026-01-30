@@ -37,10 +37,10 @@ struct FreightCalculatorToolView: View {
                             
                             Text("Coming Soon")
                                 .font(Theme.headline)
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 16)
-                                .background(Theme.accent.opacity(0.15))
+                                .background(Theme.accentColor.opacity(0.15))
                                 .clipShape(Capsule())
                         }
                         
@@ -79,7 +79,7 @@ struct FreightCalculatorToolView: View {
                             Text("Tools")
                                 .font(Theme.body)
                         }
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                     }
                 }
                 

@@ -24,17 +24,17 @@ struct TermsPrivacySheet: View {
                     VStack(spacing: 12) {
                         Image(systemName: "checkmark.shield.fill")
                             .font(.system(size: 48))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .padding(.top, 20)
                         
                         Text("Terms & Conditions")
                             .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(Theme.LightTheme.primaryText)
+                            .foregroundStyle(Theme.primaryText)
                             .multilineTextAlignment(.center)
                         
                         Text("Please review and accept our terms and conditions to continue.")
                             .font(Theme.body)
-                            .foregroundStyle(Theme.LightTheme.secondaryText)
+                            .foregroundStyle(Theme.secondaryText)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
                     }
@@ -73,7 +73,7 @@ struct TermsPrivacySheet: View {
                     }
                     .padding(.horizontal, 20)
                     
-                    // Accept Button - Orange accent
+                    // Accept Button
                     Button(action: {
                         HapticManager.success()
                         hasAccepted = true
@@ -82,20 +82,20 @@ struct TermsPrivacySheet: View {
                         Text("I Accept")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(Theme.AccentButtonStyle())
+                    .buttonStyle(Theme.PrimaryButtonStyle())
                     .padding(.horizontal, 20)
                     
                     // Fine Print
                     Text("By accepting our Terms of Service, Privacy Policy, and acknowledge our compliance with Australian Privacy Principles.")
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.LightTheme.secondaryText.opacity(0.7))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                         .padding(.bottom, 20)
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.LightTheme.background.ignoresSafeArea())
+            .background(Theme.background.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .interactiveDismissDisabled() // Debug: Must accept, can't dismiss
         }
@@ -123,32 +123,32 @@ struct LegalDocumentRow: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.system(size: 24))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .frame(width: 32)
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Theme.LightTheme.primaryText)
+                        .foregroundStyle(Theme.primaryText)
                         .multilineTextAlignment(.leading)
                     
                     Text(description)
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.LightTheme.secondaryText)
+                        .foregroundStyle(Theme.secondaryText)
                         .multilineTextAlignment(.leading)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundStyle(Theme.LightTheme.secondaryText)
+                    .foregroundStyle(Theme.secondaryText)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .frame(minHeight: Theme.buttonHeight)
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .fill(Theme.LightTheme.cardBackground)
+                    .fill(Theme.cardBackground)
             )
         }
         .buttonStyle(.plain)
@@ -170,7 +170,7 @@ struct KeyPointRow: View {
             
             Text(text)
                 .font(Theme.subheadline)
-                .foregroundStyle(Theme.LightTheme.primaryText)
+                .foregroundStyle(Theme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
@@ -212,7 +212,7 @@ struct TermsDetailView: View {
                 }
                 .padding(20)
             }
-            .background(Theme.backgroundGradient)
+            .background(Theme.backgroundView)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -260,7 +260,7 @@ struct PrivacyDetailView: View {
                 }
                 .padding(20)
             }
-            .background(Theme.backgroundGradient)
+            .background(Theme.backgroundView)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
@@ -305,7 +305,7 @@ struct APPsDetailView: View {
                 }
                 .padding(20)
             }
-            .background(Theme.backgroundGradient)
+            .background(Theme.backgroundView)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {

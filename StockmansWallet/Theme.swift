@@ -2,9 +2,8 @@
 //  Theme.swift
 //  StockmansWallet
 //
-//  Design System: Single color theme with two surface contexts.
-//  Dark Surface: Main app pages (Dashboard, Portfolio, Market)
-//  Light Surface: Sheets, modals, and landing pages
+//  Design System following Apple Human Interface Guidelines
+//  Color system optimized for dark mode livestock management app
 //
 
 import SwiftUI
@@ -12,173 +11,181 @@ import SwiftUI
 // MARK: - Theme
 
 /// Single source of truth for the app's visual design system.
+/// Follows Apple HIG principles: https://developer.apple.com/design/human-interface-guidelines/color
 enum Theme {
     
-    // MARK: - Color Primitives (from Figma Design Tokens)
+    // MARK: - Color Primitives (Design Tokens)
     
-    /// Brown scale - core palette
-    enum Brown {
-        static let _10 = Color(hex: "E2D9CF")  // Light cream
-        static let _20 = Color(hex: "ECE5DF")  // Lighter cream
-        static let _30 = Color(hex: "D9CCBF")
-        static let _40 = Color(hex: "C6B29F")
-        static let _50 = Color(hex: "B39980")  // Medium brown
-        static let _60 = Color(hex: "9F7F60")
-        static let _70 = Color(hex: "80664C")
-        static let _80 = Color(hex: "604C39")  // Dark brown text
-        static let _90 = Color(hex: "403326")
-        static let _100 = Color(hex: "201A13") // Darkest brown (main bg)
+    /// Accent color scale - Used for interactive elements and brand identity
+    enum Accent {
+        static let primaryLight = Color(hex: "F3B887")
+        static let primary = Color(hex: "D07321")
+        static let secondary = Color(hex: "9A5518")
+        static let tertiary = Color(hex: "844915")
+        static let quaternary = Color(hex: "6E3D11")
+        static let quinary = Color(hex: "4F2F12")
     }
     
-    /// Brand orange scale
-    enum BrandOrange {
-        static let _20 = Color(hex: "FFE5CC")
-        static let _30 = Color(hex: "FFCC99")
-        static let _40 = Color(hex: "E8B27D")
-        static let _50 = Color(hex: "E09952")
-        static let _60 = Color(hex: "D98026")  // Primary accent
-        static let _70 = Color(hex: "AD661F")
-        static let _80 = Color(hex: "824D17")
+    /// Label colors - Used for text content following Apple HIG
+    enum Label {
+        static let primary = Color(hex: "B8AD9D")
+        static let secondary = Color(hex: "7C6F5D")
+        static let tertiary = Color(hex: "5E5142")
+        static let quaternary = Color(hex: "4A3C2D")
     }
     
-    // MARK: - Semantic Colors
-    
-    /// Primary brand accent color.
-    static let accent = BrandOrange._60
-    
-    /// Destructive action color.
-    static let destructive = Color(hex: "C36F6F")
-    
-    /// Success color.
-    static let success = Color(hex: "9CA659")
-    
-    /// Warning color.
-    static let warning = Color(hex: "A68C59")
-    
-    /// Info color.
-    static let info = Color(hex: "6FA7C3")
-    
-    // MARK: - Dark Theme (Main App: Dashboard, Portfolio, Market, Landing)
-    
-    /// Dark Theme: Dark brown background with cream text. Used for main app pages.
-    enum DarkTheme {
-        /// Main app background (very dark brown).
-        static let background = Brown._100
-        
-        /// Secondary background for cards/sections.
-        static let backgroundSecondary = Brown._90
-        
-        /// Primary text on dark surface (cream).
-        static let primaryText = Brown._10
-        
-        /// Secondary text on dark surface.
-        static let secondaryText = Brown._50
-        
-        /// Tertiary/disabled text.
-        static let tertiaryText = Brown._60
-        
-        /// Card background.
-        static let cardBackground = Brown._10.opacity(0.08)
-        
-        /// Input field background.
-        static let inputBackground = Brown._10.opacity(0.10)
-        
-        /// Separator and border color.
-        static let separator = Brown._10.opacity(0.15)
-        
-        /// Border color.
-        static let border = Brown._90
+    /// Background colors - Used for surfaces and containers
+    enum Background {
+        static let primary = Color(hex: "211A12")
+        static let secondary = Color(hex: "271F18")
+        static let tertiary = Color(hex: "2D241A")
+        static let quaternary = Color(hex: "3A2F23")
     }
     
-    // MARK: - Light Theme (Sheets, Modals, Features Page)
+    // MARK: - Semantic Colors (Following Apple HIG naming)
     
-    /// Light Theme: Cream background with dark brown text. Used for sheets and modals.
-    enum LightTheme {
-        /// Sheet/modal background (cream).
-        static let background = Brown._10
-        
-        /// Secondary background.
-        static let backgroundSecondary = Brown._20
-        
-        /// Primary text on light surface (dark brown).
-        static let primaryText = Brown._80
-        
-        /// Secondary text on light surface.
-        static let secondaryText = Brown._60
-        
-        /// Tertiary/disabled text.
-        static let tertiaryText = Brown._50
-        
-        /// Card background.
-        static let cardBackground = Brown._80.opacity(0.05)
-        
-        /// Input field background.
-        static let inputBackground = Brown._80.opacity(0.08)
-        
-        /// Separator and border color.
-        static let separator = Brown._80.opacity(0.12)
-        
-        /// Border color.
-        static let border = Brown._30
-    }
+    /// Primary accent color for interactive elements, buttons, and highlights.
+    static let accentColor = Accent.primary
     
-    // MARK: - Legacy Semantic Colors (defaults to Dark Theme)
+    /// Destructive/Error colors.
+    static let destructive = Color(hex: "7E2D1C")
+    static let destructiveLight = Color(hex: "E59781")
     
-    static let background = DarkTheme.background
-    static let primaryText = DarkTheme.primaryText
-    static let secondaryText = DarkTheme.secondaryText
-    static let cardBackground = DarkTheme.cardBackground
-    static let inputFieldBackground = DarkTheme.inputBackground
-    static let separator = DarkTheme.separator
+    /// Success colors.
+    static let success = Color(hex: "384224")
+    static let successLight = Color(hex: "BAC99C")
     
-    // MARK: - Surface Colors
+    /// Warning/Alert colors.
+    static let warning = Color(hex: "D4A944")
+    static let warningLight = Color(hex: "F3E8C8")
     
-    static let backgroundColor = DarkTheme.background
-    static let noBackgroundColor = Brown._90
-    static let sheetBackground = LightTheme.background
+    /// Informational colors.
+    static let info = Color(hex: "5B7C8D")
+    static let infoLight = Color(hex: "D3DDE2")
+    
+    // MARK: - System Colors (Apple HIG semantic naming)
+    
+    /// Primary background color for main app surfaces.
+    static let background = Background.primary
+    
+    /// Secondary background color for grouped content and cards.
+    static let secondaryBackground = Background.secondary
+    
+    /// Tertiary background color for nested grouping.
+    static let tertiaryBackground = Background.tertiary
+    
+    /// Primary text color for main content.
+    static let primaryText = Label.primary
+    
+    /// Secondary text color for supporting content.
+    static let secondaryText = Label.secondary
+    
+    /// Tertiary text color for subtle content.
+    static let tertiaryText = Label.tertiary
+    
+    /// Quaternary text color for disabled states.
+    static let quaternaryText = Label.quaternary
+    
+    /// Card background with subtle transparency.
+    static let cardBackground = Label.primary.opacity(0.12)
+    
+    /// Input field background.
+    static let inputFieldBackground = Label.primary.opacity(0.15)
+    
+    /// Separator line color.
+    static let separator = Label.primary.opacity(0.15)
+    
+    /// Border color for outlined elements.
+    static let borderColor = Background.secondary
+    
+    /// Sheet and modal presentation background.
+    static let sheetBackground = background
     
     /// Background image opacity for parallax effects.
     static let backgroundImageOpacity: CGFloat = 0.4
     
-    // MARK: - Status Colors (Solid backgrounds - not transparent)
+    // MARK: - Status Colors
     
+    /// Positive change indicator color.
     static let positiveChange = success
-    static let positiveChangeBg = Color(hex: "2F3526")  // Solid dark green-brown
+    
+    /// Positive change background color.
+    static let positiveChangeBackground = Color(hex: "2F3526")
+    
+    /// Negative change indicator color.
     static let negativeChange = destructive
-    static let negativeChangeBg = Color(hex: "3D2828")  // Solid dark red-brown
     
-    // MARK: - Typography
+    /// Negative change background color.
+    static let negativeChangeBackground = Color(hex: "3D2828")
     
+    // MARK: - Typography (Apple HIG Dynamic Type)
+    
+    /// Large title style for prominent headings.
     static let largeTitle = Font.system(.largeTitle, design: .rounded)
+    
+    /// Title style for primary section headers.
     static let title = Font.system(.title, design: .rounded).weight(.semibold)
+    
+    /// Title 2 style for secondary section headers.
     static let title2 = Font.system(.title2, design: .rounded).weight(.semibold)
+    
+    /// Title 3 style for tertiary section headers.
     static let title3 = Font.system(.title3, design: .rounded).weight(.semibold)
+    
+    /// Headline style for emphasized content.
     static let headline = Font.system(.headline, design: .rounded).weight(.semibold)
+    
+    /// Body style for primary content.
     static let body = Font.system(.body, design: .rounded)
+    
+    /// Callout style for secondary content.
     static let callout = Font.system(.callout, design: .rounded)
+    
+    /// Subheadline style for supporting content.
     static let subheadline = Font.system(.subheadline, design: .rounded)
+    
+    /// Caption style for metadata and timestamps.
     static let caption = Font.system(.caption, design: .rounded)
     
-    // MARK: - Spacing & Layout
+    // MARK: - Spacing & Layout (Apple HIG Standards)
     
+    /// Standard corner radius for cards and buttons.
     static let cornerRadius: CGFloat = 16
+    
+    /// Corner radius for sheets and modal presentations.
     static let sheetCornerRadius: CGFloat = 32
+    
+    /// Internal padding for cards and containers.
     static let cardPadding: CGFloat = 20
+    
+    /// Spacing between major sections.
     static let sectionSpacing: CGFloat = 24
+    
+    /// Standard button height.
     static let buttonHeight: CGFloat = 52
+    
+    /// Minimum touch target size per Apple HIG (44pt minimum).
     static let minimumTouchTarget: CGFloat = 44
     
-    // MARK: - Materials
+    // MARK: - Materials (Apple HIG Visual Effects)
     
+    /// Glass material that respects accessibility settings.
     static var glassMaterial: Material {
         UIAccessibility.isReduceTransparencyEnabled ? .thickMaterial : .ultraThinMaterial
     }
     
-    // MARK: - Background (Solid)
+    // MARK: - Background View
     
+    /// Background view for main app surfaces.
+    @ViewBuilder
+    static var backgroundView: some View {
+        background.ignoresSafeArea()
+    }
+    
+    /// Background gradient helper (currently solid color, name kept for semantic clarity).
     @ViewBuilder
     static var backgroundGradient: some View {
-        DarkTheme.background.ignoresSafeArea()
+        backgroundView
     }
 }
 
@@ -206,73 +213,62 @@ extension Theme {
     }
 }
 
-// MARK: - Button Styles
+// MARK: - Button Styles (Apple HIG Compliant)
 
 extension Theme {
     
-    /// Primary button for dark theme. Cream background, dark text.
+    /// Primary button style with filled background.
+    /// Use for primary call-to-action buttons.
     struct PrimaryButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .font(Theme.headline)
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.buttonHeight)
-                .foregroundStyle(Theme.Brown._100)
-                .background(Theme.Brown._10.opacity(configuration.isPressed ? 0.85 : 1.0))
+                .foregroundStyle(Theme.background)
+                .background(Theme.accentColor.opacity(configuration.isPressed ? 0.85 : 1.0))
                 .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
                 .contentShape(Rectangle())
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
     }
     
-    /// Dark brown button. Used on Landing page and Features page. Dark brown bg, cream text.
-    struct LandingButtonStyle: ButtonStyle {
-        func makeBody(configuration: Configuration) -> some View {
-            configuration.label
-                .font(Theme.headline)
-                .frame(maxWidth: .infinity)
-                .frame(height: Theme.buttonHeight)
-                .foregroundStyle(Theme.Brown._10)
-                .background(Theme.Brown._80.opacity(configuration.isPressed ? 0.7 : 1.0))
-                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-                .contentShape(Rectangle())
-                .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
-        }
-    }
-    
-    /// Accent orange button. Used on sheets (Terms & Privacy). Orange bg, dark text.
-    struct AccentButtonStyle: ButtonStyle {
-        func makeBody(configuration: Configuration) -> some View {
-            configuration.label
-                .font(Theme.headline)
-                .frame(maxWidth: .infinity)
-                .frame(height: Theme.buttonHeight)
-                .foregroundStyle(Theme.Brown._10)
-                .background(Theme.accent.opacity(configuration.isPressed ? 0.85 : 1.0))
-                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-                .contentShape(Rectangle())
-                .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
-        }
-    }
-    
-    /// Secondary button with outline.
+    /// Secondary button style with subtle background.
+    /// Use for secondary actions alongside primary buttons.
     struct SecondaryButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
                 .font(Theme.headline)
                 .frame(maxWidth: .infinity)
                 .frame(height: Theme.buttonHeight)
-                .foregroundStyle(Theme.DarkTheme.primaryText)
+                .foregroundStyle(Theme.primaryText)
                 .background(
                     RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                        .strokeBorder(Theme.DarkTheme.primaryText.opacity(configuration.isPressed ? 0.6 : 1.0), lineWidth: 1.5)
+                        .strokeBorder(Theme.primaryText.opacity(configuration.isPressed ? 0.6 : 1.0), lineWidth: 1.5)
                 )
                 .contentShape(Rectangle())
                 .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
         }
     }
     
-    /// Row button for list items.
+    /// Tertiary button style with minimal styling.
+    /// Use for tertiary actions or on dark surfaces.
+    struct TertiaryButtonStyle: ButtonStyle {
+        func makeBody(configuration: Configuration) -> some View {
+            configuration.label
+                .font(Theme.headline)
+                .frame(maxWidth: .infinity)
+                .frame(height: Theme.buttonHeight)
+                .foregroundStyle(Theme.accentColor)
+                .background(Theme.secondaryBackground.opacity(configuration.isPressed ? 0.7 : 1.0))
+                .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
+                .contentShape(Rectangle())
+                .animation(.easeOut(duration: 0.12), value: configuration.isPressed)
+        }
+    }
+    
+    /// Row button style for list items.
+    /// Use for interactive list rows and selectable items.
     struct RowButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
@@ -286,7 +282,8 @@ extension Theme {
         }
     }
     
-    /// Destructive button.
+    /// Destructive button style for dangerous actions.
+    /// Use for delete, remove, or other destructive operations.
     struct DestructiveButtonStyle: ButtonStyle {
         func makeBody(configuration: Configuration) -> some View {
             configuration.label
@@ -302,8 +299,9 @@ extension Theme {
     }
 }
 
-// MARK: - View Modifiers
+// MARK: - View Modifiers (Apple HIG Patterns)
 
+/// Modifier for card-style containers with background and border.
 struct CardStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -316,30 +314,23 @@ struct CardStyleModifier: ViewModifier {
     }
 }
 
-struct DarkBackgroundModifier: ViewModifier {
+/// Modifier for standard background application.
+struct BackgroundModifier: ViewModifier {
     func body(content: Content) -> some View {
         ZStack {
-            Theme.DarkTheme.background.ignoresSafeArea()
+            Theme.background.ignoresSafeArea()
             content
         }
     }
 }
 
-struct LightBackgroundModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        ZStack {
-            Theme.LightTheme.background.ignoresSafeArea()
-            content
-        }
-    }
-}
-
+/// Modifier for background with optional image overlay.
 struct BackgroundImageModifier: ViewModifier {
     let imageName: String?
     
     func body(content: Content) -> some View {
         ZStack {
-            Theme.DarkTheme.background.ignoresSafeArea()
+            Theme.background.ignoresSafeArea()
             
             if let imageName, !imageName.isEmpty {
                 Image(imageName)
@@ -354,6 +345,7 @@ struct BackgroundImageModifier: ViewModifier {
     }
 }
 
+/// Modifier for parallax blur effect on scroll (respects accessibility).
 struct ScrollBlurModifier: ViewModifier {
     func body(content: Content) -> some View {
         if Theme.prefersReducedMotion || UIAccessibility.isReduceTransparencyEnabled {
@@ -370,6 +362,7 @@ struct ScrollBlurModifier: ViewModifier {
     }
 }
 
+/// Text field style following Apple HIG input guidelines.
 struct InputFieldStyle: TextFieldStyle {
     func _body(configuration: TextField<Self._Label>) -> some View {
         configuration
@@ -378,30 +371,60 @@ struct InputFieldStyle: TextFieldStyle {
             .frame(minHeight: Theme.minimumTouchTarget)
             .background(Theme.inputFieldBackground)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .foregroundStyle(Theme.DarkTheme.primaryText)
+            .foregroundStyle(Theme.primaryText)
     }
 }
 
-// MARK: - View Extensions
+// MARK: - View Extensions (Convenience Methods)
 
 extension View {
-    func cardStyle() -> some View { modifier(CardStyleModifier()) }
-    func darkBackground() -> some View { modifier(DarkBackgroundModifier()) }
-    func lightBackground() -> some View { modifier(LightBackgroundModifier()) }
-    func backgroundImage(_ imageName: String?) -> some View { modifier(BackgroundImageModifier(imageName: imageName)) }
-    func scrollBlurEffect() -> some View { modifier(ScrollBlurModifier()) }
-    func inputFieldStyle() -> some View { textFieldStyle(InputFieldStyle()) }
-    func accessibleTapTarget() -> some View { frame(minWidth: Theme.minimumTouchTarget, minHeight: Theme.minimumTouchTarget) }
+    /// Applies card styling with background and border.
+    func cardStyle() -> some View {
+        modifier(CardStyleModifier())
+    }
     
+    /// Applies standard app background.
+    func appBackground() -> some View {
+        modifier(BackgroundModifier())
+    }
+    
+    /// Applies background with optional image overlay.
+    func backgroundImage(_ imageName: String?) -> some View {
+        modifier(BackgroundImageModifier(imageName: imageName))
+    }
+    
+    /// Applies scroll-based blur effect (accessibility-aware).
+    func scrollBlurEffect() -> some View {
+        modifier(ScrollBlurModifier())
+    }
+    
+    /// Applies standard input field styling.
+    func inputFieldStyle() -> some View {
+        textFieldStyle(InputFieldStyle())
+    }
+    
+    /// Ensures minimum touch target size per Apple HIG (44x44pt).
+    func accessibleTapTarget() -> some View {
+        frame(minWidth: Theme.minimumTouchTarget, minHeight: Theme.minimumTouchTarget)
+    }
+    
+    /// Applies animation only if user hasn't enabled Reduce Motion.
     @ViewBuilder
     func accessibleAnimation<V: Equatable>(_ animation: Animation?, value: V) -> some View {
-        if Theme.prefersReducedMotion { self } else { self.animation(animation, value: value) }
+        if Theme.prefersReducedMotion {
+            self
+        } else {
+            self.animation(animation, value: value)
+        }
     }
 }
 
-// MARK: - Color Extension
+// MARK: - Color Extension (Hex Support)
 
 extension Color {
+    /// Initializes a Color from a hex string.
+    /// Supports 3, 6, and 8 character hex strings (RGB, RRGGBB, AARRGGBB).
+    /// - Parameter hex: Hex color string (e.g., "FF0000", "#FF0000", "F00")
     init(hex: String) {
         let hex = hex.trimmingCharacters(in: CharacterSet.alphanumerics.inverted)
         var int: UInt64 = 0
@@ -419,33 +442,40 @@ extension Color {
     }
 }
 
-// MARK: - Haptic Feedback
+// MARK: - Haptic Feedback (Apple HIG)
 
+/// Manager for haptic feedback following Apple HIG guidelines.
+/// Automatically respects user's Reduce Motion accessibility setting.
 enum HapticManager {
     private static let impact = UIImpactFeedbackGenerator(style: .light)
     private static let notification = UINotificationFeedbackGenerator()
     private static let selection = UISelectionFeedbackGenerator()
     
+    /// Light impact feedback for button taps and selections.
     static func tap() {
         guard !Theme.prefersReducedMotion else { return }
         impact.impactOccurred()
     }
     
+    /// Success notification feedback for completed actions.
     static func success() {
         guard !Theme.prefersReducedMotion else { return }
         notification.notificationOccurred(.success)
     }
     
+    /// Error notification feedback for failed actions.
     static func error() {
         guard !Theme.prefersReducedMotion else { return }
         notification.notificationOccurred(.error)
     }
     
+    /// Warning notification feedback for cautionary actions.
     static func warning() {
         guard !Theme.prefersReducedMotion else { return }
         notification.notificationOccurred(.warning)
     }
     
+    /// Selection feedback for picker and segmented control changes.
     static func selectionChanged() {
         guard !Theme.prefersReducedMotion else { return }
         selection.selectionChanged()

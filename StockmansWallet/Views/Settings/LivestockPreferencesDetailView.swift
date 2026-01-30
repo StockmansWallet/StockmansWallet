@@ -159,7 +159,7 @@ private struct SaleyardSearchSheet: View {
                                 Text("None")
                                 Spacer()
                                 if selected.isEmpty {
-                                    Image(systemName: "checkmark").foregroundStyle(Theme.accent)
+                                    Image(systemName: "checkmark").foregroundStyle(Theme.accentColor)
                                 }
                             }
                         }
@@ -176,7 +176,7 @@ private struct SaleyardSearchSheet: View {
                                         .multilineTextAlignment(.leading)
                                     Spacer()
                                     if selected == yard {
-                                        Image(systemName: "checkmark").foregroundStyle(Theme.accent)
+                                        Image(systemName: "checkmark").foregroundStyle(Theme.accentColor)
                                     }
                                 }
                             }

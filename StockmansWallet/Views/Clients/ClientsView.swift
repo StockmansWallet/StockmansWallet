@@ -41,7 +41,7 @@ struct ClientsView: View {
                         showingAddClient = true
                     }) {
                         Image(systemName: "plus")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                     .accessibilityLabel("Add client")
                 }
@@ -60,7 +60,7 @@ struct ClientsView: View {
             // Icon
             Image(systemName: "person.3.fill")
                 .font(.system(size: 64))
-                .foregroundStyle(Theme.accent.opacity(0.5))
+                .foregroundStyle(Theme.accentColor.opacity(0.5))
             
             // Title and message
             VStack(spacing: 12) {
@@ -144,7 +144,7 @@ struct ClientCard: View {
                 if client.unreadMessages > 0 {
                     ZStack {
                         Circle()
-                            .fill(Theme.accent)
+                            .fill(Theme.accentColor)
                             .frame(width: 24, height: 24)
                         
                         Text("\(client.unreadMessages)")
@@ -186,7 +186,7 @@ struct StatBadge: View {
         HStack(spacing: 6) {
             Image(systemName: icon)
                 .font(.caption2)
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(value)
@@ -309,7 +309,7 @@ struct ClientDetailActionButton: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.title3)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .frame(width: 40)
                 
                 VStack(alignment: .leading, spacing: 4) {

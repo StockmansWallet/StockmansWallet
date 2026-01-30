@@ -81,7 +81,7 @@ struct InteractiveChartView: View {
     // Performance: Single gradient definition - no dynamic changes during scrubbing
     private var fullOpacityGradient: LinearGradient {
         LinearGradient(
-            colors: [Theme.accent.opacity(0.3), Theme.accent.opacity(0.0)],
+            colors: [Theme.accentColor.opacity(0.3), Theme.accentColor.opacity(0.0)],
             startPoint: .top,
             endPoint: .bottom
         )
@@ -111,7 +111,7 @@ struct InteractiveChartView: View {
                     x: .value("Date", point.date),
                     y: .value("Value", point.value)
                 )
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
                 .interpolationMethod(.monotone)
                 .lineStyle(StrokeStyle(lineWidth: 2.5, lineCap: .round, lineJoin: .round)) // Debug: Round lineCap to prevent extension
             }
@@ -151,7 +151,7 @@ struct InteractiveChartView: View {
                     Text(position.date, format: .dateTime.day(.twoDigits).month(.abbreviated).year())
                         .font(.system(size: 11, weight: .regular))
                         .monospacedDigit()
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .padding(.horizontal, 12)
                         .padding(.vertical, 6)
                         // Debug: Solid dark background with rounded rectangle (no glass effect)
@@ -343,8 +343,8 @@ struct InteractiveChartView: View {
                                         Circle()
                                             .fill(.white)
                                             .frame(width: 12, height: 12)
-                                            .shadow(color: Theme.accent.opacity(1), radius: 6)
-                                            .shadow(color: Theme.accent.opacity(0.4), radius: 12)
+                                            .shadow(color: Theme.accentColor.opacity(1), radius: 6)
+                                            .shadow(color: Theme.accentColor.opacity(0.4), radius: 12)
                                             .position(x: x, y: y)
                                             .accessibilityHidden(true)
                                     }

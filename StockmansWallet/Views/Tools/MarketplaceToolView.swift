@@ -179,7 +179,7 @@ struct MarketplaceToolView: View {
                 }
                 .padding(.horizontal)
                 .padding(.vertical, 12)
-                .background(Theme.backgroundColor.opacity(0.5))
+                .background(Theme.background.opacity(0.5))
                 
                 // Debug: Listings grid
                 ScrollView {
@@ -208,7 +208,7 @@ struct MarketplaceToolView: View {
                             Text("Tools")
                                 .font(Theme.body)
                         }
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                     }
                 }
                 
@@ -226,7 +226,7 @@ struct MarketplaceToolView: View {
                         HapticManager.tap()
                         // Debug: Placeholder for future "Create Listing" functionality
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .accessibilityLabel("Create listing")
                 }
             }
@@ -277,7 +277,7 @@ struct FilterChip: View {
                 .foregroundStyle(isSelected ? .white : Theme.primaryText)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
-                .background(isSelected ? Theme.accent : Theme.inputFieldBackground)
+                .background(isSelected ? Theme.accentColor : Theme.inputFieldBackground)
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
@@ -344,7 +344,7 @@ struct MarketplaceListingCard: View {
                     VStack(alignment: .trailing, spacing: 2) {
                         Text(formattedPrice)
                             .font(Theme.headline)
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Text("per head")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)

@@ -18,7 +18,7 @@ struct PerformanceMetricsView: View {
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
                 Image(systemName: "chart.line.uptrend.xyaxis")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .accessibilityHidden(true)
             }
             
@@ -57,7 +57,7 @@ struct PerformanceMetricsView: View {
                             .foregroundStyle(Theme.secondaryText)
                         Text(metrics.unrealizedGains, format: .currency(code: "AUD"))
                             .font(Theme.callout) // HIG: callout (16pt) for secondary metrics
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .accessibilityLabel("Unrealized gains")
                             .accessibilityValue(metrics.unrealizedGains.formatted(.currency(code: "AUD")))
                     }

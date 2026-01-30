@@ -19,7 +19,7 @@ struct SaleyardSelector: View {
         }) {
             HStack {
                 Image(systemName: "dollarsign.bank.building")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .font(.system(size: 16))
                 
                 VStack(alignment: .leading, spacing: 2) {

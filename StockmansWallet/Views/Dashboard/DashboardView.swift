@@ -181,7 +181,7 @@ struct DashboardView: View {
                     timeRange: $timeRange
                 )
             }
-            .background(Theme.backgroundColor.ignoresSafeArea())
+            .background(Theme.background.ignoresSafeArea())
     }
     
     // Debug: Extract main content to reduce body complexity
@@ -252,14 +252,14 @@ struct DashboardView: View {
                 // Much darker base color for stronger contrast, with minimal orange accent for warmth
                 ZStack {
                     // Debug: Almost black base layer
-                    Theme.noBackgroundColor
+                    Theme.secondaryBackground
                         .ignoresSafeArea()
                     
                     // Debug: Very subtle orange glow at top for minimal warmth
                     RadialGradient(
                         colors: [
-                            Theme.accent.opacity(0.08),  // Minimal orange glow at top
-                            Theme.accent.opacity(0.02),  // Fade to barely visible
+                            Theme.accentColor.opacity(0.08),  // Minimal orange glow at top
+                            Theme.accentColor.opacity(0.02),  // Fade to barely visible
                             Color.clear                   // Fade to transparent
                         ],
                         center: .top,
@@ -346,7 +346,7 @@ struct DashboardView: View {
                     topTrailingRadius: Theme.sheetCornerRadius,
                     style: .continuous
                 )
-                .fill(Theme.backgroundColor)
+                .fill(Theme.background)
                 .ignoresSafeArea()
                 
                 // Gradient overlay for visual interest

@@ -41,7 +41,7 @@ struct AddAssetMenuView: View {
                             
                             // Debug: Add Herd first as it's the more common action
                             AssetMenuRow(
-                                iconColor: Theme.accent,
+                                iconColor: Theme.accentColor,
                                 iconSymbol: "plus.app",
                                 customImageName: "cattle_tags",
                                 title: "Add Herd",
@@ -53,7 +53,7 @@ struct AddAssetMenuView: View {
                             
                             // Add Individual
                             AssetMenuRow(
-                                iconColor: Theme.accent,
+                                iconColor: Theme.accentColor,
                                 iconSymbol: "plus.app",
                                 customImageName: "cattle_tag",
                                 title: "Add Individual",
@@ -98,7 +98,7 @@ struct AddAssetMenuView: View {
                         HapticManager.tap()
                         isPresented = false
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
             .sheet(isPresented: $showingAddHerd) {

@@ -119,10 +119,10 @@ struct SaleLocationsSettingsView: View {
                                 .font(Theme.caption)
                                 .fontWeight(.semibold)
                         }
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .padding(.vertical, 8)
                         .padding(.horizontal, 16)
-                        .background(Theme.accent.opacity(0.15))
+                        .background(Theme.accentColor.opacity(0.15))
                         .clipShape(Capsule())
                     }
                     
@@ -231,10 +231,10 @@ struct SaleLocationsSettingsView: View {
                             .font(Theme.body)
                             .fontWeight(.semibold)
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(Theme.accent.opacity(0.15))
+                    .background(Theme.accentColor.opacity(0.15))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .padding(.horizontal)
@@ -407,7 +407,7 @@ struct SaleyardToggleRow: View {
                 // Debug: Toggle indicator
                 ZStack {
                     Circle()
-                        .fill(isEnabled ? Theme.accent : Theme.secondaryText.opacity(0.2))
+                        .fill(isEnabled ? Theme.accentColor : Theme.secondaryText.opacity(0.2))
                         .frame(width: 24, height: 24)
                     
                     if isEnabled {
@@ -458,7 +458,7 @@ struct CustomLocationRow: View {
                 } label: {
                     ZStack {
                         Circle()
-                            .fill(location.isEnabled ? Theme.accent : Theme.secondaryText.opacity(0.2))
+                            .fill(location.isEnabled ? Theme.accentColor : Theme.secondaryText.opacity(0.2))
                             .frame(width: 24, height: 24)
                         
                         if location.isEnabled {

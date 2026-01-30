@@ -85,7 +85,7 @@ struct MainTabView: View {
         }
         // Debug: iOS 26+ uses glass effect, iOS 17-25 needs visible background
         .toolbarBackground(toolbarBackgroundVisibility, for: .tabBar)
-        .tint(Theme.accent)
+        .tint(Theme.accentColor)
         .onAppear {
             if !tabBarAppearanceConfigured {
                 configureTabBarAppearance()
@@ -133,7 +133,7 @@ struct MainTabView: View {
         }
         // Debug: iOS 26+ uses glass effect, iOS 17-25 needs visible background
         .toolbarBackground(toolbarBackgroundVisibility, for: .tabBar)
-        .tint(Theme.accent)
+        .tint(Theme.accentColor)
         .onAppear {
             if !tabBarAppearanceConfigured {
                 configureTabBarAppearance()
@@ -153,21 +153,21 @@ struct MainTabView: View {
     private func configureTabBarAppearance() {
         let appearance = UITabBarAppearance()
         
-        // Dark Theme background color for tab bar: #201A13
-        let darkBgColor = UIColor(red: 32/255, green: 26/255, blue: 19/255, alpha: 1.0)
+        // Background color for tab bar (Theme.Background.primary: #211A12)
+        let bgColor = UIColor(red: 33/255, green: 26/255, blue: 18/255, alpha: 1.0)
         
-        // Configure opaque background with dark theme color
+        // Configure opaque background
         appearance.configureWithOpaqueBackground()
-        appearance.backgroundColor = darkBgColor
+        appearance.backgroundColor = bgColor
         appearance.shadowColor = .clear
         
-        // Set unselected item color to secondary text (Brown._50: #B39980)
-        let normalColor = UIColor(red: 179/255, green: 153/255, blue: 128/255, alpha: 1.0)
+        // Set unselected item color (Theme.Label.secondary: #7C6F5D)
+        let normalColor = UIColor(red: 124/255, green: 111/255, blue: 93/255, alpha: 1.0)
         appearance.stackedLayoutAppearance.normal.iconColor = normalColor
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: normalColor]
         
-        // Set selected item color to accent (BrandOrange._60: #D98026)
-        let selectedColor = UIColor(red: 217/255, green: 128/255, blue: 38/255, alpha: 1.0)
+        // Set selected item color (Theme.Accent.primary: #D07321)
+        let selectedColor = UIColor(red: 208/255, green: 115/255, blue: 33/255, alpha: 1.0)
         appearance.stackedLayoutAppearance.selected.iconColor = selectedColor
         appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: selectedColor]
         

@@ -31,7 +31,7 @@ struct ReportPreviewView: View {
             ScrollView {
                 if isLoading {
                     ProgressView("Loading report data...")
-                        .tint(Theme.accent)
+                        .tint(Theme.accentColor)
                         .padding()
                 } else if let data = reportData {
                     reportContentView(data: data)
@@ -355,7 +355,7 @@ struct ReportPDFExportView: View {
                 Group {
                     if isGenerating {
                         ProgressView("Generating PDF...")
-                            .tint(Theme.accent)
+                            .tint(Theme.accentColor)
                             .foregroundStyle(Theme.primaryText)
                     } else if let url = pdfURL {
                         PDFKitRepresentedView(url: url)
@@ -384,7 +384,7 @@ struct ReportPDFExportView: View {
                             showShare = true
                         } label: {
                             Image(systemName: "square.and.arrow.up")
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                         }
                     }
                 }
@@ -444,13 +444,13 @@ struct ReportPrintView: View {
                 
                 if isGenerating {
                     ProgressView("Preparing for print...")
-                        .tint(Theme.accent)
+                        .tint(Theme.accentColor)
                         .foregroundStyle(Theme.primaryText)
                 } else {
                     VStack(spacing: 20) {
                         Image(systemName: "printer.fill")
                             .font(.system(size: 60))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         
                         Text("Ready to Print")
                             .font(Theme.title)
@@ -474,7 +474,7 @@ struct ReportPrintView: View {
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Theme.accent)
+                            .background(Theme.accentColor)
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
                         .padding(.horizontal, 40)

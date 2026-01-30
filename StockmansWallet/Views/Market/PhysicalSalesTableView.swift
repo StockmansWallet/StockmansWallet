@@ -127,12 +127,12 @@ struct PhysicalSalesTableView: View {
                     } label: {
                         ZStack {
                             Circle()
-                                .fill(Theme.accent.opacity(0.15))
+                                .fill(Theme.accentColor.opacity(0.15))
                                 .frame(width: 40, height: 40)
                             
                             Image(systemName: speechCoordinator.isSpeaking ? "stop.fill" : "speaker.wave.2.fill")
                                 .font(.system(size: 16))
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                         }
                     }
                     .accessibilityLabel(speechCoordinator.isSpeaking ? "Stop reading" : "Read market summary aloud")
@@ -247,7 +247,7 @@ struct PhysicalSalesTableView: View {
                     
                     Text(category.salePrefix)
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.accent.opacity(0.8))
+                        .foregroundStyle(Theme.accentColor.opacity(0.8))
                     
                     Text("\(category.headCount) hd")
                         .font(Theme.caption.weight(.medium))
@@ -280,7 +280,7 @@ struct PhysicalSalesTableView: View {
             if let value = value {
                 Text(format.formatted(value))
                     .font(Theme.body.weight(.semibold))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
             } else {
                 Text("–")
                     .font(Theme.body)

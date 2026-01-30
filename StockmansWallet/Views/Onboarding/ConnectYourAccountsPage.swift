@@ -44,7 +44,7 @@ struct ConnectYourAccountsPage: View {
                         }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "chart.bar.doc.horizontal.fill")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                                     .frame(width: 24)
                                 
                                 Text("Connect Xero")
@@ -78,7 +78,7 @@ struct ConnectYourAccountsPage: View {
                         }) {
                             HStack(spacing: 12) {
                                 Image(systemName: "doc.text.fill")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                                     .frame(width: 24)
                                 
                                 Text("Connect MYOB")

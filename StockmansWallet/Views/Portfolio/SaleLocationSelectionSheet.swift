@@ -76,7 +76,7 @@ struct SaleLocationSelectionSheet: View {
                             
                             if selectedLocation == nil {
                                 Image(systemName: "checkmark")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                                     .font(.system(size: 16, weight: .semibold))
                             }
                         }
@@ -117,7 +117,7 @@ struct SaleLocationSelectionSheet: View {
                                     
                                     if selectedLocation == location.name {
                                         Image(systemName: "checkmark")
-                                            .foregroundStyle(Theme.accent)
+                                            .foregroundStyle(Theme.accentColor)
                                             .font(.system(size: 16, weight: .semibold))
                                     }
                                 }
@@ -160,7 +160,7 @@ struct SaleLocationSelectionSheet: View {
                                     
                                     if selectedLocation == location.name {
                                         Image(systemName: "checkmark")
-                                            .foregroundStyle(Theme.accent)
+                                            .foregroundStyle(Theme.accentColor)
                                             .font(.system(size: 16, weight: .semibold))
                                     }
                                 }
@@ -194,7 +194,7 @@ struct SaleLocationSelectionSheet: View {
                                 
                                 if selectedLocation == saleyard {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.accentColor)
                                         .font(.system(size: 16, weight: .semibold))
                                 }
                             }
@@ -244,11 +244,11 @@ struct SaleLocationSelectionSheet: View {
                         HapticManager.tap()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.backgroundColor)
+            .background(Theme.background)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)

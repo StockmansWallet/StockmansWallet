@@ -33,11 +33,11 @@ struct PortfolioValueCard: View {
             .frame(height: 58) // Debug: Fixed height for currency display (50pt font + 8pt padding)
             // Debug: Pulse/glow effect during value update (crypto-style)
             .shadow(
-                color: isUpdating ? Theme.accent.opacity(0.6) : .clear,
+                color: isUpdating ? Theme.accentColor.opacity(0.6) : .clear,
                 radius: isUpdating ? 20 : 0
             )
             .shadow(
-                color: isUpdating ? Theme.accent.opacity(0.4) : .clear,
+                color: isUpdating ? Theme.accentColor.opacity(0.4) : .clear,
                 radius: isUpdating ? 40 : 0
             )
             .animation(.easeInOut(duration: 0.8).repeatCount(3, autoreverses: true), value: isUpdating)
@@ -74,7 +74,7 @@ struct PortfolioValueCard: View {
             .padding(.vertical, 6)
             .background(
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(change >= 0 ? Theme.positiveChangeBg : Theme.negativeChangeBg)
+                    .fill(change >= 0 ? Theme.positiveChangeBackground : Theme.negativeChangeBackground)
             )
             .fixedSize() // Debug: Prevent pill from affecting parent layout when values animate
             .animation(UIAccessibility.isReduceMotionEnabled ? nil : .spring(response: 0.3, dampingFraction: 0.8), value: change)

@@ -161,7 +161,7 @@ struct SellStockView: View {
                                             Spacer()
                                             Text("\(herd.headCount)")
                                                 .font(Theme.headline)
-                                                .foregroundStyle(Theme.accent)
+                                                .foregroundStyle(Theme.accentColor)
                                         }
                                         .padding()
                                         .background(Theme.inputFieldBackground.opacity(0.5))
@@ -253,7 +253,7 @@ struct SellStockView: View {
                                                 if isLoadingValuation {
                                                     ProgressView()
                                                         .scaleEffect(0.8)
-                                                        .tint(Theme.accent)
+                                                        .tint(Theme.accentColor)
                                                 }
                                             }
                                             
@@ -296,7 +296,7 @@ struct SellStockView: View {
                                                 Spacer()
                                                 Text("$\(String(format: "%.2f", salePrice))")
                                                     .font(Theme.title3)
-                                                    .foregroundStyle(Theme.accent)
+                                                    .foregroundStyle(Theme.accentColor)
                                             }
                                             .padding()
                                             .background(Theme.inputFieldBackground.opacity(0.5))

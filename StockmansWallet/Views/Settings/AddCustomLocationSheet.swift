@@ -151,7 +151,7 @@ struct AddCustomLocationSheet: View {
                     Button(locationToEdit == nil ? "Add" : "Save") {
                         saveLocation()
                     }
-                    .foregroundStyle(isValid ? Theme.accent : Theme.secondaryText)
+                    .foregroundStyle(isValid ? Theme.accentColor : Theme.secondaryText)
                     .disabled(!isValid)
                 }
             }

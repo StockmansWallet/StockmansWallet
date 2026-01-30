@@ -86,7 +86,7 @@ struct EnhancedReportsView: View {
             HStack {
                 Image(systemName: "doc.text.magnifyingglass")
                     .font(.system(size: 24, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 Text("Generate Reports")
                     .font(Theme.title)
                     .foregroundStyle(Theme.primaryText)
@@ -116,11 +116,11 @@ struct ReportTypeCard: View {
                 // Debug: Icon
                 ZStack {
                     Circle()
-                        .fill(Theme.accent.opacity(0.15))
+                        .fill(Theme.accentColor.opacity(0.15))
                         .frame(width: 50, height: 50)
                     Image(systemName: reportType.icon)
                         .font(.system(size: 22, weight: .semibold))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                 }
                 
                 // Debug: Content

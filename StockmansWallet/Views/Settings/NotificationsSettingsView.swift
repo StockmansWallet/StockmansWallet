@@ -36,7 +36,7 @@ struct NotificationsSettingsView: View {
                     HStack {
                         Image(systemName: "bell.badge.fill")
                             .font(.system(size: 24, weight: .semibold))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Text("Notifications")
                             .font(Theme.title)
                             .foregroundStyle(Theme.primaryText)
@@ -113,7 +113,7 @@ struct NotificationsSettingsView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Image(systemName: "gearshape.2.fill")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Text("Notification delivery controls")
                             .font(Theme.headline)
                             .foregroundStyle(Theme.primaryText)
@@ -141,7 +141,7 @@ struct NotificationsSettingsView: View {
                 VStack(alignment: .leading, spacing: 12) {
                     HStack {
                         Image(systemName: "info.circle.fill")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Text("Behaviour")
                             .font(Theme.headline)
                             .foregroundStyle(Theme.primaryText)
@@ -217,14 +217,14 @@ struct NotificationCategoryCard: View {
                 HStack {
                     Image(systemName: "bell.fill")
                         .font(.system(size: 14))
-                        .foregroundStyle(isEnabled ? Theme.accent : Theme.secondaryText)
+                        .foregroundStyle(isEnabled ? Theme.accentColor : Theme.secondaryText)
                         .frame(width: 20)
                     Text("Enable notifications")
                         .font(Theme.body)
                         .foregroundStyle(Theme.primaryText)
                 }
             }
-            .tint(Theme.accent)
+            .tint(Theme.accentColor)
             .onChange(of: isEnabled) { _, _ in
                 HapticManager.tap()
             }
@@ -281,7 +281,7 @@ struct NotificationCategoryCard: View {
                         .frame(width: 20)
                     Text("Examples")
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                     Spacer()
                     Image(systemName: showExamples ? "chevron.up" : "chevron.down")
                         .font(.system(size: 12, weight: .semibold))
@@ -324,7 +324,7 @@ struct DeliveryControlRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
                 .frame(width: 20)
             Text(text)
                 .font(Theme.body)

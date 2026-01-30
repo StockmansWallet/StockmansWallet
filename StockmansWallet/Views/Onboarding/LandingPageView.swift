@@ -15,8 +15,8 @@ struct LandingPageView: View {
 
     var body: some View {
         ZStack {
-            // Light Theme cream base – shows through transparent parts of bg_landing
-            Theme.LightTheme.background
+            // Background base – shows through transparent parts of bg_landing
+            Theme.background
                 .ignoresSafeArea()
 
             // Full-bleed background image to bottom (iOS 26 HIG: content can extend edge-to-edge)
@@ -34,7 +34,7 @@ struct LandingPageView: View {
                         .resizable()
                         .renderingMode(.template)
                         .scaledToFit()
-                        .foregroundStyle(Theme.LightTheme.primaryText)
+                        .foregroundStyle(Theme.primaryText)
                         .frame(maxWidth: 220)
                         .accessibilityLabel("Stockman's Wallet")
                 }
@@ -58,10 +58,10 @@ struct LandingPageView: View {
                 } label: {
                     Text("Skip to Dashboard")
                         .font(.caption)
-                        .foregroundStyle(Theme.LightTheme.background)
+                        .foregroundStyle(Theme.background)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Capsule().fill(Theme.LightTheme.primaryText))
+                        .background(Capsule().fill(Theme.primaryText))
                 }
                 .padding(.bottom, 4)
             }
@@ -72,12 +72,12 @@ struct LandingPageView: View {
             } label: {
                 Text("Continue")
             }
-            .buttonStyle(Theme.LandingButtonStyle())
+            .buttonStyle(Theme.PrimaryButtonStyle())
             .padding(.horizontal, 24)
 
             Text("Powered by MLA Market Data")
                 .font(Theme.caption)
-                .foregroundStyle(Theme.LightTheme.secondaryText)
+                .foregroundStyle(Theme.secondaryText)
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 24)

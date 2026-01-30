@@ -61,17 +61,37 @@ This document summarizes the key iOS Human Interface Guidelines principles we fo
 
 ```swift
 // Our Color Palette (from Theme.swift)
-Background: Dark backgrounds
-CardBackground: Elevated surfaces
-PrimaryText: High contrast
-SecondaryText: Reduced contrast
-Accent: Orange (#FF6B35) - For CTAs and highlights
-Destructive: Red - For delete actions
+// Design Tokens - Organized by Apple HIG principles
+
+Accent Colors:
+- Primary Light: #B8AD9D (main accent)
+- Primary: #7C6F5D
+- Secondary: #5E5142
+- Tertiary: #4A3C2D
+
+Label Colors (Text):
+- Primary: #B8AD9D (main text)
+- Secondary: #7C6F5D (supporting text)
+- Tertiary: #5E5142 (subtle text)
+- Quaternary: #4A3C2D (disabled text)
+
+Background Colors:
+- Primary: #211A12 (main background)
+- Secondary: #271F18 (cards/sections)
+- Tertiary: #2D241A (nested grouping)
+- Quaternary: #3A2F23 (elevated elements)
+
+Status Colors (to be updated):
+- Destructive: #C36F6F (delete/danger)
+- Success: #9CA659 (positive actions)
+- Warning: #A68C59 (caution)
+- Info: #6FA7C3 (informational)
 ```
 
 ✅ **Dark Mode:** Always on (agricultural/outdoor use)
 ✅ **Contrast:** WCAG AA compliant minimum
-✅ **Semantic:** Colors have meaning (red = danger, orange = action)
+✅ **Semantic:** Colors have meaning (destructive = danger, accent = interactive)
+✅ **Apple HIG:** Following semantic naming conventions
 ❌ **Avoid:** Pure white on pure black (too harsh)
 
 ### Typography

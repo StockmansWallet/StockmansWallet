@@ -27,7 +27,7 @@ struct EmptyDashboardView: View {
             VStack(spacing: 24) {
                 Image(systemName: "chart.line.uptrend.xyaxis")
                     .font(.system(size: 80))
-                    .foregroundStyle(Theme.accent.opacity(0.5))
+                    .foregroundStyle(Theme.accentColor.opacity(0.5))
                     .accessibilityHidden(true)
                 
                 Text("Add your first herd or individual animals to start tracking your livestock portfolio value in real-time")
@@ -76,7 +76,7 @@ struct EmptyDashboardView: View {
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.backgroundColor.ignoresSafeArea())
+        .background(Theme.background.ignoresSafeArea())
     }
     
     // Debug: Add 3-year historical mock data

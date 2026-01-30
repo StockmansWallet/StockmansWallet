@@ -17,7 +17,7 @@ struct SalesSummaryPDFView: View {
                 Group {
                     if isGenerating {
                         ProgressView("Generating PDF…")
-                            .tint(Theme.accent)
+                            .tint(Theme.accentColor)
                             .foregroundStyle(Theme.primaryText)
                     } else if let url = pdfURL {
                         PDFKitRepresentedView(url: url)
@@ -40,7 +40,7 @@ struct SalesSummaryPDFView: View {
                             showShare = true
                         } label: {
                             Image(systemName: "square.and.arrow.up")
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                         }
                         .buttonBorderShape(.roundedRectangle)
                     }

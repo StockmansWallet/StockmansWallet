@@ -123,8 +123,8 @@ struct OnboardingPageTemplate<Content: View>: View {
                     // Debug: Subtle gradient fade for back button area (content scrolls under)
                     LinearGradient(
                         colors: [
-                            Theme.backgroundColor.opacity(0.95),
-                            Theme.backgroundColor.opacity(0)
+                            Theme.background.opacity(0.95),
+                            Theme.background.opacity(0)
                         ],
                         startPoint: .top,
                         endPoint: .bottom
@@ -144,7 +144,7 @@ struct OnboardingPageTemplate<Content: View>: View {
                 HStack(spacing: 8) {
                     ForEach(0..<totalPages, id: \.self) { index in
                         Circle()
-                            .fill(index <= currentPage ? Theme.accent : Theme.secondaryText.opacity(0.3))
+                            .fill(index <= currentPage ? Theme.accentColor : Theme.secondaryText.opacity(0.3))
                             .frame(width: 8, height: 8)
                             .accessibilityHidden(true)
                     }

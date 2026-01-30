@@ -148,7 +148,7 @@ struct ReportsOptionsCard: View {
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
                 Image(systemName: "doc.text.fill")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .accessibilityHidden(true)
             }
             
@@ -159,7 +159,7 @@ struct ReportsOptionsCard: View {
                 } label: {
                     HStack {
                         Image(systemName: "doc.on.doc.fill")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .frame(width: 24)
                         Text("Asset Register (PDF)")
                             .font(Theme.body)
@@ -180,7 +180,7 @@ struct ReportsOptionsCard: View {
                 } label: {
                     HStack {
                         Image(systemName: "doc.richtext.fill")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .frame(width: 24)
                         Text("Sales Summary (PDF)")
                             .font(Theme.body)
@@ -213,7 +213,7 @@ struct RecentSalesCard: View {
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
                 Image(systemName: "clock.arrow.circlepath")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .accessibilityHidden(true)
             }
             
@@ -288,13 +288,13 @@ struct AssetSummaryCard: View {
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
                 Image(systemName: "list.bullet.rectangle")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .accessibilityHidden(true)
             }
             
             if isLoading {
                 ProgressView()
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding()
             } else if herds.isEmpty {
@@ -329,7 +329,7 @@ struct AssetSummaryCard: View {
                             Spacer()
                             Text("View")
                                 .font(Theme.caption)
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                         }
                         if herd.id != herds.prefix(5).last?.id {
                             Divider().background(Theme.separator)

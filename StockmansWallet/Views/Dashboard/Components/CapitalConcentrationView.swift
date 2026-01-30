@@ -86,7 +86,7 @@ struct CapitalConcentrationView: View {
                             .foregroundStyle(Theme.secondaryText)
                         Image(systemName: "chevron.down.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                     .contentShape(Rectangle())
                 }

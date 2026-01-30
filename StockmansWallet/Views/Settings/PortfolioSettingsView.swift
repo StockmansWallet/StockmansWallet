@@ -57,11 +57,11 @@ struct PortfolioSettingsView: View {
                 Button(action: resetToDefaultOrder) {
                     HStack(spacing: 12) {
                         Image(systemName: "arrow.counterclockwise")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .frame(width: 24)
                         Text("Reset to Default Order")
                             .font(Theme.body)
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                 }
                 .accessibilityLabel("Reset card order to default")
@@ -92,14 +92,14 @@ struct PortfolioSettingsView: View {
         )) {
             HStack(spacing: 12) {
                 Image(systemName: card.icon)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .frame(width: 24)
                 Text(card.name)
                     .font(Theme.body)
                     .foregroundStyle(Theme.primaryText)
             }
         }
-        .tint(Theme.accent)
+        .tint(Theme.accentColor)
         .accessibilityLabel(card.accessibilityLabel)
     }
     

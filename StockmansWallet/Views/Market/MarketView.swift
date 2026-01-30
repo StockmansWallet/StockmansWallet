@@ -95,7 +95,7 @@ struct MarketView: View {
                         Task { await viewModel.loadAllData() }
                     } label: {
                         Image(systemName: "arrow.clockwise")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                     .accessibilityLabel("Refresh market data")
                 }
@@ -144,7 +144,7 @@ struct MarketView: View {
                     .padding(.horizontal)
             } else if viewModel.isLoadingInsight {
                 ProgressView()
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .frame(height: 80)
             }
             
@@ -156,7 +156,7 @@ struct MarketView: View {
                         .foregroundStyle(Theme.secondaryText)
                     Text(lastUpdated, style: .relative)
                         .font(.system(size: 12))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                     Text("ago")
                         .font(.system(size: 12))
                         .foregroundStyle(Theme.secondaryText)
@@ -231,7 +231,7 @@ struct MarketView: View {
                 .padding(.vertical, 60)
             } else if viewModel.isLoadingPrices {
                 ProgressView()
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .frame(height: 200)
             } else if viewModel.categoryPrices.isEmpty {
                 // No prices available
@@ -275,7 +275,7 @@ struct MarketView: View {
                 
                 if viewModel.isLoadingIndicators {
                     ProgressView()
-                        .tint(Theme.accent)
+                        .tint(Theme.accentColor)
                         .frame(height: 150)
                 } else if viewModel.nationalIndicators.isEmpty {
                     emptyStateView(message: "No indicator data available")
@@ -473,7 +473,7 @@ struct MarketView: View {
                 } else if viewModel.isLoadingPhysicalReport {
                     VStack(spacing: 12) {
                         ProgressView()
-                            .tint(Theme.accent)
+                            .tint(Theme.accentColor)
                         Text("Loading report...")
                             .font(.system(size: 13))
                             .foregroundStyle(Theme.secondaryText)
@@ -493,7 +493,7 @@ struct MarketView: View {
             // Icon
             Image(systemName: "brain.head.profile")
                 .font(.system(size: 60))
-                .foregroundStyle(Theme.accent.gradient)
+                .foregroundStyle(Theme.accentColor.gradient)
                 .padding(.bottom, 8)
             
             // Title
@@ -505,10 +505,10 @@ struct MarketView: View {
             VStack(spacing: 16) {
                 Text("Coming Soon")
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 6)
-                    .background(Theme.accent.opacity(0.15))
+                    .background(Theme.accentColor.opacity(0.15))
                     .clipShape(Capsule())
                 
                 Text("Chat with an AI assistant that knows your herds, analyses market trends, and provides personalised insights based on your livestock, historical data, and current market conditions.")
@@ -540,7 +540,7 @@ struct MarketView: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
                 .frame(width: 24)
             
             Text(text)
@@ -599,10 +599,10 @@ struct TopInsightBanner: View {
             HStack {
                 Image(systemName: "lightbulb.fill")
                     .font(.system(size: 14))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 Text("Today's Insight")
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .textCase(.uppercase)
                     .tracking(0.5)
                 Spacer()
@@ -622,7 +622,7 @@ struct TopInsightBanner: View {
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Theme.accent.opacity(0.3), lineWidth: 1)
+                .stroke(Theme.accentColor.opacity(0.3), lineWidth: 1)
         )
     }
 }
@@ -644,7 +644,7 @@ struct QuickAccessCard: View {
             HStack(spacing: 16) {
                 Image(systemName: icon)
                     .font(.system(size: 28))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .frame(width: 44, height: 44)
                 
                 VStack(alignment: .leading, spacing: 4) {
@@ -661,10 +661,10 @@ struct QuickAccessCard: View {
                 if let count = count {
                     Text("\(count)")
                         .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
-                        .background(Theme.accent.opacity(0.15))
+                        .background(Theme.accentColor.opacity(0.15))
                         .clipShape(Capsule())
                 }
                 
@@ -705,10 +705,10 @@ struct PriceCard: View {
                     if let breed = price.breed {
                         Text(breed)
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .padding(.horizontal, 8)
                             .padding(.vertical, 3)
-                            .background(Theme.accent.opacity(0.15))
+                            .background(Theme.accentColor.opacity(0.15))
                             .clipShape(Capsule())
                     }
                     
@@ -776,10 +776,10 @@ struct PriceListRow: View {
                         if let breed = price.breed {
                             Text(breed)
                                 .font(.system(size: 11, weight: .medium))
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 3)
-                                .background(Theme.accent.opacity(0.15))
+                                .background(Theme.accentColor.opacity(0.15))
                                 .clipShape(Capsule())
                         }
                         
@@ -834,7 +834,7 @@ struct NationalIndicatorCard: View {
         VStack(alignment: .leading, spacing: 10) {
             Text(indicator.abbreviation)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
                 .textCase(.uppercase)
                 .tracking(0.5)
             
@@ -875,7 +875,7 @@ struct SaleyardReportCard: View {
                         .foregroundStyle(Theme.primaryText)
                     Text(report.state)
                         .font(.system(size: 12))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                 }
                 
                 Spacer()
@@ -883,7 +883,7 @@ struct SaleyardReportCard: View {
                 VStack(alignment: .trailing, spacing: 4) {
                     Text("\(report.yardings)")
                         .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                     Text("head yarded")
                         .font(.system(size: 11))
                         .foregroundStyle(Theme.secondaryText)
@@ -907,7 +907,7 @@ struct SaleyardReportCard: View {
                 if !report.categories.isEmpty {
                     Text("\(report.categories.count) categories")
                         .font(.system(size: 11))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                 }
             }
         }
@@ -960,7 +960,7 @@ struct IntelligenceCard: View {
                 Text(intelligence.timeHorizon)
                     .font(.system(size: 12))
             }
-            .foregroundStyle(Theme.accent)
+            .foregroundStyle(Theme.accentColor)
             
             // Key drivers
             VStack(alignment: .leading, spacing: 8) {
@@ -975,7 +975,7 @@ struct IntelligenceCard: View {
                         HStack(alignment: .top, spacing: 8) {
                             Image(systemName: "circle.fill")
                                 .font(.system(size: 5))
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .padding(.top, 5)
                             Text(driver)
                                 .font(.system(size: 13))
@@ -996,7 +996,7 @@ struct IntelligenceCard: View {
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Theme.accent.opacity(0.2), lineWidth: 1)
+                .stroke(Theme.accentColor.opacity(0.2), lineWidth: 1)
         )
     }
     
@@ -1114,7 +1114,7 @@ struct PhysicalSaleyardSelectionSheet: View {
                                 
                                 if selectedSaleyard == saleyard {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.accentColor)
                                         .font(.system(size: 16, weight: .semibold))
                                 }
                             }
@@ -1164,11 +1164,11 @@ struct PhysicalSaleyardSelectionSheet: View {
                         HapticManager.tap()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.backgroundColor)
+            .background(Theme.background)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)

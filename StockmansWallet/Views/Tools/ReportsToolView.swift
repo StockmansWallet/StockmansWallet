@@ -33,7 +33,7 @@ struct ReportsToolView: View {
                                 Text("Tools")
                                     .font(Theme.body)
                             }
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         }
                     }
                     

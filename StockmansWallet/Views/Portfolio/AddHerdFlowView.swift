@@ -237,7 +237,7 @@ struct AddHerdFlowView: View {
                     HStack(spacing: 8) {
                         ForEach(1...totalSteps, id: \.self) { step in
                             Circle()
-                                .fill(step <= currentStep ? Theme.accent : Theme.primaryText.opacity(0.3))
+                                .fill(step <= currentStep ? Theme.accentColor : Theme.primaryText.opacity(0.3))
                                 .frame(width: 8, height: 8)
                                 .accessibilityHidden(true)
                         }
@@ -590,7 +590,7 @@ struct AddHerdFlowView: View {
                     Spacer()
                     Text(String(format: "%.1f kg/day", Double(dailyGainGrams) / 10.0))
                         .font(Theme.body)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .fontWeight(.semibold)
                 }
                 
@@ -598,7 +598,7 @@ struct AddHerdFlowView: View {
                     get: { Double(dailyGainGrams) },
                     set: { dailyGainGrams = Int($0) }
                 ), in: 0...30, step: 1)
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 8)
                     .background(Theme.inputFieldBackground)
@@ -616,7 +616,7 @@ struct AddHerdFlowView: View {
                     Spacer()
                     Text("\(mortalityRate)%")
                         .font(Theme.body)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .fontWeight(.semibold)
                 }
                 
@@ -624,7 +624,7 @@ struct AddHerdFlowView: View {
                     get: { Double(mortalityRate) },
                     set: { mortalityRate = Int($0) }
                 ), in: 0...30, step: 1)
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 8)
                     .background(Theme.inputFieldBackground)
@@ -897,7 +897,7 @@ struct SearchableDropdown: View {
                                         Spacer()
                                         if selectedValue == option {
                                             Image(systemName: "checkmark")
-                                                .foregroundStyle(Theme.accent)
+                                                .foregroundStyle(Theme.accentColor)
                                         }
                                     }
                                     .padding()
@@ -944,7 +944,7 @@ struct ProgressIndicator: View {
         HStack(spacing: 8) {
             ForEach(1...totalSteps, id: \.self) { step in
                 Circle()
-                    .fill(step <= currentStep ? Theme.accent : Theme.primaryText.opacity(0.3))
+                    .fill(step <= currentStep ? Theme.accentColor : Theme.primaryText.opacity(0.3))
                     .frame(width: 12, height: 12)
             }
         }
@@ -1006,7 +1006,7 @@ struct ScrollablePickerSheet: View {
                                     Spacer()
                                     if selectedValue == option {
                                         Image(systemName: "checkmark")
-                                            .foregroundStyle(Theme.accent)
+                                            .foregroundStyle(Theme.accentColor)
                                     }
                                 }
                                 .padding(.horizontal, 20)
@@ -1038,7 +1038,7 @@ struct ScrollablePickerSheet: View {
                         dismiss()
                     }
                     .buttonBorderShape(.roundedRectangle)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
         }
@@ -1079,10 +1079,10 @@ struct SpeciesCard: View {
                 if !isAvailable {
                     Text("Coming Soon")
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)
-                        .background(Theme.accent.opacity(0.15))
+                        .background(Theme.accentColor.opacity(0.15))
                         .clipShape(Capsule())
                 }
             }
@@ -1095,7 +1095,7 @@ struct SpeciesCard: View {
                     .fill(isAvailable ? Theme.inputFieldBackground : Theme.inputFieldBackground.opacity(0.5))
                     .overlay(
                         RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .strokeBorder(isSelected ? Theme.accent : Color.clear, lineWidth: 2)
+                            .strokeBorder(isSelected ? Theme.accentColor : Color.clear, lineWidth: 2)
                     )
             )
         }

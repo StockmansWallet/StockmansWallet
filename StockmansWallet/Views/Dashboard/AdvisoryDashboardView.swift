@@ -42,7 +42,7 @@ struct AdvisoryDashboardView: View {
                     // Icon
                     Image(systemName: "chart.line.uptrend.xyaxis")
                         .font(.system(size: 80))
-                        .foregroundStyle(Theme.accent.opacity(0.6))
+                        .foregroundStyle(Theme.accentColor.opacity(0.6))
                     
                     // Welcome message
                     VStack(spacing: 16) {
@@ -57,12 +57,12 @@ struct AdvisoryDashboardView: View {
                         
                         Text("Coming Soon")
                             .font(Theme.headline)
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .padding(.horizontal, 24)
                             .padding(.vertical, 12)
                             .background(
                                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                                    .fill(Theme.accent.opacity(0.15))
+                                    .fill(Theme.accentColor.opacity(0.15))
                             )
                             .padding(.top, 8)
                     }
@@ -99,7 +99,7 @@ struct DashboardFeatureItem: View {
         HStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
                 .font(.body)
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
             
             Text(text)
                 .font(Theme.body)

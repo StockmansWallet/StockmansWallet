@@ -37,7 +37,7 @@ struct ErrorStateView: View {
                     .foregroundStyle(.white)
                     .padding()
                     .frame(maxWidth: 200)
-                    .background(Theme.accent)
+                    .background(Theme.accentColor)
                     .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
             }
             .buttonBorderShape(.roundedRectangle)
@@ -45,7 +45,7 @@ struct ErrorStateView: View {
             .accessibilityHint("Retry loading the dashboard data")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Theme.backgroundColor.ignoresSafeArea())
+        .background(Theme.background.ignoresSafeArea())
     }
 }
 

@@ -102,7 +102,7 @@ struct AdvisoryHubToolView: View {
                     AdvisorySection(
                         title: "Why it matters",
                         icon: "star.fill",
-                        iconColor: Theme.accent,
+                        iconColor: Theme.accentColor,
                         items: [
                             "Faster access to the right advice",
                             "Fewer phone calls and emails",
@@ -143,7 +143,7 @@ struct AdvisoryHubToolView: View {
                         .foregroundStyle(.white)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 24)
-                        .background(Theme.accent)
+                        .background(Theme.accentColor)
                         .clipShape(Capsule())
                         .padding(.top, 8)
                 }
@@ -166,7 +166,7 @@ struct AdvisoryHubToolView: View {
                             Text("Tools")
                                 .font(Theme.body)
                         }
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                     }
                 }
                 
@@ -209,7 +209,7 @@ struct AdvisorySection: View {
                     HStack(alignment: .top, spacing: 8) {
                         Text("•")
                             .font(Theme.body)
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .frame(width: 12, alignment: .leading)
                         Text(item)
                             .font(Theme.body)

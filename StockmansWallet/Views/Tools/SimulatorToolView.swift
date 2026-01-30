@@ -37,10 +37,10 @@ struct SimulatorToolView: View {
                             
                             Text("Coming Soon")
                                 .font(Theme.headline)
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .padding(.vertical, 8)
                                 .padding(.horizontal, 16)
-                                .background(Theme.accent.opacity(0.15))
+                                .background(Theme.accentColor.opacity(0.15))
                                 .clipShape(Capsule())
                         }
                         
@@ -79,7 +79,7 @@ struct SimulatorToolView: View {
                             Text("Tools")
                                 .font(Theme.body)
                         }
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                     }
                 }
                 
@@ -105,7 +105,7 @@ struct FeatureRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 16))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
                 .frame(width: 24)
             Text(text)
                 .font(Theme.body)

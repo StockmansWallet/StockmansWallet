@@ -20,7 +20,7 @@ struct DataSyncSettingsView: View {
                 } label: {
                     HStack {
                         Text("Sync Now")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Spacer()
                         if let last = lastSyncDate {
                             Text("Last: \(relativeDate(last))")

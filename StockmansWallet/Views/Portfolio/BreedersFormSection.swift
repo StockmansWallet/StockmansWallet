@@ -118,7 +118,7 @@ struct BreederSelectionScreen: View {
                 // Debug: Radio button indicator (circle or checkmark)
                 Image(systemName: breedingProgramType == programType ? "checkmark.circle.fill" : "circle")
                     .font(.system(size: 24))
-                    .foregroundStyle(breedingProgramType == programType ? Theme.accent : Theme.secondaryText)
+                    .foregroundStyle(breedingProgramType == programType ? Theme.accentColor : Theme.secondaryText)
                     .padding(.top, 2)
                 
                 VStack(alignment: .leading, spacing: 4) {
@@ -134,7 +134,7 @@ struct BreederSelectionScreen: View {
                                 .foregroundStyle(.white)
                                 .padding(.horizontal, 8)
                                 .padding(.vertical, 2)
-                                .background(Theme.accent)
+                                .background(Theme.accentColor)
                                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                         }
                     }
@@ -150,11 +150,11 @@ struct BreederSelectionScreen: View {
             }
             .padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(breedingProgramType == programType ? Theme.accent.opacity(0.1) : Theme.inputFieldBackground)
+            .background(breedingProgramType == programType ? Theme.accentColor.opacity(0.1) : Theme.inputFieldBackground)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(breedingProgramType == programType ? Theme.accent : Color.clear, lineWidth: 2)
+                    .stroke(breedingProgramType == programType ? Theme.accentColor : Color.clear, lineWidth: 2)
             )
         }
         .buttonStyle(.plain)
@@ -239,7 +239,7 @@ struct BreedingDetailsScreen: View {
                     Spacer()
                     Text("\(calvingRate)%")
                         .font(Theme.body)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .fontWeight(.semibold)
                 }
                 
@@ -247,7 +247,7 @@ struct BreedingDetailsScreen: View {
                     get: { Double(calvingRate) },
                     set: { calvingRate = Int($0) }
                 ), in: 0...100, step: 1)
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 8)
                     .background(Theme.inputFieldBackground)

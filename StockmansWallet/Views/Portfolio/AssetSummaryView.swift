@@ -21,12 +21,12 @@ struct AssetSummaryView: View {
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
                 Image(systemName: "square.stack.3d.up.fill")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
             }
             
             if isLoading {
                 ProgressView()
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .frame(maxWidth: .infinity)
                     .padding()
             } else if activeHerds.isEmpty {
@@ -59,10 +59,10 @@ private struct SummaryTile: View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 20))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
             Text(value)
                 .font(Theme.title)
-                .foregroundStyle(highlight ? Theme.accent : Theme.primaryText)
+                .foregroundStyle(highlight ? Theme.accentColor : Theme.primaryText)
             Text(title)
                 .font(Theme.caption)
                 .foregroundStyle(Theme.primaryText.opacity(0.7))

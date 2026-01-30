@@ -193,7 +193,7 @@ struct PortfolioView: View {
                 HapticManager.tap()
                 showingAddAssetMenu = true
             }
-            .foregroundStyle(Theme.accent)
+            .foregroundStyle(Theme.accentColor)
             .accessibilityLabel("Add Stock")
         }
     }
@@ -243,7 +243,7 @@ struct PortfolioView: View {
                 }
             } else if isLoading {
                 ProgressView()
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .frame(maxWidth: .infinity)
                     .padding()
             }
@@ -621,7 +621,7 @@ struct PortfolioStatsCards: View {
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(totalChange >= 0 ? Theme.positiveChangeBg : Theme.negativeChangeBg)
+                        .fill(totalChange >= 0 ? Theme.positiveChangeBackground : Theme.negativeChangeBackground)
                 )
                 .fixedSize()
                 .opacity(isLoading ? 0.3 : 1.0)
@@ -732,7 +732,7 @@ struct NetWorthCard: View {
             
             if isLoading {
                 ProgressView()
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
             } else {
                 Text(summary.totalNetWorth, format: .currency(code: "AUD"))
                     .font(.system(size: 36, weight: .bold))
@@ -748,7 +748,7 @@ struct NetWorthCard: View {
                 ValueBreakdownRow(
                     label: "Physical Value",
                     value: summary.totalPhysicalValue,
-                    color: Theme.accent
+                    color: Theme.accentColor
                 )
                 
                 if summary.totalBreedingAccrual > 0 {
@@ -855,7 +855,7 @@ struct CapitalConcentrationCard: View {
                             .foregroundStyle(Theme.secondaryText)
                         Image(systemName: "chevron.down.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                     .contentShape(Rectangle())
                 }
@@ -942,7 +942,7 @@ struct CategoryRow: View {
                 Spacer()
                 Text("\(percentage, format: .number.precision(.fractionLength(1)))%")
                     .font(Theme.caption)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
             }
             
             GeometryReader { geometry in
@@ -952,7 +952,7 @@ struct CategoryRow: View {
                         .frame(height: 4)
                     
                     RoundedRectangle(cornerRadius: 4)
-                        .fill(Theme.accent.opacity(0.6))
+                        .fill(Theme.accentColor.opacity(0.6))
                         .frame(width: geometry.size.width * CGFloat(percentage / 100), height: 4)
                 }
             }
@@ -974,7 +974,7 @@ struct PerformanceMetricsCard: View {
                     .foregroundStyle(Theme.primaryText)
                 Spacer()
                 Image(systemName: "chart.line.uptrend.xyaxis")
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                     .accessibilityHidden(true)
             }
             
@@ -1007,7 +1007,7 @@ struct MetricTile: View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 24))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
             Text(value)
                 .font(Theme.title)
                 .foregroundStyle(Theme.primaryText)
@@ -1084,7 +1084,7 @@ struct AssetBreakdownCard: View {
                             .foregroundStyle(Theme.secondaryText)
                         Image(systemName: "chevron.down.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                     .contentShape(Rectangle())
                 }
@@ -1171,7 +1171,7 @@ struct SpeciesRow: View {
                     .layoutPriority(1)
                 Text("\(percentage, format: .number.precision(.fractionLength(1)))%")
                     .font(Theme.caption)
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
             }
         }
         .padding(.vertical, 8)
@@ -1244,7 +1244,7 @@ struct LightweightAnimalCard: View {
                     HStack(alignment: .top) {
                         Text(data.displayName)
                             .font(Theme.headline)
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .lineLimit(1)
                         Spacer()
                         Image(systemName: "chevron.right")
@@ -1279,7 +1279,7 @@ struct LightweightAnimalCard: View {
                             Text(data.totalValue, format: .currency(code: "AUD"))
                                 .font(Theme.subheadline)
                                 .fontWeight(.semibold)
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                         }
                     }
                     
@@ -1325,16 +1325,16 @@ struct LightweightAnimalCard: View {
                             Text("Sell")
                                 .font(.system(size: 12))
                                 .fontWeight(.medium)
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 4)
                                 .background(
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(Theme.accent.opacity(0.1))
+                                        .fill(Theme.accentColor.opacity(0.1))
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .stroke(Theme.accent, lineWidth: 0.8)
+                                        .stroke(Theme.accentColor, lineWidth: 0.8)
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                         }
@@ -1389,7 +1389,7 @@ struct EnhancedHerdCard: View {
                 HStack(alignment: .top) {
                     Text(herdDisplayName)
                         .font(Theme.headline)
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                         .lineLimit(1)
                     Spacer()
                     Image(systemName: "chevron.right")
@@ -1424,10 +1424,10 @@ struct EnhancedHerdCard: View {
                         Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
                             .font(Theme.subheadline)
                             .fontWeight(.semibold)
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     } else if isLoading {
                         ProgressView()
-                            .tint(Theme.accent)
+                            .tint(Theme.accentColor)
                             .scaleEffect(0.8)
                     }
                 }
@@ -1490,16 +1490,16 @@ struct EnhancedHerdCard: View {
                             Text("Sell")
                                 .font(.system(size: 12))
                                 .fontWeight(.medium)
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 4)
                                 .background(
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(Theme.accent.opacity(0.1))
+                                        .fill(Theme.accentColor.opacity(0.1))
                                 )
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .stroke(Theme.accent, lineWidth: 0.8)
+                                        .stroke(Theme.accentColor, lineWidth: 0.8)
                                 )
                                 .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                         }
@@ -1605,7 +1605,7 @@ struct EmptyPortfolioView: View {
                 showingAddAssetMenu = true
             }
             .buttonStyle(.borderedProminent)
-            .tint(Theme.accent)
+            .tint(Theme.accentColor)
             .controlSize(.large)
             .accessibilityLabel("Add asset")
         }
@@ -1768,7 +1768,7 @@ struct PortfolioSearchPanel: View {
                                 Label("Search", systemImage: "magnifyingglass")
                             }
                             .buttonStyle(.borderedProminent)
-                            .tint(Theme.accent)
+                            .tint(Theme.accentColor)
                             .frame(maxWidth: .infinity)
                             
                             if hasSearched {
@@ -1779,7 +1779,7 @@ struct PortfolioSearchPanel: View {
                                     Label("Clear", systemImage: "xmark")
                                 }
                                 .buttonStyle(.bordered)
-                                .tint(Theme.accent)
+                                .tint(Theme.accentColor)
                                 .frame(maxWidth: .infinity)
                             }
                         }
@@ -1840,7 +1840,7 @@ struct PortfolioSearchPanel: View {
                         HapticManager.tap()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
         }
@@ -1879,7 +1879,7 @@ struct SearchResultCard: View {
                             if isIndividualAnimal {
                                 Image(systemName: "tag.fill")
                                     .font(.system(size: 12))
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                             }
                         }
                         
@@ -2009,8 +2009,8 @@ struct FloatingSellButton: View {
             .padding(.vertical, 14)
             .background(
                 Capsule()
-                    .fill(Theme.accent)
-                    .shadow(color: Theme.accent.opacity(0.4), radius: 12, x: 0, y: 4)
+                    .fill(Theme.accentColor)
+                    .shadow(color: Theme.accentColor.opacity(0.4), radius: 12, x: 0, y: 4)
             )
         }
         .buttonStyle(.plain)

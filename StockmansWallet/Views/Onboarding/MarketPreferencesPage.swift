@@ -92,7 +92,7 @@ struct MarketPreferencesPage: View {
                                                 Spacer()
                                                 if userPrefs.defaultSaleyard == saleyard {
                                                     Image(systemName: "checkmark.circle.fill")
-                                                        .foregroundStyle(Theme.accent)
+                                                        .foregroundStyle(Theme.accentColor)
                                                 }
                                             }
                                         }
@@ -135,7 +135,7 @@ struct MarketPreferencesPage: View {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack(spacing: 12) {
                                 Image(systemName: "truck.box.fill")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                                     .frame(width: 24)
                                 Text("Enable TruckIt API")
                                     .font(Theme.body)
@@ -146,7 +146,7 @@ struct MarketPreferencesPage: View {
                                 .foregroundStyle(Theme.secondaryText)
                         }
                     }
-                    .toggleStyle(SwitchToggleStyle(tint: Theme.accent))
+                    .toggleStyle(SwitchToggleStyle(tint: Theme.accentColor))
                     .padding(.horizontal, 16)
                     .padding(.vertical, 12)
                     .frame(minHeight: Theme.buttonHeight) // iOS 26 HIG: Consistent with button heights

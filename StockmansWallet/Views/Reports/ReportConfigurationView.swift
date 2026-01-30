@@ -60,7 +60,7 @@ struct ReportConfigurationView: View {
                     } label: {
                         HStack {
                             Image(systemName: "eye.fill")
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .frame(width: 24)
                             Text("Preview Report")
                                 .font(Theme.body)
@@ -79,7 +79,7 @@ struct ReportConfigurationView: View {
                     } label: {
                         HStack {
                             Image(systemName: "doc.fill")
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .frame(width: 24)
                             Text("Generate PDF")
                                 .font(Theme.body)
@@ -98,7 +98,7 @@ struct ReportConfigurationView: View {
                     } label: {
                         HStack {
                             Image(systemName: "printer.fill")
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .frame(width: 24)
                             Text("Print Report")
                                 .font(Theme.body)
@@ -286,7 +286,7 @@ struct SaleyardSelectionView: View {
                             Spacer()
                             if selectedSaleyards.contains(saleyard) {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                             }
                         }
                     }
@@ -342,7 +342,7 @@ struct PropertySelectionView: View {
                             Spacer()
                             if selectedProperties.contains(property.id) {
                                 Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                             }
                         }
                     }

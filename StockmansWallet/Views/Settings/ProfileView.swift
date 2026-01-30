@@ -39,7 +39,7 @@ struct ProfileView: View {
                             // Avatar image or initials
                             ZStack {
                                 Circle()
-                                    .fill(Theme.accent.opacity(0.15))
+                                    .fill(Theme.accentColor.opacity(0.15))
                                     .frame(width: 100, height: 100)
                                 
                                 if let profileImage {
@@ -54,19 +54,19 @@ struct ProfileView: View {
                                     // Display initials
                                     Text("\(String(first))\(String(last))")
                                         .font(.system(size: 36, weight: .semibold))
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.accentColor)
                                 } else {
                                     // Default person icon
                                     Image(systemName: "person.fill")
                                         .font(.system(size: 40, weight: .semibold))
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.accentColor)
                                 }
                             }
                             
                             // Edit badge
                             ZStack {
                                 Circle()
-                                    .fill(Theme.accent)
+                                    .fill(Theme.accentColor)
                                     .frame(width: 32, height: 32)
                                 Image(systemName: "camera.fill")
                                     .font(.system(size: 14, weight: .semibold))
@@ -97,7 +97,7 @@ struct ProfileView: View {
                             .foregroundStyle(Theme.secondaryText)
                             .padding(.vertical, 6)
                             .padding(.horizontal, 12)
-                            .background(Theme.accent.opacity(0.15))
+                            .background(Theme.accentColor.opacity(0.15))
                             .clipShape(Capsule())
                     }
                 }
@@ -108,7 +108,7 @@ struct ProfileView: View {
                 VStack(alignment: .leading, spacing: 16) {
                     HStack {
                         Image(systemName: "person.text.rectangle.fill")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                         Text("Personal Information")
                             .font(Theme.headline)
                             .foregroundStyle(Theme.primaryText)
@@ -119,7 +119,7 @@ struct ProfileView: View {
                         } label: {
                             Text("Edit")
                                 .font(Theme.caption)
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                         }
                     }
                     
@@ -248,7 +248,7 @@ struct ProfileInfoRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
                 .frame(width: 24)
             
             VStack(alignment: .leading, spacing: 2) {

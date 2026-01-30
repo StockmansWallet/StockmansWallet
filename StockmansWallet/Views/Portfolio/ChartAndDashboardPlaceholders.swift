@@ -131,11 +131,11 @@ struct TimeRangeSelector: View {
                         ? customDateRangeLabel 
                         : range.rawValue)
                         .font(Theme.caption)
-                        .foregroundStyle(timeRange == range ? Theme.accent : Theme.secondaryText)
+                        .foregroundStyle(timeRange == range ? Theme.accentColor : Theme.secondaryText)
                         .padding(.horizontal, 10) // Reduced from 12 for smaller screens
                         .padding(.vertical, 6)
                         .background(
-                            timeRange == range ? Theme.accent.opacity(0.15) : Color.clear
+                            timeRange == range ? Theme.accentColor.opacity(0.15) : Color.clear
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                 }
@@ -216,7 +216,7 @@ struct MarketPulseView: View {
                             .foregroundStyle(Theme.secondaryText)
                         Image(systemName: "chevron.down.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                     .contentShape(Rectangle())
                 }
@@ -226,7 +226,7 @@ struct MarketPulseView: View {
             
             if isLoading {
                 ProgressView()
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding()
             } else if categoryPerformance.isEmpty {
@@ -550,7 +550,7 @@ struct HerdDynamicsView: View {
                             .foregroundStyle(Theme.secondaryText)
                         Image(systemName: "chevron.down.circle.fill")
                             .font(.system(size: 14))
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                     .contentShape(Rectangle())
                 }
@@ -784,7 +784,7 @@ struct QuickStatsView: View {
                     .foregroundStyle(Theme.secondaryText)
                 Text("\(herds.reduce(0) { $0 + $1.headCount })")
                     .font(Theme.title3) // HIG: title3 (20pt) for stat values
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
             }
         }
         .accessibilityElement(children: .combine)

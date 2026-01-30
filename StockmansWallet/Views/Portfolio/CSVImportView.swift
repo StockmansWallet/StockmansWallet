@@ -72,7 +72,7 @@ struct CSVImportView: View {
                             VStack(spacing: 16) {
                                 if importStatus == .importing {
                                     ProgressView()
-                                        .tint(Theme.accent)
+                                        .tint(Theme.accentColor)
                                     Text("Importing...")
                                         .font(Theme.body)
                                         .foregroundStyle(Theme.primaryText.opacity(0.7))
@@ -160,7 +160,7 @@ Bessie,Cattle,Hereford,Breeding Cow,Female,36,1,550,0.3,South Paddock
                         HapticManager.tap()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
             .fileImporter(

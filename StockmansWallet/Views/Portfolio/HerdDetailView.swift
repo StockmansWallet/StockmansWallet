@@ -65,7 +65,7 @@ struct HerdDetailView: View {
                             .padding(.horizontal)
                     } else if isLoading {
                         ProgressView()
-                            .tint(Theme.accent)
+                            .tint(Theme.accentColor)
                             .frame(maxWidth: .infinity)
                             .padding()
                     }
@@ -162,7 +162,7 @@ struct HerdDetailView: View {
                                 .foregroundStyle(.white)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 16)
-                                .background(Theme.accent)
+                                .background(Theme.accentColor)
                                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
                         .buttonStyle(.plain)
@@ -181,7 +181,7 @@ struct HerdDetailView: View {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink(destination: EditHerdView(herd: activeHerd)) {
                         Text("Edit")
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                     }
                 }
             }
@@ -350,7 +350,7 @@ struct HerdStatsCard: View {
             .padding(.vertical, 10)
             .background(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Theme.accent)
+                    .fill(Theme.accentColor)
             )
             .frame(maxWidth: .infinity, alignment: .center)
     }
@@ -419,7 +419,7 @@ struct WeightGrowthChart: View {
                     x: .value("Date", point.date),
                     y: .value("Weight", point.weight)
                 )
-                .foregroundStyle(Theme.accent)
+                .foregroundStyle(Theme.accentColor)
                 .lineStyle(StrokeStyle(lineWidth: 2))
                 
                 AreaMark(
@@ -428,7 +428,7 @@ struct WeightGrowthChart: View {
                 )
                 .foregroundStyle(
                     LinearGradient(
-                        colors: [Theme.accent.opacity(0.3), Theme.accent.opacity(0.05)],
+                        colors: [Theme.accentColor.opacity(0.3), Theme.accentColor.opacity(0.05)],
                         startPoint: .top,
                         endPoint: .bottom
                     )
@@ -750,7 +750,7 @@ struct AnimalListSheet: View {
                                         if allIndividualAnimals.isEmpty {
                                             Text("Go to Settings → Generate Mock Data to create individual animals")
                                                 .font(Theme.caption)
-                                                .foregroundStyle(Theme.accent)
+                                                .foregroundStyle(Theme.accentColor)
                                                 .multilineTextAlignment(.center)
                                                 .padding(.top, 8)
                                         }
@@ -784,7 +784,7 @@ struct AnimalListSheet: View {
                         HapticManager.tap()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
         }
@@ -809,12 +809,12 @@ struct IndividualAnimalRow: View {
                 // Tag icon
                 ZStack {
                     Circle()
-                        .fill(Theme.accent.opacity(0.2))
+                        .fill(Theme.accentColor.opacity(0.2))
                         .frame(width: 44, height: 44)
                     
                     Image(systemName: "tag.fill")
                         .font(.system(size: 16))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.accentColor)
                 }
                 
                 // Animal info
@@ -1025,12 +1025,12 @@ struct MusterRecordRow: View {
             // Debug: Calendar icon for muster date
             ZStack {
                 Circle()
-                    .fill(Theme.accent.opacity(0.2))
+                    .fill(Theme.accentColor.opacity(0.2))
                     .frame(width: 36, height: 36)
                 
                 Image(systemName: "calendar")
                     .font(.system(size: 14))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
             }
             
             VStack(alignment: .leading, spacing: 6) {
@@ -1161,12 +1161,12 @@ struct HealthRecordRow: View {
             // Debug: Treatment type icon
             ZStack {
                 Circle()
-                    .fill(Theme.accent.opacity(0.2))
+                    .fill(Theme.accentColor.opacity(0.2))
                     .frame(width: 36, height: 36)
                 
                 Image(systemName: record.treatmentIcon)
                     .font(.system(size: 14))
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
             }
             
             VStack(alignment: .leading, spacing: 6) {

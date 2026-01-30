@@ -81,7 +81,7 @@ struct SaleyardSelectionSheet: View {
                             
                             if selectedSaleyard == nil {
                                 Image(systemName: "checkmark")
-                                    .foregroundStyle(Theme.accent)
+                                    .foregroundStyle(Theme.accentColor)
                                     .font(.system(size: 16, weight: .semibold))
                             }
                         }
@@ -122,7 +122,7 @@ struct SaleyardSelectionSheet: View {
                                     
                                     if selectedSaleyard == location.name {
                                         Image(systemName: "checkmark")
-                                            .foregroundStyle(Theme.accent)
+                                            .foregroundStyle(Theme.accentColor)
                                             .font(.system(size: 16, weight: .semibold))
                                     }
                                 }
@@ -165,7 +165,7 @@ struct SaleyardSelectionSheet: View {
                                     
                                     if selectedSaleyard == location.name {
                                         Image(systemName: "checkmark")
-                                            .foregroundStyle(Theme.accent)
+                                            .foregroundStyle(Theme.accentColor)
                                             .font(.system(size: 16, weight: .semibold))
                                     }
                                 }
@@ -199,7 +199,7 @@ struct SaleyardSelectionSheet: View {
                                 
                                 if selectedSaleyard == saleyard {
                                     Image(systemName: "checkmark")
-                                        .foregroundStyle(Theme.accent)
+                                        .foregroundStyle(Theme.accentColor)
                                         .font(.system(size: 16, weight: .semibold))
                                 }
                             }
@@ -249,11 +249,11 @@ struct SaleyardSelectionSheet: View {
                         HapticManager.tap()
                         dismiss()
                     }
-                    .foregroundStyle(Theme.accent)
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.backgroundColor)
+            .background(Theme.background)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)

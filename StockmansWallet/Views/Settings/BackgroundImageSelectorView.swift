@@ -170,7 +170,7 @@ struct BackgroundImageSelectorView: View {
                     topTrailingRadius: Theme.sheetCornerRadius,
                     style: .continuous
                 )
-                .fill(Theme.backgroundColor)
+                .fill(Theme.background)
                 .frame(height: geo.size.height + 100) // Debug: Extend beyond container to eliminate gaps
                 .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
             }
@@ -209,14 +209,14 @@ struct BackgroundImageSelectorView: View {
             // Debug: No background - show almost black color with subtle accent glow
             ZStack {
                 // Debug: Almost black base layer for strong contrast
-                Theme.noBackgroundColor
+                Theme.secondaryBackground
                     .ignoresSafeArea()
                 
                 // Debug: Very subtle orange glow at top for minimal warmth (matching dashboard)
                 RadialGradient(
                     colors: [
-                        Theme.accent.opacity(0.08),  // Minimal orange glow at top
-                        Theme.accent.opacity(0.02),  // Fade to barely visible
+                        Theme.accentColor.opacity(0.08),  // Minimal orange glow at top
+                        Theme.accentColor.opacity(0.02),  // Fade to barely visible
                         Color.clear                   // Fade to transparent
                     ],
                     center: .top,
@@ -699,7 +699,7 @@ struct BackgroundThumbnail: View {
                     .overlay(
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: min(40, height * 0.14))) // Scale with height
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .background(
                                 Circle()
                                     .fill(.black.opacity(0.5))
@@ -768,7 +768,7 @@ struct CustomBackgroundThumbnail: View {
                         .overlay(
                             Image(systemName: "checkmark.circle.fill")
                                 .font(.system(size: min(40, height * 0.14))) // Scale with height
-                                .foregroundStyle(Theme.accent)
+                                .foregroundStyle(Theme.accentColor)
                                 .background(
                                     Circle()
                                         .fill(.black.opacity(0.5))

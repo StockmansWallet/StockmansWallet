@@ -119,7 +119,7 @@ struct PriceDetailSheet: View {
             
             if isLoadingHistory {
                 ProgressView()
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .frame(maxWidth: .infinity)
                     .frame(height: 240)
             } else if filteredHistoricalPrices.isEmpty {
@@ -133,7 +133,7 @@ struct PriceDetailSheet: View {
                                 x: .value("Date", point.date),
                                 y: .value("Price", point.price)
                             )
-                            .foregroundStyle(Theme.accent)
+                            .foregroundStyle(Theme.accentColor)
                             .interpolationMethod(.catmullRom)
                             .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
                             
@@ -145,8 +145,8 @@ struct PriceDetailSheet: View {
                             .foregroundStyle(
                                 LinearGradient(
                                     colors: [
-                                        Theme.accent.opacity(0.25),
-                                        Theme.accent.opacity(0.05)
+                                        Theme.accentColor.opacity(0.25),
+                                        Theme.accentColor.opacity(0.05)
                                     ],
                                     startPoint: .top,
                                     endPoint: .bottom
@@ -208,7 +208,7 @@ struct PriceDetailSheet: View {
             
             if isLoadingRegional {
                 ProgressView()
-                    .tint(Theme.accent)
+                    .tint(Theme.accentColor)
                     .frame(maxWidth: .infinity)
                     .frame(height: 120)
             } else if regionalPrices.isEmpty {
@@ -307,7 +307,7 @@ struct TimeRangeButton: View {
                 .foregroundStyle(isSelected ? .white : Theme.secondaryText)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 8)
-                .background(isSelected ? Theme.accent : Color.clear)
+                .background(isSelected ? Theme.accentColor : Color.clear)
                 .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
         }
         .buttonStyle(.plain)
