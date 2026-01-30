@@ -121,7 +121,8 @@ struct InteractiveChartView: View {
                     y: .value("Value", point.value)
                 )
                 .foregroundStyle(Theme.accentColor)
-                .interpolationMethod(.linear) // Debug: Linear interpolation keeps scrubber aligned with line
+                // Debug: Smooth line without overshoot to keep within chart bounds
+                .interpolationMethod(.monotone)
                 .lineStyle(StrokeStyle(lineWidth: 3.5, lineCap: .round, lineJoin: .round)) // Debug: Thicker line for visibility; round lineCap to prevent extension
             }
             
@@ -132,7 +133,8 @@ struct InteractiveChartView: View {
                     yEnd: .value("Value", point.value)
                 )
                 .foregroundStyle(chartAreaFill)
-                .interpolationMethod(.linear) // Debug: Match line interpolation for consistent fill
+                // Debug: Match line interpolation for consistent fill
+                .interpolationMethod(.monotone)
             }
         }
         .chartXAxis(.hidden)
@@ -378,7 +380,8 @@ struct InteractiveChartView: View {
                         }
                 }
             }
-            .frame(height: 160)
+            // Debug: Slightly taller chart for better readability
+            .frame(height: 180)
             // Debug: Clean minimal chart styling with card background
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)

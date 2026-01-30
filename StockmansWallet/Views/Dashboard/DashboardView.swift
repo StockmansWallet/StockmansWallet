@@ -381,8 +381,9 @@ struct DashboardView: View {
         .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
         .accessibilityHint("Drag your finger across the chart to explore values over time.")
         
-        // Debug: Only show time range selector when there's enough data to filter
-        if filteredHistory.count >= 2 {
+        // Debug: Keep time range selector visible when overall history exists
+        // This prevents the selector from disappearing when a custom range is empty
+        if valuationHistory.count >= 2 {
             TimeRangeSelector(
                 timeRange: $timeRange,
                 customStartDate: $customStartDate,
