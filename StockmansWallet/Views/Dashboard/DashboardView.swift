@@ -503,7 +503,7 @@ struct DashboardView: View {
     @ViewBuilder
     private var marketPulseCard: some View {
         MarketPulseView()
-            .padding(16)
+            // Debug: Remove extra wrapper padding; use internal dashboard card padding.
             .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)
@@ -513,7 +513,7 @@ struct DashboardView: View {
     @ViewBuilder
     private var herdDynamicsCard: some View {
         HerdDynamicsView(herds: herds.filter { !$0.isSold })
-            .padding(16)
+            // Debug: Remove extra wrapper padding; use internal dashboard card padding.
             .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)
@@ -523,7 +523,7 @@ struct DashboardView: View {
     @ViewBuilder
     private var capitalConcentrationCard: some View {
         CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
-            .padding(16)
+            // Debug: Remove extra wrapper padding; use internal dashboard card padding.
             .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)

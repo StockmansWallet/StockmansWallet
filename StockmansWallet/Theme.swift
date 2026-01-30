@@ -157,6 +157,9 @@ enum Theme {
     
     /// Internal padding for cards and containers.
     static let cardPadding: CGFloat = 20
+
+    /// Debug: Tighter padding for dashboard content cards (matches mockups).
+    static let dashboardCardPadding: CGFloat = 12
     
     /// Spacing between major sections.
     static let sectionSpacing: CGFloat = 24

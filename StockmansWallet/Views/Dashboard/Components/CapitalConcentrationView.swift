@@ -159,7 +159,8 @@ struct CapitalConcentrationView: View {
                 }
             }
         }
-        .padding(Theme.cardPadding)
+        // Debug: Reduce internal padding to match dashboard card mockups.
+        .padding(Theme.dashboardCardPadding)
         // Debug: No card background/stroke for cleaner dashboard look
         // .cardStyle()
         .sheet(isPresented: $showingCustomDatePicker) {
