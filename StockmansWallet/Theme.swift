@@ -70,6 +70,12 @@ enum Theme {
     
     /// Secondary background color for grouped content and cards.
     static let secondaryBackground = Background.secondary
+
+    /// Debug: Header background for dashboard cards.
+    static let dashboardHeaderBackground = Color(hex: "2A2117")
+
+    /// Debug: Icon background for dashboard card title bars.
+    static let dashboardIconBackground = Background.quaternary
     
     /// Tertiary background color for nested grouping.
     static let tertiaryBackground = Background.tertiary
@@ -160,6 +166,13 @@ enum Theme {
 
     /// Debug: Tighter padding for dashboard content cards (matches mockups).
     static let dashboardCardPadding: CGFloat = 12
+
+    // MARK: - Dashboard Accent Colors (Nature/Farm Tone)
+    /// Debug: Per-card accent colors for dashboard title bar icons.
+    static let dashboardPerformanceAccent = Color(hex: "D1843B") // Warm amber
+    static let dashboardMarketAccent = Color(hex: "7FA76A") // Pasture green
+    static let dashboardDynamicsAccent = Color(hex: "C36B5A") // Rustic clay
+    static let dashboardCompositionAccent = Color(hex: "6E8E9D") // Muted blue/teal
     
     /// Spacing between major sections.
     static let sectionSpacing: CGFloat = 24

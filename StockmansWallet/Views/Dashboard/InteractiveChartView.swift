@@ -405,7 +405,7 @@ struct InteractiveChartView: View {
                 customStartDate: customStartDate,
                 customEndDate: customEndDate
             )
-            .padding(.horizontal, Theme.cardPadding)
+            .padding(.horizontal, Theme.dashboardCardPadding) // Debug: Match dashboard card density
             .padding(.top, 10)
             .padding(.bottom, 4)
         }

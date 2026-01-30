@@ -10,6 +10,7 @@ import SwiftUI
 import SwiftData
 import Charts
 import Foundation
+import UniformTypeIdentifiers
 
 struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
@@ -53,6 +54,8 @@ struct DashboardView: View {
     @State private var showingAddAssetMenu = false
     @State private var showingCustomDatePicker = false
     @State private var backgroundImageTrigger = false // Debug: Trigger to force view refresh on background change
+    @State private var isReorderMode = false // Debug: Long-press to enable card reordering
+    @State private var draggedCardId: String? = nil // Debug: Track currently dragged card
     
     // Debug: Smart refresh tracking (Coinbase-style)
     // Only reload when necessary, not on every view appearance
@@ -390,16 +393,26 @@ struct DashboardView: View {
                 if userPrefs.isCardVisible(cardId) {
                     switch cardId {
                     case "performanceChart":
-                        performanceChartCard
+                        dashboardCardWrapper(cardId: cardId) {
+                            performanceChartCard
+                        }
                     case "quickActions":
-                        saleyardSelectorCard
+                        dashboardCardWrapper(cardId: cardId) {
+                            saleyardSelectorCard
+                        }
                     case "marketSummary":
-                        marketPulseCard
+                        dashboardCardWrapper(cardId: cardId) {
+                            marketPulseCard
+                        }
                     case "recentActivity":
-                        herdDynamicsCard
+                        dashboardCardWrapper(cardId: cardId) {
+                            herdDynamicsCard
+                        }
                     case "herdComposition":
                         if !capitalConcentration.isEmpty {
-                            capitalConcentrationCard
+                            dashboardCardWrapper(cardId: cardId) {
+                                capitalConcentrationCard
+                            }
                         }
                     default:
                         EmptyView()
@@ -430,6 +443,33 @@ struct DashboardView: View {
     private var performanceChartCard: some View {
         // Debug: Unified card background for chart + range selector
         VStack(spacing: 0) {
+            DashboardCardHeader(
+                title: "Portfolio Performance",
+                iconName: "chart.line.uptrend.xyaxis",
+                iconColor: Theme.dashboardPerformanceAccent,
+                timeRangeLabel: dashboardTimeRangeLabel,
+                showsDragHandle: true,
+                isReorderMode: isReorderMode
+            ) {
+                ForEach(TimeRange.allCases, id: \.self) { range in
+                    Button {
+                        HapticManager.tap()
+                        if range == .custom {
+                            showingCustomDatePicker = true
+                        } else {
+                            timeRange = range
+                        }
+                    } label: {
+                        HStack {
+                            Text(range.rawValue)
+                            if timeRange == range {
+                                Image(systemName: "checkmark")
+                            }
+                        }
+                    }
+                }
+            }
+            
             // Debug: Always show chart, even for new portfolios
             // Chart automatically handles showing growth from zero to current value
             InteractiveChartView(
@@ -460,7 +500,7 @@ struct DashboardView: View {
                     customEndDate: $customEndDate,
                     showingCustomDatePicker: $showingCustomDatePicker
                 )
-                .padding(.horizontal, Theme.cardPadding)
+                .padding(.horizontal, Theme.dashboardCardPadding)
                 .padding(.top, 6) // Debug: Keep selector below date labels
                 .padding(.bottom, 12) // Debug: Breathing room above rounded corners
                 .accessibilityElement(children: .contain)
@@ -502,8 +542,7 @@ struct DashboardView: View {
     
     @ViewBuilder
     private var marketPulseCard: some View {
-        MarketPulseView()
-            // Debug: Remove extra wrapper padding; use internal dashboard card padding.
+        MarketPulseView(showsDashboardHeader: true, isReorderMode: isReorderMode)
             .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)
@@ -512,8 +551,11 @@ struct DashboardView: View {
     
     @ViewBuilder
     private var herdDynamicsCard: some View {
-        HerdDynamicsView(herds: herds.filter { !$0.isSold })
-            // Debug: Remove extra wrapper padding; use internal dashboard card padding.
+        HerdDynamicsView(
+            showsDashboardHeader: true,
+            isReorderMode: isReorderMode,
+            herds: herds.filter { !$0.isSold }
+        )
             .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)
@@ -522,12 +564,81 @@ struct DashboardView: View {
     
     @ViewBuilder
     private var capitalConcentrationCard: some View {
-        CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
-            // Debug: Remove extra wrapper padding; use internal dashboard card padding.
+        CapitalConcentrationView(
+            showsDashboardHeader: true,
+            isReorderMode: isReorderMode,
+            breakdown: capitalConcentration,
+            totalValue: portfolioValue
+        )
             .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Herd composition")
+    }
+
+    // MARK: - Dashboard Card Reordering
+    @ViewBuilder
+    private func dashboardCardWrapper<Content: View>(
+        cardId: String,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        content()
+            .onTapGesture {
+                // Debug: Tap to exit reorder mode without dragging.
+                if isReorderMode {
+                    isReorderMode = false
+                }
+            }
+            .onDrag {
+                // Debug: Drag starts with long-press gesture (system default).
+                isReorderMode = true
+                draggedCardId = cardId
+                return NSItemProvider(object: cardId as NSString)
+            }
+            .onDrop(
+                of: [.text],
+                delegate: DashboardCardDropDelegate(
+                    itemId: cardId,
+                    draggedCardId: $draggedCardId,
+                    isReorderMode: $isReorderMode,
+                    onMove: moveDashboardCard
+                )
+            )
+    }
+
+    // Debug: Move cards within user preferences order.
+    private func moveDashboardCard(from sourceId: String, to destinationId: String) {
+        guard let prefs = preferences.first else { return }
+        var order = prefs.dashboardCardOrder
+        guard let fromIndex = order.firstIndex(of: sourceId),
+              let toIndex = order.firstIndex(of: destinationId),
+              fromIndex != toIndex else { return }
+        
+        order.move(
+            fromOffsets: IndexSet(integer: fromIndex),
+            toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex
+        )
+        
+        prefs.dashboardCardOrder = order
+    }
+
+    // Debug: Time range label for the dashboard title bar pill.
+    private var dashboardTimeRangeLabel: String {
+        switch timeRange {
+        case .custom:
+            guard let start = customStartDate, let end = customEndDate else { return "Custom" }
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        case .week:
+            return "7d"
+        case .month:
+            return "1m"
+        case .year:
+            return "1y"
+        case .all:
+            return "All"
+        }
     }
     
     private var filteredHistory: [ValuationDataPoint] {
@@ -1083,6 +1194,31 @@ struct DashboardView: View {
             print("📊 Full history loaded: \(history.count) data points")
             #endif
         }
+    }
+}
+
+// MARK: - Dashboard Card Drop Delegate
+private struct DashboardCardDropDelegate: DropDelegate {
+    let itemId: String
+    @Binding var draggedCardId: String?
+    @Binding var isReorderMode: Bool
+    let onMove: (String, String) -> Void
+    
+    func dropEntered(info: DropInfo) {
+        guard let draggedCardId,
+              draggedCardId != itemId else { return }
+        onMove(draggedCardId, itemId)
+    }
+    
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        DropProposal(operation: .move)
+    }
+    
+    func performDrop(info: DropInfo) -> Bool {
+        // Debug: Reset reorder mode and dragging state after drop completes.
+        draggedCardId = nil
+        isReorderMode = false
+        return true
     }
 }
 

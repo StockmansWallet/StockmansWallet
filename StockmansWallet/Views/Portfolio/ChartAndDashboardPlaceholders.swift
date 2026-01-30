@@ -156,6 +156,9 @@ struct TimeRangeSelector: View {
 // MARK: - Herd Performance View
 // Debug: Shows performance by herd category with percentage changes over selected time range
 struct MarketPulseView: View {
+    // Debug: Enable dashboard-style title bar when embedded in dashboard.
+    var showsDashboardHeader: Bool = false
+    var isReorderMode: Bool = false
     @Environment(\.modelContext) private var modelContext
     // Performance: Only query herds (headCount > 1), not individual animals
     @Query(filter: #Predicate<HerdGroup> { $0.headCount > 1 }) private var herds: [HerdGroup]
@@ -190,14 +193,16 @@ struct MarketPulseView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Herd Performance")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Spacer()
-                
-                // Debug: Time range selector menu
-                Menu {
+            if showsDashboardHeader {
+                // Debug: Dashboard-style header with icon, time range, and drag handle.
+                DashboardCardHeader(
+                    title: "Herd Performance",
+                    iconName: "chart.line.uptrend.xyaxis",
+                    iconColor: Theme.dashboardMarketAccent,
+                    timeRangeLabel: customDateRangeLabel,
+                    showsDragHandle: true,
+                    isReorderMode: isReorderMode
+                ) {
                     ForEach(PerformanceTimeRange.allCases, id: \.self) { range in
                         Button {
                             HapticManager.tap()
@@ -215,46 +220,79 @@ struct MarketPulseView: View {
                             }
                         }
                     }
-                } label: {
-                    HStack(spacing: 4) {
-                        // Debug: Show custom date range or standard label
-                        Text(customDateRangeLabel)
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        Image(systemName: "chevron.down.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(Theme.accentColor)
-                    }
-                    .contentShape(Rectangle())
                 }
-                .accessibilityLabel("Select performance time range")
-                .accessibilityValue(performanceTimeRange.rawValue)
+            } else {
+                HStack {
+                    Text("Herd Performance")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Spacer()
+                    
+                    // Debug: Time range selector menu
+                    Menu {
+                        ForEach(PerformanceTimeRange.allCases, id: \.self) { range in
+                            Button {
+                                HapticManager.tap()
+                                if range == .custom {
+                                    showingCustomDatePicker = true
+                                } else {
+                                    performanceTimeRange = range
+                                }
+                            } label: {
+                                HStack {
+                                    Text(range.rawValue)
+                                    if performanceTimeRange == range {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            // Debug: Show custom date range or standard label
+                            Text(customDateRangeLabel)
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            Image(systemName: "chevron.down.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Theme.accentColor)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("Select performance time range")
+                    .accessibilityValue(performanceTimeRange.rawValue)
+                }
             }
             
-            if isLoading {
-                ProgressView()
-                    .tint(Theme.accentColor)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
-            } else if categoryPerformance.isEmpty {
-                Text("No herd data available")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                    .padding(.vertical, 8)
-            } else {
-                VStack(alignment: .leading, spacing: 12) {
-                    ForEach(categoryPerformance) { performance in
-                        IndicatorRow(
-                            title: performance.category,
-                            value: "\(performance.percentChange >= 0 ? "+" : "")\(performance.percentChange.formatted(.number.precision(.fractionLength(2))))%",
-                            trend: performance.trend
-                        )
+            Group {
+                if isLoading {
+                    ProgressView()
+                        .tint(Theme.accentColor)
+                        .frame(maxWidth: .infinity, alignment: .center)
+                        .padding()
+                } else if categoryPerformance.isEmpty {
+                    Text("No herd data available")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                        .padding(.vertical, 8)
+                } else {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(categoryPerformance) { performance in
+                            IndicatorRow(
+                                title: performance.category,
+                                value: "\(performance.percentChange >= 0 ? "+" : "")\(performance.percentChange.formatted(.number.precision(.fractionLength(2))))%",
+                                trend: performance.trend
+                            )
+                        }
                     }
                 }
             }
+            // Debug: Keep header edge-to-edge, pad only the content area.
+            .padding(.horizontal, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
+            .padding(.bottom, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
         }
-        // Debug: Reduce internal padding to match dashboard card mockups.
-        .padding(Theme.dashboardCardPadding)
+        // Debug: Use standard padding for non-dashboard usage.
+        .padding(showsDashboardHeader ? 0 : Theme.cardPadding)
         // Debug: No card background/stroke for cleaner dashboard look
         // .cardStyle()
         .sheet(isPresented: $showingCustomDatePicker) {
@@ -482,6 +520,9 @@ struct IndicatorRow: View {
 // MARK: - Growth & Mortality View (Biological Adjustments)
 // Debug: Shows biological changes affecting herd value - weight gain, mortality, breeding
 struct HerdDynamicsView: View {
+    // Debug: Enable dashboard-style title bar when embedded in dashboard.
+    var showsDashboardHeader: Bool = false
+    var isReorderMode: Bool = false
     let herds: [HerdGroup]
     @State private var dynamicsTimeRange: DynamicsTimeRange = .week
     @State private var showingCustomDatePicker = false
@@ -525,14 +566,16 @@ struct HerdDynamicsView: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Growth & Mortality")
-                    .font(Theme.headline)
-                    .foregroundStyle(Theme.primaryText)
-                Spacer()
-                
-                // Debug: Time range selector menu
-                Menu {
+            if showsDashboardHeader {
+                // Debug: Dashboard-style header with icon, time range, and drag handle.
+                DashboardCardHeader(
+                    title: "Growth & Mortality",
+                    iconName: "heart.fill",
+                    iconColor: Theme.dashboardDynamicsAccent,
+                    timeRangeLabel: customDateRangeLabel,
+                    showsDragHandle: true,
+                    isReorderMode: isReorderMode
+                ) {
                     ForEach(DynamicsTimeRange.allCases, id: \.self) { range in
                         Button {
                             HapticManager.tap()
@@ -550,20 +593,48 @@ struct HerdDynamicsView: View {
                             }
                         }
                     }
-                } label: {
-                    HStack(spacing: 4) {
-                        // Debug: Show custom date range or standard label
-                        Text(customDateRangeLabel)
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        Image(systemName: "chevron.down.circle.fill")
-                            .font(.system(size: 14))
-                            .foregroundStyle(Theme.accentColor)
-                    }
-                    .contentShape(Rectangle())
                 }
-                .accessibilityLabel("Select dynamics time range")
-                .accessibilityValue(dynamicsTimeRange.rawValue)
+            } else {
+                HStack {
+                    Text("Growth & Mortality")
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
+                    Spacer()
+                    
+                    // Debug: Time range selector menu
+                    Menu {
+                        ForEach(DynamicsTimeRange.allCases, id: \.self) { range in
+                            Button {
+                                HapticManager.tap()
+                                if range == .custom {
+                                    showingCustomDatePicker = true
+                                } else {
+                                    dynamicsTimeRange = range
+                                }
+                            } label: {
+                                HStack {
+                                    Text(range.rawValue)
+                                    if dynamicsTimeRange == range {
+                                        Image(systemName: "checkmark")
+                                    }
+                                }
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 4) {
+                            // Debug: Show custom date range or standard label
+                            Text(customDateRangeLabel)
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            Image(systemName: "chevron.down.circle.fill")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Theme.accentColor)
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .accessibilityLabel("Select dynamics time range")
+                    .accessibilityValue(dynamicsTimeRange.rawValue)
+                }
             }
             
             VStack(alignment: .leading, spacing: 12) {
@@ -571,7 +642,7 @@ struct HerdDynamicsView: View {
                 if let weightGainMetrics = calculateWeightGainMetrics() {
                     BiologicalMetricRow(
                         title: "Weight Gain",
-                        subtitle: "\(weightGainMetrics.totalKgGained.formatted(.number.precision(.fractionLength(0)))) kg gained (\(dynamicsTimeRange.displayLabel))",
+                        middleValue: "\(weightGainMetrics.totalKgGained.formatted(.number.precision(.fractionLength(0))))kg",
                         value: weightGainMetrics.valueImpact,
                         trend: .up
                     )
@@ -581,7 +652,7 @@ struct HerdDynamicsView: View {
                 if let breedingMetrics = calculateBreedingMetrics() {
                     BiologicalMetricRow(
                         title: "Calf Accrual",
-                        subtitle: "\(breedingMetrics.expectedProgeny) expected progeny",
+                        middleValue: "\(breedingMetrics.expectedProgeny)",
                         value: breedingMetrics.valueImpact,
                         trend: .up
                     )
@@ -590,14 +661,14 @@ struct HerdDynamicsView: View {
                 // Mortality Impact - always show, even if zero
                 let mortalityMetrics = calculateMortalityMetrics()
                 BiologicalMetricRow(
-                    title: "Mortality Loss",
-                    subtitle: "\(mortalityMetrics.projectedLosses.formatted(.number.precision(.fractionLength(1)))) head projected (\(dynamicsTimeRange.displayLabel))",
+                    title: "Mortality",
+                    middleValue: "\(mortalityMetrics.projectedLosses.formatted(.number.precision(.fractionLength(1))))",
                     value: -mortalityMetrics.valueImpact,
                     trend: mortalityMetrics.projectedLosses > 0 ? .down : .neutral
                 )
                 
                 // Show message if no biological data is available
-                if calculateWeightGainMetrics() == nil && 
+                if calculateWeightGainMetrics() == nil &&
                    calculateBreedingMetrics() == nil {
                     Text("No growth or breeding data tracked")
                         .font(Theme.caption)
@@ -605,9 +676,12 @@ struct HerdDynamicsView: View {
                         .padding(.vertical, 4)
                 }
             }
+            // Debug: Keep header edge-to-edge, pad only the content area.
+            .padding(.horizontal, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
+            .padding(.bottom, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
         }
-        // Debug: Reduce internal padding to match dashboard card mockups.
-        .padding(Theme.dashboardCardPadding)
+        // Debug: Use standard padding for non-dashboard usage.
+        .padding(showsDashboardHeader ? 0 : Theme.cardPadding)
         // Debug: No card background/stroke for cleaner dashboard look
         // .cardStyle()
         .sheet(isPresented: $showingCustomDatePicker) {
@@ -736,22 +810,23 @@ struct HerdDynamicsView: View {
 // Debug: Reusable row component for biological metrics display
 struct BiologicalMetricRow: View {
     let title: String
-    let subtitle: String
+    let middleValue: String
     let value: Double
     let trend: PriceTrend
     
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.primaryText)
-                Text(subtitle)
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-            }
+        HStack(spacing: 12) {
+            Text(title)
+                .font(Theme.body)
+                .foregroundStyle(Theme.primaryText)
             
-            Spacer()
+            Spacer(minLength: 8)
+            
+            Text(middleValue)
+                .font(Theme.body)
+                .foregroundStyle(Theme.secondaryText)
+                .frame(minWidth: 60, alignment: .trailing)
+                .monospacedDigit()
             
             HStack(spacing: 6) {
                 Text(value.formatted(.currency(code: "AUD").precision(.fractionLength(0))))
