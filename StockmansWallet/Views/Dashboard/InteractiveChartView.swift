@@ -390,7 +390,7 @@ struct InteractiveChartView: View {
             }
             // Debug: Slightly taller chart for better readability
             .frame(height: 180)
-            // Debug: Clean minimal chart styling with card background
+            // Debug: Match card background with other dashboard cards
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
                     .fill(Theme.cardBackground)

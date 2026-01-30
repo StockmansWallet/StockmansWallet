@@ -270,7 +270,7 @@ struct DashboardView: View {
                         ],
                         center: .top,
                         startRadius: 0,
-                        endRadius: 500
+                        endRadius: 200
                     )
                     .ignoresSafeArea()
                 }
@@ -353,8 +353,8 @@ struct DashboardView: View {
                 topTrailingRadius: Theme.sheetCornerRadius,
                 style: .continuous
             )
-            .fill(Theme.tertiaryBackground)
-            .shadow(color: .black.opacity(0.8), radius: 20, y: -8)
+            .fill(Theme.background)
+
         )
     }
     
