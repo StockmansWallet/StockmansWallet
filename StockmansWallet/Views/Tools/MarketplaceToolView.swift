@@ -159,7 +159,8 @@ struct MarketplaceToolView: View {
                     }
                     .padding(12)
                     .background(Theme.inputFieldBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                    // Debug: iOS 26 HIG - continuous curve for input field shape.
+                    .clipShape(Theme.continuousRoundedRect(12))
                     
                     // Filter chips
                     ScrollView(.horizontal, showsIndicators: false) {

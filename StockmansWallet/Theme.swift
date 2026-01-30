@@ -160,6 +160,11 @@ enum Theme {
     
     /// Corner radius for sheets and modal presentations.
     static let sheetCornerRadius: CGFloat = 32
+
+    /// Debug: iOS 26 HIG - Use continuous corner curve for nested shapes.
+    static func continuousRoundedRect(_ radius: CGFloat) -> RoundedRectangle {
+        RoundedRectangle(cornerRadius: radius, style: .continuous)
+    }
     
     /// Internal padding for cards and containers.
     static let cardPadding: CGFloat = 20

@@ -413,7 +413,8 @@ struct PrimaryPropertyPage: View {
                                 .padding(.horizontal, 6)
                                 .padding(.vertical, 2)
                                 .background(Theme.accentColor)
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                                // Debug: iOS 26 HIG - continuous curve for badge.
+                                .clipShape(Theme.continuousRoundedRect(4))
                         }
                         Text(state)
                             .font(Theme.caption)

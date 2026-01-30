@@ -135,7 +135,8 @@ struct EditHerdView: View {
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                // Debug: iOS 26 HIG - continuous curve for form fields.
+                                .clipShape(Theme.continuousRoundedRect(8))
                                 
                                 // Row 1: Species | Breed
                                 HStack(spacing: 12) {
@@ -172,7 +173,7 @@ struct EditHerdView: View {
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity)
                                         .background(Theme.cardBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                     
                                     // Breed picker
@@ -203,7 +204,7 @@ struct EditHerdView: View {
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity)
                                         .background(Theme.cardBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                 }
                                 
@@ -237,7 +238,7 @@ struct EditHerdView: View {
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity)
                                         .background(Theme.cardBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                     
                                     // Sex picker
@@ -273,7 +274,7 @@ struct EditHerdView: View {
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity)
                                         .background(Theme.cardBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                 }
                             }
@@ -310,7 +311,7 @@ struct EditHerdView: View {
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Theme.continuousRoundedRect(8))
                                 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Age (months)")
@@ -327,7 +328,7 @@ struct EditHerdView: View {
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Theme.continuousRoundedRect(8))
                             }
                             
                             // Row 2: Initial Weight | Daily Weight Gain (matches mockup)
@@ -347,7 +348,7 @@ struct EditHerdView: View {
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Theme.continuousRoundedRect(8))
                                 
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Daily Weight Gain (kg/day)")
@@ -367,7 +368,7 @@ struct EditHerdView: View {
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Theme.continuousRoundedRect(8))
                             }
                             
                             // Debug: Weight gain calculation method toggle
@@ -389,7 +390,7 @@ struct EditHerdView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                             
                             // Breeding Stock toggle
                             Toggle(isOn: $isBreeder) {
@@ -401,7 +402,7 @@ struct EditHerdView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                             
                             // Show breeding-related fields only when Breeding Stock is enabled
                             if isBreeder {
@@ -415,7 +416,7 @@ struct EditHerdView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Theme.continuousRoundedRect(8))
                                 
                                 // Show pregnancy-related fields only when Currently Pregnant is enabled
                                 if isPregnant {
@@ -444,7 +445,7 @@ struct EditHerdView: View {
                                             .padding(.vertical, 10)
                                             .frame(maxWidth: .infinity)
                                             .background(Theme.cardBackground)
-                                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                                            .clipShape(Theme.continuousRoundedRect(8))
                                         }
                                         .buttonStyle(.plain)
                                         
@@ -463,7 +464,7 @@ struct EditHerdView: View {
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                         .background(Theme.cardBackground)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                 }
                             }
@@ -493,7 +494,7 @@ struct EditHerdView: View {
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                             
                             // Debug: Location Notes field
                             VStack(alignment: .leading, spacing: 8) {
@@ -509,7 +510,7 @@ struct EditHerdView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                         }
                         .padding(Theme.cardPadding)
                         .cardStyle()
@@ -547,7 +548,7 @@ struct EditHerdView: View {
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Theme.continuousRoundedRect(8))
                             }
                             .buttonStyle(.plain)
                         }
@@ -1077,7 +1078,7 @@ struct AddMusterRecordSheet: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .frame(height: 50)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Theme.continuousRoundedRect(8))
                             }
                             .buttonStyle(.plain)
                             
@@ -1101,7 +1102,7 @@ struct AddMusterRecordSheet: View {
                             }
                             .frame(height: 50)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                         }
                         
                         // Row 2: Weaners | Branders
@@ -1126,7 +1127,7 @@ struct AddMusterRecordSheet: View {
                             }
                             .frame(height: 50)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                             
                             ZStack {
                                 VStack(alignment: .leading, spacing: 2) {
@@ -1148,7 +1149,7 @@ struct AddMusterRecordSheet: View {
                             }
                             .frame(height: 50)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                         }
                         
                         // Cattle Yard (full width)
@@ -1168,7 +1169,7 @@ struct AddMusterRecordSheet: View {
                         }
                         .frame(height: 50)
                         .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(Theme.continuousRoundedRect(8))
                         
                         // Notes (full width)
                         VStack(alignment: .leading, spacing: 8) {
@@ -1184,7 +1185,7 @@ struct AddMusterRecordSheet: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
                         .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(Theme.continuousRoundedRect(8))
                     }
                     .padding()
                     .padding(.bottom, 40)
@@ -1255,7 +1256,7 @@ struct AddHealthRecordSheet: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .frame(height: 50)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Theme.continuousRoundedRect(8))
                             }
                             .buttonStyle(.plain)
                             
@@ -1298,7 +1299,7 @@ struct AddHealthRecordSheet: View {
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 50)
                                 .background(Theme.cardBackground)
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .clipShape(Theme.continuousRoundedRect(8))
                             }
                             .buttonStyle(.plain)
                         }
@@ -1317,7 +1318,7 @@ struct AddHealthRecordSheet: View {
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
                         .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                        .clipShape(Theme.continuousRoundedRect(8))
                     }
                     .padding()
                     .padding(.bottom, 40)
@@ -1398,7 +1399,7 @@ struct DatePickerSheet: View {
                         .datePickerStyle(.graphical)
                         .padding()
                         .background(Theme.cardBackground)
-                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                        .clipShape(Theme.continuousRoundedRect(16))
                         .padding()
                     
                     Spacer()

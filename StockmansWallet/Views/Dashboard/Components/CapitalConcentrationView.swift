@@ -135,7 +135,8 @@ struct CapitalConcentrationView: View {
                                 angularInset: 2.0 // Small gap between segments
                             )
                             .foregroundStyle(chartColors[index % chartColors.count])
-                            .cornerRadius(4)
+                            // Debug: iOS 26 HIG - continuous curve for chart segment corners.
+                            .clipShape(Theme.continuousRoundedRect(4))
                             .accessibilityLabel("\(item.category)")
                             .accessibilityValue("\(item.percentage.formatted(.number.precision(.fractionLength(1)))) percent")
                         }
@@ -151,7 +152,7 @@ struct CapitalConcentrationView: View {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack(spacing: 8) {
                                 // Debug: Color indicator matching pie chart
-                                RoundedRectangle(cornerRadius: 3)
+                                Theme.continuousRoundedRect(3)
                                     .fill(chartColors[index % chartColors.count])
                                     .frame(width: 12, height: 12)
                                     .accessibilityHidden(true)
@@ -169,11 +170,11 @@ struct CapitalConcentrationView: View {
                             
                             GeometryReader { geometry in
                                 ZStack(alignment: .leading) {
-                                    RoundedRectangle(cornerRadius: 4)
+                                    Theme.continuousRoundedRect(4)
                                         .fill(Theme.primaryText.opacity(0.1))
                                         .frame(height: 8)
                                     
-                                    RoundedRectangle(cornerRadius: 4)
+                                    Theme.continuousRoundedRect(4)
                                         .fill(chartColors[index % chartColors.count])
                                         .frame(width: geometry.size.width * CGFloat(item.percentage / 100), height: 8)
                                         .accessibilityLabel("\(item.category) percentage")

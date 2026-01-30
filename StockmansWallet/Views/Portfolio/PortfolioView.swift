@@ -947,11 +947,12 @@ struct CategoryRow: View {
             
             GeometryReader { geometry in
                 ZStack(alignment: .leading) {
-                    RoundedRectangle(cornerRadius: 4)
+                    // Debug: iOS 26 HIG - continuous curve for thin progress bars.
+                    Theme.continuousRoundedRect(4)
                         .fill(Theme.primaryText.opacity(0.1))
                         .frame(height: 4)
                     
-                    RoundedRectangle(cornerRadius: 4)
+                    Theme.continuousRoundedRect(4)
                         .fill(Theme.accentColor.opacity(0.6))
                         .frame(width: geometry.size.width * CGFloat(percentage / 100), height: 4)
                 }

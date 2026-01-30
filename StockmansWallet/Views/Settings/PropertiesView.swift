@@ -287,7 +287,8 @@ struct PropertyCard: View {
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 2)
                                         .background(Theme.accentColor.opacity(0.1))
-                                        .clipShape(RoundedRectangle(cornerRadius: 4))
+                                        // Debug: iOS 26 HIG - continuous curve for badges.
+                                        .clipShape(Theme.continuousRoundedRect(4))
                                 }
                             }
                             

@@ -54,7 +54,8 @@ struct PhysicalSalesTableView: View {
                 }
             }
             .background(Theme.cardBackground)
-            .cornerRadius(12)
+            // Debug: iOS 26 HIG - continuous curve for card nesting.
+            .clipShape(Theme.continuousRoundedRect(12))
         }
         .padding(.horizontal)
         .onDisappear {
@@ -168,7 +169,7 @@ struct PhysicalSalesTableView: View {
             }
         }
         .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .clipShape(Theme.continuousRoundedRect(12))
     }
     
     // MARK: - Empty State

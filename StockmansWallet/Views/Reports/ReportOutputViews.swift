@@ -143,7 +143,8 @@ struct ReportPreviewView: View {
                 }
                 .padding()
                 .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                // Debug: iOS 26 HIG - continuous curve for report cards.
+                .clipShape(Theme.continuousRoundedRect(12))
             }
         }
     }
@@ -214,7 +215,7 @@ struct ReportPreviewView: View {
                 }
                 .padding()
                 .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(Theme.continuousRoundedRect(12))
             }
         }
     }
@@ -243,7 +244,7 @@ struct ReportPreviewView: View {
                 }
                 .padding()
                 .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(Theme.continuousRoundedRect(12))
             }
         }
     }
@@ -274,7 +275,7 @@ struct ReportPreviewView: View {
                 }
                 .padding()
                 .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(Theme.continuousRoundedRect(12))
             }
         }
     }
@@ -304,7 +305,7 @@ struct ReportPreviewView: View {
                 }
                 .padding()
                 .background(Theme.cardBackground)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
+                .clipShape(Theme.continuousRoundedRect(12))
             }
         }
     }
@@ -475,7 +476,7 @@ struct ReportPrintView: View {
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(Theme.accentColor)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .clipShape(Theme.continuousRoundedRect(12))
                         }
                         .padding(.horizontal, 40)
                     }

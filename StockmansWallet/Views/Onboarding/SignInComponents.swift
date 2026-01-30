@@ -53,12 +53,15 @@ struct AppleSignInButtonRepresentable: UIViewRepresentable {
     func makeUIView(context: Context) -> ASAuthorizationAppleIDButton {
         let button = ASAuthorizationAppleIDButton(type: type, style: style)
         button.cornerRadius = cornerRadius
+        // Debug: iOS 26 HIG - continuous corner curve for native Apple button.
+        button.layer.cornerCurve = .continuous
         button.addTarget(context.coordinator, action: #selector(Coordinator.didTap), for: .touchUpInside)
         return button
     }
     
     func updateUIView(_ uiView: ASAuthorizationAppleIDButton, context: Context) {
         uiView.cornerRadius = cornerRadius
+        uiView.layer.cornerCurve = .continuous
     }
     
     func makeCoordinator() -> Coordinator {
@@ -127,6 +130,8 @@ struct GoogleSignInButtonStyledRepresentable: UIViewRepresentable {
         // Visuals to match Apple's white style in dark mode
         button.backgroundColor = .white
         button.layer.cornerRadius = cornerRadius
+        // Debug: iOS 26 HIG - continuous corner curve for UIKit buttons.
+        button.layer.cornerCurve = .continuous
         button.layer.masksToBounds = true
         button.layer.borderWidth = 1
         button.layer.borderColor = UIColor(white: 0, alpha: 0.06).cgColor // subtle separator like Apple's
@@ -189,6 +194,7 @@ struct GoogleSignInButtonStyledRepresentable: UIViewRepresentable {
     
     func updateUIView(_ uiView: UIButton, context: Context) {
         uiView.layer.cornerRadius = cornerRadius
+        uiView.layer.cornerCurve = .continuous
     }
     
     func makeCoordinator() -> Coordinator {
@@ -217,6 +223,8 @@ struct GoogleSignInButtonStyledRepresentable: UIViewRepresentable {
             label.font = UIFont.systemFont(ofSize: size * 0.65, weight: .bold)
             label.backgroundColor = .white
             label.layer.cornerRadius = size / 2
+            // Debug: iOS 26 HIG - continuous curve for circular fallback icon.
+            label.layer.cornerCurve = .continuous
             label.layer.masksToBounds = true
             label.layer.borderColor = UIColor.black.withAlphaComponent(0.1).cgColor
             label.layer.borderWidth = 0.5

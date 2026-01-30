@@ -336,7 +336,8 @@ struct MarketView: View {
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            // Debug: iOS 26 HIG - continuous curve for filter controls.
+                            .clipShape(Theme.continuousRoundedRect(8))
                         }
                         
                         // State Filter (Optional)
@@ -377,7 +378,7 @@ struct MarketView: View {
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                         }
                     }
                     
@@ -417,7 +418,7 @@ struct MarketView: View {
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                         }
                         
                         // Sale Prefix Filter
@@ -454,7 +455,7 @@ struct MarketView: View {
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity)
                             .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                            .clipShape(Theme.continuousRoundedRect(8))
                         }
                     }
                     
@@ -1041,7 +1042,7 @@ struct PhysicalSaleyardSelector: View {
             .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
             .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .clipShape(Theme.continuousRoundedRect(8))
         }
         .buttonStyle(.plain)
         .sheet(isPresented: $showingSaleyardSheet) {
