@@ -78,13 +78,9 @@ struct InteractiveChartView: View {
     }
     
     
-    // Performance: Single gradient definition - no dynamic changes during scrubbing
-    private var fullOpacityGradient: LinearGradient {
-        LinearGradient(
-            colors: [Theme.accentColor.opacity(0.3), Theme.accentColor.opacity(0.0)],
-            startPoint: .top,
-            endPoint: .bottom
-        )
+    // Chart area fill - solid color per design spec
+    private var chartAreaFill: Color {
+        Color(hex: "4F2F12")
     }
     
     private func edgeExtendedData(for data: [ValuationDataPoint], in range: TimeRange) -> [ValuationDataPoint] {
@@ -122,7 +118,7 @@ struct InteractiveChartView: View {
                     yStart: .value("Value", yRange.lowerBound),
                     yEnd: .value("Value", point.value)
                 )
-                .foregroundStyle(fullOpacityGradient)
+                .foregroundStyle(chartAreaFill)
                 .interpolationMethod(.monotone)
             }
         }
@@ -357,22 +353,12 @@ struct InteractiveChartView: View {
                 }
             }
             .frame(height: 200)
-            // Debug: Clean minimal chart styling with subtle stroke matching other cards
+            // Debug: Clean minimal chart styling with card background
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .fill(Color.white.opacity(0.01))
+                    .fill(Theme.cardBackground)
             )
-            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)) // Debug: Clip to rounded corners to prevent overflow
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .strokeBorder(
-                        Color.white.opacity(0.1),
-                        style: StrokeStyle(
-                            lineWidth: 1,
-                            lineCap: .round
-                        )
-                    )
-            )
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
             .accessibilityLabel("Portfolio value chart")
             
             ChartDateLabelsView(

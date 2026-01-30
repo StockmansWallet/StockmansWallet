@@ -309,7 +309,7 @@ struct DashboardView: View {
     private var contentPanel: some View {
         let userPrefs = preferences.first ?? UserPreferences()
         
-        VStack(spacing: Theme.sectionSpacing) {
+        VStack(spacing: 20) { // Apple HIG: 20pt spacing between sections
             // Debug: Display cards in user's custom order from preferences
             ForEach(userPrefs.dashboardCardOrder, id: \.self) { cardId in
                 // Debug: Render each card type inline to maintain access to @State bindings
@@ -333,41 +333,17 @@ struct DashboardView: View {
                 }
             }
         }
-        .padding(.top, Theme.cardPadding) // Debug: Even top padding matching horizontal padding (20pt)
+        .padding(.top, 20) // Apple HIG: Consistent 20pt padding
         .padding(.bottom, 100)
         .background(
             // Debug: iOS 26 HIG - Panel background using native UnevenRoundedRectangle
             // Uses sheetCornerRadius (32pt) for large panel surfaces, matching iOS sheet standards
-            // Dark panel with gradient and drop shadow for depth and hierarchy
-            ZStack {
-                // Base background layer
-                UnevenRoundedRectangle(
-                    topLeadingRadius: Theme.sheetCornerRadius,
-                    topTrailingRadius: Theme.sheetCornerRadius,
-                    style: .continuous
-                )
-                .fill(Theme.background)
-                .ignoresSafeArea()
-                
-                // Gradient overlay for visual interest
-                UnevenRoundedRectangle(
-                    topLeadingRadius: Theme.sheetCornerRadius,
-                    topTrailingRadius: Theme.sheetCornerRadius,
-                    style: .continuous
-                )
-                .fill(
-                    RadialGradient(
-                        colors: [
-                            Color(hex: "7C5134").opacity(0.15),  // Brown accent from top
-                            Color(hex: "1E1815").opacity(0)      // Fade to transparent
-                        ],
-                        center: .top,
-                        startRadius: 0,
-                        endRadius: 500
-                    )
-                )
-                .ignoresSafeArea()
-            }
+            UnevenRoundedRectangle(
+                topLeadingRadius: Theme.sheetCornerRadius,
+                topTrailingRadius: Theme.sheetCornerRadius,
+                style: .continuous
+            )
+            .fill(Theme.tertiaryBackground)
             .shadow(color: .black.opacity(0.8), radius: 30, y: -8)
         )
     }
@@ -404,7 +380,7 @@ struct DashboardView: View {
                 showingCustomDatePicker: $showingCustomDatePicker
             )
                 .padding(.horizontal, Theme.cardPadding)
-                .padding(.top, -Theme.sectionSpacing)
+                .padding(.top, -20) // Apple HIG: Align with section spacing
                 .accessibilityElement(children: .contain)
                 .accessibilityLabel("Time range selector")
         }
@@ -412,32 +388,33 @@ struct DashboardView: View {
     
     @ViewBuilder
     private var saleyardSelectorCard: some View {
-        // Debug: Saleyard selector - updates valuations based on selected saleyard prices
-        VStack(spacing: 12) {
+        // Debug: Saleyard selector without card wrapper - Apple HIG pattern
+        VStack(spacing: 16) {
             SaleyardSelector(selectedSaleyard: $selectedSaleyard)
+                .padding(.horizontal, Theme.cardPadding)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel("Saleyard selector")
             
-            // Debug: Info note about pricing data sources and future enhancements - reduced opacity for less prominence
+            // Debug: Info note - Apple HIG pattern for supplementary info
             HStack(alignment: .top, spacing: 8) {
                 Image(systemName: "info.circle.fill")
                     .font(.system(size: 12))
-                    .foregroundStyle(Theme.secondaryText)
-                    .opacity(0.5)
+                    .foregroundStyle(Theme.secondaryText.opacity(0.5))
                 Text("Market prices are based on available saleyard benchmark data. Additional sale channels will be progressively integrated to improve pricing accuracy.")
                     .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
-                    .opacity(0.5)
+                    .foregroundStyle(Theme.secondaryText.opacity(0.5))
                     .fixedSize(horizontal: false, vertical: true)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, Theme.cardPadding)
         }
-        .padding(.horizontal, Theme.cardPadding)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel("Saleyard selector")
     }
     
     @ViewBuilder
     private var marketPulseCard: some View {
         MarketPulseView()
+            .padding(16)
+            .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Herd performance")
@@ -446,6 +423,8 @@ struct DashboardView: View {
     @ViewBuilder
     private var herdDynamicsCard: some View {
         HerdDynamicsView(herds: herds.filter { !$0.isSold })
+            .padding(16)
+            .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Growth and mortality")
@@ -454,6 +433,8 @@ struct DashboardView: View {
     @ViewBuilder
     private var capitalConcentrationCard: some View {
         CapitalConcentrationView(breakdown: capitalConcentration, totalValue: portfolioValue)
+            .padding(16)
+            .cardStyle()
             .padding(.horizontal, Theme.cardPadding)
             .accessibilityElement(children: .contain)
             .accessibilityLabel("Herd composition")

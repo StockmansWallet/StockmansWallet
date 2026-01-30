@@ -37,7 +37,7 @@ enum Theme {
     /// Background colors - Used for surfaces and containers
     enum Background {
         static let primary = Color(hex: "211A12")
-        static let secondary = Color(hex: "271F18")
+        static let secondary = Color(hex: "271F16")
         static let tertiary = Color(hex: "2D241A")
         static let quaternary = Color(hex: "3A2F23")
     }
@@ -86,8 +86,8 @@ enum Theme {
     /// Quaternary text color for disabled states.
     static let quaternaryText = Label.quaternary
     
-    /// Card background with subtle transparency.
-    static let cardBackground = Label.primary.opacity(0.12)
+    /// Card background - solid color for better visibility (Apple HIG).
+    static let cardBackground = Background.secondary
     
     /// Input field background.
     static let inputFieldBackground = Label.primary.opacity(0.15)
@@ -107,16 +107,16 @@ enum Theme {
     // MARK: - Status Colors
     
     /// Positive change indicator color.
-    static let positiveChange = success
+    static let positiveChange = successLight
     
     /// Positive change background color.
-    static let positiveChangeBackground = Color(hex: "2F3526")
+    static let positiveChangeBackground = success
     
     /// Negative change indicator color.
-    static let negativeChange = destructive
+    static let negativeChange = destructiveLight
     
     /// Negative change background color.
-    static let negativeChangeBackground = Color(hex: "3D2828")
+    static let negativeChangeBackground = destructive
     
     // MARK: - Typography (Apple HIG Dynamic Type)
     
@@ -301,16 +301,12 @@ extension Theme {
 
 // MARK: - View Modifiers (Apple HIG Patterns)
 
-/// Modifier for card-style containers with background and border.
+/// Modifier for card-style containers with background (no border per Apple HIG).
 struct CardStyleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .strokeBorder(Theme.separator, lineWidth: 1)
-            )
     }
 }
 

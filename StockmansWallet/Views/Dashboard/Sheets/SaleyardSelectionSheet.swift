@@ -253,10 +253,11 @@ struct SaleyardSelectionSheet: View {
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.background)
+            .background(Theme.tertiaryBackground)
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
+        .presentationBackground(Theme.tertiaryBackground)
     }
 }
 

@@ -37,37 +37,15 @@ struct ParallaxImageView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                ParallaxImageRepresentable(
-                    imageName: imageName,
-                    intensity: intensity,
-                    size: geometry.size,
-                    scale: scale,
-                    verticalOffset: verticalOffset
-                )
-                .blur(radius: blur) // Apply blur effect
-                .opacity(opacity)
-                
-                // Debug: Bottom fade gradient to blend image edge seamlessly into background
-                // Fixed 300pt gradient provides consistent, smooth transition
-                VStack(spacing: 0) {
-                    Spacer()
-                    
-                    LinearGradient(
-                        colors: [
-                            Color.clear,                          // Transparent at top
-                            Theme.background.opacity(0.2),   // Gentle start
-                            Theme.background.opacity(0.5),   // Mid fade
-                            Theme.background.opacity(0.8),   // Strong fade
-                            Theme.background                 // Solid at bottom
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 300)  // Fixed 300pt gradient fade zone
-                    .allowsHitTesting(false)  // Don't intercept touches
-                }
-            }
+            ParallaxImageRepresentable(
+                imageName: imageName,
+                intensity: intensity,
+                size: geometry.size,
+                scale: scale,
+                verticalOffset: verticalOffset
+            )
+            .blur(radius: blur) // Apply blur effect
+            .opacity(opacity)
         }
         .ignoresSafeArea(edges: .top)
     }
@@ -206,37 +184,15 @@ struct CustomParallaxImageView: View {
     
     var body: some View {
         GeometryReader { geometry in
-            ZStack {
-                CustomParallaxImageRepresentable(
-                    imageName: imageName,
-                    intensity: intensity,
-                    size: geometry.size,
-                    scale: scale,
-                    verticalOffset: verticalOffset
-                )
-                .blur(radius: blur)
-                .opacity(opacity)
-                
-                // Debug: Bottom fade gradient to blend image edge seamlessly into background
-                // Fixed 300pt gradient provides consistent, smooth transition
-                VStack(spacing: 0) {
-                    Spacer()
-                    
-                    LinearGradient(
-                        colors: [
-                            Color.clear,                          // Transparent at top
-                            Theme.background.opacity(0.2),   // Gentle start
-                            Theme.background.opacity(0.5),   // Mid fade
-                            Theme.background.opacity(0.8),   // Strong fade
-                            Theme.background                 // Solid at bottom
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                    .frame(height: 300)  // Fixed 300pt gradient fade zone
-                    .allowsHitTesting(false)  // Don't intercept touches
-                }
-            }
+            CustomParallaxImageRepresentable(
+                imageName: imageName,
+                intensity: intensity,
+                size: geometry.size,
+                scale: scale,
+                verticalOffset: verticalOffset
+            )
+            .blur(radius: blur)
+            .opacity(opacity)
         }
         .ignoresSafeArea(edges: .top)
     }

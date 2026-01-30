@@ -59,7 +59,7 @@ struct StockmansWalletApp: App {
         WindowGroup {
             RootView()
                 .font(.system(.body, design: .rounded)) // Debug: SF Rounded as default app font (correct Apple HIG way)
-                .preferredColorScheme(.light) // Light mode with warm cream theme
+                .preferredColorScheme(.dark) // Dark mode with warm brown theme
         }
         .modelContainer(sharedModelContainer)
     }
