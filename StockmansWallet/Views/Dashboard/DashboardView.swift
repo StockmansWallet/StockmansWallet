@@ -290,7 +290,8 @@ struct DashboardView: View {
                 Spacer()
             }
             
-            // Debug: Scrollable content panel - vertical only, full width (Apple HIG: no horizontal drag)
+            // Debug: iOS 26 page structure - single-axis vertical scroll only (Apple HIG: no horizontal drag)
+            // Fixed header above; scroll content below with no 2D dragging of the card
             ScrollView(.vertical, showsIndicators: false) {
                 VStack(spacing: 0) {
                     // Debug: Top spacing to position content panel lower and clear the fixed header
@@ -299,9 +300,10 @@ struct DashboardView: View {
                     
                     contentPanel
                 }
-                .frame(maxWidth: .infinity)
+                .frame(minWidth: 0, maxWidth: .infinity) // HIG: content width constrained so no horizontal scroll
             }
             .scrollIndicators(.hidden)
+            .scrollBounceBehavior(.basedOnSize, axes: .vertical) // iOS 16.4+: no bounce when content is shorter than screen
         }
     }
     

@@ -201,6 +201,11 @@ struct InteractiveChartView: View {
                                                 // Performance: Early exit if no data
                                                 guard !data.isEmpty else { return }
                                                 
+                                                // Apple HIG: Only scrub when drag is primarily horizontal so vertical drags scroll the page
+                                                // Prevents dashboard card feeling draggable in 2D; chart scrub = horizontal, page scroll = vertical
+                                                let t = value.translation
+                                                if abs(t.height) > abs(t.width) { return }
+                                                
                                                 // Performance: Set scrubbing state once at start of gesture
                                                 if !isScrubbing {
                                                     isScrubbing = true
