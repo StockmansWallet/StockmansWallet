@@ -144,13 +144,8 @@ struct MainTabView: View {
     
     // Debug: Computed property for toolbar background visibility based on iOS version
     private var toolbarBackgroundVisibility: Visibility {
-        if #available(iOS 26.0, *) {
-            // iOS 26+ can use transparent with glass effect
-            return .hidden
-        } else {
-            // iOS 17-25 needs visible background material
-            return .visible
-        }
+        // Always visible to prevent flickering
+        return .visible
     }
     
     // Debug: Extract UIKit appearance setup to separate method (called once on appear)
@@ -158,22 +153,26 @@ struct MainTabView: View {
     private func configureTabBarAppearance() {
         let appearance = UITabBarAppearance()
         
-        // Debug: iOS 26+ uses glass effect with transparency, iOS 17-25 needs material background
-        if #available(iOS 26.0, *) {
-            appearance.configureWithTransparentBackground()
-            appearance.backgroundColor = .clear
-            appearance.shadowColor = .clear
-        } else {
-            // iOS 17-25: Use default opaque appearance with blur
-            appearance.configureWithDefaultBackground()
-            // Apply dark theme with blur material
-            appearance.backgroundColor = UIColor(white: 0.1, alpha: 0.92)
-            appearance.shadowColor = UIColor.black.withAlphaComponent(0.3)
-        }
+        // Dark Theme background color for tab bar: #201A13
+        let darkBgColor = UIColor(red: 32/255, green: 26/255, blue: 19/255, alpha: 1.0)
+        
+        // Configure opaque background with dark theme color
+        appearance.configureWithOpaqueBackground()
+        appearance.backgroundColor = darkBgColor
+        appearance.shadowColor = .clear
+        
+        // Set unselected item color to secondary text (Brown._50: #B39980)
+        let normalColor = UIColor(red: 179/255, green: 153/255, blue: 128/255, alpha: 1.0)
+        appearance.stackedLayoutAppearance.normal.iconColor = normalColor
+        appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: normalColor]
+        
+        // Set selected item color to accent (BrandOrange._60: #D98026)
+        let selectedColor = UIColor(red: 217/255, green: 128/255, blue: 38/255, alpha: 1.0)
+        appearance.stackedLayoutAppearance.selected.iconColor = selectedColor
+        appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: selectedColor]
         
         UITabBar.appearance().standardAppearance = appearance
         UITabBar.appearance().scrollEdgeAppearance = appearance
-        UITabBar.appearance().isTranslucent = true
     }
 }
 

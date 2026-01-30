@@ -15,8 +15,8 @@ struct LandingPageView: View {
 
     var body: some View {
         ZStack {
-            // Cream base – shows through transparent top of bg_landing
-            Theme.backgroundColor
+            // Light Theme cream base – shows through transparent parts of bg_landing
+            Theme.LightTheme.background
                 .ignoresSafeArea()
 
             // Full-bleed background image to bottom (iOS 26 HIG: content can extend edge-to-edge)
@@ -34,7 +34,7 @@ struct LandingPageView: View {
                         .resizable()
                         .renderingMode(.template)
                         .scaledToFit()
-                        .foregroundStyle(Theme.primaryText)
+                        .foregroundStyle(Theme.LightTheme.primaryText)
                         .frame(maxWidth: 220)
                         .accessibilityLabel("Stockman's Wallet")
                 }
@@ -58,10 +58,10 @@ struct LandingPageView: View {
                 } label: {
                     Text("Skip to Dashboard")
                         .font(.caption)
-                        .foregroundStyle(Theme.background)
+                        .foregroundStyle(Theme.LightTheme.background)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 8)
-                        .background(Capsule().fill(Theme.primaryText))
+                        .background(Capsule().fill(Theme.LightTheme.primaryText))
                 }
                 .padding(.bottom, 4)
             }
@@ -77,7 +77,7 @@ struct LandingPageView: View {
 
             Text("Powered by MLA Market Data")
                 .font(Theme.caption)
-                .foregroundStyle(Theme.secondaryText)
+                .foregroundStyle(Theme.LightTheme.secondaryText)
                 .multilineTextAlignment(.center)
         }
         .padding(.horizontal, 24)

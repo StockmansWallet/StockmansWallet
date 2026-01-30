@@ -18,8 +18,8 @@ struct FeaturesPageView: View {
 
     var body: some View {
         ZStack(alignment: .top) {
-            // Background extends behind status bar
-            Theme.backgroundColor
+            // Dark Theme background
+            Theme.DarkTheme.background
                 .ignoresSafeArea()
                 .accessibilityHidden(true)
 
@@ -33,7 +33,7 @@ struct FeaturesPageView: View {
                         .renderingMode(.template)
                         .scaledToFit()
                         .frame(height: 90)
-                        .foregroundStyle(Theme.primaryText)
+                        .foregroundStyle(Theme.DarkTheme.primaryText)
                         .accessibilityLabel("Stockman's Wallet")
                         .padding(.bottom, 40)
 
@@ -45,7 +45,7 @@ struct FeaturesPageView: View {
 
                         Text("Manage your livestock assets like a share trading exchange. Real-time valuations, comprehensive reporting, and insights designed for primary producers.")
                             .font(.subheadline)
-                            .foregroundStyle(Theme.secondaryText)
+                            .foregroundStyle(Theme.DarkTheme.secondaryText)
                             .multilineTextAlignment(.center)
                             .lineLimit(nil)
                     }
@@ -65,12 +65,12 @@ struct FeaturesPageView: View {
                         Text("Continue")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(Theme.LandingButtonStyle())
+                    .buttonStyle(Theme.PrimaryButtonStyle())
                     .padding(.horizontal, 20)
 
                     Text("Powered by MLA Market Data")
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.primaryText)
+                        .foregroundStyle(Theme.DarkTheme.secondaryText)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 20)
                 }
@@ -88,7 +88,7 @@ struct FeaturesPageView: View {
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(Theme.primaryText)
+                            .foregroundStyle(Theme.DarkTheme.primaryText)
                             .frame(width: controlSize, height: controlSize)
                             .contentShape(Circle())
                             .background(
@@ -100,15 +100,10 @@ struct FeaturesPageView: View {
                                             .frame(width: controlSize, height: controlSize)
                                             .glassEffect(.regular.interactive(), in: Circle())
                                     } else {
-                                        // Fallback: Blur + semi-transparent background for iOS 17-25
+                                        // Fallback: cream circle for dark theme
                                         Circle()
-                                            .fill(Color.white.opacity(0.15))
+                                            .fill(Theme.DarkTheme.primaryText.opacity(0.15))
                                             .frame(width: controlSize, height: controlSize)
-                                            .background(
-                                                Circle()
-                                                    .fill(.ultraThinMaterial)
-                                                    .frame(width: controlSize, height: controlSize)
-                                            )
                                     }
                                 }
                             )
@@ -143,7 +138,7 @@ struct FeaturesPageView: View {
     }
 }
 
-// MARK: - Feature Tile (used only on features page)
+// MARK: - Feature Tile (used only on features page - Dark Theme)
 struct FeatureTile: View {
     let icon: String
     let title: String
@@ -156,7 +151,7 @@ struct FeatureTile: View {
 
             Text(title)
                 .font(.callout.weight(.medium))
-                .foregroundStyle(Theme.primaryText.opacity(0.9))
+                .foregroundStyle(Theme.DarkTheme.primaryText.opacity(0.9))
                 .multilineTextAlignment(.center)
                 .minimumScaleFactor(0.9)
         }

@@ -27,14 +27,14 @@ struct TermsPrivacySheet: View {
                             .foregroundStyle(Theme.accent)
                             .padding(.top, 20)
                         
-                        Text("Terms & Privacy")
+                        Text("Terms & Conditions")
                             .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(Theme.primaryText)
+                            .foregroundStyle(Theme.LightTheme.primaryText)
                             .multilineTextAlignment(.center)
                         
-                        Text("Please review and accept our terms to continue")
+                        Text("Please review and accept our terms and conditions to continue.")
                             .font(Theme.body)
-                            .foregroundStyle(Theme.secondaryText)
+                            .foregroundStyle(Theme.LightTheme.secondaryText)
                             .multilineTextAlignment(.center)
                             .padding(.horizontal, 20)
                     }
@@ -45,7 +45,7 @@ struct TermsPrivacySheet: View {
                         LegalDocumentRow(
                             icon: "doc.text.fill",
                             title: "Terms of Service",
-                            description: "Outlines the rules and regulations for using Stockman's Wallet"
+                            description: "Outlines the rules and regulations of using Stockman's Wallet."
                         ) {
                             HapticManager.tap()
                             showingTerms = true
@@ -55,7 +55,7 @@ struct TermsPrivacySheet: View {
                         LegalDocumentRow(
                             icon: "hand.raised.fill",
                             title: "Privacy Policy",
-                            description: "Explains how we collect, use, and protect your personal information"
+                            description: "Explains how we collect, use, and protect your personal information."
                         ) {
                             HapticManager.tap()
                             showingPrivacy = true
@@ -64,8 +64,8 @@ struct TermsPrivacySheet: View {
                         // Australian Privacy Principles
                         LegalDocumentRow(
                             icon: "building.columns.fill",
-                            title: "Australian Privacy Principles (APPs)",
-                            description: "Our commitment to Australian privacy compliance standards"
+                            title: "Australian Privacy Principles",
+                            description: "Our commitment to Australian privacy compliance standards."
                         ) {
                             HapticManager.tap()
                             showingAPPs = true
@@ -73,41 +73,7 @@ struct TermsPrivacySheet: View {
                     }
                     .padding(.horizontal, 20)
                     
-                    // Key Points
-                    VStack(alignment: .leading, spacing: 16) {
-                        Text("Key Points")
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.primaryText)
-                        
-                        KeyPointRow(
-                            icon: "lock.fill",
-                            text: "Your data is encrypted and stored securely"
-                        )
-                        
-                        KeyPointRow(
-                            icon: "eye.slash.fill",
-                            text: "We never sell your personal information"
-                        )
-                        
-                        KeyPointRow(
-                            icon: "checkmark.seal.fill",
-                            text: "Compliant with Australian privacy laws"
-                        )
-                        
-                        KeyPointRow(
-                            icon: "hand.thumbsup.fill",
-                            text: "You can delete your data at any time"
-                        )
-                    }
-                    .padding(.horizontal, 20)
-                    .padding(.vertical, 20)
-                    .background(
-                        RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                            .fill(Theme.cardBackground)
-                    )
-                    .padding(.horizontal, 20)
-                    
-                    // Accept Button
+                    // Accept Button - Orange accent
                     Button(action: {
                         HapticManager.success()
                         hasAccepted = true
@@ -116,20 +82,20 @@ struct TermsPrivacySheet: View {
                         Text("I Accept")
                             .frame(maxWidth: .infinity)
                     }
-                    .buttonStyle(Theme.PrimaryButtonStyle())
+                    .buttonStyle(Theme.AccentButtonStyle())
                     .padding(.horizontal, 20)
                     
                     // Fine Print
-                    Text("By accepting, you agree to our Terms of Service, Privacy Policy, and acknowledge our compliance with Australian Privacy Principles.")
+                    Text("By accepting our Terms of Service, Privacy Policy, and acknowledge our compliance with Australian Privacy Principles.")
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                        .foregroundStyle(Theme.LightTheme.secondaryText.opacity(0.7))
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 32)
                         .padding(.bottom, 20)
                 }
             }
             .scrollContentBackground(.hidden)
-            .background(Theme.backgroundGradient)
+            .background(Theme.LightTheme.background.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
             .interactiveDismissDisabled() // Debug: Must accept, can't dismiss
         }
@@ -162,27 +128,27 @@ struct LegalDocumentRow: View {
                 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(title)
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.primaryText)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(Theme.LightTheme.primaryText)
                         .multilineTextAlignment(.leading)
                     
                     Text(description)
                         .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
+                        .foregroundStyle(Theme.LightTheme.secondaryText)
                         .multilineTextAlignment(.leading)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 
                 Image(systemName: "chevron.right")
                     .font(.caption)
-                    .foregroundStyle(Theme.secondaryText)
+                    .foregroundStyle(Theme.LightTheme.secondaryText)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .frame(minHeight: Theme.buttonHeight)
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .fill(Theme.cardBackground)
+                    .fill(Theme.LightTheme.cardBackground)
             )
         }
         .buttonStyle(.plain)
@@ -204,7 +170,7 @@ struct KeyPointRow: View {
             
             Text(text)
                 .font(Theme.subheadline)
-                .foregroundStyle(Theme.primaryText)
+                .foregroundStyle(Theme.LightTheme.primaryText)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
