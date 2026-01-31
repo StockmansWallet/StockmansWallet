@@ -116,7 +116,22 @@ struct LegalDocumentRow: View {
     let icon: String
     let title: String
     let description: String
+    let backgroundColor: Color
     let action: () -> Void
+
+    init(
+        icon: String,
+        title: String,
+        description: String,
+        backgroundColor: Color = Theme.cardBackground,
+        action: @escaping () -> Void
+    ) {
+        self.icon = icon
+        self.title = title
+        self.description = description
+        self.backgroundColor = backgroundColor
+        self.action = action
+    }
     
     var body: some View {
         Button(action: action) {
@@ -148,7 +163,7 @@ struct LegalDocumentRow: View {
             .frame(minHeight: Theme.buttonHeight)
             .background(
                 RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
-                    .fill(Theme.cardBackground)
+                    .fill(backgroundColor)
             )
         }
         .buttonStyle(.plain)

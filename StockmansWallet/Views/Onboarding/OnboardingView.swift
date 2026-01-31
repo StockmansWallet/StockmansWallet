@@ -15,8 +15,7 @@ struct OnboardingView: View {
     @State private var currentPage = 0
     @State private var userPrefs = UserPreferences()
     
-    // Debug: Terms & Privacy acceptance (shown before onboarding)
-    @State private var showingTermsPrivacy = false
+    // Debug: Terms & Privacy acceptance (now part of the welcome card flow)
     @State private var hasAcceptedTerms = false
     
     // Intro animation state (HIG-aligned: subtle fade only)
@@ -41,7 +40,6 @@ struct OnboardingView: View {
                 case .landing, .features:
                     WelcomeFeaturesPage(
                         onboardingStep: $onboardingStep,
-                        showingTermsPrivacy: $showingTermsPrivacy,
                         hasAcceptedTerms: $hasAcceptedTerms,
                         // Pass down intro completion so Lottie can start after fade
                         introComplete: introComplete,
@@ -149,15 +147,6 @@ struct OnboardingView: View {
             if let existing = preferences.first {
                 userPrefs = existing
             }
-        }
-        .sheet(isPresented: $showingTermsPrivacy) {
-            // Debug: Terms & Privacy sheet shown after "Continue" on features page
-            // Sheet is appropriate here per HIG - self-contained legal acceptance task
-            TermsPrivacySheet(
-                isPresented: $showingTermsPrivacy,
-                hasAccepted: $hasAcceptedTerms
-            )
-            .interactiveDismissDisabled() // Debug: Must accept terms, can't dismiss
         }
     }
     

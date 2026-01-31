@@ -36,8 +36,9 @@ enum Theme {
     
     /// Background colors - Used for surfaces and containers
     enum Background {
-        static let primary = Color(hex: "211A12")
-        static let secondary = Color(hex: "271F16")
+        // Debug: Updated palette to match onboarding reference colors.
+        static let primary = Color(hex: "1B150E") // Base dark BG
+        static let secondary = Color(hex: "211A12") // Primary card BG
         static let tertiary = Color(hex: "2D241A")
         static let quaternary = Color(hex: "3A2F23")
     }
@@ -68,8 +69,9 @@ enum Theme {
     /// Primary background color for main app surfaces.
     static let background = Background.primary
     
-    /// Secondary background color for grouped content and cards.
-    static let secondaryBackground = Background.secondary
+    /// Secondary background color for grouped content and nested cards.
+    /// Debug: Use a slightly lighter tone for contrast on card surfaces.
+    static let secondaryBackground = Background.tertiary
 
     /// Debug: Header background for dashboard cards.
     static let dashboardHeaderBackground = Color(hex: "2A2117")
