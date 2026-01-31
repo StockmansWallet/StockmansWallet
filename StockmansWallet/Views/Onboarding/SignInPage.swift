@@ -20,23 +20,19 @@ struct SignInPage: View {
     var onAppleSignIn: (() -> Void)? = nil // Not used in beta
     var onGoogleSignIn: (() -> Void)? = nil // Not used in beta
     
-    @State private var firstName = ""
-    @State private var lastName = ""
-    @State private var email = ""
+    @State private var fullName = ""
     
     // Debug: iOS 26 HIG - Focus state for proper keyboard navigation between fields
     @FocusState private var focusedField: Field?
     
     // Debug: Enum to track which field is focused for keyboard navigation
     private enum Field: Hashable {
-        case firstName
-        case lastName
-        case email
+        case fullName
     }
     
     // Debug: Beta validation - only require name (email optional for personalization)
     private var canProceed: Bool {
-        return !firstName.isEmpty && !lastName.isEmpty
+        return !fullName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
     
     var body: some View {
@@ -45,111 +41,81 @@ struct SignInPage: View {
             Theme.backgroundGradient
                 .ignoresSafeArea()
             
-            // Debug: Align content to top for better visual hierarchy
-            VStack(spacing: 32) {
-                // Debug: Profile setup header for beta testing
-                VStack(spacing: 16) {
-                    // Profile icon
-                    Image("farmer_icon")
-                        .resizable()
-                        .scaledToFit()
-                        .frame(width: 64, height: 64)
-                        .foregroundStyle(Theme.accentColor)
-                        .padding(.bottom, 4)
-                    
-                    // Header text
-                    Text("Let's Get Started")
-                        .font(.system(size: 32, weight: .bold))
-                        .foregroundStyle(Theme.primaryText)
-                        .multilineTextAlignment(.center)
-                        .accessibilityAddTraits(.isHeader)
-                    
-        
-                    
-                    // Debug: Beta disclaimer badge
-                    HStack(spacing: 8) {
-                        Image(systemName: "info.circle.fill")
-                            .font(.system(size: 14))
-                        Text("Beta Testing - No user authentication")
-                            .font(.caption)
-                    }
-                    .foregroundStyle(Theme.accentColor)
-                    .padding(.horizontal, 16)
-                    .padding(.vertical, 8)
-                    .background(Theme.accentColor.opacity(0.15))
-                    .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
-                }
-                .frame(maxWidth: .infinity)
+            VStack(spacing: 0) {
+                Spacer(minLength: 16)
                 
-                // Debug: Profile form - name required, email optional for beta
-                VStack(spacing: 16) {
-                    // First Name field
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("First Name")
-                            .font(.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                            .fontWeight(.medium)
-                        TextField("First Name", text: $firstName)
-                            .textFieldStyle(SignInTextFieldStyle())
-                            .textContentType(.givenName)
-                            .autocapitalization(.words)
-                            .submitLabel(.next)
-                            .focused($focusedField, equals: .firstName)
-                            .onSubmit {
-                                focusedField = .lastName
+                // Debug: Card container to match onboarding card style.
+                SignInCard {
+                    ScrollView {
+                        VStack(spacing: 24) {
+                            // Debug: Profile setup header for beta testing (no icon).
+                            VStack(spacing: 10) {
+                                Text("Add User Details")
+                                    .font(.system(size: 24, weight: .bold))
+                                    .foregroundStyle(Theme.primaryText)
+                                    .multilineTextAlignment(.center)
+                                    .accessibilityAddTraits(.isHeader)
+                                
+                                Text("Add your name so we can personalize the app.")
+                                    .font(.system(size: 16))
+                                    .foregroundStyle(Theme.secondaryText)
+                                    .multilineTextAlignment(.center)
                             }
-                    }
-                    
-                    // Last Name field
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Last Name")
-                            .font(.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                            .fontWeight(.medium)
-                        TextField("Last Name", text: $lastName)
-                            .textFieldStyle(SignInTextFieldStyle())
-                            .textContentType(.familyName)
-                            .autocapitalization(.words)
-                            .submitLabel(.next)
-                            .focused($focusedField, equals: .lastName)
-                            .onSubmit {
-                                focusedField = .email
+                            .frame(maxWidth: .infinity)
+                            
+                            // Debug: Profile form - name required, email optional for beta
+                            VStack(spacing: 16) {
+                                // Full Name field
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Full Name")
+                                        .font(.caption)
+                                        .foregroundStyle(Theme.secondaryText)
+                                        .fontWeight(.medium)
+                                    TextField("Full Name", text: $fullName)
+                                        .textFieldStyle(SignInTextFieldStyle())
+                                        .textContentType(.name)
+                                        .autocapitalization(.words)
+                                        .submitLabel(.done)
+                                        .focused($focusedField, equals: .fullName)
+                                        .onSubmit {
+                                            focusedField = nil
+                                        }
+                                }
                             }
-                    }
-                    
-                    // Email field (optional for beta)
-                    VStack(alignment: .leading, spacing: 8) {
-                        HStack(spacing: 4) {
-                            Text("Email")
-                                .font(.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                                .fontWeight(.medium)
-                            Text("(Optional)")
-                                .font(.caption)
-                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                            
+                            // Debug: Beta disclaimer badge moved to bottom of card.
+                            HStack(spacing: 8) {
+                                Image(systemName: "info.circle.fill")
+                                    .font(.system(size: 14))
+                                Text("Beta Testing - No user authentication")
+                                    .font(.caption)
+                            }
+                            .foregroundStyle(Theme.accentColor)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Theme.accentColor.opacity(0.15))
+                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
                         }
-                        TextField("Email", text: $email)
-                            .textFieldStyle(SignInTextFieldStyle())
-                            .keyboardType(.emailAddress)
-                            .textContentType(.emailAddress)
-                            .autocapitalization(.none)
-                            .autocorrectionDisabled()
-                            .submitLabel(.done)
-                            .focused($focusedField, equals: .email)
-                            .onSubmit {
-                                focusedField = nil
-                            }
+                        .padding(24)
                     }
+                    .scrollIndicators(.hidden)
                 }
-                .padding(.horizontal, 4)
+                .padding(.horizontal, 20)
                 
-                // Primary Action - Continue to onboarding
+                Spacer(minLength: 0)
+            }
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            // Debug: Fixed bottom CTA to match onboarding flow.
+            VStack(spacing: 12) {
                 Button {
                     HapticManager.tap()
                     // Debug: Save profile data to userPrefs
-                    userPrefs.firstName = firstName
-                    userPrefs.lastName = lastName
-                    userPrefs.email = email.isEmpty ? "" : email
+                    let trimmedName = fullName.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let parts = trimmedName.split(separator: " ", maxSplits: 1).map(String.init)
+                    userPrefs.firstName = parts.first ?? ""
+                    userPrefs.lastName = parts.count > 1 ? parts[1] : ""
+                    userPrefs.email = ""
                     // Debug: Beta - everyone continues to onboarding (all are "new users")
                     onEmailSignUp?()
                 } label: {
@@ -161,46 +127,34 @@ struct SignInPage: View {
                 .opacity(canProceed ? 1.0 : 0.6)
                 .accessibilityLabel("Continue to app")
                 .accessibilityHint("Your name will be used to personalize the app")
-                
-                // Footer - Terms & Privacy (kept for compliance)
-                HStack(spacing: 4) {
-                    Text("By continuing, you accept our")
-                        .font(.caption)
-                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
-                    
-                    Button {
-                        HapticManager.tap()
-                        // TODO: Show terms sheet
-                    } label: {
-                        Text("Terms")
-                            .font(.caption)
-                            .foregroundStyle(Theme.accentColor.opacity(0.5))
-                    }
-                    .buttonStyle(.plain)
-                    
-                    Text("&")
-                        .font(.caption)
-                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
-                    
-                    Button {
-                        HapticManager.tap()
-                        // TODO: Show privacy sheet
-                    } label: {
-                        Text("Privacy")
-                            .font(.caption)
-                            .foregroundStyle(Theme.accentColor.opacity(0.5))
-                    }
-                    .buttonStyle(.plain)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.top, 8)
-                
-                Spacer()
             }
             .padding(.horizontal, 24)
-            .padding(.top, 60)
-            .padding(.bottom, 40)
-            .frame(maxHeight: .infinity, alignment: .top)
+            .padding(.top, 12)
+            .padding(.bottom, 16)
         }
+    }
+}
+
+// MARK: - Card Container
+private struct SignInCard<Content: View>: View {
+    let content: Content
+    
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                .fill(Theme.cardBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous)
+                        .strokeBorder(Theme.borderColor.opacity(0.6), lineWidth: 1)
+                )
+            
+            // Debug: Scrollable content to handle smaller screens.
+            content
+        }
+        .shadow(color: Theme.background.opacity(0.4), radius: 10, x: 0, y: 8)
     }
 }

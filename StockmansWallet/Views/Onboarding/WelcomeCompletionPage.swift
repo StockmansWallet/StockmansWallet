@@ -37,30 +37,21 @@ struct WelcomeCompletionPage: View {
             totalPages: totalPages,
             onCustomContinue: onComplete // Debug: Complete onboarding on continue
         ) {
-            // Debug: Clean success screen with icon, message, and feature highlights
-            VStack(spacing: 32) {
-          
-                              
-                // Success Message
+            // Debug: Clean success screen matching onboarding card typography.
+            VStack(spacing: 24) {
+                Text("Let's choose the right plan to unlock your livestock management dashboard")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Theme.secondaryText)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 24)
+                
                 VStack(spacing: 12) {
-                
-                    
-                    Text("Let's choose the right plan to unlock your livestock management dashboard")
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.secondaryText)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal, 20)
-                }
-                
-                // Quick Feature Preview
-                VStack(spacing: 16) {
                     FeatureCheckmark(text: "Track your livestock portfolio")
                     FeatureCheckmark(text: "Monitor real-time market prices")
                     FeatureCheckmark(text: "Generate detailed reports")
                     FeatureCheckmark(text: "Manage properties and herds")
                 }
-                .padding(.horizontal, 32)
-                .padding(.top, 8)
+                .padding(.horizontal, 28)
                 
                 Spacer()
             }
