@@ -9,6 +9,7 @@
 import SwiftUI
 import SwiftData
 import Charts
+import UniformTypeIdentifiers
 
 struct PortfolioView: View {
     @Environment(\.modelContext) private var modelContext
@@ -26,6 +27,10 @@ struct PortfolioView: View {
     @State private var portfolioSummary: PortfolioSummary?
     @State private var isLoading = true
     @State private var selectedView: PortfolioViewMode = .overview
+    
+    // Debug: Long-press to enable portfolio card reordering (matches Dashboard behavior)
+    @State private var isReorderMode = false
+    @State private var draggedCardId: String? = nil
     
     // Performance: Track if we've loaded summary to prevent recalculation on every navigation
     @State private var hasInitiallyLoaded = false
@@ -209,16 +214,25 @@ struct PortfolioView: View {
                     if userPrefs.isPortfolioCardVisible(cardId) {
                         switch cardId {
                         case "marketSummary":
-                            MarketPulseView()
-                                .padding(.horizontal, Theme.cardPadding)
-                                .accessibilityElement(children: .contain)
-                                .accessibilityLabel("Herd performance")
+                            portfolioCardWrapper(cardId: cardId, isReorderable: true) {
+                                MarketPulseView(showsDashboardHeader: true)
+                                    .cardStyle()
+                                    .padding(.horizontal, Theme.cardPadding)
+                                    .accessibilityElement(children: .contain)
+                                    .accessibilityLabel("Herd performance")
+                            }
                             
                         case "recentActivity":
-                            HerdDynamicsView(herds: allHerds.filter { !$0.isSold })
+                            portfolioCardWrapper(cardId: cardId, isReorderable: true) {
+                                HerdDynamicsView(
+                                    showsDashboardHeader: true,
+                                    herds: allHerds.filter { !$0.isSold }
+                                )
+                                .cardStyle()
                                 .padding(.horizontal, Theme.cardPadding)
                                 .accessibilityElement(children: .contain)
                                 .accessibilityLabel("Growth and mortality")
+                            }
                             
                         case "herdComposition":
                             // Debug: Build capital concentration breakdown from portfolio summary
@@ -230,10 +244,17 @@ struct PortfolioView: View {
                                 )
                             }
                             if !breakdown.isEmpty {
-                                CapitalConcentrationView(breakdown: breakdown, totalValue: summary.totalNetWorth)
+                                portfolioCardWrapper(cardId: cardId, isReorderable: true) {
+                                    CapitalConcentrationView(
+                                        showsDashboardHeader: true,
+                                        breakdown: breakdown,
+                                        totalValue: summary.totalNetWorth
+                                    )
+                                    .cardStyle()
                                     .padding(.horizontal, Theme.cardPadding)
                                     .accessibilityElement(children: .contain)
                                     .accessibilityLabel("Herd composition")
+                                }
                             }
                             
                         default:
@@ -248,6 +269,60 @@ struct PortfolioView: View {
                     .padding()
             }
         }
+    }
+    
+    // MARK: - Portfolio Card Reordering (Overview)
+    @ViewBuilder
+    private func portfolioCardWrapper<Content: View>(
+        cardId: String,
+        isReorderable: Bool,
+        @ViewBuilder content: () -> Content
+    ) -> some View {
+        content()
+            .onTapGesture {
+                // Debug: Tap to exit reorder mode without dragging.
+                if isReorderMode {
+                    isReorderMode = false
+                }
+            }
+            .onDrag {
+                // Debug: Drag starts with long-press gesture (system default).
+                guard isReorderable else { return NSItemProvider() }
+                isReorderMode = true
+                draggedCardId = cardId
+                return NSItemProvider(object: cardId as NSString)
+            }
+            .onDrop(
+                of: [.text],
+                delegate: CardReorderDropDelegate(
+                    itemId: cardId,
+                    draggedCardId: $draggedCardId,
+                    isReorderMode: $isReorderMode,
+                    onMove: movePortfolioCard
+                )
+            )
+    }
+    
+    // Debug: Move portfolio cards within user preferences order.
+    private func movePortfolioCard(from sourceId: String, to destinationId: String) {
+        guard let prefs = preferences.first else { return }
+        var order = prefs.portfolioCardOrder
+        guard let fromIndex = order.firstIndex(of: sourceId),
+              let toIndex = order.firstIndex(of: destinationId),
+              fromIndex != toIndex else { return }
+        
+        // Debug: Animate card reordering for smooth iOS HIG-style shuffle.
+        withAnimation(.snappy(duration: 0.22)) {
+            order.move(
+                fromOffsets: IndexSet(integer: fromIndex),
+                toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex
+            )
+            prefs.portfolioCardOrder = order
+        }
+        
+        #if DEBUG
+        print("📊 Portfolio card order updated: \(order)")
+        #endif
     }
     
     // MARK: - Herds Content

@@ -581,7 +581,7 @@ struct DashboardView: View {
             }
             .onDrop(
                 of: [.text],
-                delegate: DashboardCardDropDelegate(
+                delegate: CardReorderDropDelegate(
                     itemId: cardId,
                     draggedCardId: $draggedCardId,
                     isReorderMode: $isReorderMode,
@@ -598,12 +598,14 @@ struct DashboardView: View {
               let toIndex = order.firstIndex(of: destinationId),
               fromIndex != toIndex else { return }
         
-        order.move(
-            fromOffsets: IndexSet(integer: fromIndex),
-            toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex
-        )
-        
-        prefs.dashboardCardOrder = order
+        // Debug: Animate card reordering for smooth iOS HIG-style shuffle.
+        withAnimation(.snappy(duration: 0.22)) {
+            order.move(
+                fromOffsets: IndexSet(integer: fromIndex),
+                toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex
+            )
+            prefs.dashboardCardOrder = order
+        }
     }
 
     // Debug: Time range label for the dashboard title bar pill.
@@ -1181,30 +1183,6 @@ struct DashboardView: View {
     }
 }
 
-// MARK: - Dashboard Card Drop Delegate
-private struct DashboardCardDropDelegate: DropDelegate {
-    let itemId: String
-    @Binding var draggedCardId: String?
-    @Binding var isReorderMode: Bool
-    let onMove: (String, String) -> Void
-    
-    func dropEntered(info: DropInfo) {
-        guard let draggedCardId,
-              draggedCardId != itemId else { return }
-        onMove(draggedCardId, itemId)
-    }
-    
-    func dropUpdated(info: DropInfo) -> DropProposal? {
-        DropProposal(operation: .move)
-    }
-    
-    func performDrop(info: DropInfo) -> Bool {
-        // Debug: Reset reorder mode and dragging state after drop completes.
-        draggedCardId = nil
-        isReorderMode = false
-        return true
-    }
-}
 
 // MARK: - Portfolio Value Card
 // MARK: - Extracted Components
