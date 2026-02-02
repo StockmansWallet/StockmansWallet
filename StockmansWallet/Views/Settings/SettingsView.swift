@@ -67,10 +67,7 @@ struct SettingsView: View {
                     }
                     .listRowBackground(Theme.cardBackground)
                     
-                    NavigationLink(destination: PortfolioSettingsView()) {
-                        SettingsListRow(icon: "chart.pie.fill", title: "Portfolio Overview", subtitle: nil)
-                    }
-                    .listRowBackground(Theme.cardBackground)
+                    // Debug: Removed Portfolio Overview settings since Overview tab was removed
                     
                     NavigationLink(destination: NotificationsSettingsView()) {
                         SettingsListRow(icon: "bell.fill", title: "Notifications", subtitle: nil)

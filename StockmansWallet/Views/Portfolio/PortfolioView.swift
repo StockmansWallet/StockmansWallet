@@ -26,11 +26,8 @@ struct PortfolioView: View {
     @State private var showingSearchPanel = false
     @State private var portfolioSummary: PortfolioSummary?
     @State private var isLoading = true
-    @State private var selectedView: PortfolioViewMode = .overview
+    @State private var selectedView: PortfolioViewMode = .herds // Debug: Default to Herds view
     
-    // Debug: Long-press to enable portfolio card reordering (matches Dashboard behavior)
-    @State private var isReorderMode = false
-    @State private var draggedCardId: String? = nil
     
     // Performance: Track if we've loaded summary to prevent recalculation on every navigation
     @State private var hasInitiallyLoaded = false
@@ -56,9 +53,8 @@ struct PortfolioView: View {
     // Performance: Task cancellation - prevent wasted CPU when user navigates away
     @State private var loadingTask: Task<Void, Never>? = nil
     
-    // Debug: Three-section portfolio view - Overview for summary stats, Herds for groups, Individual for single animals
+    // Debug: Two-section portfolio view - Herds for groups, Individual for single animals
     enum PortfolioViewMode: String, CaseIterable {
-        case overview = "Overview"
         case herds = "Herds"
         case individual = "Individual"
     }
@@ -141,36 +137,89 @@ struct PortfolioView: View {
             if allHerds.isEmpty {
                 EmptyPortfolioView(showingAddAssetMenu: $showingAddAssetMenu)
             } else {
-                ScrollView {
-                    VStack(spacing: Theme.sectionSpacing) {
-                        // Always render stats card to prevent layout shift during loading
-                        PortfolioStatsCards(summary: portfolioSummary, isLoading: isLoading)
-                            .padding(.horizontal, Theme.cardPadding)
-                           
-                        
-                        PortfolioViewModeSelector(selectedView: $selectedView)
-                            .padding(.horizontal)
-                           
-                        
-                        if selectedView == .overview {
-                            overviewContent
-                        } else if selectedView == .herds {
-                            herdsContent
-                        } else {
-                            individualContent
+                VStack(spacing: 0) {
+                    // Debug: Custom tab bar at the very top
+                    customTabBar
+                    
+                    // Debug: TabView for swipeable content
+                    TabView(selection: $selectedView) {
+                        // Herds Tab
+                        ScrollView {
+                            VStack(spacing: 16) {
+                                // Debug: Show total value of herds only
+                                PortfolioStatsCards(
+                                    summary: portfolioSummary,
+                                    isLoading: isLoading,
+                                    viewMode: .herds
+                                )
+                                .padding(.horizontal, Theme.cardPadding)
+                                .padding(.top, 16)
+                                
+                                herdsContent
+                            }
+                            .padding(.bottom, 100)
                         }
+                        .scrollContentBackground(.hidden)
+                        .tag(PortfolioViewMode.herds)
+                        
+                        // Individual Tab
+                        ScrollView {
+                            VStack(spacing: 16) {
+                                // Debug: Show total value of individual animals only
+                                PortfolioStatsCards(
+                                    summary: portfolioSummary,
+                                    isLoading: isLoading,
+                                    viewMode: .individual
+                                )
+                                .padding(.horizontal, Theme.cardPadding)
+                                .padding(.top, 16)
+                                
+                                individualContent
+                            }
+                            .padding(.bottom, 100)
+                        }
+                        .scrollContentBackground(.hidden)
+                        .tag(PortfolioViewMode.individual)
                     }
-                    .frame(maxWidth: .infinity)
-                    .padding(.bottom, 100)
+                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    .background(Theme.backgroundGradient)
                 }
-                .scrollContentBackground(.hidden)
                 .background(Theme.backgroundGradient)
-                .refreshable {
-                    // Performance: Refresh summary (herds auto-update via @Query)
-                    await loadPortfolioSummary()
-                }
             }
         }
+    }
+    
+    // MARK: - Custom Tab Bar
+    // Debug: iOS-style tab bar for switching between Herds and Individual
+    private var customTabBar: some View {
+        HStack(spacing: 0) {
+            ForEach(PortfolioViewMode.allCases, id: \.self) { mode in
+                Button {
+                    HapticManager.selectionChanged()
+                    withAnimation(.easeInOut(duration: 0.2)) {
+                        selectedView = mode
+                    }
+                } label: {
+                    VStack(spacing: 8) {
+                        Text(mode.rawValue)
+                            .font(.system(size: 15, weight: selectedView == mode ? .semibold : .regular))
+                            .foregroundStyle(selectedView == mode ? Theme.accentColor : Theme.secondaryText)
+                        
+                        // Debug: Active indicator line
+                        Rectangle()
+                            .fill(selectedView == mode ? Theme.accentColor : Color.clear)
+                            .frame(height: 3)
+                            .clipShape(RoundedRectangle(cornerRadius: 1.5, style: .continuous))
+                    }
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, Theme.cardPadding)
+        .padding(.vertical, 8)
+        .background(Theme.cardBackground.opacity(0.5))
     }
     
     @ToolbarContentBuilder
@@ -203,190 +252,56 @@ struct PortfolioView: View {
         }
     }
     
-    // MARK: - Overview Content
-    private var overviewContent: some View {
-        let userPrefs = preferences.first ?? UserPreferences()
-        
-        return Group {
-            if let summary = portfolioSummary {
-                // Debug: Display dashboard cards in user's custom order from preferences
-                ForEach(userPrefs.portfolioCardOrder, id: \.self) { cardId in
-                    if userPrefs.isPortfolioCardVisible(cardId) {
-                        switch cardId {
-                        case "marketSummary":
-                            portfolioCardWrapper(cardId: cardId, isReorderable: true) {
-                                MarketPulseView(showsDashboardHeader: true)
-                                    .cardStyle()
-                                    .padding(.horizontal, Theme.cardPadding)
-                                    .accessibilityElement(children: .contain)
-                                    .accessibilityLabel("Herd performance")
-                            }
-                            
-                        case "recentActivity":
-                            portfolioCardWrapper(cardId: cardId, isReorderable: true) {
-                                HerdDynamicsView(
-                                    showsDashboardHeader: true,
-                                    herds: allHerds.filter { !$0.isSold }
-                                )
-                                .cardStyle()
-                                .padding(.horizontal, Theme.cardPadding)
-                                .accessibilityElement(children: .contain)
-                                .accessibilityLabel("Growth and mortality")
-                            }
-                            
-                        case "herdComposition":
-                            // Debug: Build capital concentration breakdown from portfolio summary
-                            let breakdown = summary.categoryBreakdown.map {
-                                CapitalConcentrationBreakdown(
-                                    category: $0.category,
-                                    value: $0.totalValue,
-                                    percentage: summary.totalNetWorth > 0 ? ($0.totalValue / summary.totalNetWorth) * 100 : 0
-                                )
-                            }
-                            if !breakdown.isEmpty {
-                                portfolioCardWrapper(cardId: cardId, isReorderable: true) {
-                                    CapitalConcentrationView(
-                                        showsDashboardHeader: true,
-                                        breakdown: breakdown,
-                                        totalValue: summary.totalNetWorth
-                                    )
-                                    .cardStyle()
-                                    .padding(.horizontal, Theme.cardPadding)
-                                    .accessibilityElement(children: .contain)
-                                    .accessibilityLabel("Herd composition")
-                                }
-                            }
-                            
-                        default:
-                            EmptyView()
-                        }
-                    }
-                }
-            } else if isLoading {
-                ProgressView()
-                    .tint(Theme.accentColor)
-                    .frame(maxWidth: .infinity)
-                    .padding()
-            }
-        }
-    }
-    
-    // MARK: - Portfolio Card Reordering (Overview)
-    @ViewBuilder
-    private func portfolioCardWrapper<Content: View>(
-        cardId: String,
-        isReorderable: Bool,
-        @ViewBuilder content: () -> Content
-    ) -> some View {
-        content()
-            .onTapGesture {
-                // Debug: Tap to exit reorder mode without dragging.
-                if isReorderMode {
-                    isReorderMode = false
-                }
-            }
-            .onDrag {
-                // Debug: Drag starts with long-press gesture (system default).
-                guard isReorderable else { return NSItemProvider() }
-                isReorderMode = true
-                draggedCardId = cardId
-                return NSItemProvider(object: cardId as NSString)
-            }
-            .onDrop(
-                of: [.text],
-                delegate: CardReorderDropDelegate(
-                    itemId: cardId,
-                    draggedCardId: $draggedCardId,
-                    isReorderMode: $isReorderMode,
-                    onMove: movePortfolioCard
-                )
-            )
-    }
-    
-    // Debug: Move portfolio cards within user preferences order.
-    private func movePortfolioCard(from sourceId: String, to destinationId: String) {
-        guard let prefs = preferences.first else { return }
-        var order = prefs.portfolioCardOrder
-        guard let fromIndex = order.firstIndex(of: sourceId),
-              let toIndex = order.firstIndex(of: destinationId),
-              fromIndex != toIndex else { return }
-        
-        // Debug: Animate card reordering for smooth iOS HIG-style shuffle.
-        withAnimation(.snappy(duration: 0.22)) {
-            order.move(
-                fromOffsets: IndexSet(integer: fromIndex),
-                toOffset: toIndex > fromIndex ? toIndex + 1 : toIndex
-            )
-            prefs.portfolioCardOrder = order
-        }
-        
-        #if DEBUG
-        print("📊 Portfolio card order updated: \(order)")
-        #endif
-    }
-    
     // MARK: - Herds Content
-    // Debug: Display only herds (headCount > 1) with search functionality
+    // Debug: Display only herds (headCount > 1)
     private var herdsContent: some View {
         Group {
             if let summary = portfolioSummary {
-                VStack(spacing: 16) {
-                    // Debug: Search field at top of herds section (below segmented control)
-                    SearchField(text: $herdsSearchText, placeholder: "Search for a herd")
-                        .padding(.horizontal)
-                    
-                    LazyVStack(spacing: 16) {
-                        ForEach(cachedFilteredHerds, id: \.id) { herd in
-                            let herdIdForSale = herd.id
-                            EnhancedHerdCard(
-                                herd: herd,
-                                summary: summary,
-                                onSellTapped: {
-                                    herdIdToSell = IdentifiableUUID(id: herdIdForSale)
-                                }
-                            )
-                            .id(herd.id) // Performance: Explicit ID for stable identity
-                        }
-                    }
-                    .padding(.horizontal)
-                    
-                    // Debug: Show message if no herds found
-                    if cachedFilteredHerds.isEmpty {
-                        EmptySearchResultView(
-                            searchText: herdsSearchText,
-                            type: "herds"
+                LazyVStack(spacing: 16) {
+                    ForEach(cachedFilteredHerds, id: \.id) { herd in
+                        let herdIdForSale = herd.id
+                        EnhancedHerdCard(
+                            herd: herd,
+                            summary: summary,
+                            onSellTapped: {
+                                herdIdToSell = IdentifiableUUID(id: herdIdForSale)
+                            }
                         )
+                        .id(herd.id) // Performance: Explicit ID for stable identity
                     }
+                }
+                .padding(.horizontal)
+                
+                // Debug: Show message if no herds found
+                if cachedFilteredHerds.isEmpty {
+                    EmptySearchResultView(
+                        searchText: herdsSearchText,
+                        type: "herds"
+                    )
                 }
             }
         }
     }
     
     // MARK: - Individual Content
-    // Debug: Display only individual animals (headCount == 1) with search functionality
+    // Debug: Display only individual animals (headCount == 1)
     // Performance: Uses lightweight card for better scroll performance with many items
     private var individualContent: some View {
         Group {
             if portfolioSummary != nil {
-                VStack(spacing: 16) {
-                    // Debug: Search field at top of individual section (below segmented control)
-                    SearchField(text: $individualSearchText, placeholder: "Search for an individual animal")
-                        .padding(.horizontal)
-                    
-                    LazyVStack(spacing: 12) {
-                        ForEach(cachedFilteredIndividuals) { data in
-                            LightweightAnimalCard(data: data)
-                        }
+                LazyVStack(spacing: 12) {
+                    ForEach(cachedFilteredIndividuals) { data in
+                        LightweightAnimalCard(data: data)
                     }
-                    .padding(.horizontal)
-                    
-                    // Debug: Show message if no individuals found
-                    if cachedFilteredIndividuals.isEmpty {
-                        EmptySearchResultView(
-                            searchText: individualSearchText,
-                            type: "individual animals"
-                        )
-                    }
+                }
+                .padding(.horizontal)
+                
+                // Debug: Show message if no individuals found
+                if cachedFilteredIndividuals.isEmpty {
+                    EmptySearchResultView(
+                        searchText: individualSearchText,
+                        type: "individual animals"
+                    )
                 }
             }
         }
@@ -468,8 +383,7 @@ struct PortfolioView: View {
             }
         }
         
-        // Performance: Only calculate valuations for herds (headCount > 1) in summary
-        // Individual animals (headCount == 1) load their valuations on-demand when viewed
+        // Debug: Calculate valuations for both herds and individual animals
         let activeHerds = allHerds.filter { !$0.isSold && $0.headCount > 1 }
         let activeIndividuals = allHerds.filter { !$0.isSold && $0.headCount == 1 }
         let allActiveAssets = allHerds.filter { !$0.isSold } // For head count totals
@@ -485,11 +399,12 @@ struct PortfolioView: View {
         // Debug: Get user preferences for ValuationEngine
         let prefs = preferences.first ?? UserPreferences()
         
-        // Create a mapping of herd IDs to herds for later lookup
+        // Create mappings for later lookup
         let herdMap = Dictionary(uniqueKeysWithValues: activeHerds.map { ($0.id, $0) })
+        let individualMap = Dictionary(uniqueKeysWithValues: activeIndividuals.map { ($0.id, $0) })
         
-        // Calculate valuations using ValuationEngine (same as Dashboard for consistency)
-        var results: [(herdId: UUID, valuation: HerdValuation)] = []
+        // Debug: Calculate valuations for herds
+        var herdResults: [(herdId: UUID, valuation: HerdValuation)] = []
         
         for herd in activeHerds {
             // Performance: Check if task was cancelled
@@ -507,8 +422,31 @@ struct PortfolioView: View {
                 modelContext: modelContext
             )
             
-            results.append((herdId: herd.id, valuation: valuation))
+            herdResults.append((herdId: herd.id, valuation: valuation))
         }
+        
+        // Debug: Calculate valuations for individual animals
+        var individualResults: [(herdId: UUID, valuation: HerdValuation)] = []
+        
+        for individual in activeIndividuals {
+            if Task.isCancelled {
+                #if DEBUG
+                print("📊 Portfolio valuation cancelled - skipping remaining individuals")
+                #endif
+                break
+            }
+            
+            let valuation = await valuationEngine.calculateHerdValue(
+                herd: individual,
+                preferences: prefs,
+                modelContext: modelContext
+            )
+            
+            individualResults.append((herdId: individual.id, valuation: valuation))
+        }
+        
+        // Combine results for overall totals
+        let results = herdResults + individualResults
         
         // Aggregate results
         var valuations: [UUID: HerdValuation] = [:]
@@ -574,6 +512,25 @@ struct PortfolioView: View {
         let headInIndividuals = activeIndividuals.reduce(0) { $0 + $1.headCount }
         let totalHeadCount = headInHerds + headInIndividuals
         
+        // Debug: Calculate separate values for herds and individuals
+        let herdsValue = herdResults.reduce(0) { $0 + $1.valuation.netRealizableValue }
+        let individualsValue = individualResults.reduce(0) { $0 + $1.valuation.netRealizableValue }
+        
+        // Debug: Calculate separate initial values for change calculations
+        var herdsInitialValue: Double = 0
+        for entry in herdResults {
+            guard let herd = herdMap[entry.herdId] else { continue }
+            let valuation = entry.valuation
+            herdsInitialValue += Double(herd.headCount) * herd.initialWeight * valuation.pricePerKg
+        }
+        
+        var individualsInitialValue: Double = 0
+        for entry in individualResults {
+            guard let individual = individualMap[entry.herdId] else { continue }
+            let valuation = entry.valuation
+            individualsInitialValue += Double(individual.headCount) * individual.initialWeight * valuation.pricePerKg
+        }
+        
         await MainActor.run {
             self.portfolioSummary = PortfolioSummary(
                 totalNetWorth: totalNetWorth,
@@ -591,6 +548,10 @@ struct PortfolioView: View {
                 activeHerdCount: activeHerds.count,
                 headInHerds: headInHerds,
                 headInIndividuals: headInIndividuals,
+                herdsValue: herdsValue,
+                individualsValue: individualsValue,
+                herdsInitialValue: herdsInitialValue,
+                individualsInitialValue: individualsInitialValue,
                 categoryBreakdown: Array(categoryBreakdown.values),
                 speciesBreakdown: Array(speciesBreakdown.values),
                 largestCategory: largestCategory?.category ?? "",
@@ -617,6 +578,10 @@ struct PortfolioSummary {
     let activeHerdCount: Int
     let headInHerds: Int // Debug: Total head count in herds (headCount > 1)
     let headInIndividuals: Int // Debug: Total head count in individual animals (headCount == 1)
+    let herdsValue: Double // Debug: Total value of herds only
+    let individualsValue: Double // Debug: Total value of individual animals only
+    let herdsInitialValue: Double // Debug: Initial value of herds for change calculation
+    let individualsInitialValue: Double // Debug: Initial value of individuals for change calculation
     let categoryBreakdown: [CategoryBreakdown]
     let speciesBreakdown: [SpeciesBreakdown]
     let largestCategory: String
@@ -640,35 +605,77 @@ struct SpeciesBreakdown {
 }
 
 // MARK: - Portfolio Stats Cards
-// Debug: Stacked cards showing total portfolio value, total head, and active herds
+// Debug: Shows featured value based on selected view mode (herds or individual animals)
 struct PortfolioStatsCards: View {
     let summary: PortfolioSummary?
     let isLoading: Bool
+    let viewMode: PortfolioView.PortfolioViewMode
+    
+    // Debug: Calculate values based on view mode
+    private var displayValue: Double {
+        guard let summary = summary else { return 0 }
+        switch viewMode {
+        case .herds:
+            return summary.herdsValue
+        case .individual:
+            return summary.individualsValue
+        }
+    }
+    
+    private var displayInitialValue: Double {
+        guard let summary = summary else { return 0 }
+        switch viewMode {
+        case .herds:
+            return summary.herdsInitialValue
+        case .individual:
+            return summary.individualsInitialValue
+        }
+    }
+    
+    private var displayCount: Int {
+        guard let summary = summary else { return 0 }
+        switch viewMode {
+        case .herds:
+            return summary.activeHerdCount
+        case .individual:
+            return summary.headInIndividuals
+        }
+    }
+    
+    private var displayHeadCount: Int {
+        guard let summary = summary else { return 0 }
+        switch viewMode {
+        case .herds:
+            return summary.headInHerds
+        case .individual:
+            return summary.headInIndividuals
+        }
+    }
     
     // Calculate change from initial purchase cost
     private var totalChange: Double {
-        (summary?.totalNetWorth ?? 0) - (summary?.totalInitialValue ?? 0)
+        displayValue - displayInitialValue
     }
     
     private var percentageChange: Double {
-        guard let summary = summary, summary.totalInitialValue > 0 else { return 0 }
-        return (totalChange / summary.totalInitialValue) * 100
+        guard displayInitialValue > 0 else { return 0 }
+        return (totalChange / displayInitialValue) * 100
     }
     
     var body: some View {
         VStack(spacing: 12) {
-            // Debug: Match Dashboard's PortfolioValueCard exactly for consistent positioning
+            // Debug: Featured value card - shows different value based on tab
             VStack(spacing: 0) {
                 // Always show value (no loader overlay)
                 AnimatedCurrencyValue(
-                    value: summary?.totalNetWorth ?? 0,
+                    value: displayValue,
                     isScrubbing: false
                 )
                 .frame(height: 58)
                 .opacity(isLoading ? 0.5 : 1.0) // Subtle fade during loading
                 .animation(.easeInOut(duration: 0.3), value: isLoading)
                 .padding(.bottom, 8)
-                .accessibilityLabel("Total portfolio value")
+                .accessibilityLabel(viewMode == .herds ? "Total herds value" : "Total individuals value")
                 
                 // Change pill (matches Dashboard)
                 HStack(spacing: 6) {
@@ -707,16 +714,16 @@ struct PortfolioStatsCards: View {
             .padding(.vertical, Theme.cardPadding)
             .frame(maxWidth: .infinity)
             
-            // Debug: Combined stats card with 3-section horizontal layout - shows Herds, Head in Herds, and Head in Individuals
+            // Debug: Stats card - shows count and head count
             HStack(spacing: 16) {
-                // Section 1: Herds
+                // Section 1: Count (Herds or Individuals)
                 VStack(spacing: 4) {
-                    Text("\(summary?.activeHerdCount ?? 0)")
+                    Text("\(displayCount)")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
-                    Text("Herds")
+                    Text(viewMode == .herds ? "Herds" : "Individuals")
                         .font(.system(size: 11, weight: .regular))
                         .foregroundStyle(Theme.secondaryText)
                         .lineLimit(1)
@@ -724,39 +731,19 @@ struct PortfolioStatsCards: View {
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
                 
-                // Divider 1
+                // Divider
                 Rectangle()
                     .fill(Theme.separator.opacity(0.3))
                     .frame(width: 1, height: 40)
                 
-                // Section 2: Head in Herds
+                // Section 2: Head Count
                 VStack(spacing: 4) {
-                    Text("\(summary?.headInHerds ?? 0)")
+                    Text("\(displayHeadCount)")
                         .font(.system(size: 20, weight: .bold))
                         .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
-                    Text("Head in Herds")
-                        .font(.system(size: 11, weight: .regular))
-                        .foregroundStyle(Theme.secondaryText)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                }
-                .frame(maxWidth: .infinity, alignment: .center)
-                
-                // Divider 2
-                Rectangle()
-                    .fill(Theme.separator.opacity(0.3))
-                    .frame(width: 1, height: 40)
-                
-                // Section 3: Head in Individuals
-                VStack(spacing: 4) {
-                    Text("\(summary?.headInIndividuals ?? 0)")
-                        .font(.system(size: 20, weight: .bold))
-                        .foregroundStyle(Theme.primaryText)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                    Text("Head in Individuals")
+                    Text("Head")
                         .font(.system(size: 11, weight: .regular))
                         .foregroundStyle(Theme.secondaryText)
                         .lineLimit(1)
@@ -773,21 +760,6 @@ struct PortfolioStatsCards: View {
     }
 }
 
-// MARK: - View Mode Selector
-// Debug: Using native segmented control for iOS HIG compliance with smooth sliding animation
-struct PortfolioViewModeSelector: View {
-    @Binding var selectedView: PortfolioView.PortfolioViewMode
-    
-    var body: some View {
-        ThemedSegmentedControl(
-            selection: $selectedView,
-            options: PortfolioView.PortfolioViewMode.allCases,
-            label: { $0.rawValue },
-            accessibilityLabel: "Portfolio view mode"
-        )
-        .frame(height: 50) // Debug: Increased height for better tap target (taller than standard 44pt)
-    }
-}
 
 // MARK: - Net Worth Card
 struct NetWorthCard: View {
