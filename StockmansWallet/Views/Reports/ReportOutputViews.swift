@@ -30,9 +30,14 @@ struct ReportPreviewView: View {
         NavigationStack {
             ScrollView {
                 if isLoading {
-                    ProgressView("Loading report data...")
-                        .tint(Theme.accentColor)
-                        .padding()
+                    // Debug: Skeleton loader while loading report data
+                    VStack(spacing: 20) {
+                        ReportListSkeleton()
+                            .padding(.horizontal)
+                        HerdDetailCardSkeleton()
+                            .padding(.horizontal)
+                    }
+                    .padding(.vertical)
                 } else if let data = reportData {
                     reportContentView(data: data)
                         .padding()

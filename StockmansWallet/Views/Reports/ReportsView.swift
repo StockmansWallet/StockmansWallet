@@ -293,10 +293,8 @@ struct AssetSummaryCard: View {
             }
             
             if isLoading {
-                ProgressView()
-                    .tint(Theme.accentColor)
-                    .frame(maxWidth: .infinity, alignment: .center)
-                    .padding()
+                // Debug: Skeleton loader for report list
+                ReportListSkeleton()
             } else if herds.isEmpty {
                 Text("No herds available")
                     .font(Theme.caption)

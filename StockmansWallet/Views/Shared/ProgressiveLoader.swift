@@ -162,6 +162,249 @@ struct MarketPriceRowSkeleton: View {
     }
 }
 
+// MARK: - Dashboard Chart Skeleton
+/// Debug: Skeleton loader for dashboard performance chart
+struct DashboardChartSkeleton: View {
+    var body: some View {
+        VStack(spacing: 0) {
+            // Debug: Time range selector skeleton
+            HStack {
+                Spacer()
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(Theme.tertiaryBackground)
+                    .frame(width: 80, height: 32)
+            }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 10)
+            
+            // Debug: Chart area skeleton
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Theme.tertiaryBackground)
+                .frame(height: 200)
+                .padding(.horizontal, Theme.dashboardCardPadding)
+                .padding(.bottom, Theme.dashboardCardPadding)
+        }
+        .cardStyle()
+        .shimmer()
+    }
+}
+
+// MARK: - Dashboard Card Skeleton
+/// Debug: Generic skeleton for dashboard cards with header
+struct DashboardCardSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Debug: Header with icon and title
+            HStack(spacing: 10) {
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Theme.tertiaryBackground)
+                    .frame(width: 28, height: 28)
+                
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.tertiaryBackground)
+                    .frame(width: 120, height: 16)
+                
+                Spacer()
+            }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 10)
+            .background(Theme.tertiaryBackground)
+            
+            // Debug: Content area with rows
+            VStack(spacing: 12) {
+                ForEach(0..<3, id: \.self) { _ in
+                    HStack {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(width: 100, height: 14)
+                        Spacer()
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(width: 60, height: 14)
+                    }
+                }
+            }
+            .padding(Theme.dashboardCardPadding)
+        }
+        .cardStyle()
+        .shimmer()
+    }
+}
+
+// MARK: - Physical Sales Table Skeleton
+/// Debug: Skeleton loader for physical sales report table
+struct PhysicalSalesTableSkeleton: View {
+    var body: some View {
+        VStack(spacing: 8) {
+            // Debug: Table header row
+            HStack(spacing: 8) {
+                ForEach(0..<4, id: \.self) { _ in
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Theme.tertiaryBackground)
+                        .frame(height: 12)
+                }
+            }
+            .padding(.bottom, 4)
+            
+            // Debug: Table data rows
+            ForEach(0..<5, id: \.self) { _ in
+                HStack(spacing: 8) {
+                    ForEach(0..<4, id: \.self) { col in
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(height: col == 0 ? 14 : 12)
+                    }
+                }
+            }
+        }
+        .padding()
+        .shimmer()
+    }
+}
+
+// MARK: - Herd Value Card Skeleton
+/// Debug: Skeleton loader for herd/animal total value display at top of detail page
+struct HerdValueCardSkeleton: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            // Debug: Herd name skeleton
+            RoundedRectangle(cornerRadius: 6)
+                .fill(Theme.tertiaryBackground)
+                .frame(width: 150, height: 18)
+            
+            // Debug: Large value skeleton
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Theme.tertiaryBackground)
+                .frame(width: 200, height: 44)
+            
+            // Debug: Change indicator skeleton
+            RoundedRectangle(cornerRadius: 12)
+                .fill(Theme.tertiaryBackground)
+                .frame(width: 120, height: 28)
+        }
+        .padding(.vertical, Theme.cardPadding * 1.5)
+        .frame(maxWidth: .infinity)
+        .shimmer()
+    }
+}
+
+// MARK: - Herd Detail Card Skeleton
+/// Debug: Skeleton loader for detail cards with header and content rows
+struct HerdDetailCardSkeleton: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Debug: Header
+            HStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.tertiaryBackground)
+                    .frame(width: 120, height: 16)
+                Spacer()
+            }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 12)
+            .background(Theme.tertiaryBackground)
+            
+            // Debug: Content rows
+            VStack(spacing: 12) {
+                ForEach(0..<4, id: \.self) { _ in
+                    HStack {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(width: 80, height: 14)
+                        Spacer()
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(width: 100, height: 14)
+                    }
+                }
+            }
+            .padding(Theme.dashboardCardPadding)
+        }
+        .cardStyle()
+        .shimmer()
+    }
+}
+
+// MARK: - Report List Skeleton
+/// Debug: Skeleton loader for report preview lists
+struct ReportListSkeleton: View {
+    var body: some View {
+        VStack(spacing: 12) {
+            // Debug: Portfolio value row
+            HStack {
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.tertiaryBackground)
+                    .frame(width: 120, height: 16)
+                Spacer()
+                RoundedRectangle(cornerRadius: 4)
+                    .fill(Theme.tertiaryBackground)
+                    .frame(width: 100, height: 18)
+            }
+            
+            Divider().background(Theme.separator)
+            
+            // Debug: Herd rows
+            ForEach(0..<3, id: \.self) { _ in
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(width: 140, height: 14)
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(width: 100, height: 12)
+                    }
+                    Spacer()
+                }
+            }
+        }
+        .padding()
+        .shimmer()
+    }
+}
+
+// MARK: - Summary Tiles Skeleton
+/// Debug: Skeleton loader for asset summary tiles
+struct SummaryTilesSkeleton: View {
+    var body: some View {
+        VStack(spacing: 16) {
+            HStack(spacing: 16) {
+                ForEach(0..<2, id: \.self) { _ in
+                    VStack(spacing: 8) {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(width: 40, height: 40)
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(width: 60, height: 20)
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.tertiaryBackground)
+                            .frame(width: 50, height: 12)
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+            }
+            
+            HStack(spacing: 16) {
+                VStack(spacing: 8) {
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Theme.tertiaryBackground)
+                        .frame(width: 40, height: 40)
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Theme.tertiaryBackground)
+                        .frame(width: 100, height: 20)
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(Theme.tertiaryBackground)
+                        .frame(width: 80, height: 12)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .padding()
+        .shimmer()
+    }
+}
+
 // MARK: - Progressive Loading Container
 /// Debug: Container view that shows skeleton loaders while content is loading
 struct ProgressiveLoadingContainer<Content: View>: View {
@@ -174,6 +417,13 @@ struct ProgressiveLoadingContainer<Content: View>: View {
         case portfolioCard
         case statsCard
         case marketRow
+        case dashboardChart
+        case dashboardCard
+        case physicalSalesTable
+        case herdValueCard
+        case herdDetailCard
+        case reportList
+        case summaryTiles
     }
     
     init(
@@ -211,6 +461,27 @@ struct ProgressiveLoadingContainer<Content: View>: View {
             ForEach(0..<skeletonCount, id: \.self) { _ in
                 MarketPriceRowSkeleton()
             }
+        case .dashboardChart:
+            DashboardChartSkeleton()
+                .padding(.horizontal, Theme.cardPadding)
+        case .dashboardCard:
+            ForEach(0..<skeletonCount, id: \.self) { _ in
+                DashboardCardSkeleton()
+                    .padding(.horizontal, Theme.cardPadding)
+            }
+        case .physicalSalesTable:
+            PhysicalSalesTableSkeleton()
+        case .herdValueCard:
+            HerdValueCardSkeleton()
+        case .herdDetailCard:
+            ForEach(0..<skeletonCount, id: \.self) { _ in
+                HerdDetailCardSkeleton()
+                    .padding(.horizontal, Theme.cardPadding)
+            }
+        case .reportList:
+            ReportListSkeleton()
+        case .summaryTiles:
+            SummaryTilesSkeleton()
         }
     }
 }

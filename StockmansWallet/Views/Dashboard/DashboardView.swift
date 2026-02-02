@@ -370,35 +370,48 @@ struct DashboardView: View {
         let userPrefs = preferences.first ?? UserPreferences()
         
         VStack(spacing: 20) { // Apple HIG: 20pt spacing between sections
-            // Debug: Display cards in user's custom order from preferences
-            ForEach(userPrefs.dashboardCardOrder, id: \.self) { cardId in
-                // Debug: Render each card type inline to maintain access to @State bindings
-                if userPrefs.isCardVisible(cardId) {
-                    switch cardId {
-                    case "performanceChart":
-                        dashboardCardWrapper(cardId: cardId, isReorderable: false) {
-                            performanceChartCard
-                        }
-                    case "quickActions":
-                        dashboardCardWrapper(cardId: cardId, isReorderable: true) {
-                            saleyardSelectorCard
-                        }
-                    case "marketSummary":
-                        dashboardCardWrapper(cardId: cardId, isReorderable: true) {
-                            marketPulseCard
-                        }
-                    case "recentActivity":
-                        dashboardCardWrapper(cardId: cardId, isReorderable: true) {
-                            herdDynamicsCard
-                        }
-                    case "herdComposition":
-                        if !capitalConcentration.isEmpty {
-                            dashboardCardWrapper(cardId: cardId, isReorderable: true) {
-                                capitalConcentrationCard
+            // Debug: Show skeleton loaders during initial load
+            if isLoading {
+                // Chart skeleton
+                DashboardChartSkeleton()
+                    .padding(.horizontal, Theme.cardPadding)
+                
+                // Dashboard card skeletons
+                ForEach(0..<3, id: \.self) { _ in
+                    DashboardCardSkeleton()
+                        .padding(.horizontal, Theme.cardPadding)
+                }
+            } else {
+                // Debug: Display cards in user's custom order from preferences
+                ForEach(userPrefs.dashboardCardOrder, id: \.self) { cardId in
+                    // Debug: Render each card type inline to maintain access to @State bindings
+                    if userPrefs.isCardVisible(cardId) {
+                        switch cardId {
+                        case "performanceChart":
+                            dashboardCardWrapper(cardId: cardId, isReorderable: false) {
+                                performanceChartCard
                             }
+                        case "quickActions":
+                            dashboardCardWrapper(cardId: cardId, isReorderable: true) {
+                                saleyardSelectorCard
+                            }
+                        case "marketSummary":
+                            dashboardCardWrapper(cardId: cardId, isReorderable: true) {
+                                marketPulseCard
+                            }
+                        case "recentActivity":
+                            dashboardCardWrapper(cardId: cardId, isReorderable: true) {
+                                herdDynamicsCard
+                            }
+                        case "herdComposition":
+                            if !capitalConcentration.isEmpty {
+                                dashboardCardWrapper(cardId: cardId, isReorderable: true) {
+                                    capitalConcentrationCard
+                                }
+                            }
+                        default:
+                            EmptyView()
                         }
-                    default:
-                        EmptyView()
                     }
                 }
             }

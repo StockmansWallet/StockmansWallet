@@ -25,10 +25,8 @@ struct AssetSummaryView: View {
             }
             
             if isLoading {
-                ProgressView()
-                    .tint(Theme.accentColor)
-                    .frame(maxWidth: .infinity)
-                    .padding()
+                // Debug: Skeleton loader for summary tiles
+                SummaryTilesSkeleton()
             } else if activeHerds.isEmpty {
                 Text("No active herds")
                     .font(Theme.caption)

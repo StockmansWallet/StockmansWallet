@@ -59,95 +59,100 @@ struct HerdDetailView: View {
                 
                 ScrollView {
                     VStack(spacing: 20) {
-                    // Debug: Total value card with herd name at the very top
-                    if let valuation = valuation {
-                        TotalValueCard(herd: activeHerd, valuation: valuation)
+                    // Debug: Show skeleton loaders while loading
+                    if isLoading {
+                        // Total value skeleton
+                        HerdValueCardSkeleton()
                             .padding(.horizontal)
-                    } else if isLoading {
-                        ProgressView()
-                            .tint(Theme.accentColor)
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                    }
-                    
-                    // Debug: Horizontal stats card for herd type and head count
-                    // Only show for herds (headCount > 1), not for individual animals to avoid duplication
-                    if !isLoading && activeHerd.headCount > 1 {
-                        HerdStatsCard(herd: activeHerd)
-                            .padding(.horizontal)
-                    }
                         
-                    // Debug: Weight Growth Chart for visual insight
-                    // Pass data directly to avoid SwiftData access issues
-                    if !isLoading, let valuation = valuation, activeHerd.dailyWeightGain > 0 {
-                        WeightGrowthChart(
-                            initialWeight: activeHerd.initialWeight,
-                            dailyWeightGain: activeHerd.dailyWeightGain,
-                            daysHeld: activeHerd.daysHeld,
-                            createdAt: activeHerd.createdAt,
-                            projectedWeight: valuation.projectedWeight
-                        )
-                        .padding(.horizontal)
-                    }
-                    
-                    // Debug: Primary valuation metrics
-                    if let valuation = valuation {
-                        PrimaryMetricsCard(herd: activeHerd, valuation: valuation)
+                        // Detail cards skeletons
+                        ForEach(0..<3, id: \.self) { _ in
+                            HerdDetailCardSkeleton()
+                                .padding(.horizontal)
+                        }
+                    } else {
+                        // Debug: Total value card with herd name at the very top
+                        if let valuation = valuation {
+                            TotalValueCard(herd: activeHerd, valuation: valuation)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Horizontal stats card for herd type and head count
+                        // Only show for herds (headCount > 1), not for individual animals to avoid duplication
+                        if activeHerd.headCount > 1 {
+                            HerdStatsCard(herd: activeHerd)
+                                .padding(.horizontal)
+                        }
+                            
+                        // Debug: Weight Growth Chart for visual insight
+                        // Pass data directly to avoid SwiftData access issues
+                        if let valuation = valuation, activeHerd.dailyWeightGain > 0 {
+                            WeightGrowthChart(
+                                initialWeight: activeHerd.initialWeight,
+                                dailyWeightGain: activeHerd.dailyWeightGain,
+                                daysHeld: activeHerd.daysHeld,
+                                createdAt: activeHerd.createdAt,
+                                projectedWeight: valuation.projectedWeight
+                            )
                             .padding(.horizontal)
-                    }
-                    
-                    // Debug: Consolidated herd details - all key info in one card
-                    if !isLoading {
+                        }
+                        
+                        // Debug: Primary valuation metrics
+                        if let valuation = valuation {
+                            PrimaryMetricsCard(herd: activeHerd, valuation: valuation)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Consolidated herd details - all key info in one card
                         HerdDetailsCard(herd: activeHerd, valuation: valuation)
                             .padding(.horizontal)
-                    }
-                    
-                    // Debug: Breeding info only if applicable - shown before other records
-                    if !isLoading, activeHerd.isBreeder {
-                        BreedingDetailsCard(herd: activeHerd)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Mustering records card - only show if there are muster records
-                    if !isLoading, let musterRecords = activeHerd.musterRecords, !musterRecords.isEmpty {
-                        MusteringHistoryCard(herd: activeHerd)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Health records card - only show if there are health records
-                    if !isLoading, let healthRecords = activeHerd.healthRecords, !healthRecords.isEmpty {
-                        HealthRecordsCard(herd: activeHerd)
-                            .padding(.horizontal)
-                    }
-                    
-                    // Debug: Button to open searchable animal list sheet - only show for herds (not individual animals)
-                    if !isLoading && activeHerd.headCount > 1 {
-                        Button {
-                            HapticManager.tap()
-                            showingAnimalsList = true
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text("View Individual Animals")
-                                        .font(Theme.headline)
-                                        .foregroundStyle(Theme.primaryText)
-                                    Text("Browse all individually tagged animals")
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.secondaryText)
-                                }
-                                
-                                Spacer()
-                                
-                                Image(systemName: "chevron.right")
-                                    .font(.system(size: 14, weight: .semibold))
-                                    .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                            }
-                            .padding(Theme.cardPadding)
+                        
+                        // Debug: Breeding info only if applicable - shown before other records
+                        if activeHerd.isBreeder {
+                            BreedingDetailsCard(herd: activeHerd)
+                                .padding(.horizontal)
                         }
-                        .buttonStyle(PlainButtonStyle())
-                        // Debug: Card temporarily removed to test cleaner look
-                        // .cardStyle()
-                        .padding(.horizontal)
+                        
+                        // Debug: Mustering records card - only show if there are muster records
+                        if let musterRecords = activeHerd.musterRecords, !musterRecords.isEmpty {
+                            MusteringHistoryCard(herd: activeHerd)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Health records card - only show if there are health records
+                        if let healthRecords = activeHerd.healthRecords, !healthRecords.isEmpty {
+                            HealthRecordsCard(herd: activeHerd)
+                                .padding(.horizontal)
+                        }
+                        
+                        // Debug: Button to open searchable animal list sheet - only show for herds (not individual animals)
+                        if activeHerd.headCount > 1 {
+                            Button {
+                                HapticManager.tap()
+                                showingAnimalsList = true
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("View Individual Animals")
+                                            .font(Theme.headline)
+                                            .foregroundStyle(Theme.primaryText)
+                                        Text("Browse all individually tagged animals")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                                }
+                                .padding(Theme.cardPadding)
+                            }
+                            .buttonStyle(PlainButtonStyle())
+                            .cardStyle()
+                            .padding(.horizontal)
+                        }
                     }
                     
                     // Debug: Record Sale button at bottom of detail page (not floating, just regular button)
@@ -393,8 +398,8 @@ struct WeightGrowthChart: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            // Debug: Weight header
+        VStack(alignment: .leading, spacing: 0) {
+            // Debug: Header bar with dark background like dashboard cards
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Weight Growth")
@@ -412,51 +417,57 @@ struct WeightGrowthChart: View {
                         .foregroundStyle(Theme.positiveChange)
                 }
             }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(Theme.tertiaryBackground)
             
-            // Debug: Always show chart with at least 2 data points for line rendering
-            Chart(weightData) { point in
-                LineMark(
-                    x: .value("Date", point.date),
-                    y: .value("Weight", point.weight)
-                )
-                .foregroundStyle(Theme.accentColor)
-                .lineStyle(StrokeStyle(lineWidth: 2))
-                
-                AreaMark(
-                    x: .value("Date", point.date),
-                    y: .value("Weight", point.weight)
-                )
-                .foregroundStyle(
-                    LinearGradient(
-                        colors: [Theme.accentColor.opacity(0.3), Theme.accentColor.opacity(0.05)],
-                        startPoint: .top,
-                        endPoint: .bottom
+            // Debug: Chart content area
+            VStack(spacing: 12) {
+                // Debug: Always show chart with at least 2 data points for line rendering
+                Chart(weightData) { point in
+                    LineMark(
+                        x: .value("Date", point.date),
+                        y: .value("Weight", point.weight)
                     )
-                )
-            }
-            .frame(height: 120)
-            .chartYAxis {
-                AxisMarks(position: .leading) { value in
-                    AxisGridLine()
-                        .foregroundStyle(Theme.separator.opacity(0.3))
-                    AxisValueLabel()
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
+                    .foregroundStyle(Theme.accentColor)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    
+                    AreaMark(
+                        x: .value("Date", point.date),
+                        y: .value("Weight", point.weight)
+                    )
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Theme.accentColor.opacity(0.3), Theme.accentColor.opacity(0.05)],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+                }
+                .frame(height: 120)
+                .chartYAxis {
+                    AxisMarks(position: .leading) { value in
+                        AxisGridLine()
+                            .foregroundStyle(Theme.separator.opacity(0.3))
+                        AxisValueLabel()
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                }
+                .chartXAxis {
+                    AxisMarks { value in
+                        AxisGridLine()
+                            .foregroundStyle(Theme.separator.opacity(0.3))
+                        AxisValueLabel(format: .dateTime.month().day())
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
                 }
             }
-            .chartXAxis {
-                AxisMarks { value in
-                    AxisGridLine()
-                        .foregroundStyle(Theme.separator.opacity(0.3))
-                    AxisValueLabel(format: .dateTime.month().day())
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                }
-            }
+            .padding(Theme.dashboardCardPadding)
         }
-        .padding(Theme.cardPadding)
-        // Debug: Card temporarily removed to test cleaner look
-        // .cardStyle()
+        .cardStyle()
     }
 }
 
@@ -491,31 +502,40 @@ struct PrimaryMetricsCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            // Header
-            Text("Key Metrics")
-                .font(Theme.headline)
-                .foregroundStyle(Theme.primaryText)
-            
-            // Key metrics in list format
-            DetailRow(label: "Price (Per Kilogram)", value: formattedPricePerKg)
-            DetailRow(label: "Average Weight", value: "\(Int(valuation.projectedWeight)) kg")
-            DetailRow(label: "Value Per Head", value: formattedValuePerHead)
-            
-            // Debug: Show herd's specific saleyard with consistent icon
+        VStack(alignment: .leading, spacing: 0) {
+            // Debug: Header bar with dark background like dashboard cards
             HStack {
-                Image(systemName: "dollarsign.bank.building")
-                    .font(.system(size: 12))
-                    .foregroundStyle(Theme.secondaryText)
-                Text(herd.selectedSaleyard ?? "No saleyard selected")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondaryText)
+                Text("Key Metrics")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                Spacer()
             }
-            .padding(.top, 4)
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(Theme.tertiaryBackground)
+            
+            // Debug: Content area
+            VStack(alignment: .leading, spacing: 8) {
+                // Key metrics in list format
+                DetailRow(label: "Price (Per Kilogram)", value: formattedPricePerKg)
+                DetailRow(label: "Average Weight", value: "\(Int(valuation.projectedWeight)) kg")
+                DetailRow(label: "Value Per Head", value: formattedValuePerHead)
+                
+                // Debug: Show herd's specific saleyard with consistent icon
+                HStack {
+                    Image(systemName: "dollarsign.bank.building")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.secondaryText)
+                    Text(herd.selectedSaleyard ?? "No saleyard selected")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                .padding(.top, 4)
+            }
+            .padding(Theme.dashboardCardPadding)
         }
-        .padding(Theme.cardPadding)
-        // Debug: Card temporarily removed to test cleaner look
-        // .cardStyle()
+        .cardStyle()
     }
 }
 
@@ -531,18 +551,30 @@ struct HerdDetailsCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            // Debug: Removed "Animal Details" heading since there's no card background
-            
-            // Physical Attributes Section
-            VStack(alignment: .leading, spacing: 8) {
-                SectionHeader(title: "Physical Attributes")
-                DetailRow(label: "Species", value: herd.species)
-                DetailRow(label: "Breed", value: herd.breed)
-                DetailRow(label: "Category", value: herd.category)
-                DetailRow(label: "Sex", value: herd.sex)
-                DetailRow(label: "Age", value: "\(herd.ageMonths) months")
+        VStack(alignment: .leading, spacing: 0) {
+            // Debug: Header bar with dark background like dashboard cards
+            HStack {
+                Text(isIndividualAnimal ? "Animal Details" : "Herd Details")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                Spacer()
             }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(Theme.tertiaryBackground)
+            
+            // Debug: Content area with sections
+            VStack(alignment: .leading, spacing: 20) {
+                // Physical Attributes Section
+                VStack(alignment: .leading, spacing: 8) {
+                    SectionHeader(title: "Physical Attributes")
+                    DetailRow(label: "Species", value: herd.species)
+                    DetailRow(label: "Breed", value: herd.breed)
+                    DetailRow(label: "Category", value: herd.category)
+                    DetailRow(label: "Sex", value: herd.sex)
+                    DetailRow(label: "Age", value: "\(herd.ageMonths) months")
+                }
             
             Divider()
                 .background(Theme.separator.opacity(0.3))
@@ -612,10 +644,10 @@ struct HerdDetailsCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            }
+            .padding(Theme.dashboardCardPadding)
         }
-        .padding(Theme.cardPadding)
-        // Debug: Card temporarily removed to test cleaner look
-        // .cardStyle()
+        .cardStyle()
     }
 }
 
@@ -918,21 +950,31 @@ struct BreedingDetailsCard: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            Text("Breeding Information")
-                .font(Theme.headline)
-                .foregroundStyle(Theme.primaryText)
+        VStack(alignment: .leading, spacing: 0) {
+            // Debug: Header bar with dark background like dashboard cards
+            HStack {
+                Text("Breeding Information")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                Spacer()
+            }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(Theme.tertiaryBackground)
             
-            VStack(spacing: 8) {
-                // Debug: Show breeding program type if available
-                if let programType = breedingProgramInfo.type {
-                    DetailRow(label: "Breeding Program", value: programType)
-                    
-                    // Show joining/insemination period if available
-                    if let periodDetails = breedingProgramInfo.details {
-                        DetailRow(label: "Period", value: periodDetails)
+            // Debug: Content area
+            VStack(alignment: .leading, spacing: 16) {
+                VStack(spacing: 8) {
+                    // Debug: Show breeding program type if available
+                    if let programType = breedingProgramInfo.type {
+                        DetailRow(label: "Breeding Program", value: programType)
+                        
+                        // Show joining/insemination period if available
+                        if let periodDetails = breedingProgramInfo.details {
+                            DetailRow(label: "Period", value: periodDetails)
+                        }
                     }
-                }
                 
                 DetailRow(label: "Calving Rate", value: "\(Int(herd.calvingRate * 100))%")
                 DetailRow(label: "Pregnant", value: herd.isPregnant ? "Yes" : "No")
@@ -973,10 +1015,10 @@ struct BreedingDetailsCard: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
+            }
+            .padding(Theme.dashboardCardPadding)
         }
-        .padding(Theme.cardPadding)
-        // Debug: Card temporarily removed to test cleaner look
-        // .cardStyle()
+        .cardStyle()
     }
 }
 
@@ -986,7 +1028,8 @@ struct MusteringHistoryCard: View {
     let herd: HerdGroup
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Debug: Header bar with dark background like dashboard cards
             HStack {
                 Text("Mustering Records")
                     .font(Theme.headline)
@@ -1001,17 +1044,20 @@ struct MusteringHistoryCard: View {
                         .foregroundStyle(Theme.secondaryText)
                 }
             }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(Theme.tertiaryBackground)
             
-            // Debug: Display muster records in chronological order (most recent first)
+            // Debug: Content area with muster records
             VStack(spacing: 12) {
                 ForEach(herd.sortedMusterRecords) { record in
                     MusterRecordRow(record: record)
                 }
             }
+            .padding(Theme.dashboardCardPadding)
         }
-        .padding(Theme.cardPadding)
-        // Debug: Card temporarily removed to test cleaner look
-        // .cardStyle()
+        .cardStyle()
     }
 }
 
@@ -1122,7 +1168,8 @@ struct HealthRecordsCard: View {
     let herd: HerdGroup
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 0) {
+            // Debug: Header bar with dark background like dashboard cards
             HStack {
                 Text("Health Records")
                     .font(Theme.headline)
@@ -1137,17 +1184,20 @@ struct HealthRecordsCard: View {
                         .foregroundStyle(Theme.secondaryText)
                 }
             }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 12)
+            .frame(maxWidth: .infinity)
+            .background(Theme.tertiaryBackground)
             
-            // Debug: Display health records in chronological order (most recent first)
+            // Debug: Content area with health records
             VStack(spacing: 12) {
                 ForEach(herd.sortedHealthRecords) { record in
                     HealthRecordRow(record: record)
                 }
             }
+            .padding(Theme.dashboardCardPadding)
         }
-        .padding(Theme.cardPadding)
-        // Debug: Card temporarily removed to test cleaner look
-        // .cardStyle()
+        .cardStyle()
     }
 }
 

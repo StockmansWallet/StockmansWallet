@@ -493,14 +493,9 @@ struct MarketView: View {
                         selectedSalePrefix: viewModel.selectedSalePrefix
                     )
                 } else if viewModel.isLoadingPhysicalReport {
-                    VStack(spacing: 12) {
-                        ProgressView()
-                            .tint(Theme.accentColor)
-                        Text("Loading report...")
-                            .font(.system(size: 13))
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                    .frame(height: 100)
+                    // Debug: Skeleton loader for physical sales table
+                    PhysicalSalesTableSkeleton()
+                        .padding(.horizontal)
                 }
             }
         }
