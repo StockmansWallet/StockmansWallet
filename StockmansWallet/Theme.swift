@@ -36,11 +36,10 @@ enum Theme {
     
     /// Background colors - Used for surfaces and containers
     enum Background {
-        // Debug: Updated palette to match onboarding reference colors.
-        static let primary = Color(hex: "1B150E") // Base dark BG
-        static let secondary = Color(hex: "211A12") // Primary card BG
-        static let tertiary = Color(hex: "2D241A")
-        static let quaternary = Color(hex: "3A2F23")
+        static let primary = Color(hex: "14100B") // App Base Dark BG
+        static let secondary = Color(hex: "211A12") // Card BG Level 1
+        static let tertiary = Color(hex: "2D241A") // Card BG Level 2
+        static let quaternary = Color(hex: "3A2F23") // Card BG Level 3
     }
     
     // MARK: - Semantic Colors (Following Apple HIG naming)
