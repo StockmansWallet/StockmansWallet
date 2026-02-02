@@ -76,7 +76,6 @@ enum Theme {
     /// Debug: Header background for dashboard cards.
     static let dashboardHeaderBackground = Color(hex: "2A2117")
 
-    /// Debug: Icon background for dashboard card title bars.
     static let dashboardIconBackground = Background.quaternary
     
     /// Tertiary background color for nested grouping.
