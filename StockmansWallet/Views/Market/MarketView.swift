@@ -143,9 +143,12 @@ struct MarketView: View {
                 TopInsightBanner(insight: insight)
                     .padding(.horizontal)
             } else if viewModel.isLoadingInsight {
-                ProgressView()
-                    .tint(Theme.accentColor)
-                    .frame(height: 80)
+                // Debug: Progressive loader for top insight
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Theme.tertiaryBackground)
+                    .frame(height: 120)
+                    .padding(.horizontal)
+                    .shimmer()
             }
             
             // Debug: Last updated timestamp
@@ -230,9 +233,14 @@ struct MarketView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 60)
             } else if viewModel.isLoadingPrices {
-                ProgressView()
-                    .tint(Theme.accentColor)
-                    .frame(height: 200)
+                // Debug: Progressive loader for market prices
+                ProgressiveLoadingContainer(
+                    isLoading: true,
+                    skeletonCount: 4,
+                    skeletonType: .marketRow
+                ) {
+                    EmptyView()
+                }
             } else if viewModel.categoryPrices.isEmpty {
                 // No prices available
                 emptyStateView(message: "No price data available for your livestock")
@@ -274,9 +282,22 @@ struct MarketView: View {
                     .padding(.horizontal)
                 
                 if viewModel.isLoadingIndicators {
-                    ProgressView()
-                        .tint(Theme.accentColor)
-                        .frame(height: 150)
+                    // Debug: Progressive loader for national indicators
+                    LazyVGrid(
+                        columns: [
+                            GridItem(.flexible(), spacing: 12),
+                            GridItem(.flexible(), spacing: 12)
+                        ],
+                        spacing: 12
+                    ) {
+                        ForEach(0..<4, id: \.self) { _ in
+                            RoundedRectangle(cornerRadius: 12)
+                                .fill(Theme.tertiaryBackground)
+                                .frame(height: 100)
+                                .shimmer()
+                        }
+                    }
+                    .padding(.horizontal)
                 } else if viewModel.nationalIndicators.isEmpty {
                     emptyStateView(message: "No indicator data available")
                 } else {

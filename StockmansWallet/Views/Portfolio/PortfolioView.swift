@@ -146,14 +146,20 @@ struct PortfolioView: View {
                         // Herds Tab
                         ScrollView {
                             VStack(spacing: 16) {
-                                // Debug: Show total value of herds only
-                                PortfolioStatsCards(
-                                    summary: portfolioSummary,
-                                    isLoading: isLoading,
-                                    viewMode: .herds
-                                )
-                                .padding(.horizontal, Theme.cardPadding)
-                                .padding(.top, 16)
+                                // Debug: Show total value of herds only with skeleton loader
+                                if isLoading {
+                                    StatsCardSkeleton()
+                                        .padding(.horizontal, Theme.cardPadding)
+                                        .padding(.top, 16)
+                                } else {
+                                    PortfolioStatsCards(
+                                        summary: portfolioSummary,
+                                        isLoading: isLoading,
+                                        viewMode: .herds
+                                    )
+                                    .padding(.horizontal, Theme.cardPadding)
+                                    .padding(.top, 16)
+                                }
                                 
                                 herdsContent
                             }
@@ -165,14 +171,20 @@ struct PortfolioView: View {
                         // Individual Tab
                         ScrollView {
                             VStack(spacing: 16) {
-                                // Debug: Show total value of individual animals only
-                                PortfolioStatsCards(
-                                    summary: portfolioSummary,
-                                    isLoading: isLoading,
-                                    viewMode: .individual
-                                )
-                                .padding(.horizontal, Theme.cardPadding)
-                                .padding(.top, 16)
+                                // Debug: Show total value of individual animals only with skeleton loader
+                                if isLoading {
+                                    StatsCardSkeleton()
+                                        .padding(.horizontal, Theme.cardPadding)
+                                        .padding(.top, 16)
+                                } else {
+                                    PortfolioStatsCards(
+                                        summary: portfolioSummary,
+                                        isLoading: isLoading,
+                                        viewMode: .individual
+                                    )
+                                    .padding(.horizontal, Theme.cardPadding)
+                                    .padding(.top, 16)
+                                }
                                 
                                 individualContent
                             }
@@ -254,9 +266,19 @@ struct PortfolioView: View {
     
     // MARK: - Herds Content
     // Debug: Display only herds (headCount > 1)
+    // Debug: Progressive loader shows skeleton cards while data loads
     private var herdsContent: some View {
         Group {
-            if let summary = portfolioSummary {
+            if isLoading {
+                // Debug: Show skeleton loaders while loading
+                ProgressiveLoadingContainer(
+                    isLoading: true,
+                    skeletonCount: 3,
+                    skeletonType: .portfolioCard
+                ) {
+                    EmptyView()
+                }
+            } else if let summary = portfolioSummary {
                 LazyVStack(spacing: 16) {
                     ForEach(cachedFilteredHerds, id: \.id) { herd in
                         let herdIdForSale = herd.id
@@ -286,9 +308,19 @@ struct PortfolioView: View {
     // MARK: - Individual Content
     // Debug: Display only individual animals (headCount == 1)
     // Performance: Uses lightweight card for better scroll performance with many items
+    // Debug: Progressive loader shows skeleton cards while data loads
     private var individualContent: some View {
         Group {
-            if portfolioSummary != nil {
+            if isLoading {
+                // Debug: Show skeleton loaders while loading
+                ProgressiveLoadingContainer(
+                    isLoading: true,
+                    skeletonCount: 4,
+                    skeletonType: .portfolioCard
+                ) {
+                    EmptyView()
+                }
+            } else if portfolioSummary != nil {
                 LazyVStack(spacing: 12) {
                     ForEach(cachedFilteredIndividuals) { data in
                         LightweightAnimalCard(data: data)
