@@ -779,18 +779,13 @@ struct PortfolioViewModeSelector: View {
     @Binding var selectedView: PortfolioView.PortfolioViewMode
     
     var body: some View {
-        Picker("View Mode", selection: $selectedView) {
-            ForEach(PortfolioView.PortfolioViewMode.allCases, id: \.self) { mode in
-                Text(mode.rawValue)
-                    .font(Theme.headline) // Debug: Larger font for better readability
-                    .tag(mode)
-            }
-        }
-        .pickerStyle(.segmented)
+        ThemedSegmentedControl(
+            selection: $selectedView,
+            options: PortfolioView.PortfolioViewMode.allCases,
+            label: { $0.rawValue },
+            accessibilityLabel: "Portfolio view mode"
+        )
         .frame(height: 50) // Debug: Increased height for better tap target (taller than standard 44pt)
-        .onChange(of: selectedView) { _, _ in
-            HapticManager.tap()
-        }
     }
 }
 

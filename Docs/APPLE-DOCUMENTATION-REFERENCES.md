@@ -40,10 +40,27 @@ This file contains important Apple documentation URLs for quick reference during
 - [Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/) - Complete HIG reference
 - [iOS 26 Design Resources](https://developer.apple.com/design/resources/) - UI kits, templates, and assets
 - [Liquid Glass Design Language](https://developer.apple.com/design/human-interface-guidelines/ios/visual-design/materials/) - Materials and translucency
+- [Segmented Controls (HIG)](https://developer.apple.com/design/human-interface-guidelines/ios/controls/segmented-controls) - Usage and interaction guidance
 
 ### Performance & Best Practices
 - [Performance Best Practices](https://developer.apple.com/documentation/xcode/improving-your-app-s-performance)
 - [Optimizing SwiftUI Performance](https://developer.apple.com/documentation/swiftui/optimizing-your-swiftui-app-s-performance)
+
+## UIKit Controls & Appearance
+
+### Segmented Controls (UIKit)
+- [UISegmentedControl](https://developer.apple.com/documentation/uikit/uisegmentedcontrol)
+- [init(items:)](https://developer.apple.com/documentation/uikit/uisegmentedcontrol/init%28items%3A%29)
+- [segment selection](https://developer.apple.com/documentation/uikit/uisegmentedcontrol/1618559-segment_selection)
+- [selectedSegmentTintColor](https://developer.apple.com/documentation/uikit/uisegmentedcontrol/selectedsegmenttintcolor)
+- [setTitleTextAttributes(_:for:)](https://developer.apple.com/documentation/uikit/uisegmentedcontrol/settitletextattributes%28_%3Afor%3A%29)
+
+### UIAppearance
+- [UIAppearance](https://developer.apple.com/documentation/uikit/uiappearance)
+- [appearance(whenContainedInInstancesOf:)](https://developer.apple.com/documentation/uikit/uiappearance/appearance%28whencontainedininstancesof%3A%29)
+
+### UIKit Views & Controls
+- [Views and Controls](https://developer.apple.com/documentation/uikit/views-and-controls)
 
 ---
 
