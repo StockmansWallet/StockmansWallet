@@ -267,10 +267,10 @@ struct PortfolioView: View {
                                 herdIdToSell = IdentifiableUUID(id: herdIdForSale)
                             }
                         )
+                        .padding(.horizontal, Theme.cardPadding)
                         .id(herd.id) // Performance: Explicit ID for stable identity
                     }
                 }
-                .padding(.horizontal)
                 
                 // Debug: Show message if no herds found
                 if cachedFilteredHerds.isEmpty {
@@ -292,9 +292,9 @@ struct PortfolioView: View {
                 LazyVStack(spacing: 12) {
                     ForEach(cachedFilteredIndividuals) { data in
                         LightweightAnimalCard(data: data)
+                            .padding(.horizontal, Theme.cardPadding)
                     }
                 }
-                .padding(.horizontal)
                 
                 // Debug: Show message if no individuals found
                 if cachedFilteredIndividuals.isEmpty {
@@ -1283,110 +1283,108 @@ struct LightweightAnimalCard: View {
     
     var body: some View {
         NavigationLink(destination: HerdDetailView(herdId: data.id)) {
-            VStack(alignment: .leading, spacing: 12) {
-                    HStack(alignment: .top) {
-                        Text(data.displayName)
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.accentColor)
-                            .lineLimit(1)
-                        Spacer()
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                    }
-                    
-                    // Row 2: Species/Breed/Category
-                    Text("\(data.species) | \(data.breed) | \(data.category)")
-                        .font(Theme.subheadline) // Debug: Bigger font for better readability
-                        .foregroundStyle(Theme.secondaryText)
+            VStack(alignment: .leading, spacing: 0) {
+                // Debug: Header row with animal name and chevron - dark background like dashboard
+                HStack(alignment: .center) {
+                    Text(data.displayName)
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
-                    
-                    // Divider
-                    Rectangle()
-                        .frame(height: 1)
-                        .foregroundStyle(Theme.separator.opacity(0.15))
+                    Spacer()
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
+                }
+                .padding(.horizontal, Theme.dashboardCardPadding)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity)
+                .background(Theme.tertiaryBackground)
                 
-                    // Row 3: Location and Value
-                    HStack {
-                        if let paddock = data.paddockName, !paddock.isEmpty {
-                            HStack(spacing: 4) {
-                                Image(systemName: "map.fill")
-                                    .font(.system(size: 12)) // Debug: Slightly bigger icon
-                                Text(paddock)
-                            }
-                            .font(Theme.subheadline) // Debug: Bigger font for better readability
-                            .foregroundStyle(Theme.secondaryText.opacity(0.8))
-                        }
+                // Debug: Label-value rows
+                VStack(spacing: 12) {
+                    // Type row
+                    HStack(alignment: .top) {
+                        Text("Type")
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
                         Spacer()
-                        if data.totalValue > 0 {
-                            Text(data.totalValue, format: .currency(code: "AUD"))
-                                .font(Theme.subheadline)
-                                .fontWeight(.semibold)
-                                .foregroundStyle(Theme.accentColor)
-                        }
-                    }
-                    
-                    // Row 4: Breeder info and Weight/Price
-                    HStack {
-                        if data.isBreeder {
-                            HStack(spacing: 4) {
-                                Image("chick")
-                                    .resizable()
-                                    .renderingMode(.template)
-                                    .frame(width: 12, height: 12) // Debug: Slightly bigger icon
-                                Text("Breeder")
-                            }
-                            .font(Theme.subheadline) // Debug: Bigger font for better readability
-                            .foregroundStyle(Theme.secondaryText.opacity(0.8))
-                        }
-                        Spacer()
-                        Text("\(Int(data.currentWeight)) kg @ \(data.pricePerKg, format: .currency(code: "AUD"))")
-                            .font(Theme.subheadline) // Debug: Bigger font for better readability
+                        Text("\(data.species) | \(data.breed) | \(data.category)\(data.isBreeder ? " (Breeder)" : "")")
+                            .font(.system(size: 14, weight: .regular))
                             .foregroundStyle(Theme.secondaryText)
+                            .multilineTextAlignment(.trailing)
                     }
                     
-                    // Row 5: Saleyard and Sell Button
-                    HStack(alignment: .center) {
-                        if let saleyard = data.selectedSaleyard, !saleyard.isEmpty {
-                            HStack(spacing: 4) {
-                                Image("property_icon")
-                                    .resizable()
-                                    .renderingMode(.template)
-                                    .frame(width: 10, height: 10)
-                                Text(saleyard)
-                            }
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText.opacity(0.8))
-                            .lineLimit(1)
+                    // Location row
+                    if let paddock = data.paddockName, !paddock.isEmpty {
+                        HStack(alignment: .top) {
+                            Text("Location")
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                            Spacer()
+                            Text(paddock)
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText)
+                                .multilineTextAlignment(.trailing)
                         }
-                        Spacer()
-                        // Sell button - matching herd card style
-                        Button {
-                            HapticManager.tap()
-                            showingSellSheet = true
-                        } label: {
-                            Text("Sell")
-                                .font(.system(size: 12))
-                                .fontWeight(.medium)
-                                .foregroundStyle(Theme.accentColor)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 4)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(Theme.accentColor.opacity(0.1))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .stroke(Theme.accentColor, lineWidth: 0.8)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        }
-                        .buttonStyle(.plain)
                     }
+                    
+                    // Head row (weight and price)
+                    HStack(alignment: .top) {
+                        Text("Head")
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                        Spacer()
+                        Text("\(Int(data.currentWeight))kg | \(data.pricePerKg, format: .currency(code: "AUD"))")
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    
+                    // Value row
+                    if data.totalValue > 0 {
+                        HStack(alignment: .top) {
+                            Text("Value")
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                            Spacer()
+                            Text(data.totalValue, format: .currency(code: "AUD"))
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.accentColor)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+                }
+                .padding(.horizontal, Theme.dashboardCardPadding)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
+                
+                // Debug: Sell button at bottom right - matches dashboard style
+                HStack {
+                    Spacer()
+                    Button {
+                        HapticManager.tap()
+                        showingSellSheet = true
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "dollarsign.circle.fill")
+                                .font(.system(size: 14))
+                            Text("Sell")
+                                .font(.system(size: 14, weight: .medium))
+                        }
+                        .foregroundStyle(Theme.accentColor)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 8)
+                        .background(
+                            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                .fill(Theme.accentColor.opacity(0.15))
+                        )
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, Theme.dashboardCardPadding)
+                .padding(.bottom, Theme.dashboardCardPadding)
             }
         }
-        .buttonStyle(PlainButtonStyle())
-        .padding(Theme.cardPadding)
         .cardStyle()
         .sheet(isPresented: $showingSellSheet) {
             SellStockView(preselectedHerdId: data.id)
@@ -1427,131 +1425,121 @@ struct EnhancedHerdCard: View {
         let isBreeder = herd.isBreeder
         
         NavigationLink(destination: HerdDetailView(herdId: herdId)) {
-            VStack(alignment: .leading, spacing: 12) {
-                // Top Row: Herd Name (left, orange) and Chevron (right)
-                HStack(alignment: .top) {
+            VStack(alignment: .leading, spacing: 0) {
+                // Debug: Header row with herd name and chevron - dark background like dashboard
+                HStack(alignment: .center) {
                     Text(herdDisplayName)
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.accentColor)
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
                     Spacer()
                     Image(systemName: "chevron.right")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Theme.secondaryText.opacity(0.6))
                 }
+                .padding(.horizontal, Theme.dashboardCardPadding)
+                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity)
+                .background(Theme.tertiaryBackground)
                 
-                // Row 2: Species/Breed/Category
-                Text("\(herdSpecies) | \(herdBreed) | \(herdCategory)")
-                    .font(Theme.subheadline) // Debug: Bigger font for better readability
-                    .foregroundStyle(Theme.secondaryText)
-                    .lineLimit(1)
-                
-                // Divider
-                Rectangle()
-                    .frame(height: 1)
-                    .foregroundStyle(Theme.separator.opacity(0.15))
-                
-                // Row 3: Location and Value
-                HStack {
-                    if let location = herdLocation, !location.isEmpty {
-                        HStack(spacing: 4) {
-                            Image(systemName: "map.fill")
-                                .font(.system(size: 12)) // Debug: Slightly bigger icon
-                            Text(location)
-                        }
-                        .font(Theme.subheadline) // Debug: Bigger font for better readability
-                        .foregroundStyle(Theme.secondaryText.opacity(0.8))
-                    }
-                    Spacer()
-                    if let valuation = valuation {
-                        Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
-                            .font(Theme.subheadline)
-                            .fontWeight(.semibold)
-                            .foregroundStyle(Theme.accentColor)
-                    } else if isLoading {
-                        ProgressView()
-                            .tint(Theme.accentColor)
-                            .scaleEffect(0.8)
-                    }
-                }
-                
-                // Head Count, Breeder info, and Weight/Price Row
-                if let valuation = valuation {
-                    HStack(alignment: .center) {
-                        HStack(spacing: 4) {
-                            Image("cowhead")
-                                .resizable()
-                                .renderingMode(.template)
-                                .frame(width: 12, height: 12) // Debug: Slightly bigger icon
-                            Text("\(herdHeadCount) head")
-                        }
-                        .font(Theme.subheadline) // Debug: Bigger font for better readability
-                        .foregroundStyle(Theme.secondaryText.opacity(0.8))
-                        
-                        if isBreeder {
-                            HStack(spacing: 4) {
-                                Image("chick")
-                                    .resizable()
-                                    .renderingMode(.template)
-                                    .frame(width: 12, height: 12) // Debug: Slightly bigger icon
-                                Text("Breeder")
-                            }
-                            .font(Theme.subheadline) // Debug: Bigger font for better readability
-                            .foregroundStyle(Theme.secondaryText.opacity(0.8))
-                            .padding(.leading, 8)
-                        }
-                        
+                // Debug: Label-value rows
+                VStack(spacing: 12) {
+                    // Type row
+                    HStack(alignment: .top) {
+                        Text("Type")
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
                         Spacer()
-                        Text("\(Int(valuation.projectedWeight)) kg @ \(valuation.pricePerKg, format: .currency(code: "AUD"))")
-                            .font(Theme.subheadline) // Debug: Bigger font for better readability
+                        Text("\(herdSpecies) | \(herdBreed) | \(herdCategory)\(isBreeder ? " (Breeder)" : "")")
+                            .font(.system(size: 14, weight: .regular))
                             .foregroundStyle(Theme.secondaryText)
+                            .multilineTextAlignment(.trailing)
+                    }
+                    
+                    // Location row
+                    if let location = herdLocation, !location.isEmpty {
+                        HStack(alignment: .top) {
+                            Text("Location")
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                            Spacer()
+                            Text(location)
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    }
+                    
+                    // Head row
+                    if let valuation = valuation {
+                        HStack(alignment: .top) {
+                            Text("Head")
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                            Spacer()
+                            Text("\(herdHeadCount) | \(Int(valuation.projectedWeight))kg | \(valuation.pricePerKg, format: .currency(code: "AUD"))")
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText)
+                                .multilineTextAlignment(.trailing)
+                        }
+                        
+                        // Value row
+                        HStack(alignment: .top) {
+                            Text("Value")
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                            Spacer()
+                            Text(valuation.netRealizableValue, format: .currency(code: "AUD"))
+                                .font(.system(size: 14, weight: .regular))
+                                .foregroundStyle(Theme.accentColor)
+                                .multilineTextAlignment(.trailing)
+                        }
+                    } else if isLoading {
+                        HStack {
+                            Spacer()
+                            ProgressView()
+                                .tint(Theme.accentColor)
+                                .scaleEffect(0.8)
+                        }
                     }
                 }
+                .padding(.horizontal, Theme.dashboardCardPadding)
+                .padding(.top, 16)
+                .padding(.bottom, 12)
                 
-                // Saleyard and Sell Button Row
-                HStack(alignment: .center) {
-                    if let saleyard = herdSaleyard, !saleyard.isEmpty {
-                        HStack(spacing: 4) {
-                            Image("property_icon")
-                                .resizable()
-                                .renderingMode(.template)
-                                .frame(width: 10, height: 10)
-                            Text(saleyard)
-                        }
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText.opacity(0.8))
-                        .lineLimit(1)
-                    }
-                    Spacer()
-                    if onSellTapped != nil {
+                // Debug: Sell button at bottom right - matches dashboard style
+                if onSellTapped != nil {
+                    HStack {
+                        Spacer()
                         Button {
                             HapticManager.tap()
                             if let callback = onSellTapped {
                                 callback()
                             }
                         } label: {
-                            Text("Sell")
-                                .font(.system(size: 12))
-                                .fontWeight(.medium)
-                                .foregroundStyle(Theme.accentColor)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 4)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .fill(Theme.accentColor.opacity(0.1))
-                                )
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 6, style: .continuous)
-                                        .stroke(Theme.accentColor, lineWidth: 0.8)
-                                )
-                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
+                            HStack(spacing: 6) {
+                                Image(systemName: "dollarsign.circle.fill")
+                                    .font(.system(size: 14))
+                                Text("Sell")
+                                    .font(.system(size: 14, weight: .medium))
+                            }
+                            .foregroundStyle(Theme.accentColor)
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 8)
+                            .background(
+                                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                                    .fill(Theme.accentColor.opacity(0.15))
+                            )
                         }
                         .buttonStyle(.plain)
                     }
+                    .padding(.horizontal, Theme.dashboardCardPadding)
+                    .padding(.bottom, Theme.dashboardCardPadding)
+                } else {
+                    Color.clear.frame(height: Theme.dashboardCardPadding)
                 }
             }
         }
-        .padding(Theme.cardPadding)
         .cardStyle()
         .onAppear {
             // Performance: Load valuation only when card appears, and only once
