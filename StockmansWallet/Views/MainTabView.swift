@@ -58,9 +58,9 @@ struct MainTabView: View {
             
             MarketView()
                 .tabItem {
-                    Label("Market", systemImage: "chart.bar.xaxis.ascending")
+                    Label("Markets", systemImage: "chart.bar.xaxis.ascending")
                 }
-                .accessibilityLabel("Market tab")
+                .accessibilityLabel("Markets tab")
             
             ToolsView()
                 .tabItem {

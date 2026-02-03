@@ -17,35 +17,46 @@ struct MarketView: View {
     // Debug: Use 'let' with @Observable instead of @StateObject (modern pattern)
     @State private var viewModel = MarketViewModel()
     
-    // Debug: Tab selection state
-    @State private var selectedTab: MarketTab = .overview
+    // Debug: Track if initial load has happened
+    @State private var hasLoadedInitialData = false
+    
+    // Debug: Tab selection state - My Markets is default
+    @State private var selectedTab: MarketTab = .myMarkets
     
     // Debug: Price detail sheet state
     @State private var selectedPriceForDetail: CategoryPrice? = nil
     @State private var showingPriceDetail = false
+    
+    // Debug: Cached herd data to avoid recomputing on every render
+    @State private var cachedUserHerdCategories: [String] = []
+    @State private var cachedCategoryBreedPairs: [(category: String, breed: String, state: String)] = []
     
     // Debug: Get user preferences
     private var userPrefs: UserPreferences {
         preferences.first ?? UserPreferences()
     }
     
-    // Debug: Get unique categories from user's actual herds
+    // Debug: Get unique categories from user's actual herds (cached for performance)
     private var userHerdCategories: [String] {
-        let activeHerds = allHerds.filter { !$0.isSold }
-        return Array(Set(activeHerds.map { $0.category })).sorted()
+        cachedUserHerdCategories
     }
     
-    // Debug: Get exact category+breed combinations from user's herds
+    // Debug: Get exact category+breed combinations from user's herds (cached for performance)
     private var userCategoryBreedPairs: [(category: String, breed: String, state: String)] {
+        cachedCategoryBreedPairs
+    }
+    
+    // Debug: Helper to compute herd data (called once on appear)
+    private func computeHerdData() {
         let activeHerds = allHerds.filter { !$0.isSold }
-        let userState = preferences.first?.defaultState ?? "QLD" // Use user's default state
-        return activeHerds.map { (category: $0.category, breed: $0.breed, state: userState) }
+        cachedUserHerdCategories = Array(Set(activeHerds.map { $0.category })).sorted()
+        let userState = preferences.first?.defaultState ?? "QLD"
+        cachedCategoryBreedPairs = activeHerds.map { (category: $0.category, breed: $0.breed, state: userState) }
     }
     
     // MARK: - Market Tab Enum
-    // Debug: Four-section market view - Overview, My Markets, Market Pulse, Intelligence
+    // Debug: Three-section market view - My Markets, Market Pulse, Intelligence
     enum MarketTab: String, CaseIterable {
-        case overview = "Overview"
         case myMarkets = "My Markets"
         case pulse = "Market Pulse"
         case intelligence = "Intelligence"
@@ -64,8 +75,6 @@ struct MarketView: View {
                 ScrollView {
                     VStack(spacing: Theme.sectionSpacing) {
                         switch selectedTab {
-                        case .overview:
-                            overviewContent
                         case .myMarkets:
                             myMarketsContent
                         case .pulse:
@@ -92,7 +101,21 @@ struct MarketView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         HapticManager.tap()
-                        Task { await viewModel.loadAllData() }
+                        // Debug: Recompute and reload data for current tab
+                        computeHerdData()
+                        Task {
+                            switch selectedTab {
+                            case .myMarkets:
+                                if !userHerdCategories.isEmpty {
+                                    await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs)
+                                }
+                            case .pulse:
+                                await viewModel.loadNationalIndicators()
+                                await viewModel.loadPhysicalSalesReport()
+                            case .intelligence:
+                                await viewModel.loadMarketIntelligence()
+                            }
+                        }
                     } label: {
                         Image(systemName: "arrow.clockwise")
                             .foregroundStyle(Theme.accentColor)
@@ -100,18 +123,45 @@ struct MarketView: View {
                     .accessibilityLabel("Refresh market data")
                 }
             }
-            .task {
-                // Debug: Load initial data on appear
-                await viewModel.loadAllData()
-                // Load prices specific to user's exact herd category+breed combinations
-                if !userHerdCategories.isEmpty {
-                    await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs)
+            .onAppear {
+                // Debug: Compute herd data immediately (synchronous, fast)
+                computeHerdData()
+                
+                // Debug: Set loading state IMMEDIATELY so skeleton appears instantly
+                viewModel.isLoadingPrices = true
+                
+                // Debug: Ensure data loads on first appearance
+                if !hasLoadedInitialData {
+                    hasLoadedInitialData = true
+                    
+                    // Debug: Prioritize My Markets data (user sees skeleton immediately)
+                    Task {
+                        // Load prices FIRST (what user sees on default tab)
+                        if !userHerdCategories.isEmpty {
+                            await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs)
+                        }
+                        
+                        // Load other data in background (for other tabs)
+                        await viewModel.loadNationalIndicators()
+                        await viewModel.loadPhysicalSalesReport()
+                    }
                 }
             }
             .refreshable {
-                await viewModel.loadAllData()
-                if !userHerdCategories.isEmpty {
-                    await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs)
+                // Debug: Recompute herd data on refresh
+                computeHerdData()
+                
+                // Debug: Load current tab's data based on selection
+                switch selectedTab {
+                case .myMarkets:
+                    if !userHerdCategories.isEmpty {
+                        await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs)
+                    }
+                case .pulse:
+                    await viewModel.loadNationalIndicators()
+                    await viewModel.loadPhysicalSalesReport()
+                case .intelligence:
+                    await viewModel.loadMarketIntelligence()
                 }
             }
             .onChange(of: viewModel.selectedPhysicalSaleyard) { _, newSaleyard in
@@ -131,72 +181,6 @@ struct MarketView: View {
                     )
                 }
             }
-        }
-    }
-    
-    // MARK: - Overview Content
-    // Debug: Landing page with TOP INSIGHT + summary cards
-    private var overviewContent: some View {
-        VStack(spacing: 20) {
-            // TOP INSIGHT Banner
-            if let insight = viewModel.topInsight {
-                TopInsightBanner(insight: insight)
-                    .padding(.horizontal)
-            } else if viewModel.isLoadingInsight {
-                // Debug: Progressive loader for top insight
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(Theme.tertiaryBackground)
-                    .frame(height: 120)
-                    .padding(.horizontal)
-                    .shimmer()
-            }
-            
-            // Debug: Last updated timestamp
-            if let lastUpdated = viewModel.lastUpdated {
-                HStack {
-                    Text("Last updated")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.secondaryText)
-                    Text(lastUpdated, style: .relative)
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.accentColor)
-                    Text("ago")
-                        .font(.system(size: 12))
-                        .foregroundStyle(Theme.secondaryText)
-                }
-                .padding(.horizontal)
-            }
-            
-            // Quick access cards to other tabs
-            VStack(spacing: 12) {
-                QuickAccessCard(
-                    title: "My Markets",
-                    subtitle: "Prices for your livestock",
-                    icon: "chart.bar.xaxis",
-                    count: userHerdCategories.isEmpty ? nil : viewModel.categoryPrices.count
-                ) {
-                    selectedTab = .myMarkets
-                }
-                
-                QuickAccessCard(
-                    title: "Market Pulse",
-                    subtitle: "National indicators & reports",
-                    icon: "waveform.path.ecg",
-                    count: viewModel.nationalIndicators.count + viewModel.saleyardReports.count
-                ) {
-                    selectedTab = .pulse
-                }
-                
-                QuickAccessCard(
-                    title: "Intelligence",
-                    subtitle: "AI predictive insights",
-                    icon: "brain.head.profile",
-                    count: viewModel.marketIntelligence.count
-                ) {
-                    selectedTab = .intelligence
-                }
-            }
-            .padding(.horizontal)
         }
     }
     
@@ -608,95 +592,6 @@ struct MarketTabSelector: View {
 
 // MARK: - Top Insight Banner
 // Debug: Slim banner with daily market takeaway
-struct TopInsightBanner: View {
-    let insight: TopInsight
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "lightbulb.fill")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.accentColor)
-                Text("Today's Insight")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(Theme.accentColor)
-                    .textCase(.uppercase)
-                    .tracking(0.5)
-                Spacer()
-                Text(insight.date, style: .time)
-                    .font(.system(size: 11))
-                    .foregroundStyle(Theme.secondaryText)
-            }
-            
-            Text(insight.text)
-                .font(.system(size: 15))
-                .foregroundStyle(Theme.primaryText)
-                .lineSpacing(6)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(16)
-        .background(Theme.cardBackground)
-        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .stroke(Theme.accentColor.opacity(0.3), lineWidth: 1)
-        )
-    }
-}
-
-// MARK: - Quick Access Card
-// Debug: Navigate to specific tabs from Overview
-struct QuickAccessCard: View {
-    let title: String
-    let subtitle: String
-    let icon: String
-    let count: Int?
-    let action: () -> Void
-    
-    var body: some View {
-        Button(action: {
-            HapticManager.tap()
-            action()
-        }) {
-            HStack(spacing: 16) {
-                Image(systemName: icon)
-                    .font(.system(size: 28))
-                    .foregroundStyle(Theme.accentColor)
-                    .frame(width: 44, height: 44)
-                
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(.system(size: 17, weight: .semibold))
-                        .foregroundStyle(Theme.primaryText)
-                    Text(subtitle)
-                        .font(.system(size: 13))
-                        .foregroundStyle(Theme.secondaryText)
-                }
-                
-                Spacer()
-                
-                if let count = count {
-                    Text("\(count)")
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundStyle(Theme.accentColor)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 4)
-                        .background(Theme.accentColor.opacity(0.15))
-                        .clipShape(Capsule())
-                }
-                
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundStyle(Theme.secondaryText.opacity(0.5))
-            }
-            .padding(16)
-            .background(Theme.cardBackground)
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-        }
-        .buttonStyle(.plain)
-    }
-}
-
 // MARK: - Price Card
 // Debug: Market price display for user's livestock
 struct PriceCard: View {
