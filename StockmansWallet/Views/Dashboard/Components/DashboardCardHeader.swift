@@ -33,8 +33,9 @@ struct DashboardCardHeader<TimeRangeMenu: View>: View {
     var body: some View {
         VStack(spacing: 0) {
             HStack(spacing: 10) {
+                // Debug: Icon background changed from rounded rectangle to circle shape
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    Circle()
                         .fill(Theme.dashboardIconBackground)
                     Image(systemName: iconName)
                         .font(.system(size: 14, weight: .semibold))

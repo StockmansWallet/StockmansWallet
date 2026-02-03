@@ -47,6 +47,35 @@ extension View {
     }
 }
 
+// MARK: - Pulse Effect Modifier
+/// Debug: Animated pulse effect with opacity breathing during loading
+struct PulseEffect: ViewModifier {
+    @State private var opacity: Double = 0.3
+    var minOpacity: Double = 0.3
+    var maxOpacity: Double = 0.8
+    var duration: Double = 1.2
+    
+    func body(content: Content) -> some View {
+        content
+            .opacity(opacity)
+            .onAppear {
+                withAnimation(
+                    .easeInOut(duration: duration)
+                    .repeatForever(autoreverses: true)
+                ) {
+                    opacity = maxOpacity
+                }
+            }
+    }
+}
+
+extension View {
+    /// Applies pulse/breathing effect to any view
+    func pulse(minOpacity: Double = 0.3, maxOpacity: Double = 0.8, duration: Double = 1.2) -> some View {
+        modifier(PulseEffect(minOpacity: minOpacity, maxOpacity: maxOpacity, duration: duration))
+    }
+}
+
 // MARK: - Portfolio Card Skeleton Loader
 /// Debug: Skeleton loader that matches portfolio card structure
 struct PortfolioCardSkeleton: View {
@@ -86,7 +115,7 @@ struct PortfolioCardSkeleton: View {
             .padding(.bottom, 12)
         }
         .cardStyle()
-        .shimmer()
+        .pulse()
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
@@ -128,7 +157,7 @@ struct StatsCardSkeleton: View {
             .background(Theme.cardBackground)
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
-        .shimmer()
+        .pulse()
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
@@ -162,7 +191,7 @@ struct MarketPriceRowSkeleton: View {
         .padding(.vertical, 12)
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .shimmer()
+        .pulse()
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
@@ -190,7 +219,7 @@ struct DashboardChartSkeleton: View {
                 .padding(.bottom, Theme.dashboardCardPadding)
         }
         .cardStyle()
-        .shimmer()
+        .pulse()
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
@@ -200,9 +229,9 @@ struct DashboardChartSkeleton: View {
 struct DashboardCardSkeleton: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Debug: Header with icon and title
+            // Debug: Header with icon and title (circle shape matches DashboardCardHeader)
             HStack(spacing: 10) {
-                RoundedRectangle(cornerRadius: 8)
+                Circle()
                     .fill(Theme.tertiaryBackground)
                     .frame(width: 28, height: 28)
                 
@@ -233,7 +262,7 @@ struct DashboardCardSkeleton: View {
             .padding(Theme.dashboardCardPadding)
         }
         .cardStyle()
-        .shimmer()
+        .pulse()
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
@@ -267,7 +296,7 @@ struct PhysicalSalesTableSkeleton: View {
         .padding()
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .shimmer()
+        .pulse()
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
@@ -294,7 +323,7 @@ struct HerdValueCardSkeleton: View {
         }
         .padding(.vertical, Theme.cardPadding * 1.5)
         .frame(maxWidth: .infinity)
-        .shimmer()
+        .pulse()
     }
 }
 
@@ -331,7 +360,7 @@ struct HerdDetailCardSkeleton: View {
             .padding(Theme.dashboardCardPadding)
         }
         .cardStyle()
-        .shimmer()
+        .pulse()
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
@@ -372,7 +401,7 @@ struct ReportListSkeleton: View {
         .padding()
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .shimmer()
+        .pulse()
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
@@ -417,7 +446,7 @@ struct SummaryTilesSkeleton: View {
         .padding()
         .background(Theme.cardBackground)
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
-        .shimmer()
+        .pulse()
         .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }

@@ -18,8 +18,9 @@ struct SaleyardSelector: View {
             showingSaleyardSheet = true
         }) {
             HStack {
+                // Debug: Icon background changed from rounded rectangle to circle shape
                 ZStack {
-                    RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    Circle()
                         .fill(Theme.dashboardIconBackground)
                     Image(systemName: "dollarsign.bank.building")
                         .foregroundStyle(Theme.sectionHarvest)
