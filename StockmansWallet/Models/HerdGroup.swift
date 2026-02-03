@@ -60,6 +60,10 @@ final class HerdGroup {
     var notes: String? // General farmer notes: custom observations, reminders, etc.
     var mortalityRate: Double? // Annual mortality rate as decimal (e.g., 0.05 for 5%)
     
+    // MARK: - Demo Data Flag
+    // Debug: Flag to identify mock/demo data that can be removed separately from real user data
+    var isMockData: Bool
+    
     // MARK: - Relationships
     // Debug: SwiftData relationship to muster records (one-to-many)
     @Relationship(deleteRule: .cascade, inverse: \MusterRecord.herd)
@@ -116,6 +120,7 @@ final class HerdGroup {
         self.additionalInfo = nil
         self.notes = nil
         self.mortalityRate = nil
+        self.isMockData = false // Debug: Default to real user data
         self.musterRecords = []
         self.healthRecords = []
     }

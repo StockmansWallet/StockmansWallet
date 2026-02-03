@@ -99,7 +99,22 @@ struct SettingsView: View {
                 }
                 .listSectionSeparator(.hidden)
                 
-                // MARK: - Section 5: Information & Support
+                // MARK: - Section 5: Demo Data
+                // Debug: Testing tool to generate realistic mock herds for visualization
+                Section {
+                    NavigationLink(destination: DemoDataView()) {
+                        SettingsListRow(icon: "chart.line.uptrend.xyaxis", title: "Demo Data", subtitle: nil)
+                    }
+                    .listRowBackground(Theme.cardBackground)
+                } header: {
+                    Text("Testing")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                        .textCase(.uppercase)
+                }
+                .listSectionSeparator(.hidden)
+                
+                // MARK: - Section 6: Information & Support
                 Section {
                     NavigationLink(destination: SupportView()) {
                         SettingsListRow(icon: "questionmark.circle.fill", title: "Help & Support", subtitle: nil)

@@ -1,0 +1,356 @@
+//
+//  DemoDataView.swift
+//  StockmansWallet
+//
+//  Demo Data Management for Testing and Visualization
+//  Debug: Allows users to add and remove realistic mock herds
+//
+
+import SwiftUI
+import SwiftData
+
+struct DemoDataView: View {
+    @Environment(\.modelContext) private var modelContext
+    
+    // Debug: Track selected duration for mock data generation
+    @State private var selectedDuration: MockDataDuration = .threeMonths
+    
+    // Debug: Track operation states
+    @State private var isGenerating = false
+    @State private var isRemoving = false
+    @State private var showSuccessMessage = false
+    @State private var successMessage = ""
+    @State private var showError = false
+    @State private var errorMessage = ""
+    
+    // Debug: Check if mock data exists
+    @State private var hasMockData = false
+    
+    var body: some View {
+        List {
+            // MARK: - Info Section
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack(spacing: 12) {
+                        Image(systemName: "chart.line.uptrend.xyaxis")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Theme.accentColor)
+                        
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Demo Data")
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            Text("Test charts and visualizations")
+                                .font(.system(size: 14))
+                                .foregroundStyle(Theme.secondaryText)
+                        }
+                    }
+                    
+                    Text("Generate realistic mock herds spread over time to see how your charts and data displays work with real-world farming patterns.")
+                        .font(.system(size: 14))
+                        .foregroundStyle(Theme.secondaryText)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, 8)
+                .listRowBackground(Theme.cardBackground)
+            }
+            .listSectionSeparator(.hidden)
+            
+            // MARK: - Duration Selection
+            Section {
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Time Period")
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundStyle(Theme.secondaryText)
+                    
+                    // Debug: Custom selection cards for duration
+                    ForEach(MockDataDuration.allCases, id: \.self) { duration in
+                        DurationSelectionCard(
+                            duration: duration,
+                            isSelected: selectedDuration == duration,
+                            onTap: {
+                                HapticManager.tap()
+                                selectedDuration = duration
+                            }
+                        )
+                    }
+                }
+                .padding(.vertical, 8)
+                .listRowBackground(Theme.cardBackground)
+            } header: {
+                Text("Select how much demo data to generate")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+            }
+            .listSectionSeparator(.hidden)
+            
+            // MARK: - Actions Section
+            Section {
+                VStack(spacing: 12) {
+                    // Debug: Generate button
+                    Button(action: generateMockData) {
+                        HStack {
+                            if isGenerating {
+                                ProgressView()
+                                    .tint(.white)
+                                    .scaleEffect(0.8)
+                            } else {
+                                Image(systemName: "plus.circle.fill")
+                                    .font(.system(size: 16))
+                            }
+                            
+                            Text(isGenerating ? "Generating..." : "Add Mock Data")
+                                .font(.system(size: 16, weight: .semibold))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 50)
+                        .background(Theme.accentColor)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .disabled(isGenerating || isRemoving)
+                    .opacity((isGenerating || isRemoving) ? 0.6 : 1.0)
+                    
+                    // Debug: Remove button (only show if mock data exists)
+                    if hasMockData {
+                        Button(action: removeMockData) {
+                            HStack {
+                                if isRemoving {
+                                    ProgressView()
+                                        .tint(Theme.accentColor)
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "trash.circle.fill")
+                                        .font(.system(size: 16))
+                                }
+                                
+                                Text(isRemoving ? "Removing..." : "Remove Mock Data")
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            .foregroundStyle(Theme.accentColor)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Theme.accentColor.opacity(0.1))
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .disabled(isGenerating || isRemoving)
+                        .opacity((isGenerating || isRemoving) ? 0.6 : 1.0)
+                    }
+                }
+                .padding(.vertical, 8)
+                .listRowBackground(Theme.cardBackground)
+            } header: {
+                Text("Mock data is separate from your real herds")
+                    .font(.system(size: 13))
+                    .foregroundStyle(Theme.secondaryText.opacity(0.7))
+            }
+            .listSectionSeparator(.hidden)
+            
+            // MARK: - Success/Error Messages
+            if showSuccessMessage {
+                Section {
+                    HStack(spacing: 12) {
+                        Image(systemName: "checkmark.circle.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.green)
+                        
+                        Text(successMessage)
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.primaryText)
+                    }
+                    .padding(.vertical, 8)
+                    .listRowBackground(Theme.cardBackground.opacity(0.5))
+                }
+                .listSectionSeparator(.hidden)
+            }
+            
+            if showError {
+                Section {
+                    HStack(spacing: 12) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .font(.system(size: 20))
+                            .foregroundStyle(.red)
+                        
+                        Text(errorMessage)
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.primaryText)
+                    }
+                    .padding(.vertical, 8)
+                    .listRowBackground(Theme.cardBackground.opacity(0.5))
+                }
+                .listSectionSeparator(.hidden)
+            }
+        }
+        .listStyle(.insetGrouped)
+        .scrollContentBackground(.hidden)
+        .background(Theme.backgroundGradient)
+        .listSectionSeparator(.hidden)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbar {
+            ToolbarItem(placement: .principal) {
+                Text("Demo Data")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                    .accessibilityAddTraits(.isHeader)
+            }
+        }
+        .task {
+            // Debug: Check if mock data exists when view appears
+            checkForMockData()
+        }
+    }
+    
+    // MARK: - Actions
+    
+    /// Generate mock data for the selected duration
+    /// Debug: Creates realistic herds spread over time
+    @MainActor
+    private func generateMockData() {
+        guard !isGenerating else { return }
+        
+        isGenerating = true
+        showSuccessMessage = false
+        showError = false
+        
+        HapticManager.tap()
+        
+        Task {
+            do {
+                // Debug: Generate mock data using the service
+                try await MockDataGenerator.shared.generateMockData(
+                    for: selectedDuration,
+                    in: modelContext
+                )
+                
+                // Debug: Success feedback
+                HapticManager.success()
+                successMessage = "Generated \(selectedDuration.herdCount) mock herds over \(selectedDuration.rawValue.lowercased())"
+                showSuccessMessage = true
+                hasMockData = true
+                
+                // Debug: Hide success message after 3 seconds
+                try? await Task.sleep(for: .seconds(3))
+                showSuccessMessage = false
+                
+            } catch {
+                // Debug: Error feedback
+                HapticManager.error()
+                errorMessage = "Failed to generate mock data: \(error.localizedDescription)"
+                showError = true
+                
+                #if DEBUG
+                print("❌ Error generating mock data: \(error)")
+                #endif
+            }
+            
+            isGenerating = false
+        }
+    }
+    
+    /// Remove all mock data
+    /// Debug: Safely removes only herds marked as mock data
+    @MainActor
+    private func removeMockData() {
+        guard !isRemoving else { return }
+        
+        isRemoving = true
+        showSuccessMessage = false
+        showError = false
+        
+        HapticManager.tap()
+        
+        Task {
+            do {
+                // Debug: Remove mock data using the service
+                try MockDataGenerator.shared.removeMockData(from: modelContext)
+                
+                // Debug: Success feedback
+                HapticManager.success()
+                successMessage = "All mock data removed successfully"
+                showSuccessMessage = true
+                hasMockData = false
+                
+                // Debug: Hide success message after 3 seconds
+                try? await Task.sleep(for: .seconds(3))
+                showSuccessMessage = false
+                
+            } catch {
+                // Debug: Error feedback
+                HapticManager.error()
+                errorMessage = "Failed to remove mock data: \(error.localizedDescription)"
+                showError = true
+                
+                #if DEBUG
+                print("❌ Error removing mock data: \(error)")
+                #endif
+            }
+            
+            isRemoving = false
+        }
+    }
+    
+    /// Check if mock data exists
+    /// Debug: Updates UI to show/hide remove button
+    @MainActor
+    private func checkForMockData() {
+        hasMockData = MockDataGenerator.shared.hasMockData(in: modelContext)
+    }
+}
+
+// MARK: - Duration Selection Card
+
+/// Debug: Custom selection card for duration options
+private struct DurationSelectionCard: View {
+    let duration: MockDataDuration
+    let isSelected: Bool
+    let onTap: () -> Void
+    
+    var body: some View {
+        Button(action: onTap) {
+            HStack(spacing: 12) {
+                // Debug: Selection indicator
+                ZStack {
+                    Circle()
+                        .strokeBorder(isSelected ? Theme.accentColor : Theme.secondaryText.opacity(0.3), lineWidth: 2)
+                        .frame(width: 20, height: 20)
+                    
+                    if isSelected {
+                        Circle()
+                            .fill(Theme.accentColor)
+                            .frame(width: 12, height: 12)
+                    }
+                }
+                
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(duration.rawValue)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundStyle(Theme.primaryText)
+                    
+                    Text("\(duration.herdCount) herds")
+                        .font(.system(size: 13))
+                        .foregroundStyle(Theme.secondaryText)
+                }
+                
+                Spacer()
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 10)
+                    .fill(isSelected ? Theme.accentColor.opacity(0.1) : Theme.cardBackground)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10)
+                    .strokeBorder(isSelected ? Theme.accentColor : Color.clear, lineWidth: 1.5)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+#Preview {
+    NavigationStack {
+        DemoDataView()
+    }
+}
