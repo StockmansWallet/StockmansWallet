@@ -87,6 +87,7 @@ struct PortfolioCardSkeleton: View {
         }
         .cardStyle()
         .shimmer()
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
 
@@ -128,6 +129,7 @@ struct StatsCardSkeleton: View {
             .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .shimmer()
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 
@@ -158,7 +160,10 @@ struct MarketPriceRowSkeleton: View {
         }
         .padding(.horizontal, Theme.cardPadding)
         .padding(.vertical, 12)
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         .shimmer()
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
 
@@ -186,6 +191,7 @@ struct DashboardChartSkeleton: View {
         }
         .cardStyle()
         .shimmer()
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
 
@@ -228,6 +234,7 @@ struct DashboardCardSkeleton: View {
         }
         .cardStyle()
         .shimmer()
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
 
@@ -258,7 +265,10 @@ struct PhysicalSalesTableSkeleton: View {
             }
         }
         .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         .shimmer()
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
 
@@ -322,6 +332,7 @@ struct HerdDetailCardSkeleton: View {
         }
         .cardStyle()
         .shimmer()
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
 
@@ -359,7 +370,10 @@ struct ReportListSkeleton: View {
             }
         }
         .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         .shimmer()
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
 
@@ -401,7 +415,10 @@ struct SummaryTilesSkeleton: View {
             }
         }
         .padding()
+        .background(Theme.cardBackground)
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
         .shimmer()
+        .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius, style: .continuous))
     }
 }
 

@@ -279,6 +279,7 @@ struct MarketView: View {
                                 .fill(Theme.tertiaryBackground)
                                 .frame(height: 100)
                                 .shimmer()
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                         }
                     }
                     .padding(.horizontal)
