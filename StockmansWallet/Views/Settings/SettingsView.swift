@@ -113,19 +113,8 @@ struct SettingsView: View {
                 }
                 .listSectionSeparator(.hidden)
                 
-                // MARK: - Section 6: Dev Tools
-                // Debug: Temporary section for development/testing
-                // TODO: Remove this section before production release
+                // Debug: Development tool to reset onboarding flow
                 Section {
-                    NavigationLink(destination: DevelopmentSettingsView()) {
-                        SettingsListRow(
-                            icon: "hammer.fill",
-                            title: "Development",
-                            subtitle: "Testing & Data Generation"
-                        )
-                    }
-                    .listRowBackground(Theme.cardBackground)
-                    
                     Button(action: {
                         HapticManager.tap()
                         goToLandingPage()
@@ -135,7 +124,7 @@ struct SettingsView: View {
                                 .foregroundStyle(Theme.accentColor)
                                 .frame(width: 24)
                             
-                            Text("Go to Landing Page")
+                            Text("Landing Page")
                                 .font(Theme.body)
                                 .foregroundStyle(Theme.accentColor)
                             
@@ -182,9 +171,9 @@ struct SettingsView: View {
     }
     
     // Debug: Reset to landing page for testing during development
-    // TODO: Remove this function before production release
     @MainActor
     private func goToLandingPage() {
+        // Debug: Reset onboarding flag to return to landing page
         if let prefs = preferences.first {
             prefs.hasCompletedOnboarding = false
             try? modelContext.save()
