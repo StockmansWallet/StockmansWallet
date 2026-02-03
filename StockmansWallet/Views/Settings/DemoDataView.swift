@@ -47,7 +47,7 @@ struct DemoDataView: View {
                         }
                     }
                     
-                    Text("Generate realistic mock herds spread over time to see how your charts and data displays work with real-world farming patterns.")
+                    Text("Generate realistic mock herds spread over time to see how your charts work with real-world farming patterns. Data includes purchases, sales, weight changes, and head count adjustments for realistic chart fluctuations.")
                         .font(.system(size: 14))
                         .foregroundStyle(Theme.secondaryText)
                         .fixedSize(horizontal: false, vertical: true)

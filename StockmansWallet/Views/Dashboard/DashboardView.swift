@@ -1128,8 +1128,11 @@ struct DashboardView: View {
     private func loadFullHistory(activeHerds: [HerdGroup], prefs: UserPreferences, endDate: Date) async {
         let calendar = Calendar.current
         
+        // Debug: Get ALL herds (including sold ones) for historical calculations
+        let allHerds = herds
+        
         // Debug: Get earliest herd creation date and normalize to start of day
-        guard let earliestHerdDate = activeHerds.map({ $0.createdAt }).min() else {
+        guard let earliestHerdDate = allHerds.map({ $0.createdAt }).min() else {
             #if DEBUG
             print("📊 No herds found, skipping history load")
             #endif
@@ -1174,17 +1177,46 @@ struct DashboardView: View {
             guard let dateAtStartOfDay = calendar.date(byAdding: .day, value: -dayOffset, to: startOfToday) else { continue }
             guard let dateAtEndOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: dateAtStartOfDay) else { continue }
             
-            // Debug: Filter herds that existed on this date (compare start of days only)
-            let activeHerdsForDate = activeHerds.filter { herd in
+            // Debug: Filter herds that were active on this specific date
+            // Include herds that:
+            // 1. Were created on or before this date
+            // 2. Were NOT sold, OR were sold AFTER this date
+            let activeHerdsForDate = allHerds.filter { herd in
                 let herdStartDay = calendar.startOfDay(for: herd.createdAt)
-                return herdStartDay <= dateAtStartOfDay
+                let wasCreatedByThisDate = herdStartDay <= dateAtStartOfDay
+                
+                // Debug: Check if herd was sold after this date (or not sold at all)
+                let wasActiveOnThisDate: Bool
+                if let soldDate = herd.soldDate {
+                    let soldDay = calendar.startOfDay(for: soldDate)
+                    wasActiveOnThisDate = soldDay > dateAtStartOfDay
+                } else {
+                    wasActiveOnThisDate = true // Not sold, so still active
+                }
+                
+                return wasCreatedByThisDate && wasActiveOnThisDate
             }
             
-            // Debug: Always calculate even if no herds (will show $0)
+            // Debug: Track herds and calculate even if empty (will show $0 or previous value)
+            #if DEBUG
+            if dayOffset <= 7 {
+                let soldToday = allHerds.filter { herd in
+                    if let soldDate = herd.soldDate {
+                        let soldDay = calendar.startOfDay(for: soldDate)
+                        return soldDay == dateAtStartOfDay
+                    }
+                    return false
+                }
+                if !soldToday.isEmpty {
+                    print("📊 Day \(dayOffset): \(dateAtStartOfDay.formatted(.dateTime.month().day())) - \(soldToday.count) herd(s) sold today! Portfolio will dip.")
+                }
+            }
+            #endif
+            
             guard !activeHerdsForDate.isEmpty else {
                 #if DEBUG
                 if dayOffset <= 7 {
-                    print("📊 Day \(dayOffset): \(dateAtStartOfDay.formatted(.dateTime.month().day())) = $0 (0 herds)")
+                    print("📊 Day \(dayOffset): \(dateAtStartOfDay.formatted(.dateTime.month().day())) = $0 (0 herds active)")
                 }
                 #endif
                 continue
