@@ -1290,6 +1290,8 @@ struct AnimalDisplayData: Identifiable, Equatable {
     let totalValue: Double // Pre-calculated valuation
     let pricePerKg: Double // Market price
     let isBreeder: Bool
+    let createdAt: Date // Debug: Added date for display
+    let updatedAt: Date // Debug: Last edited date for display
     
     init(from herd: HerdGroup, valuation: HerdValuation?) {
         self.id = herd.id
@@ -1304,6 +1306,8 @@ struct AnimalDisplayData: Identifiable, Equatable {
         self.additionalInfo = herd.additionalInfo
         self.totalValue = valuation?.netRealizableValue ?? 0
         self.pricePerKg = valuation?.pricePerKg ?? 0
+        self.createdAt = herd.createdAt
+        self.updatedAt = herd.updatedAt
     }
 }
 
@@ -1390,6 +1394,31 @@ struct LightweightAnimalCard: View {
                 .padding(.top, 16)
                 .padding(.bottom, 12)
                 
+                // Debug: Added and Edited dates row - matches screenshot style
+                HStack(spacing: 16) {
+                    HStack(spacing: 4) {
+                        Text("Added")
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                        Text(data.createdAt.formatted(.dateTime.day().month().year().locale(Locale(identifier: "en_AU"))))
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Text("Edited")
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                        Text(data.updatedAt.formatted(.dateTime.day().month().year().locale(Locale(identifier: "en_AU"))))
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, Theme.dashboardCardPadding)
+                .padding(.bottom, 8)
+                
                 // Debug: Sell button at bottom right - matches dashboard style
                 HStack {
                     Spacer()
@@ -1455,6 +1484,8 @@ struct EnhancedHerdCard: View {
         let herdLocation = herd.paddockName
         let herdSaleyard = herd.selectedSaleyard
         let isBreeder = herd.isBreeder
+        let herdCreatedAt = herd.createdAt
+        let herdUpdatedAt = herd.updatedAt
         
         NavigationLink(destination: HerdDetailView(herdId: herdId)) {
             VStack(alignment: .leading, spacing: 0) {
@@ -1538,6 +1569,31 @@ struct EnhancedHerdCard: View {
                 .padding(.horizontal, Theme.dashboardCardPadding)
                 .padding(.top, 16)
                 .padding(.bottom, 12)
+                
+                // Debug: Added and Edited dates row - matches screenshot style
+                HStack(spacing: 16) {
+                    HStack(spacing: 4) {
+                        Text("Added")
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                        Text(herdCreatedAt.formatted(.dateTime.day().month().year().locale(Locale(identifier: "en_AU"))))
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    
+                    HStack(spacing: 4) {
+                        Text("Edited")
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                        Text(herdUpdatedAt.formatted(.dateTime.day().month().year().locale(Locale(identifier: "en_AU"))))
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    
+                    Spacer()
+                }
+                .padding(.horizontal, Theme.dashboardCardPadding)
+                .padding(.bottom, 8)
                 
                 // Debug: Sell button at bottom right - matches dashboard style
                 if onSellTapped != nil {

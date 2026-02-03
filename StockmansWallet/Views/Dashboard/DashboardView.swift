@@ -395,10 +395,11 @@ struct DashboardView: View {
                             dashboardCardWrapper(cardId: cardId, isReorderable: true) {
                                 saleyardSelectorCard
                             }
-                        case "marketSummary":
-                            dashboardCardWrapper(cardId: cardId, isReorderable: true) {
-                                marketPulseCard
-                            }
+                        // Debug: Removed herd performance card - chart at top shows performance over time
+                        // case "marketSummary":
+                        //     dashboardCardWrapper(cardId: cardId, isReorderable: true) {
+                        //         marketPulseCard
+                        //     }
                         case "recentActivity":
                             dashboardCardWrapper(cardId: cardId, isReorderable: true) {
                                 herdDynamicsCard
@@ -537,14 +538,15 @@ struct DashboardView: View {
         }
     }
     
-    @ViewBuilder
-    private var marketPulseCard: some View {
-        MarketPulseView(showsDashboardHeader: true)
-            .cardStyle()
-            .padding(.horizontal, Theme.cardPadding)
-            .accessibilityElement(children: .contain)
-            .accessibilityLabel("Herd performance")
-    }
+    // Debug: Removed herd performance card - chart at top shows performance over time
+    // @ViewBuilder
+    // private var marketPulseCard: some View {
+    //     MarketPulseView(showsDashboardHeader: true)
+    //         .cardStyle()
+    //         .padding(.horizontal, Theme.cardPadding)
+    //         .accessibilityElement(children: .contain)
+    //         .accessibilityLabel("Herd performance")
+    // }
     
     @ViewBuilder
     private var herdDynamicsCard: some View {
@@ -629,6 +631,8 @@ struct DashboardView: View {
             let formatter = DateFormatter()
             formatter.dateFormat = "MMM d"
             return "\(formatter.string(from: start)) - \(formatter.string(from: end))"
+        case .day:
+            return "1d"
         case .week:
             return "7d"
         case .month:
@@ -645,22 +649,56 @@ struct DashboardView: View {
         let calendar = Calendar.current
         let now = Date()
         
+        // Debug: Helper function to ensure we always have at least 2 points for line drawing
+        // Includes the last point before cutoff so chart shows continuous line
+        func filterWithAnchor(cutoffDate: Date) -> [ValuationDataPoint] {
+            let filtered = valuationHistory.filter { $0.date >= cutoffDate }
+            
+            // If we have filtered points, also include the last point before cutoff
+            // This ensures the line extends to show the value at the start of the range
+            if !filtered.isEmpty {
+                // Find the last point before the cutoff date
+                if let anchorPoint = valuationHistory.last(where: { $0.date < cutoffDate }) {
+                    // Only add if not already included
+                    if !filtered.contains(where: { $0.date == anchorPoint.date }) {
+                        #if DEBUG
+                        print("📊 Added anchor point: \(anchorPoint.date.formatted()) ($\(anchorPoint.value))")
+                        #endif
+                        return [anchorPoint] + filtered
+                    }
+                }
+            }
+            
+            #if DEBUG
+            print("📊 Filtered to \(filtered.count) points (cutoff: \(cutoffDate.formatted()))")
+            if let first = filtered.first, let last = filtered.last {
+                print("📊 Showing: \(first.date.formatted()) ($\(first.value)) to \(last.date.formatted()) ($\(last.value))")
+            }
+            #endif
+            
+            return filtered
+        }
+        
         switch timeRange {
         case .custom:
             // Debug: Filter by custom date range if set
             guard let startDate = customStartDate, let endDate = customEndDate else {
                 return valuationHistory
             }
-            return valuationHistory.filter { $0.date >= startDate && $0.date <= endDate }
+            return filterWithAnchor(cutoffDate: startDate)
+        case .day:
+            // Debug: Show last 24 hours of data with anchor point
+            let cutoffDate = calendar.date(byAdding: .day, value: -1, to: now) ?? now
+            return filterWithAnchor(cutoffDate: cutoffDate)
         case .week:
             let cutoffDate = calendar.date(byAdding: .day, value: -7, to: now) ?? now
-            return valuationHistory.filter { $0.date >= cutoffDate }
+            return filterWithAnchor(cutoffDate: cutoffDate)
         case .month:
             let cutoffDate = calendar.date(byAdding: .month, value: -1, to: now) ?? now
-            return valuationHistory.filter { $0.date >= cutoffDate }
+            return filterWithAnchor(cutoffDate: cutoffDate)
         case .year:
             let cutoffDate = calendar.date(byAdding: .year, value: -1, to: now) ?? now
-            return valuationHistory.filter { $0.date >= cutoffDate }
+            return filterWithAnchor(cutoffDate: cutoffDate)
         case .all:
             return valuationHistory
         }
@@ -1089,17 +1127,31 @@ struct DashboardView: View {
     // Performance: Now cancellable to prevent wasted CPU when user navigates away
     private func loadFullHistory(activeHerds: [HerdGroup], prefs: UserPreferences, endDate: Date) async {
         let calendar = Calendar.current
-        let startDate = Date(timeIntervalSince1970: 1672531200) // Jan 1, 2023
-        let earliestHerdDate = activeHerds.map { $0.createdAt }.min() ?? startDate
-        let historyStartDate = min(startDate, earliestHerdDate)
         
-        let daysFromStart = calendar.dateComponents([.day], from: historyStartDate, to: endDate).day ?? 0
-        let totalDays = min(daysFromStart + 1, 1095) // Max 3 years
+        // Debug: Get earliest herd creation date and normalize to start of day
+        guard let earliestHerdDate = activeHerds.map({ $0.createdAt }).min() else {
+            #if DEBUG
+            print("📊 No herds found, skipping history load")
+            #endif
+            return
+        }
+        
+        // Debug: Normalize dates to start of day to avoid time-based issues
+        let startOfEarliestDay = calendar.startOfDay(for: earliestHerdDate)
+        let startOfToday = calendar.startOfDay(for: endDate)
+        
+        // Debug: Calculate days since earliest herd was created
+        let daysFromStart = calendar.dateComponents([.day], from: startOfEarliestDay, to: startOfToday).day ?? 0
+        let totalDays = min(daysFromStart + 1, 365) // Max 1 year of history
         
         var history: [ValuationDataPoint] = []
         
-        // Debug: Load all historical data with appropriate granularity
-        // Daily for last 7 days, weekly for older data
+        #if DEBUG
+        print("📊 Loading history: \(totalDays) days from \(startOfEarliestDay.formatted(.dateTime.month().day().year())) to \(startOfToday.formatted(.dateTime.month().day().year()))")
+        #endif
+        
+        // Debug: Load all historical data with granular daily data
+        // Daily for last 30 days, weekly for older data (up to 1 year)
         for dayOffset in (0..<totalDays).reversed() {
             // Performance: Check if task was cancelled (user navigated away, new data load started, etc.)
             // This prevents wasting CPU on calculations that won't be displayed
@@ -1112,16 +1164,31 @@ struct DashboardView: View {
                 return
             }
             
-            // Debug: Skip non-week days for data older than 7 days (optimization)
-            if dayOffset > 7 && dayOffset % 7 != 0 {
+            // Debug: Daily for last 30 days, weekly for older dates
+            let shouldInclude = dayOffset <= 30 || dayOffset % 7 == 0
+            if !shouldInclude {
                 continue
             }
             
-            guard let date = calendar.date(byAdding: .day, value: -dayOffset, to: endDate) else { continue }
-            guard date >= historyStartDate else { continue }
+            // Debug: Calculate date at end of day (11:59 PM) for accurate "as of date" valuation
+            guard let dateAtStartOfDay = calendar.date(byAdding: .day, value: -dayOffset, to: startOfToday) else { continue }
+            guard let dateAtEndOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: dateAtStartOfDay) else { continue }
             
-            let activeHerdsForDate = activeHerds.filter { $0.createdAt <= date }
-            guard !activeHerdsForDate.isEmpty else { continue }
+            // Debug: Filter herds that existed on this date (compare start of days only)
+            let activeHerdsForDate = activeHerds.filter { herd in
+                let herdStartDay = calendar.startOfDay(for: herd.createdAt)
+                return herdStartDay <= dateAtStartOfDay
+            }
+            
+            // Debug: Always calculate even if no herds (will show $0)
+            guard !activeHerdsForDate.isEmpty else {
+                #if DEBUG
+                if dayOffset <= 7 {
+                    print("📊 Day \(dayOffset): \(dateAtStartOfDay.formatted(.dateTime.month().day())) = $0 (0 herds)")
+                }
+                #endif
+                continue
+            }
             
             // Debug: Parallel valuation calculation for all herds at this date
             let dayValuations = await withTaskGroup(of: (physical: Double, breeding: Double, total: Double).self, returning: (physical: Double, breeding: Double, total: Double).self) { group in
@@ -1132,7 +1199,7 @@ struct DashboardView: View {
                             herd: herd,
                             preferences: prefs,
                             modelContext: modelContext,
-                            asOfDate: date,
+                            asOfDate: dateAtEndOfDay,
                             saleyardOverride: self.selectedSaleyard
                         )
                         return (valuation.physicalValue, valuation.breedingAccrual, valuation.netRealizableValue)
@@ -1147,18 +1214,24 @@ struct DashboardView: View {
             }
             
             history.append(ValuationDataPoint(
-                date: date,
+                date: dateAtEndOfDay,
                 value: dayValuations.total,
                 physicalValue: dayValuations.physical,
                 breedingAccrual: dayValuations.breeding
             ))
+            
+            #if DEBUG
+            if dayOffset <= 7 || dayOffset % 7 == 0 {
+                print("📊 Day \(dayOffset): \(dateAtStartOfDay.formatted(.dateTime.month().day())) = $\(String(format: "%.0f", dayValuations.total)) (\(activeHerdsForDate.count) herds)")
+            }
+            #endif
         }
         
         // Debug: Ensure chart has at least 2 points to display a line
         // If we only have 1 point (brand new portfolio), add a starting point at $0
         if history.count == 1, let firstPoint = history.first {
             let startPoint = ValuationDataPoint(
-                date: earliestHerdDate,
+                date: startOfEarliestDay,
                 value: 0,
                 physicalValue: 0,
                 breedingAccrual: 0
@@ -1173,7 +1246,7 @@ struct DashboardView: View {
         }
         
         // Debug: Calculate day-ago value for 24h change display
-        let dayAgo = calendar.date(byAdding: .hour, value: -24, to: endDate) ?? endDate
+        let dayAgo = calendar.date(byAdding: .hour, value: -24, to: startOfToday) ?? startOfToday
         let dayAgoDataPoint = history.last { $0.date <= dayAgo } ?? history.first
         
         let currentPortfolioValue = self.portfolioValue
@@ -1190,7 +1263,16 @@ struct DashboardView: View {
             HapticManager.success()
             
             #if DEBUG
+            print("📊 ============================================")
             print("📊 Full history loaded: \(history.count) data points")
+            if let first = history.first, let last = history.last {
+                print("📊 Date range: \(first.date.formatted(.dateTime.month().day())) ($\(String(format: "%.0f", first.value))) to \(last.date.formatted(.dateTime.month().day())) ($\(String(format: "%.0f", last.value)))")
+                let totalChange = last.value - first.value
+                let percentChange = first.value > 0 ? (totalChange / first.value * 100) : 0
+                print("📊 Total change: $\(String(format: "%.0f", totalChange)) (\(String(format: "%.1f", percentChange))%)")
+            }
+            print("📊 Today's value: $\(String(format: "%.0f", currentPortfolioValue))")
+            print("📊 ============================================")
             #endif
         }
     }

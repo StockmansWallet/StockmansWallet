@@ -13,6 +13,7 @@ import Charts
 // MARK: - Time Range Enum
 enum TimeRange: String, CaseIterable {
     case custom = "Custom"
+    case day = "1 Day"
     case week = "Week"
     case month = "Month"
     case year = "Year"
@@ -407,7 +408,7 @@ struct InteractiveChartView: View {
             )
             .padding(.horizontal, Theme.dashboardCardPadding) // Debug: Match dashboard card density
             .padding(.top, 10)
-            .padding(.bottom, 4)
+            .padding(.bottom, Theme.dashboardCardPadding) // Debug: Match horizontal padding for even spacing
         }
         .onAppear {
             // Performance: Initialize sorted data cache for smooth scrubbing
