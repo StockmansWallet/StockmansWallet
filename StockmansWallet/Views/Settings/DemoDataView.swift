@@ -18,13 +18,19 @@ struct DemoDataView: View {
     // Debug: Track operation states
     @State private var isGenerating = false
     @State private var isRemoving = false
+    @State private var isResettingAll = false
     @State private var showSuccessMessage = false
     @State private var successMessage = ""
     @State private var showError = false
     @State private var errorMessage = ""
     
-    // Debug: Check if mock data exists
+    // Debug: Check if data exists
     @State private var hasMockData = false
+    @State private var hasUserData = false
+    
+    // Debug: Confirmation dialogs
+    @State private var showRemoveMockConfirmation = false
+    @State private var showResetAllConfirmation = false
     
     var body: some View {
         List {
@@ -109,12 +115,15 @@ struct DemoDataView: View {
                         .background(Theme.accentColor)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
-                    .disabled(isGenerating || isRemoving)
-                    .opacity((isGenerating || isRemoving) ? 0.6 : 1.0)
+                    .disabled(isGenerating || isRemoving || isResettingAll)
+                    .opacity((isGenerating || isRemoving || isResettingAll) ? 0.6 : 1.0)
                     
-                    // Debug: Remove button (only show if mock data exists)
+                    // Debug: Remove mock data button (only show if mock data exists)
                     if hasMockData {
-                        Button(action: removeMockData) {
+                        Button(action: {
+                            HapticManager.tap()
+                            showRemoveMockConfirmation = true
+                        }) {
                             HStack {
                                 if isRemoving {
                                     ProgressView()
@@ -134,8 +143,37 @@ struct DemoDataView: View {
                             .background(Theme.accentColor.opacity(0.1))
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         }
-                        .disabled(isGenerating || isRemoving)
-                        .opacity((isGenerating || isRemoving) ? 0.6 : 1.0)
+                        .disabled(isGenerating || isRemoving || isResettingAll)
+                        .opacity((isGenerating || isRemoving || isResettingAll) ? 0.6 : 1.0)
+                    }
+                    
+                    // Debug: Reset all data button (only show if any user data exists)
+                    if hasUserData {
+                        Button(action: {
+                            HapticManager.tap()
+                            showResetAllConfirmation = true
+                        }) {
+                            HStack {
+                                if isResettingAll {
+                                    ProgressView()
+                                        .tint(.white)
+                                        .scaleEffect(0.8)
+                                } else {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .font(.system(size: 16))
+                                }
+                                
+                                Text(isResettingAll ? "Resetting..." : "Reset All Data")
+                                    .font(.system(size: 16, weight: .semibold))
+                            }
+                            .foregroundStyle(.white)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(Color.red)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                        }
+                        .disabled(isGenerating || isRemoving || isResettingAll)
+                        .opacity((isGenerating || isRemoving || isResettingAll) ? 0.6 : 1.0)
                     }
                 }
                 .padding(.vertical, 8)
@@ -197,8 +235,30 @@ struct DemoDataView: View {
             }
         }
         .task {
-            // Debug: Check if mock data exists when view appears
-            checkForMockData()
+            // Debug: Check if data exists when view appears
+            checkForExistingData()
+        }
+        // Debug: Confirmation dialog for removing mock data
+        .alert("Remove Mock Data?", isPresented: $showRemoveMockConfirmation) {
+            Button("Cancel", role: .cancel) {
+                HapticManager.tap()
+            }
+            Button("Remove", role: .destructive) {
+                removeMockData()
+            }
+        } message: {
+            Text("This will delete all mock/demo herds. Your real herds will not be affected.")
+        }
+        // Debug: Confirmation dialog for resetting all data
+        .alert("Reset All Data?", isPresented: $showResetAllConfirmation) {
+            Button("Cancel", role: .cancel) {
+                HapticManager.tap()
+            }
+            Button("Reset Everything", role: .destructive) {
+                resetAllData()
+            }
+        } message: {
+            Text("This will delete ALL data including herds, properties, sales records, and settings. This action cannot be undone. The app will return to a fresh state.")
         }
     }
     
@@ -291,11 +351,58 @@ struct DemoDataView: View {
         }
     }
     
-    /// Check if mock data exists
-    /// Debug: Updates UI to show/hide remove button
+    /// Reset all data (delete everything)
+    /// Debug: Removes ALL user-generated data to return app to fresh state
     @MainActor
-    private func checkForMockData() {
+    private func resetAllData() {
+        guard !isResettingAll else { return }
+        
+        isResettingAll = true
+        showSuccessMessage = false
+        showError = false
+        
+        HapticManager.tap()
+        
+        Task {
+            do {
+                // Debug: Delete all data using the service
+                try MockDataGenerator.shared.resetAllData(from: modelContext)
+                
+                // Debug: Success feedback
+                HapticManager.success()
+                successMessage = "All data has been reset successfully"
+                showSuccessMessage = true
+                hasMockData = false
+                hasUserData = false
+                
+                // Debug: Post notification that data was cleared (for other views to refresh)
+                NotificationCenter.default.post(name: .dataCleared, object: nil)
+                
+                // Debug: Hide success message after 3 seconds
+                try? await Task.sleep(for: .seconds(3))
+                showSuccessMessage = false
+                
+            } catch {
+                // Debug: Error feedback
+                HapticManager.error()
+                errorMessage = "Failed to reset data: \(error.localizedDescription)"
+                showError = true
+                
+                #if DEBUG
+                print("❌ Error resetting all data: \(error)")
+                #endif
+            }
+            
+            isResettingAll = false
+        }
+    }
+    
+    /// Check if mock data and user data exist
+    /// Debug: Updates UI to show/hide remove/reset buttons
+    @MainActor
+    private func checkForExistingData() {
         hasMockData = MockDataGenerator.shared.hasMockData(in: modelContext)
+        hasUserData = MockDataGenerator.shared.hasUserData(in: modelContext)
     }
 }
 

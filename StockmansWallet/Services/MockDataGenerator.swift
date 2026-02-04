@@ -79,7 +79,7 @@ class MockDataGenerator {
         
         // Debug: Generate herds for each activity date
         var generatedHerds: [HerdGroup] = []
-        for (index, createdAt) in activityDates.enumerated() {
+        for createdAt in activityDates {
             // Debug: Generate a random herd with realistic properties
             let herd = generateRandomHerd(createdAt: createdAt)
             
@@ -237,6 +237,145 @@ class MockDataGenerator {
             #endif
             return false
         }
+    }
+    
+    /// Check if any user-generated data exists (non-mock herds, properties, etc.)
+    /// Debug: Used to show/hide the reset all data button
+    func hasUserData(in modelContext: ModelContext) -> Bool {
+        // Debug: Check for non-mock herds
+        let herdDescriptor = FetchDescriptor<HerdGroup>(
+            predicate: #Predicate<HerdGroup> { herd in
+                herd.isMockData == false
+            }
+        )
+        
+        // Debug: Check for properties
+        let propertyDescriptor = FetchDescriptor<Property>()
+        
+        // Debug: Check for sales records
+        let salesDescriptor = FetchDescriptor<SalesRecord>()
+        
+        do {
+            let herdCount = try modelContext.fetchCount(herdDescriptor)
+            let propertyCount = try modelContext.fetchCount(propertyDescriptor)
+            let salesCount = try modelContext.fetchCount(salesDescriptor)
+            
+            return herdCount > 0 || propertyCount > 0 || salesCount > 0
+        } catch {
+            #if DEBUG
+            print("⚠️ Error checking for user data: \(error)")
+            #endif
+            return false
+        }
+    }
+    
+    /// Reset all data (delete everything) to return app to fresh state
+    /// Debug: Removes ALL data including mock and user-generated herds, properties, sales, health records, etc.
+    func resetAllData(from modelContext: ModelContext) throws {
+        #if DEBUG
+        print("🔄 Starting full data reset...")
+        #endif
+        
+        // Debug: Delete ALL herds (both mock and user-generated)
+        let herdDescriptor = FetchDescriptor<HerdGroup>()
+        let herds = try modelContext.fetch(herdDescriptor)
+        for herd in herds {
+            modelContext.delete(herd)
+        }
+        #if DEBUG
+        print("🗑️ Deleted \(herds.count) herds")
+        #endif
+        
+        // Debug: Delete ALL properties
+        let propertyDescriptor = FetchDescriptor<Property>()
+        let properties = try modelContext.fetch(propertyDescriptor)
+        for property in properties {
+            modelContext.delete(property)
+        }
+        #if DEBUG
+        print("🗑️ Deleted \(properties.count) properties")
+        #endif
+        
+        // Debug: Delete ALL sales records
+        let salesDescriptor = FetchDescriptor<SalesRecord>()
+        let sales = try modelContext.fetch(salesDescriptor)
+        for sale in sales {
+            modelContext.delete(sale)
+        }
+        #if DEBUG
+        print("🗑️ Deleted \(sales.count) sales records")
+        #endif
+        
+        // Debug: Delete ALL health records
+        let healthDescriptor = FetchDescriptor<HealthRecord>()
+        let healthRecords = try modelContext.fetch(healthDescriptor)
+        for record in healthRecords {
+            modelContext.delete(record)
+        }
+        #if DEBUG
+        print("🗑️ Deleted \(healthRecords.count) health records")
+        #endif
+        
+        // Debug: Delete ALL muster records
+        let musterDescriptor = FetchDescriptor<MusterRecord>()
+        let musterRecords = try modelContext.fetch(musterDescriptor)
+        for record in musterRecords {
+            modelContext.delete(record)
+        }
+        #if DEBUG
+        print("🗑️ Deleted \(musterRecords.count) muster records")
+        #endif
+        
+        // Debug: Delete ALL custom sale locations
+        let locationDescriptor = FetchDescriptor<CustomSaleLocation>()
+        let locations = try modelContext.fetch(locationDescriptor)
+        for location in locations {
+            modelContext.delete(location)
+        }
+        #if DEBUG
+        print("🗑️ Deleted \(locations.count) custom sale locations")
+        #endif
+        
+        // Debug: Delete ALL market prices (cached data)
+        let priceDescriptor = FetchDescriptor<MarketPrice>()
+        let prices = try modelContext.fetch(priceDescriptor)
+        for price in prices {
+            modelContext.delete(price)
+        }
+        #if DEBUG
+        print("🗑️ Deleted \(prices.count) market prices")
+        #endif
+        
+        // Debug: Reset user preferences to default (don't delete, just reset)
+        let prefsDescriptor = FetchDescriptor<UserPreferences>()
+        let preferences = try modelContext.fetch(prefsDescriptor)
+        for prefs in preferences {
+            // Debug: Reset to default values while keeping the object
+            prefs.hasCompletedOnboarding = false
+            prefs.userRole = .farmerGrazier
+            prefs.firstName = ""
+            prefs.lastName = ""
+            prefs.farmName = nil
+            prefs.defaultSaleyard = "Wagga Wagga Livestock Marketing Centre"
+            prefs.defaultState = "NSW"
+            prefs.defaultSaleyardDistance = 35.0
+            prefs.mortalityRate = 0.05
+            prefs.calvingRate = 0.85
+            prefs.monthlyAgistmentCost = 20.0
+            prefs.monthlyFeedCost = 15.0
+            prefs.monthlyVetCost = 5.0
+            prefs.freightCostPerKm = 2.5
+        }
+        #if DEBUG
+        print("♻️ Reset user preferences to defaults")
+        #endif
+        
+        // Debug: Save all deletions
+        try modelContext.save()
+        
+        #if DEBUG
+        print("✅ Successfully reset all data - app returned to fresh state")
+        #endif
     }
     
     // MARK: - Private Helper Methods
