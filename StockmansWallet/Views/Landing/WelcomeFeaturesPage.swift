@@ -78,8 +78,10 @@ struct WelcomeFeaturesPage: View {
         }
         .onChange(of: hasAcceptedTerms) { _, newValue in
             if newValue {
-                // Debug: Terms accepted - move into sign-in flow.
-                onboardingStep = .signIn
+                // Debug: Terms accepted - move into sign-in flow with smooth transition.
+                withAnimation(.easeInOut(duration: 0.3)) {
+                    onboardingStep = .signIn
+                }
             }
         }
         .sheet(isPresented: $showingTerms) {

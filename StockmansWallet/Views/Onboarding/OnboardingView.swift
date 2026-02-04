@@ -40,11 +40,13 @@ struct OnboardingView: View {
                 case .landing:
                     // Debug: Full-screen landing page with background image - first impression
                     LandingPageView {
-                        // User taps Continue - transition to features/welcome cards
-                        withAnimation {
+                        // User taps Continue - slide landing page left to reveal features
+                        withAnimation(.easeInOut(duration: 0.4)) {
                             onboardingStep = .features
                         }
                     }
+                    .transition(.move(edge: .leading))
+                    .zIndex(1) // Debug: Keep landing on top during transition
                     
                 case .features:
                     // Debug: Card-based welcome flow with app intro and terms acceptance
@@ -57,6 +59,7 @@ struct OnboardingView: View {
                         onSkipAsFarmer: skipAsFarmerForDev,
                         onSkipAsAdvisor: skipAsAdvisorForDev
                     )
+                    .transition(.identity) // Debug: Features page stays in place, revealed by sliding landing
                     
                 case .signIn:
                     // Debug: Profile setup page for beta testing (no authentication)
@@ -73,6 +76,7 @@ struct OnboardingView: View {
                         onAppleSignIn: nil, // Not used in beta
                         onGoogleSignIn: nil // Not used in beta
                     )
+                    .transition(.opacity)
                     
                 case .onboardingPages:
                     // Debug: Branching onboarding flow based on user role (3 pages for beta)
