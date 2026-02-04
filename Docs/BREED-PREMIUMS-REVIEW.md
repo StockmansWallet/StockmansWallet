@@ -18,7 +18,7 @@ Used for breeding programs - premiums reflect genetic value and breeding charact
 | Black Angus | 28% | 28% | Same as Angus (just color variant) |
 | Wagyu | 28% | 35% | **HIGHEST** marbling/value, rare, export premium |
 | **PREMIUM CROSSBREEDS** |
-| Angus X Friesian | 20% | 20% | Combines Angus quality with Friesian size |
+| Angus X | 20% | 8% | Quality Angus crossbreed |
 | Charolais X Angus | 20% | 22% | Excellent growth, hybrid vigor |
 | Black Baldy | 20% | 18% | (Hereford X Angus) Good all-rounder |
 | Black Hereford | 20% | 18% | Good beef qualities |
@@ -60,7 +60,7 @@ Used for meat production - premiums reflect meat quality and growth
 | Black Angus | 28% | 28% | Same as Angus |
 | Wagyu | 28% | 40% | **EXTREME** marbling, export premium |
 | **PREMIUM CROSSBREEDS** |
-| Angus X Friesian | 20% | 20% | Good size + quality |
+| Angus X | 20% | 8% | Quality Angus crossbreed |
 | Charolais X Angus | 20% | 22% | Excellent meat yield |
 | Black Baldy | 20% | 18% | Consistent quality |
 | **EUROPEAN BREEDS** |

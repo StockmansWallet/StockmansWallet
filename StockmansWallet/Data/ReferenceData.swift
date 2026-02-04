@@ -10,7 +10,7 @@ import Foundation
 struct ReferenceData {
     // MARK: - Breeds (From ADD HERD Flow PDF)
     static let cattleBreeds = [
-        "Angus X Friesian", "Angus", "Black Baldy", "Black Hereford",
+        "Angus X", "Angus", "Black Baldy", "Black Hereford",
         "Brahman", "Brangus", "Charbray", "Charolais", "Charolais X Angus",
         "Cross Breed", "Droughtmaster", "European Cross", "Friesian",
         "Friesian Cross", "Hereford", "Hereford X Friesian", "Limousin",

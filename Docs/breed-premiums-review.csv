@@ -3,7 +3,7 @@ Breeding Cow,Angus,28,28,Premium,Gold standard for meat quality marbling tempera
 Breeding Cow,Red Angus,28,28,Premium,Same quality as Angus heat tolerance bonus,Keep as is
 Breeding Cow,Black Angus,28,28,Premium,Same as Angus (just color variant),Keep as is
 Breeding Cow,Wagyu,28,35,Premium,HIGHEST marbling/value rare export premium,INCREASE
-Breeding Cow,Angus X Friesian,20,20,Premium Crossbreed,Combines Angus quality with Friesian size,Keep as is
+Breeding Cow,Angus X,20,8,Premium Crossbreed,Quality Angus crossbreed,Updated to 8%
 Breeding Cow,Charolais X Angus,20,22,Premium Crossbreed,Excellent growth hybrid vigor,INCREASE slightly
 Breeding Cow,Black Baldy,20,18,Premium Crossbreed,(Hereford X Angus) Good all-rounder,DECREASE slightly
 Breeding Cow,Black Hereford,20,18,Premium Crossbreed,Good beef qualities,DECREASE slightly
@@ -31,7 +31,7 @@ Grown Steer,Angus,28,28,Premium,Highest marbling best eating quality,Keep as is
 Grown Steer,Red Angus,28,28,Premium,Same as Angus,Keep as is
 Grown Steer,Black Angus,28,28,Premium,Same as Angus,Keep as is
 Grown Steer,Wagyu,28,40,Premium,EXTREME marbling export premium,INCREASE
-Grown Steer,Angus X Friesian,20,20,Premium Crossbreed,Good size + quality,Keep as is
+Grown Steer,Angus X,20,8,Premium Crossbreed,Quality Angus crossbreed,Updated to 8%
 Grown Steer,Charolais X Angus,20,22,Premium Crossbreed,Excellent meat yield,INCREASE
 Grown Steer,Black Baldy,20,18,Premium Crossbreed,Consistent quality,DECREASE
 Grown Steer,Charolais,0,15,European,Excellent muscling lean,ADD

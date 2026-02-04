@@ -38,7 +38,7 @@ BEGIN
     
     -- Premium Crossbreeds (7-9%)
     INSERT INTO breed_premiums (species, category, breed, premium_pct, active) VALUES
-    ('Cattle', cat, 'Angus X Friesian', 7.0, true),
+    ('Cattle', cat, 'Angus X', 8.0, true),
     ('Cattle', cat, 'Charolais X Angus', 9.0, true),
     ('Cattle', cat, 'Black Baldy', 7.0, true),
     ('Cattle', cat, 'Black Hereford', 7.0, true);

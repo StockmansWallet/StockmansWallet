@@ -19,7 +19,7 @@ WHERE breed IN ('Angus', 'Wagyu', 'Red Angus', 'Black Angus')
 UPDATE breed_premiums
 SET premium_pct = 20.0
 WHERE breed IN (
-  'Angus X Friesian',
+  'Angus X',
   'Charolais X Angus',
   'Black Baldy',
   'Black Hereford',

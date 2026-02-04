@@ -21,7 +21,7 @@ class MockDataService {
         let herdConfigs: [(id: String, nickname: String, breed: String, category: String, headCount: Int, initialWeight: Double, dwg: Double, startDateOffset: Int)] = [
             ("NP01", "North Paddock Breeders", "Angus", "Breeding Cow", 120, 550.0, 0.3, -365),
             ("SP01", "South Steers", "Hereford", "Yearling Steer", 85, 380.0, 0.9, -300),
-            ("EP01", "East Weaners", "Angus X Friesian", "Weaner Steer", 150, 250.0, 1.1, -180),
+            ("EP01", "East Weaners", "Angus X", "Weaner Steer", 150, 250.0, 1.1, -180),
             ("WP01", "West Grown Mob", "Charolais", "Grown Steer", 65, 450.0, 0.7, -120),
             ("CP01", "Central Heifers", "Murray Grey", "Heifer", 95, 320.0, 0.8, -90),
         ]
@@ -82,16 +82,16 @@ class MockDataService {
             ("#S006", "Hereford", "Yearling Steer", 425.0, 0.91, "South Paddock", "NLIS: 982000456789016", -310, 18), // No nickname
             ("#S007", "Hereford", "Yearling Steer", 415.0, 0.87, "South Paddock", "NLIS: 982000456789017", -285, 16), // No nickname
             
-            // East Paddock - Weaners (Angus X Friesian) - All ID-only
-            ("#W001", "Angus X Friesian", "Weaner Steer", 265.0, 1.1, "East Paddock", "NLIS: 982000678901234", -180, 8),
-            ("#W002", "Angus X Friesian", "Weaner Steer", 248.0, 1.0, "East Paddock", "NLIS: 982000789012345", -175, 7),
-            ("#W003", "Angus X Friesian", "Weaner Steer", 255.0, 1.15, "East Paddock", "NLIS: 982000678901235", -180, 8),
-            ("#W004", "Angus X Friesian", "Weaner Steer", 270.0, 1.08, "East Paddock", "NLIS: 982000678901236", -170, 9),
-            ("#W005", "Angus X Friesian", "Weaner Steer", 260.0, 1.12, "East Paddock", "NLIS: 982000678901237", -180, 8),
-            ("#W006", "Angus X Friesian", "Weaner Steer", 252.0, 1.05, "East Paddock", "NLIS: 982000678901238", -185, 7),
-            ("#W007", "Angus X Friesian", "Weaner Steer", 268.0, 1.18, "East Paddock", "NLIS: 982000678901239", -175, 8),
-            ("#W008", "Angus X Friesian", "Weaner Steer", 245.0, 1.02, "East Paddock", "NLIS: 982000678901240", -190, 7),
-            ("#W009", "Angus X Friesian", "Weaner Steer", 258.0, 1.09, "East Paddock", "NLIS: 982000678901241", -180, 8),
+            // East Paddock - Weaners (Angus X) - All ID-only
+            ("#W001", "Angus X", "Weaner Steer", 265.0, 1.1, "East Paddock", "NLIS: 982000678901234", -180, 8),
+            ("#W002", "Angus X", "Weaner Steer", 248.0, 1.0, "East Paddock", "NLIS: 982000789012345", -175, 7),
+            ("#W003", "Angus X", "Weaner Steer", 255.0, 1.15, "East Paddock", "NLIS: 982000678901235", -180, 8),
+            ("#W004", "Angus X", "Weaner Steer", 270.0, 1.08, "East Paddock", "NLIS: 982000678901236", -170, 9),
+            ("#W005", "Angus X", "Weaner Steer", 260.0, 1.12, "East Paddock", "NLIS: 982000678901237", -180, 8),
+            ("#W006", "Angus X", "Weaner Steer", 252.0, 1.05, "East Paddock", "NLIS: 982000678901238", -185, 7),
+            ("#W007", "Angus X", "Weaner Steer", 268.0, 1.18, "East Paddock", "NLIS: 982000678901239", -175, 8),
+            ("#W008", "Angus X", "Weaner Steer", 245.0, 1.02, "East Paddock", "NLIS: 982000678901240", -190, 7),
+            ("#W009", "Angus X", "Weaner Steer", 258.0, 1.09, "East Paddock", "NLIS: 982000678901241", -180, 8),
             
             // West Paddock - Grown Steers (Charolais) - Mix
             ("Blaze #G001", "Charolais", "Grown Steer", 485.0, 0.7, "West Paddock", "NLIS: 982000890123456", -120, 26),

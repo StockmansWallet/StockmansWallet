@@ -12,7 +12,7 @@ INSERT INTO sample_herds (name, species, breed, sex, category, age_months, head_
 ('Brahman Breeding Cows', 'Cattle', 'Brahman', 'Female', 'Breeding Cow', 48, 150, 520.0, 520.0, 0.35, true, 0.85, 'The Flats', 'Roma Saleyards', false, -1050),
 ('Yearling Steers', 'Cattle', 'Angus', 'Male', 'Yearling Steer', 18, 95, 380.0, 380.0, 0.6, false, 0.0, 'North Ridge', 'Wagga Wagga Livestock Marketing Centre', false, -1000),
 ('Feeder Steers', 'Cattle', 'Hereford', 'Male', 'Grown Steer', 28, 75, 450.0, 450.0, 0.5, false, 0.0, 'South Pasture', 'Dubbo Regional Livestock Market', false, -950),
-('Weaner Steers', 'Cattle', 'Angus X Friesian', 'Male', 'Weaner Steer', 9, 140, 250.0, 250.0, 0.8, false, 0.0, 'East Valley', 'Wagga Wagga Livestock Marketing Centre', false, -900),
+('Weaner Steers', 'Cattle', 'Angus X', 'Male', 'Weaner Steer', 9, 140, 250.0, 250.0, 0.8, false, 0.0, 'East Valley', 'Wagga Wagga Livestock Marketing Centre', false, -900),
 ('Yearling Heifers', 'Cattle', 'Charolais', 'Female', 'Heifer', 15, 110, 320.0, 320.0, 0.7, false, 0.0, 'West Slope', 'Tamworth Regional Livestock Exchange', false, -850),
 ('Weaner Bulls', 'Cattle', 'Murray Grey', 'Male', 'Weaner Bull', 10, 60, 280.0, 280.0, 0.9, false, 0.0, 'Central Plains', 'Forbes Central West Livestock Exchange', false, -800),
 ('Grown Steers', 'Cattle', 'Droughtmaster', 'Male', 'Grown Steer', 29, 80, 480.0, 480.0, 0.65, false, 0.0, 'Upper Meadow', 'Roma Saleyards', false, -700),

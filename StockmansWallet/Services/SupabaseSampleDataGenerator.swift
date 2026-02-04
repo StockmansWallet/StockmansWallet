@@ -86,7 +86,7 @@ class SupabaseSampleDataGenerator {
             ("Feeder Steers", "Cattle", "Hereford", "Grown Steer", "Male",
              75, 450.0, 0.5, 0.9, 90, -950, false, 0.0, saleyards[1]),
             
-            ("Weaner Steers", "Cattle", "Angus X Friesian", "Weaner Steer", "Male",
+            ("Weaner Steers", "Cattle", "Angus X", "Weaner Steer", "Male",
              140, 250.0, 0.8, 1.2, 100, -900, false, 0.0, saleyards[0]),
             
             ("Yearling Heifers", "Cattle", "Charolais", "Heifer", "Female",

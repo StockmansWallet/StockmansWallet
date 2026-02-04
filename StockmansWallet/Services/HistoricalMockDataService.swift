@@ -77,7 +77,7 @@ class HistoricalMockDataService {
             ("South Pasture - Feeder Steers", "Cattle", "Hereford", "Grown Steer", "Male",
              75, 450.0, 0.5, 0.9, 90, -950, false, 0.0, saleyards[1]),
             
-            ("East Valley - Weaner Steers", "Cattle", "Angus X Friesian", "Weaner Steer", "Male",
+            ("East Valley - Weaner Steers", "Cattle", "Angus X", "Weaner Steer", "Male",
              140, 250.0, 0.8, 1.2, 100, -900, false, 0.0, saleyards[0]),
             
             ("West Slope - Yearling Heifers", "Cattle", "Charolais", "Heifer", "Female",
@@ -211,12 +211,12 @@ class HistoricalMockDataService {
             ("Duke #H04", "Hereford", "Grown Steer", 488.0, 0.70, "South Pasture", "NLIS: 982500500000404", -455, 28),
             
             // East Valley - Weaner Crossbreeds
-            ("Jet #X01", "Angus X Friesian", "Weaner Steer", 272.0, 1.14, "East Valley", "NLIS: 982500600000501", -300, 9),
-            ("Rocket #X02", "Angus X Friesian", "Weaner Steer", 265.0, 1.10, "East Valley", "NLIS: 982500600000502", -310, 8),
-            ("Zoom #X03", "Angus X Friesian", "Weaner Steer", 278.0, 1.18, "East Valley", "NLIS: 982500600000503", -295, 9),
-            ("Flash #X04", "Angus X Friesian", "Weaner Steer", 260.0, 1.08, "East Valley", "NLIS: 982500600000504", -315, 8),
-            ("Sprint #X05", "Angus X Friesian", "Weaner Steer", 268.0, 1.12, "East Valley", "NLIS: 982500600000505", -305, 9),
-            ("Dash #X06", "Angus X Friesian", "Weaner Steer", 275.0, 1.16, "East Valley", "NLIS: 982500600000506", -300, 9),
+            ("Jet #X01", "Angus X", "Weaner Steer", 272.0, 1.14, "East Valley", "NLIS: 982500600000501", -300, 9),
+            ("Rocket #X02", "Angus X", "Weaner Steer", 265.0, 1.10, "East Valley", "NLIS: 982500600000502", -310, 8),
+            ("Zoom #X03", "Angus X", "Weaner Steer", 278.0, 1.18, "East Valley", "NLIS: 982500600000503", -295, 9),
+            ("Flash #X04", "Angus X", "Weaner Steer", 260.0, 1.08, "East Valley", "NLIS: 982500600000504", -315, 8),
+            ("Sprint #X05", "Angus X", "Weaner Steer", 268.0, 1.12, "East Valley", "NLIS: 982500600000505", -305, 9),
+            ("Dash #X06", "Angus X", "Weaner Steer", 275.0, 1.16, "East Valley", "NLIS: 982500600000506", -300, 9),
             
             // West Slope - Charolais Heifers
             ("Ivory #C01", "Charolais", "Heifer", 348.0, 0.82, "West Slope", "NLIS: 982500700000601", -350, 15),

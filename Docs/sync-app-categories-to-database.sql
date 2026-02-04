@@ -160,7 +160,7 @@ ON CONFLICT (rule_name) DO UPDATE SET
 -- Default neutral premiums (0%) for all breeds
 INSERT INTO breed_premiums (species, breed, category, premium_pct, source, active) VALUES
 -- Cattle breeds (neutral premiums for breeds not yet in database)
-('Cattle', 'Angus X Friesian', 'Yearling Steer', 3.0, 'Industry Standard', true),
+('Cattle', 'Angus X', 'Yearling Steer', 8.0, 'Premium Crossbreed', true),
 ('Cattle', 'Black Baldy', 'Yearling Steer', 2.0, 'Industry Standard', true),
 ('Cattle', 'Black Hereford', 'Yearling Steer', 2.0, 'Industry Standard', true),
 ('Cattle', 'Brangus', 'Yearling Steer', 3.0, 'Industry Standard', true),
@@ -182,7 +182,7 @@ INSERT INTO breed_premiums (species, breed, category, premium_pct, source, activ
 ('Cattle', 'Simmental', 'Yearling Steer', 3.0, 'Industry Standard', true),
 
 -- Add same breeds for Grown Steer category
-('Cattle', 'Angus X Friesian', 'Grown Steer', 3.0, 'Industry Standard', true),
+('Cattle', 'Angus X', 'Grown Steer', 8.0, 'Premium Crossbreed', true),
 ('Cattle', 'Black Baldy', 'Grown Steer', 2.0, 'Industry Standard', true),
 ('Cattle', 'Black Hereford', 'Grown Steer', 2.0, 'Industry Standard', true),
 ('Cattle', 'Brangus', 'Grown Steer', 3.0, 'Industry Standard', true),
@@ -204,7 +204,7 @@ INSERT INTO breed_premiums (species, breed, category, premium_pct, source, activ
 ('Cattle', 'Simmental', 'Grown Steer', 3.0, 'Industry Standard', true),
 
 -- Add for Heifer category (used by Weaner Heifer, Heifer (Unjoined), etc.)
-('Cattle', 'Angus X Friesian', 'Heifer', 3.0, 'Industry Standard', true),
+('Cattle', 'Angus X', 'Heifer', 8.0, 'Premium Crossbreed', true),
 ('Cattle', 'Black Baldy', 'Heifer', 2.0, 'Industry Standard', true),
 ('Cattle', 'Black Hereford', 'Heifer', 2.0, 'Industry Standard', true),
 ('Cattle', 'Brangus', 'Heifer', 3.0, 'Industry Standard', true),
@@ -226,7 +226,7 @@ INSERT INTO breed_premiums (species, breed, category, premium_pct, source, activ
 ('Cattle', 'Simmental', 'Heifer', 3.0, 'Industry Standard', true),
 
 -- Add for Breeding Cow category (used by Breeder, First Calf Heifer)
-('Cattle', 'Angus X Friesian', 'Breeding Cow', 3.0, 'Industry Standard', true),
+('Cattle', 'Angus X', 'Breeding Cow', 8.0, 'Premium Crossbreed', true),
 ('Cattle', 'Black Baldy', 'Breeding Cow', 2.0, 'Industry Standard', true),
 ('Cattle', 'Black Hereford', 'Breeding Cow', 2.0, 'Industry Standard', true),
 ('Cattle', 'Brangus', 'Breeding Cow', 3.0, 'Industry Standard', true),
