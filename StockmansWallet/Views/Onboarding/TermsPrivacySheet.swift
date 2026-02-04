@@ -172,20 +172,22 @@ struct LegalDocumentRow: View {
 }
 
 // MARK: - Key Point Row Component
+// Debug: Apple-style key point row with generous spacing and clear hierarchy
 struct KeyPointRow: View {
     let icon: String
     let text: String
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(alignment: .top, spacing: 16) {
             Image(systemName: icon)
-                .font(.body)
-                .foregroundStyle(Theme.positiveChange)
+                .font(.system(size: 20))
+                .foregroundStyle(Theme.accentColor)
                 .frame(width: 24)
             
             Text(text)
-                .font(Theme.subheadline)
+                .font(.system(size: 16))
                 .foregroundStyle(Theme.primaryText)
+                .lineSpacing(3)
                 .frame(maxWidth: .infinity, alignment: .leading)
         }
     }

@@ -55,9 +55,8 @@ struct OnboardingView: View {
                         hasAcceptedTerms: $hasAcceptedTerms,
                         // Pass down intro completion so animations can sequence properly
                         introComplete: introComplete,
-                        // Debug: TEMPORARY - Skip onboarding for development (DELETE BEFORE LAUNCH) ⚠️
-                        onSkipAsFarmer: skipAsFarmerForDev,
-                        onSkipAsAdvisor: skipAsAdvisorForDev
+                        // Debug: TEMPORARY - Skip onboarding for internal testing
+                        onSkipAsFarmer: skipAsFarmerForDev
                     )
                     .transition(.identity) // Debug: Features page stays in place, revealed by sliding landing
                     
@@ -245,7 +244,10 @@ struct OnboardingView: View {
         try? modelContext.save()
     }
     
-    // Debug: TEMPORARY - Skip onboarding as Farmer for development testing (DELETE BEFORE LAUNCH) ⚠️
+    // MARK: - Dev-Only Skip Functions
+    // Debug: Skip functions for internal testing - allows quick dashboard access
+    
+    // Debug: TEMPORARY - Skip onboarding as Farmer for development testing
     // This allows quick access to the farmer dashboard without going through onboarding
     private func skipAsFarmerForDev() {
         HapticManager.tap()
@@ -282,7 +284,7 @@ struct OnboardingView: View {
         try? modelContext.save()
     }
     
-    // Debug: TEMPORARY - Skip onboarding as Advisor for development testing (DELETE BEFORE LAUNCH) ⚠️
+    // Debug: TEMPORARY - Skip onboarding as Advisor for development testing
     // This allows quick access to the advisory dashboard without going through onboarding
     private func skipAsAdvisorForDev() {
         HapticManager.tap()

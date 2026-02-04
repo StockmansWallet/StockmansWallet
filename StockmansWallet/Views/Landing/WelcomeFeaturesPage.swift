@@ -37,7 +37,6 @@ struct WelcomeFeaturesPage: View {
 
     var introComplete: Bool = true
     var onSkipAsFarmer: (() -> Void)? = nil
-    var onSkipAsAdvisor: (() -> Void)? = nil
 
     @State private var currentPage: Int = 0
     @State private var showingTerms = false
@@ -146,6 +145,7 @@ struct WelcomeFeaturesPage: View {
     }
 
     // MARK: - Card Content
+    // Debug: Apple-style card with generous padding for breathing room
     private func welcomeCard(for page: WelcomeCardPage) -> some View {
         OnboardingWelcomeCard {
             ScrollView {
@@ -161,7 +161,8 @@ struct WelcomeFeaturesPage: View {
                         termsCardContent
                     }
                 }
-                .padding(24)
+                .padding(.horizontal, 28)
+                .padding(.vertical, 32)
             }
             .scrollIndicators(.hidden)
         }
@@ -169,20 +170,21 @@ struct WelcomeFeaturesPage: View {
 
     // MARK: - Page Sections
     private var welcomeCardContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 32) {
             cardHeader(
                 title: WelcomeCardPage.welcome.title,
                 subtitle: "Stockman's Wallet helps you track livestock like a financial asset."
             )
 
-            Text("Not just head count. Real value.")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Theme.secondaryText)
-                .italic()
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
+            VStack(alignment: .center, spacing: 8) {
+                Text("Not just head count. Real value.")
+                    .font(.system(size: 17, weight: .medium))
+                    .foregroundStyle(Theme.accentColor)
+                    .multilineTextAlignment(.center)
+            }
+            .frame(maxWidth: .infinity)
 
-            VStack(spacing: 10) {
+            VStack(spacing: 16) {
                 KeyPointRow(icon: "checkmark.circle.fill", text: "Record herds in minutes")
                 KeyPointRow(icon: "chart.line.uptrend.xyaxis", text: "See live value based on real market data")
                 KeyPointRow(icon: "arrow.up.arrow.down.circle.fill", text: "Track changes over time as weights, numbers, and markets move")
@@ -190,12 +192,14 @@ struct WelcomeFeaturesPage: View {
             }
 
             Text("This version focuses on the core experience. It's about getting the foundations right.")
-                .font(Theme.caption)
+                .font(.system(size: 15))
                 .foregroundStyle(Theme.secondaryText)
                 .multilineTextAlignment(.center)
+                .lineSpacing(3)
                 .frame(maxWidth: .infinity)
+                .padding(.top, 8)
             
-            // Debug: Skip button for dev testing - allows quick dashboard access
+            // Debug: Skip button for internal testing - allows quick dashboard access
             if let onSkipAsFarmer {
                 Button {
                     print("WelcomeFeaturesPage: Skip to dashboard tapped")
@@ -210,78 +214,86 @@ struct WelcomeFeaturesPage: View {
                         .background(Capsule().fill(Theme.Accent.quaternary))
                 }
                 .frame(maxWidth: .infinity, alignment: .center)
-                .padding(.top, 4)
+                .padding(.top, 12)
             }
         }
     }
 
     private var betaCardContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 32) {
             cardHeader(
                 title: WelcomeCardPage.beta.title,
                 subtitle: "This is an early beta build for testing purposes only."
             )
 
-            Text("This release is for")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Theme.secondaryText)
+            VStack(alignment: .leading, spacing: 20) {
+                Text("This release is for")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Theme.primaryText)
 
-            VStack(spacing: 10) {
-                KeyPointRow(icon: "sparkles", text: "Testing the overall experience")
-                KeyPointRow(icon: "rectangle.grid.2x2.fill", text: "Checking layouts and navigation")
-                KeyPointRow(icon: "bolt.fill", text: "Trying the core features")
-                KeyPointRow(icon: "ladybug.fill", text: "Finding bugs, errors, or things that feel confusing")
+                VStack(spacing: 16) {
+                    KeyPointRow(icon: "sparkles", text: "Testing the overall experience")
+                    KeyPointRow(icon: "rectangle.grid.2x2.fill", text: "Checking layouts and navigation")
+                    KeyPointRow(icon: "bolt.fill", text: "Trying the core features")
+                    KeyPointRow(icon: "ladybug.fill", text: "Finding bugs, errors, or things that feel confusing")
+                }
             }
 
-            Text("Limited features compared to the final product")
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundStyle(Theme.secondaryText)
-                .padding(.top, 4)
+            VStack(alignment: .leading, spacing: 20) {
+                Text("Limited features compared to the final product")
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundStyle(Theme.primaryText)
 
-            VStack(spacing: 10) {
-                KeyPointRow(icon: "minus.circle.fill", text: "Some data may be placeholders or simplified")
-                KeyPointRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "Things may change or break as we improve the app")
+                VStack(spacing: 16) {
+                    KeyPointRow(icon: "minus.circle.fill", text: "Some data may be placeholders or simplified")
+                    KeyPointRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "Things may change or break as we improve the app")
+                }
             }
         }
     }
 
     private var feedbackCardContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 32) {
             cardHeader(
                 title: WelcomeCardPage.feedback.title,
                 subtitle: "Your feedback matters."
             )
 
-            Text("If something feels off, slow, unclear, or broken, that's exactly what we want to know.")
-                .font(Theme.body)
-                .foregroundStyle(Theme.secondaryText)
+            VStack(alignment: .leading, spacing: 20) {
+                Text("If something feels off, slow, unclear, or broken, that's exactly what we want to know.")
+                    .font(.system(size: 17))
+                    .foregroundStyle(Theme.primaryText)
+                    .lineSpacing(4)
 
-            Text("Use the app as you normally would. Think like a stockman, not a tester.")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondaryText)
+                Text("Use the app as you normally would. Think like a stockman, not a tester.")
+                    .font(.system(size: 15))
+                    .foregroundStyle(Theme.secondaryText)
+                    .lineSpacing(3)
+            }
 
-            VStack(spacing: 10) {
+            VStack(spacing: 16) {
                 KeyPointRow(icon: "questionmark.circle.fill", text: "What would you expect to see here?")
                 KeyPointRow(icon: "exclamationmark.circle.fill", text: "What feels missing?")
                 KeyPointRow(icon: "clock.fill", text: "What would save you time in the paddock or the office?")
             }
 
             Text("Thanks for helping shape Stockman's Wallet.")
-                .font(Theme.caption)
+                .font(.system(size: 15))
                 .foregroundStyle(Theme.secondaryText)
                 .multilineTextAlignment(.center)
                 .frame(maxWidth: .infinity)
+                .padding(.top, 8)
         }
     }
 
     private var termsCardContent: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 32) {
             cardHeader(
                 title: WelcomeCardPage.terms.title,
                 subtitle: "Please review and accept our terms and conditions to continue."
             )
 
-            VStack(spacing: 12) {
+            VStack(spacing: 16) {
                 LegalDocumentRow(
                     icon: "doc.text.fill",
                     title: "Terms of Service",
@@ -350,17 +362,20 @@ struct WelcomeFeaturesPage: View {
         currentPage == WelcomeCardPage.terms.rawValue
     }
 
+    // Debug: Apple-style card header with generous spacing and clear hierarchy
     private func cardHeader(title: String, subtitle: String) -> some View {
-        VStack(alignment: .center, spacing: 8) {
+        VStack(alignment: .center, spacing: 12) {
             Text(title)
-                .font(.system(size: 24, weight: .bold))
+                .font(.system(size: 28, weight: .bold))
                 .foregroundStyle(Theme.primaryText)
                 .multilineTextAlignment(.center)
+                .lineSpacing(2)
 
             Text(subtitle)
-                .font(.system(size: 16))
+                .font(.system(size: 17))
                 .foregroundStyle(Theme.secondaryText)
                 .multilineTextAlignment(.center)
+                .lineSpacing(4)
         }
         .frame(maxWidth: .infinity)
     }

@@ -161,8 +161,9 @@ struct MainTabView: View {
         appearance.backgroundColor = bgColor
         appearance.shadowColor = .clear
         
-        // Set unselected item color (Theme.Label.secondary: #7C6F5D)
-        let normalColor = UIColor(red: 124/255, green: 111/255, blue: 93/255, alpha: 1.0)
+        // Set unselected item color (Theme.Label.tertiary: #5E5142 - muted brown, clearly visible but not bright)
+        // Debug: Darker than white/light beige, maintains visual hierarchy with orange active state
+        let normalColor = UIColor(red: 94/255, green: 81/255, blue: 66/255, alpha: 1.0)
         appearance.stackedLayoutAppearance.normal.iconColor = normalColor
         appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: normalColor]
         

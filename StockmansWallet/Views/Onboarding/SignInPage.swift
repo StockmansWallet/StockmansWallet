@@ -42,67 +42,51 @@ struct SignInPage: View {
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
-                Spacer(minLength: 16)
+                Spacer()
                 
-                // Debug: Card container to match onboarding card style.
+                // Debug: Card container to match onboarding card style, vertically centered.
                 SignInCard {
-                    ScrollView {
-                        VStack(spacing: 24) {
-                            // Debug: Profile setup header for beta testing (no icon).
-                            VStack(spacing: 10) {
-                                Text("Add User Details")
-                                    .font(.system(size: 24, weight: .bold))
-                                    .foregroundStyle(Theme.primaryText)
-                                    .multilineTextAlignment(.center)
-                                    .accessibilityAddTraits(.isHeader)
-                                
-                                Text("Add your name so we can personalize the app.")
-                                    .font(.system(size: 16))
-                                    .foregroundStyle(Theme.secondaryText)
-                                    .multilineTextAlignment(.center)
-                            }
-                            .frame(maxWidth: .infinity)
+                    VStack(spacing: 24) {
+                        // Debug: Profile setup header for beta testing (no icon).
+                        VStack(spacing: 10) {
+                            Text("Let's Get Started")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundStyle(Theme.primaryText)
+                                .multilineTextAlignment(.center)
+                                .accessibilityAddTraits(.isHeader)
                             
-                            // Debug: Profile form - name required, email optional for beta
-                            VStack(spacing: 16) {
-                                // Full Name field
-                                VStack(alignment: .leading, spacing: 8) {
-                                    Text("Full Name")
-                                        .font(.caption)
-                                        .foregroundStyle(Theme.secondaryText)
-                                        .fontWeight(.medium)
-                                    TextField("Full Name", text: $fullName)
-                                        .textFieldStyle(SignInTextFieldStyle())
-                                        .textContentType(.name)
-                                        .autocapitalization(.words)
-                                        .submitLabel(.done)
-                                        .focused($focusedField, equals: .fullName)
-                                        .onSubmit {
-                                            focusedField = nil
-                                        }
-                                }
-                            }
-                            
-                            // Debug: Beta disclaimer badge moved to bottom of card.
-                            HStack(spacing: 8) {
-                                Image(systemName: "info.circle.fill")
-                                    .font(.system(size: 14))
-                                Text("Beta Testing - No user authentication")
-                                    .font(.caption)
-                            }
-                            .foregroundStyle(Theme.accentColor)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Theme.accentColor.opacity(0.15))
-                            .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+                            Text("Personalise your experience by adding your name.")
+                                .font(.system(size: 16))
+                                .foregroundStyle(Theme.secondaryText)
+                                .multilineTextAlignment(.center)
                         }
-                        .padding(24)
+                        .frame(maxWidth: .infinity)
+                        
+                        // Debug: Profile form - name required for beta personalization
+                        VStack(spacing: 16) {
+                            // Full Name field
+                            VStack(alignment: .leading, spacing: 8) {
+                                Text("Full Name")
+                                    .font(.caption)
+                                    .foregroundStyle(Theme.secondaryText)
+                                    .fontWeight(.medium)
+                                TextField("Full Name", text: $fullName)
+                                    .textFieldStyle(SignInTextFieldStyle())
+                                    .textContentType(.name)
+                                    .autocapitalization(.words)
+                                    .submitLabel(.done)
+                                    .focused($focusedField, equals: .fullName)
+                                    .onSubmit {
+                                        focusedField = nil
+                                    }
+                            }
+                        }
                     }
-                    .scrollIndicators(.hidden)
+                    .padding(24)
                 }
                 .padding(.horizontal, 20)
                 
-                Spacer(minLength: 0)
+                Spacer()
             }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
@@ -119,14 +103,14 @@ struct SignInPage: View {
                     // Debug: Beta - everyone continues to onboarding (all are "new users")
                     onEmailSignUp?()
                 } label: {
-                    Text("Continue to App")
+                    Text("Continue")
                         .frame(maxWidth: .infinity)
                 }
                 .buttonStyle(Theme.PrimaryButtonStyle())
                 .disabled(!canProceed)
                 .opacity(canProceed ? 1.0 : 0.6)
-                .accessibilityLabel("Continue to app")
-                .accessibilityHint("Your name will be used to personalize the app")
+                .accessibilityLabel("Continue")
+                .accessibilityHint("Your name will be used to personalise the app")
             }
             .padding(.horizontal, 24)
             .padding(.top, 12)

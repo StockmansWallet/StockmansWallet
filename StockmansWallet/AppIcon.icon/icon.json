@@ -1,16 +1,17 @@
 {
   "fill" : {
-    "solid" : "srgb:0.43022,0.14546,0.00000,1.00000"
+    "solid" : "srgb:0.15294,0.12157,0.08627,1.00000"
   },
   "groups" : [
     {
       "layers" : [
         {
-          "blend-mode" : "multiply",
+          "blend-mode" : "normal",
           "fill" : {
-            "automatic-gradient" : "srgb:0.00000,0.00000,0.00000,1.00000"
+            "solid" : "srgb:0.81569,0.45098,0.12941,1.00000"
           },
           "glass" : false,
+          "hidden" : false,
           "image-name" : "3.2 – layer.svg",
           "name" : "3.2 – layer",
           "opacity" : 0.63,
@@ -21,81 +22,11 @@
               -9.869864584288734e-06
             ]
           }
-        },
-        {
-          "fill" : {
-            "linear-gradient" : [
-              "display-p3:0.53767,0.32260,0.21507,1.00000",
-              "display-p3:0.43878,0.26327,0.17551,1.00000"
-            ],
-            "orientation" : {
-              "start" : {
-                "x" : 0.5,
-                "y" : 0
-              },
-              "stop" : {
-                "x" : 0.5,
-                "y" : 0.7
-              }
-            }
-          },
-          "glass" : true,
-          "hidden" : true,
-          "image-name" : "5.4 – layer.svg",
-          "name" : "5.4 – layer",
-          "position" : {
-            "scale" : 1,
-            "translation-in-points" : [
-              45.375,
-              0
-            ]
-          }
-        },
-        {
-          "glass" : false,
-          "hidden" : true,
-          "image-name" : "4.3 – layer.svg",
-          "name" : "4.3 – layer",
-          "position" : {
-            "scale" : 0.96,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
-        },
-        {
-          "fill" : {
-            "linear-gradient" : [
-              "display-p3:0.63656,0.38193,0.25462,1.00000",
-              "srgb:0.50000,0.30000,0.20000,1.00000"
-            ],
-            "orientation" : {
-              "start" : {
-                "x" : 0.5,
-                "y" : 0
-              },
-              "stop" : {
-                "x" : 0.4479775116822429,
-                "y" : 1.035248373156396
-              }
-            }
-          },
-          "glass" : true,
-          "hidden" : false,
-          "image-name" : "2.1 – layer.svg",
-          "name" : "2.1 – layer",
-          "position" : {
-            "scale" : 1.07,
-            "translation-in-points" : [
-              0,
-              0
-            ]
-          }
         }
       ],
+      "lighting" : "combined",
       "shadow" : {
-        "kind" : "neutral",
+        "kind" : "none",
         "opacity" : 0.5
       },
       "translucency" : {

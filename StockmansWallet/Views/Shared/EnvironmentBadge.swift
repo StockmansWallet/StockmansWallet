@@ -12,22 +12,18 @@ struct EnvironmentBadge: View {
     var body: some View {
         // Debug: Only show badge for non-production environments
         if Config.environment.shouldShowBadge {
-            Text(badgeText)
-                .font(.system(size: 11, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .padding(.horizontal, 10)
-                .padding(.vertical, 5)
-                .background(
-                    // Debug: Color based on environment
-                    badgeColor
-                        .opacity(0.9)
-                )
-                .cornerRadius(6)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 6)
-                        .stroke(.white.opacity(0.3), lineWidth: 1)
-                )
-                .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
+            HStack(spacing: 8) {
+                Image(systemName: "info.circle.fill")
+                    .font(.system(size: 14))
+                Text(badgeText)
+                    .font(.caption)
+                    .fontWeight(.medium)
+            }
+            .foregroundStyle(.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 8)
+            .background(Theme.accentColor)
+            .clipShape(Capsule())
         }
     }
     
@@ -47,19 +43,5 @@ struct EnvironmentBadge: View {
     // Debug: Read app version from Info.plist (CFBundleShortVersionString)
     private var appVersion: String? {
         return Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
-    }
-    
-    // Debug: Badge color based on environment type
-    private var badgeColor: Color {
-        switch Config.environment {
-        case .development:
-            return Color.orange
-        case .beta:
-            return Color.blue
-        case .staging:
-            return Color.purple
-        case .production:
-            return Color.clear
-        }
     }
 }
