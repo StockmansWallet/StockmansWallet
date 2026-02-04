@@ -57,11 +57,10 @@ struct DashboardView: View {
     @State private var isReorderMode = false // Debug: Long-press to enable card reordering
     @State private var draggedCardId: String? = nil // Debug: Track currently dragged card
     
-    // Debug: Smart refresh tracking (Coinbase-style)
-    // Only reload when necessary, not on every view appearance
+    // Debug: Smart refresh tracking - optimized for daily MLA price updates
+    // MLA updates once daily at 1:30am, so no time-based polling needed
+    // Only fetch when: first load (cache stale check), user adds/edits herd, manual refresh
     @State private var hasLoadedData = false // Track if we've loaded data this session
-    @State private var lastRefreshDate: Date? = nil // Track when data was last refreshed
-    private let refreshThreshold: TimeInterval = 300 // 5 minutes - only refresh if older
     
     // Debug: Track if we need to show animation on next load (dopamine hit)
     @State private var shouldAnimateValue = false
@@ -195,6 +194,21 @@ struct DashboardView: View {
                         print("💰 Herd count changed - reset display to \(self.displayValue), animation enabled")
                         #endif
                     }
+                    await loadDataIfNeeded(force: true)
+                }
+            }
+            .onChange(of: herds.map(\.updatedAt).max()) { oldValue, newValue in
+                // Debug: Herd was edited (breed, saleyard, weight, etc.) - recalculate with cached prices
+                // This is different from count change - just updates values, no dopamine animation
+                guard oldValue != newValue else { return }
+                guard herds.count > 0 else { return } // Skip if no herds
+                
+                Task {
+                    #if DEBUG
+                    print("💰 Dashboard: Herd edited (breed/saleyard/weight), recalculating with cached prices...")
+                    #endif
+                    // Don't animate - user is editing, not adding assets
+                    shouldAnimateValue = false
                     await loadDataIfNeeded(force: true)
                 }
             }
@@ -701,7 +715,7 @@ struct DashboardView: View {
         switch timeRange {
         case .custom:
             // Debug: Filter by custom date range if set
-            guard let startDate = customStartDate, let endDate = customEndDate else {
+            guard let startDate = customStartDate, let _ = customEndDate else {
                 return valuationHistory
             }
             return filterWithAnchor(cutoffDate: startDate)
@@ -801,44 +815,34 @@ struct DashboardView: View {
         // Performance: Wrap in coordinator to prevent concurrent loads
         do {
             try await loadCoordinator.execute {
-                // Debug: Check if we need to load data
+                // Debug: Simplified load logic - no time-based polling needed
+                // MLA updates daily at 1:30am, ValuationEngine checks cache freshness
                 let (needsRefresh, isFirstLoad) = await MainActor.run {
                     let isFirst = !self.hasLoadedData
                     
-                    // Force refresh (user pull-to-refresh, data changed)
+                    // Force refresh (user pull-to-refresh, herd added/edited)
                     if force {
                         #if DEBUG
-                        print("📊 Force refresh requested")
+                        print("📊 Force refresh requested (user action)")
                         #endif
                         return (true, isFirst)
                     }
                     
-                    // First time loading
+                    // First time loading this session
+                    // ValuationEngine will check if cache is from before 1:30am MLA update
                     if isFirst {
                         #if DEBUG
-                        print("📊 First time loading - will load cache then refresh if stale")
+                        print("📊 First load - ValuationEngine will check if prices are from before 1:30am update")
                         #endif
                         return (true, isFirst)
                     }
                     
-                    // Check if data is stale (>5 minutes old)
-                    if let lastRefresh = self.lastRefreshDate {
-                        let timeSinceRefresh = Date().timeIntervalSince(lastRefresh)
-                        if timeSinceRefresh > self.refreshThreshold {
-                            #if DEBUG
-                            print("📊 Data is stale (\(Int(timeSinceRefresh))s old), refreshing...")
-                            #endif
-                            return (true, isFirst)
-                        } else {
-                            #if DEBUG
-                            print("📊 Data is fresh (\(Int(timeSinceRefresh))s old), skipping reload")
-                            #endif
-                            return (false, isFirst)
-                        }
-                    }
-                    
-                    // No last refresh date, needs refresh
-                    return (true, isFirst)
+                    // Already loaded data this session - skip reload
+                    // User actions (add/edit herd) will trigger force=true refresh
+                    #if DEBUG
+                    print("📊 Already loaded this session - skipping reload (no time-based polling)")
+                    #endif
+                    return (false, isFirst)
                 }
                 
                 guard needsRefresh else {
@@ -872,10 +876,9 @@ struct DashboardView: View {
                 // Debug: Now load fresh data
                 await self.loadValuations()
                 
-                // Debug: Mark as loaded and update timestamp
+                // Debug: Mark as loaded
                 await MainActor.run {
                     self.hasLoadedData = true
-                    self.lastRefreshDate = Date()
                 }
             }
         } catch {

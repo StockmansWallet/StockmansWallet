@@ -32,6 +32,12 @@ struct PortfolioView: View {
     // Performance: Track if we've loaded summary to prevent recalculation on every navigation
     @State private var hasInitiallyLoaded = false
     
+    // Debug: Track last loaded herd count to detect when data actually changes
+    @State private var lastLoadedHerdCount: Int = -1
+    
+    // Debug: Track last known updatedAt to detect when herds are edited (breed, saleyard, etc.)
+    @State private var lastKnownUpdatedAt: Date? = nil
+    
     // Debug: Search functionality for Herds and Individual sections
     @State private var herdsSearchText = ""
     @State private var individualSearchText = ""
@@ -92,19 +98,46 @@ struct PortfolioView: View {
                         .presentationDragIndicator(.visible)
                         .presentationBackground(Theme.sheetBackground)
                 }
-                .task(id: hasInitiallyLoaded) {
-                    // Debug: @Query automatically fetches and updates herds, no manual fetch needed
-                    // This prevents async operations during navigation that blur toolbar buttons
-                    guard !hasInitiallyLoaded else { return }
+                .task(id: allHerds.map(\.updatedAt).max()) {
+                    // Debug: Triggers when herds are added, removed, or edited (breed, saleyard, weight, etc.)
+                    // Uses max(updatedAt) to detect ANY herd changes, not just count changes
+                    let currentHerdCount = allHerds.count
+                    let latestUpdate = allHerds.map(\.updatedAt).max()
+                    
+                    // Performance: Skip reload if nothing has changed
+                    if hasInitiallyLoaded 
+                       && portfolioSummary != nil 
+                       && lastLoadedHerdCount == currentHerdCount
+                       && lastKnownUpdatedAt == latestUpdate {
+                        #if DEBUG
+                        print("📊 PortfolioView: Skipping reload - no changes (count: \(currentHerdCount))")
+                        #endif
+                        // Still update filtered caches in case search text changed
+                        updateFilteredCaches()
+                        return
+                    }
+                    
+                    // Debug: Log what changed
+                    #if DEBUG
+                    if lastLoadedHerdCount != currentHerdCount {
+                        print("📊 PortfolioView: Herd count changed (\(lastLoadedHerdCount) → \(currentHerdCount)), recalculating...")
+                    } else if lastKnownUpdatedAt != latestUpdate {
+                        print("📊 PortfolioView: Herd edited (breed/saleyard/weight changed), recalculating with cached prices...")
+                    } else {
+                        print("📊 PortfolioView: Initial load")
+                    }
+                    #endif
                     
                     // Performance: Update filtered caches
                     updateFilteredCaches()
                     
                     await MainActor.run {
                         self.hasInitiallyLoaded = true
+                        self.lastLoadedHerdCount = currentHerdCount
+                        self.lastKnownUpdatedAt = latestUpdate
                     }
                     
-                    // Calculate valuations (now uses ValuationEngine like Dashboard for consistency)
+                    // Debug: Recalculate valuations using cached prices (ValuationEngine checks cache first)
                     loadingTask = Task(priority: .userInitiated) {
                         await loadPortfolioSummary()
                     }
@@ -609,6 +642,12 @@ struct PortfolioView: View {
                 valuations: valuations
             )
             self.isLoading = false
+            // Debug: Update tracking state
+            self.lastLoadedHerdCount = allActiveAssets.count
+            self.lastKnownUpdatedAt = allActiveAssets.map(\.updatedAt).max()
+            #if DEBUG
+            print("📊 PortfolioView: Data loaded successfully (herds: \(allActiveAssets.count))")
+            #endif
         }
     }
 }

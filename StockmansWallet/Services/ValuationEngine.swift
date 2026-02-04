@@ -24,9 +24,10 @@ class ValuationEngine {
     
     // MARK: - Price Cache
     // Debug: Cache fetched prices to avoid redundant API calls
+    // MLA data updates once daily at 1am, so cache for 24 hours
     private var priceCache: [String: (price: Double, source: String)] = [:]
     private var priceCacheTimestamp: Date? = nil
-    private let priceCacheDuration: TimeInterval = 3600 // 1 hour
+    private let priceCacheDuration: TimeInterval = 86400 // 24 hours (MLA updates daily)
     
     // Debug: Offline state tracking
     var isOffline: Bool = false
@@ -36,10 +37,67 @@ class ValuationEngine {
         return "\(category)|\(breed)|\(saleyard ?? "nil")|\(state ?? "nil")"
     }
     
+    // Debug: Check if cache is from before the last 1:30am MLA update
+    // MLA scraper runs at 1am daily, check for 1:30am to allow 30min for server processing
+    private func isCacheFromBeforeLastMLAUpdate() -> Bool {
+        guard let timestamp = priceCacheTimestamp else { return true }
+        
+        let calendar = Calendar.current
+        let now = Date()
+        
+        // Get today's 1:30am (MLA scraper runs at 1am, 30min buffer for processing)
+        var components = calendar.dateComponents([.year, .month, .day], from: now)
+        components.hour = 1
+        components.minute = 30  // 30-minute buffer for server to fetch & populate data
+        components.second = 0
+        
+        guard let todayOneThirtyAM = calendar.date(from: components) else { return false }
+        
+        // If it's currently before 1:30am, check against yesterday's 1:30am
+        let lastMLAUpdate: Date
+        if now < todayOneThirtyAM {
+            // Before 1:30am today, so last update was yesterday at 1:30am
+            lastMLAUpdate = calendar.date(byAdding: .day, value: -1, to: todayOneThirtyAM) ?? todayOneThirtyAM
+        } else {
+            // After 1:30am today, so last update was today at 1:30am
+            lastMLAUpdate = todayOneThirtyAM
+        }
+        
+        // Cache is stale if it's older than the last 1:30am update
+        let isStale = timestamp < lastMLAUpdate
+        
+        #if DEBUG
+        if isStale {
+            let hoursSinceCache = Date().timeIntervalSince(timestamp) / 3600
+            print("🔵 Cache is from before last 1:30am MLA update (\(String(format: "%.1f", hoursSinceCache))h ago), needs refresh")
+        }
+        #endif
+        
+        return isStale
+    }
+    
     // Debug: Check if price cache is still fresh
+    // Fresh = within 24 hours AND not from before last 1:30am MLA update
     private func isPriceCacheFresh() -> Bool {
         guard let timestamp = priceCacheTimestamp else { return false }
-        return Date().timeIntervalSince(timestamp) < priceCacheDuration
+        
+        // Check if cache is from before last 1:30am update (primary check)
+        if isCacheFromBeforeLastMLAUpdate() {
+            return false
+        }
+        
+        // Check age (24 hour fallback for safety, though 1:30am check should catch it)
+        let age = Date().timeIntervalSince(timestamp)
+        let isFresh = age < priceCacheDuration
+        
+        #if DEBUG
+        if isFresh {
+            let hoursOld = age / 3600
+            print("✅ Price cache is fresh (\(String(format: "%.1f", hoursOld))h old, valid until next 1:30am)")
+        }
+        #endif
+        
+        return isFresh
     }
     
     // Debug: Clear price cache (forces fresh fetch)

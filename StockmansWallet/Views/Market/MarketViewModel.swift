@@ -43,8 +43,8 @@ class MarketViewModel {
     private var physicalReportLoadedAt: Date? = nil
     private var intelligenceLoadedAt: Date? = nil
     
-    // Debug: Cache duration - data older than this will be refreshed (1 hour)
-    private let cacheDuration: TimeInterval = 3600
+    // Debug: Cache duration - MLA data updates once daily at 1am, so cache for 24 hours
+    private let cacheDuration: TimeInterval = 86400 // 24 hours (MLA updates daily)
     
     // Debug: Offline state tracking
     var isOffline: Bool = false
