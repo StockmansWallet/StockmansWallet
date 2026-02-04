@@ -471,7 +471,18 @@ class ValuationEngine {
         var breedingAccrual: Double = 0.0
         if herd.isPregnant, let joinedDate = herd.joinedDate {
             let daysElapsed = Calendar.current.dateComponents([.day], from: joinedDate, to: asOfDate).day ?? 0
-            let cycleLength = herd.species == "Cattle" ? cattleGestationDays : sheepGestationDays
+            
+            // Debug: Determine cycle length based on breeding program type
+            // Uncontrolled breeding uses 12-month rolling accrual, others use gestation period
+            let isUncontrolled = herd.additionalInfo?.contains("Breeding: Uncontrolled") ?? false
+            let cycleLength: Int
+            if isUncontrolled {
+                // Debug: 12-month rolling accrual for uncontrolled breeding (365 days)
+                cycleLength = 365
+            } else {
+                // Debug: Gestation-based accrual for AI and Controlled breeding
+                cycleLength = herd.species == "Cattle" ? cattleGestationDays : sheepGestationDays
+            }
             
             // Debug: Estimate newborn progeny value based on realistic birth weights
             // Cattle calves: ~7% of mother's weight (35-40kg from 500-550kg cow)

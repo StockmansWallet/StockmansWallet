@@ -700,7 +700,25 @@ struct AddIndividualAnimalView: View {
         // Debug: Set breeding-specific data for breeder categories
         if isBreederCategory {
             herd.isPregnant = true // Fix: Set isPregnant to true so calving accrual shows in Growth and mortality card
-            herd.joinedDate = joinedDate
+            
+            // Debug: Calculate joinedDate based on breeding program type
+            if let programType = breedingProgramType {
+                switch programType {
+                case .ai, .controlled:
+                    // Debug: For AI and Controlled, use midpoint of period for accrual calculation
+                    let startInterval = joiningPeriodStart.timeIntervalSince1970
+                    let endInterval = joiningPeriodEnd.timeIntervalSince1970
+                    let midpointInterval = (startInterval + endInterval) / 2.0
+                    herd.joinedDate = Date(timeIntervalSince1970: midpointInterval)
+                case .uncontrolled:
+                    // Debug: For Uncontrolled, use start date for 12-month rolling accrual
+                    herd.joinedDate = joiningPeriodStart
+                }
+            } else {
+                // Fallback to default joinedDate if no breeding type specified
+                herd.joinedDate = joinedDate
+            }
+            
             herd.calvingRate = Double(calvingRate) / 100.0
             
             // Debug: Store breeding program info in additionalInfo

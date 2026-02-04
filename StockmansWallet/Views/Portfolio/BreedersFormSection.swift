@@ -16,16 +16,6 @@ enum BreedingProgramType: String, CaseIterable {
     case controlled = "Controlled Breeding"
     case uncontrolled = "Uncontrolled Breeding"
     
-    // Debug: Short label for badges
-    var badge: String? {
-        switch self {
-        case .ai:
-            return "AI"
-        case .controlled, .uncontrolled:
-            return nil
-        }
-    }
-    
     // Debug: Helper to get description for each breeding type
     var description: String {
         switch self {
@@ -64,11 +54,11 @@ enum BreedingProgramType: String, CaseIterable {
     var calvingNote: String {
         switch self {
         case .ai:
-            return "Calving accrual commences midpoint of the insemination period"
+            return "Calving accrual commences at midpoint of insemination period, reaching 100% at calving (~9 months)"
         case .controlled:
-            return "Calving accrual commences midpoint of the joining period"
+            return "Calving accrual commences at midpoint of joining period, reaching 100% at calving (~9 months)"
         case .uncontrolled:
-            return ""
+            return "Calving accrual progresses over 12 months based on your calving rate, reflecting year-round breeding"
         }
     }
 }
@@ -122,22 +112,10 @@ struct BreederSelectionScreen: View {
                     .padding(.top, 2)
                 
                 VStack(alignment: .leading, spacing: 4) {
-                    HStack(spacing: 8) {
-                        Text(programType.rawValue)
-                            .font(Theme.headline)
-                            .foregroundStyle(Theme.primaryText)
-                        
-                        // Debug: Show AI badge if applicable
-                        if let badge = programType.badge {
-                            Text(badge)
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(.white)
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 2)
-                                .background(Theme.accentColor)
-                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        }
-                    }
+                    // Debug: Show AI label inline with text instead of badge
+                    Text(programType == .ai ? "\(programType.rawValue) (AI)" : programType.rawValue)
+                        .font(Theme.headline)
+                        .foregroundStyle(Theme.primaryText)
                     
                     Text(programType.description)
                         .font(Theme.body)
@@ -311,7 +289,7 @@ struct BreedingDetailsScreen: View {
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             
-            // Debug: Info note about calving accrual timing (only for AI and Controlled)
+            // Debug: Info note about calving accrual timing for all breeding types
             if !programType.calvingNote.isEmpty {
                 HStack(alignment: .top, spacing: 8) {
                     Image(systemName: "info.circle")

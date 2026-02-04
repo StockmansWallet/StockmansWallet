@@ -172,7 +172,7 @@ struct EditHerdView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility against card
                                 // Debug: iOS 26 HIG - continuous curve for form fields.
                                 .clipShape(Theme.continuousRoundedRect(8))
                                 
@@ -210,7 +210,7 @@ struct EditHerdView: View {
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity)
-                                        .background(Theme.cardBackground)
+                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                         .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                     
@@ -241,7 +241,7 @@ struct EditHerdView: View {
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity)
-                                        .background(Theme.cardBackground)
+                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                         .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                 }
@@ -275,7 +275,7 @@ struct EditHerdView: View {
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity)
-                                        .background(Theme.cardBackground)
+                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                         .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                     
@@ -311,7 +311,7 @@ struct EditHerdView: View {
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity)
-                                        .background(Theme.cardBackground)
+                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                         .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                 }
@@ -348,7 +348,7 @@ struct EditHerdView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                 .clipShape(Theme.continuousRoundedRect(8))
                                 
                                 VStack(alignment: .leading, spacing: 2) {
@@ -365,7 +365,7 @@ struct EditHerdView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                 .clipShape(Theme.continuousRoundedRect(8))
                             }
                             
@@ -385,7 +385,7 @@ struct EditHerdView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                 .clipShape(Theme.continuousRoundedRect(8))
                                 
                                 VStack(alignment: .leading, spacing: 2) {
@@ -405,7 +405,7 @@ struct EditHerdView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity, alignment: .leading)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                 .clipShape(Theme.continuousRoundedRect(8))
                             }
                             
@@ -418,7 +418,7 @@ struct EditHerdView: View {
                             .tint(Theme.accentColor)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .background(Theme.cardBackground)
+                            .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                             .clipShape(Theme.continuousRoundedRect(8))
                             
                             // Show breeding-related fields only when Breeding Stock is enabled
@@ -432,7 +432,7 @@ struct EditHerdView: View {
                                 .tint(Theme.accentColor)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                 .clipShape(Theme.continuousRoundedRect(8))
                                 
                                 // Show pregnancy-related fields only when Currently Pregnant is enabled
@@ -461,7 +461,7 @@ struct EditHerdView: View {
                                             .padding(.horizontal, 12)
                                             .padding(.vertical, 10)
                                             .frame(maxWidth: .infinity)
-                                            .background(Theme.cardBackground)
+                                            .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                             .clipShape(Theme.continuousRoundedRect(8))
                                         }
                                         .buttonStyle(.plain)
@@ -480,7 +480,7 @@ struct EditHerdView: View {
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .background(Theme.cardBackground)
+                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                         .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                 }
@@ -507,7 +507,7 @@ struct EditHerdView: View {
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .background(Theme.cardBackground)
+                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                         .clipShape(Theme.continuousRoundedRect(8))
                                         
                                         VStack(alignment: .leading, spacing: 2) {
@@ -524,7 +524,7 @@ struct EditHerdView: View {
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .background(Theme.cardBackground)
+                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                         .clipShape(Theme.continuousRoundedRect(8))
                                     }
                                     
@@ -542,7 +542,7 @@ struct EditHerdView: View {
                                     }
                                     .padding(.horizontal, 12)
                                     .padding(.vertical, 10)
-                                    .background(Theme.cardBackground)
+                                    .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                     .clipShape(Theme.continuousRoundedRect(8))
                                 }
                             }
@@ -571,7 +571,7 @@ struct EditHerdView: View {
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Theme.cardBackground)
+                            .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                             .clipShape(Theme.continuousRoundedRect(8))
                             
                             // Debug: Location Notes field
@@ -587,7 +587,7 @@ struct EditHerdView: View {
                             }
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
-                            .background(Theme.cardBackground)
+                            .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                             .clipShape(Theme.continuousRoundedRect(8))
                         }
                         .padding(Theme.cardPadding)
@@ -625,7 +625,7 @@ struct EditHerdView: View {
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
                                 .frame(maxWidth: .infinity)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                 .clipShape(Theme.continuousRoundedRect(8))
                             }
                             .buttonStyle(.plain)
@@ -773,7 +773,7 @@ struct EditHerdView: View {
                                             }
                                         }
                                         .padding(16)
-                                        .background(Theme.cardBackground)
+                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     }
                                 }
@@ -891,7 +891,7 @@ struct EditHerdView: View {
                                             }
                                         }
                                         .padding(16)
-                                        .background(Theme.cardBackground)
+                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                                     }
                                 }
@@ -1197,7 +1197,7 @@ struct AddMusterRecordSheet: View {
                                 .padding(.vertical, 14)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .frame(height: 50)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                 .clipShape(Theme.continuousRoundedRect(8))
                             }
                             .buttonStyle(.plain)
@@ -1221,7 +1221,7 @@ struct AddMusterRecordSheet: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .frame(height: 50)
-                            .background(Theme.cardBackground)
+                            .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                             .clipShape(Theme.continuousRoundedRect(8))
                         }
                         
@@ -1246,7 +1246,7 @@ struct AddMusterRecordSheet: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .frame(height: 50)
-                            .background(Theme.cardBackground)
+                            .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                             .clipShape(Theme.continuousRoundedRect(8))
                             
                             ZStack {
@@ -1268,7 +1268,7 @@ struct AddMusterRecordSheet: View {
                                 .frame(maxWidth: .infinity, alignment: .leading)
                             }
                             .frame(height: 50)
-                            .background(Theme.cardBackground)
+                            .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                             .clipShape(Theme.continuousRoundedRect(8))
                         }
                         
@@ -1288,7 +1288,7 @@ struct AddMusterRecordSheet: View {
                             .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .frame(height: 50)
-                        .background(Theme.cardBackground)
+                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                         .clipShape(Theme.continuousRoundedRect(8))
                         
                         // Notes (full width)
@@ -1304,7 +1304,7 @@ struct AddMusterRecordSheet: View {
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
-                        .background(Theme.cardBackground)
+                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                         .clipShape(Theme.continuousRoundedRect(8))
                     }
                     .padding()
@@ -1375,7 +1375,7 @@ struct AddHealthRecordSheet: View {
                                 .padding(.vertical, 14)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .frame(height: 50)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                 .clipShape(Theme.continuousRoundedRect(8))
                             }
                             .buttonStyle(.plain)
@@ -1418,7 +1418,7 @@ struct AddHealthRecordSheet: View {
                                 .padding(.vertical, 14)
                                 .frame(maxWidth: .infinity)
                                 .frame(height: 50)
-                                .background(Theme.cardBackground)
+                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                                 .clipShape(Theme.continuousRoundedRect(8))
                             }
                             .buttonStyle(.plain)
@@ -1437,7 +1437,7 @@ struct AddHealthRecordSheet: View {
                         }
                         .padding(.horizontal, 12)
                         .padding(.vertical, 10)
-                        .background(Theme.cardBackground)
+                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                         .clipShape(Theme.continuousRoundedRect(8))
                     }
                     .padding()
@@ -1518,7 +1518,7 @@ struct DatePickerSheet: View {
                     DatePicker("", selection: $date, displayedComponents: .date)
                         .datePickerStyle(.graphical)
                         .padding()
-                        .background(Theme.cardBackground)
+                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
                         .clipShape(Theme.continuousRoundedRect(16))
                         .padding()
                     
