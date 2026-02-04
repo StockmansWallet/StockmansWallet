@@ -441,14 +441,12 @@ class ValuationEngine {
         saleyardOverride: String? = nil
     ) async -> HerdValuation {
         // 1. Calculate projected weight
-        // Debug: Use creation date if useCreationDateForWeight is true, otherwise use asOfDate
-        let calculationDate = herd.useCreationDateForWeight ? herd.createdAt : asOfDate
-        
+        // Debug: Always calculate weight dynamically from today's date for accurate projections
         let projectedWeight = calculateProjectedWeight(
             initialWeight: herd.initialWeight,
             dateStart: herd.createdAt,
             dateChange: herd.dwgChangeDate,
-            dateCurrent: calculationDate,
+            dateCurrent: asOfDate,
             dwgOld: herd.previousDWG,
             dwgNew: herd.dailyWeightGain
         )

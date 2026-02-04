@@ -30,9 +30,12 @@ struct EditHerdView: View {
     @State private var calvingRate: Double
     @State private var selectedSaleyard: String?
     @State private var paddockName: String
-    @State private var useCreationDateForWeight: Bool
     @State private var notes: String
     @State private var showingSaleyardSheet = false
+    // Debug: Calves at foot state
+    @State private var calvesAtFootHeadCount: Int?
+    @State private var calvesAtFootAgeMonths: Int?
+    @State private var calvesAtFootAverageWeight: Int? // Debug: Average weight in kg
     // Debug: State for managing muster records
     @State private var showingAddMusterRecord = false
     @State private var newMusterDate = Date()
@@ -102,8 +105,42 @@ struct EditHerdView: View {
         _calvingRate = State(initialValue: herd.calvingRate * 100.0)
         _selectedSaleyard = State(initialValue: herd.selectedSaleyard)
         _paddockName = State(initialValue: herd.paddockName ?? "")
-        _useCreationDateForWeight = State(initialValue: herd.useCreationDateForWeight)
         _notes = State(initialValue: herd.notes ?? "")
+        
+        // Debug: Parse calves at foot from additionalInfo
+        let calvesInfo = Self.parseCalvesAtFoot(from: herd.additionalInfo)
+        _calvesAtFootHeadCount = State(initialValue: calvesInfo.headCount)
+        _calvesAtFootAgeMonths = State(initialValue: calvesInfo.ageMonths)
+        _calvesAtFootAverageWeight = State(initialValue: calvesInfo.averageWeight)
+    }
+    
+    // Debug: Helper function to parse calves at foot from additionalInfo string
+    private static func parseCalvesAtFoot(from additionalInfo: String?) -> (headCount: Int?, ageMonths: Int?, averageWeight: Int?) {
+        guard let info = additionalInfo else { return (nil, nil, nil) }
+        
+        // Look for pattern: "Calves at Foot: X head, Y months" or "Calves at Foot: X head, Y months, Z kg"
+        if let range = info.range(of: "Calves at Foot: ([^|\\n]+)", options: .regularExpression) {
+            let calvesInfo = String(info[range])
+            let parts = calvesInfo.replacingOccurrences(of: "Calves at Foot: ", with: "").components(separatedBy: ", ")
+            
+            var headCount: Int? = nil
+            var ageMonths: Int? = nil
+            var averageWeight: Int? = nil
+            
+            for part in parts {
+                if part.contains("head") {
+                    headCount = Int(part.replacingOccurrences(of: " head", with: "").trimmingCharacters(in: .whitespaces))
+                } else if part.contains("months") {
+                    ageMonths = Int(part.replacingOccurrences(of: " months", with: "").trimmingCharacters(in: .whitespaces))
+                } else if part.contains("kg") {
+                    averageWeight = Int(part.replacingOccurrences(of: " kg", with: "").trimmingCharacters(in: .whitespaces))
+                }
+            }
+            
+            return (headCount, ageMonths, averageWeight)
+        }
+        
+        return (nil, nil, nil)
     }
     
     var body: some View {
@@ -372,27 +409,6 @@ struct EditHerdView: View {
                                 .clipShape(Theme.continuousRoundedRect(8))
                             }
                             
-                            // Debug: Weight gain calculation method toggle
-                            VStack(alignment: .leading, spacing: 8) {
-                                Toggle(isOn: $useCreationDateForWeight) {
-                                    VStack(alignment: .leading, spacing: 4) {
-                                        Text("Calculate from creation date")
-                                            .font(.system(size: 13, weight: .medium))
-                                            .foregroundStyle(Theme.primaryText)
-                                        Text(useCreationDateForWeight 
-                                             ? "Weight calculated from entry date (\(herd.createdAt.formatted(date: .abbreviated, time: .omitted)))"
-                                             : "Weight calculated from today's date (dynamic)")
-                                            .font(.system(size: 10))
-                                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                                    }
-                                }
-                                .tint(Theme.accentColor)
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 10)
-                            .background(Theme.cardBackground)
-                            .clipShape(Theme.continuousRoundedRect(8))
-                            
                             // Breeding Stock toggle
                             Toggle(isOn: $isBreeder) {
                                 Text("Breeding Stock")
@@ -467,6 +483,67 @@ struct EditHerdView: View {
                                         .background(Theme.cardBackground)
                                         .clipShape(Theme.continuousRoundedRect(8))
                                     }
+                                }
+                                
+                                // Debug: Calves at Foot section (shown for all breeding stock, not just pregnant)
+                                VStack(alignment: .leading, spacing: 8) {
+                                    Text("Calves at Foot")
+                                        .font(.system(size: 13, weight: .semibold))
+                                        .foregroundStyle(Theme.primaryText)
+                                    
+                                    // Debug: Head and Age fields side by side
+                                    HStack(spacing: 12) {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Head")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                            TextField("0", value: $calvesAtFootHeadCount, format: .number)
+                                                .keyboardType(.numberPad)
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundStyle(Theme.primaryText)
+                                                .textFieldStyle(.plain)
+                                                .multilineTextAlignment(.leading)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(Theme.continuousRoundedRect(8))
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Avg Age (Months)")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                            TextField("0", value: $calvesAtFootAgeMonths, format: .number)
+                                                .keyboardType(.numberPad)
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundStyle(Theme.primaryText)
+                                                .textFieldStyle(.plain)
+                                                .multilineTextAlignment(.leading)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Theme.cardBackground)
+                                        .clipShape(Theme.continuousRoundedRect(8))
+                                    }
+                                    
+                                    // Debug: Average Weight field (full width)
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Avg Weight (kg)")
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                        TextField("0", value: $calvesAtFootAverageWeight, format: .number)
+                                            .keyboardType(.numberPad)
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundStyle(Theme.primaryText)
+                                            .textFieldStyle(.plain)
+                                            .multilineTextAlignment(.leading)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .background(Theme.cardBackground)
+                                    .clipShape(Theme.continuousRoundedRect(8))
                                 }
                             }
                         }
@@ -911,7 +988,6 @@ struct EditHerdView: View {
         herd.headCount = headCount ?? 1
         herd.initialWeight = Double(initialWeight ?? 300)
         herd.dailyWeightGain = dailyWeightGain
-        herd.useCreationDateForWeight = useCreationDateForWeight
         herd.isBreeder = isBreeder
         herd.isPregnant = isBreeder && isPregnant
         // Debug: Convert percentage (85.0) back to decimal (0.85) for storage
@@ -926,6 +1002,9 @@ struct EditHerdView: View {
             herd.joinedDate = nil
         }
         
+        // Debug: Update additionalInfo with calves at foot data
+        updateAdditionalInfo()
+        
         // Debug: Update the updatedAt timestamp whenever changes are saved
         herd.updatedAt = Date()
         
@@ -937,6 +1016,45 @@ struct EditHerdView: View {
             HapticManager.error()
             print("Error saving changes: \(error)")
         }
+    }
+    
+    // Debug: Update additionalInfo field with calves at foot data while preserving other info
+    private func updateAdditionalInfo() {
+        guard isBreeder else {
+            // Not a breeder, don't add calves at foot info
+            return
+        }
+        
+        // Debug: Parse existing additionalInfo to preserve non-calves data
+        var infoParts: [String] = []
+        
+        if let existingInfo = herd.additionalInfo {
+            // Split by pipe and filter out old calves at foot entries
+            let parts = existingInfo.components(separatedBy: " | ")
+            for part in parts {
+                if !part.contains("Calves at Foot:") {
+                    infoParts.append(part)
+                }
+            }
+        }
+        
+        // Debug: Add updated calves at foot info if fields are filled
+        if let calvesCount = calvesAtFootHeadCount, 
+           let calvesAge = calvesAtFootAgeMonths,
+           calvesCount > 0 {
+            
+            var calvesInfo = "Calves at Foot: \(calvesCount) head, \(calvesAge) months"
+            
+            // Debug: Add weight if provided
+            if let calvesWeight = calvesAtFootAverageWeight, calvesWeight > 0 {
+                calvesInfo += ", \(calvesWeight) kg"
+            }
+            
+            infoParts.append(calvesInfo)
+        }
+        
+        // Debug: Update herd's additionalInfo
+        herd.additionalInfo = infoParts.isEmpty ? nil : infoParts.joined(separator: " | ")
     }
     
     // Debug: Add a new muster record to the herd with all optional details

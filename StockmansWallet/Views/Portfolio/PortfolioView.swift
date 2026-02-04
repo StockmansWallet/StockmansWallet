@@ -466,6 +466,10 @@ struct PortfolioView: View {
         // This must happen BEFORE filtering active herds so new calves are included
         await CalvingManager.shared.processCalvingEvents(herds: allHerds, modelContext: modelContext)
         
+        // Debug: STEP 2 - Convert manual "calves at foot" text entries to real HerdGroup entities
+        // This ensures all calves (auto and manual) are tracked with proper DWG (0.9 kg/day for cattle)
+        await CalvingManager.shared.processManualCalvesAtFoot(herds: allHerds, modelContext: modelContext)
+        
         // Debug: Calculate valuations for both herds and individual animals
         let activeHerds = allHerds.filter { !$0.isSold && $0.headCount > 1 }
         let activeIndividuals = allHerds.filter { !$0.isSold && $0.headCount == 1 }

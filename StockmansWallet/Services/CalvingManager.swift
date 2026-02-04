@@ -102,6 +102,59 @@ class CalvingManager {
         }
     }
     
+    // MARK: - Manual Calves at Foot Conversion
+    /// Converts manual "calves at foot" text entries into real HerdGroup entities
+    /// Debug: Processes all herds with "Calves at Foot" in additionalInfo and creates actual calf records
+    @MainActor
+    func processManualCalvesAtFoot(herds: [HerdGroup], modelContext: ModelContext) async {
+        var calvesGenerated = 0
+        
+        for herd in herds {
+            // Debug: Only process breeding herds with calves at foot info
+            guard herd.isBreeder,
+                  let additionalInfo = herd.additionalInfo,
+                  additionalInfo.contains("Calves at Foot:") else {
+                continue
+            }
+            
+            // Debug: Parse calves at foot data
+            guard let calvesData = parseCalvesAtFootData(from: additionalInfo) else {
+                continue
+            }
+            
+            #if DEBUG
+            print("🍼 CalvingManager: Converting manual calves at foot for \(herd.name)")
+            print("   Head count: \(calvesData.headCount)")
+            print("   Age: \(calvesData.ageMonths) months")
+            print("   Weight: \(calvesData.averageWeight ?? 0) kg")
+            #endif
+            
+            // Debug: Generate individual calf records
+            let generatedCount = await generateManualCalves(
+                from: herd,
+                calvesData: calvesData,
+                modelContext: modelContext
+            )
+            
+            calvesGenerated += generatedCount
+            
+            // Debug: Remove "Calves at Foot" from additionalInfo after conversion
+            herd.additionalInfo = removeCalvesAtFootFromInfo(additionalInfo)
+            herd.updatedAt = Date()
+        }
+        
+        if calvesGenerated > 0 {
+            do {
+                try modelContext.save()
+                #if DEBUG
+                print("✅ CalvingManager: Converted \(calvesGenerated) manual calves to real entities")
+                #endif
+            } catch {
+                print("❌ CalvingManager: Error saving manual calves: \(error)")
+            }
+        }
+    }
+    
     // MARK: - Calf Generation
     /// Generates individual calf records for a breeding herd
     private func generateCalves(
@@ -201,5 +254,124 @@ class CalvingManager {
         default:
             return "Calves"
         }
+    }
+    
+    // MARK: - Manual Calves Helpers
+    
+    /// Parses calves at foot data from additionalInfo string
+    /// Debug: Extracts head count, age in months, and optional average weight
+    private func parseCalvesAtFootData(from additionalInfo: String) -> (headCount: Int, ageMonths: Int, averageWeight: Double?)? {
+        // Look for pattern: "Calves at Foot: X head, Y months" or "Calves at Foot: X head, Y months, Z kg"
+        guard let range = additionalInfo.range(of: "Calves at Foot: ([^|\\n]+)", options: .regularExpression) else {
+            return nil
+        }
+        
+        let calvesInfo = String(additionalInfo[range])
+        let parts = calvesInfo.replacingOccurrences(of: "Calves at Foot: ", with: "").components(separatedBy: ", ")
+        
+        var headCount: Int? = nil
+        var ageMonths: Int? = nil
+        var averageWeight: Double? = nil
+        
+        for part in parts {
+            if part.contains("head") {
+                headCount = Int(part.replacingOccurrences(of: " head", with: "").trimmingCharacters(in: .whitespaces))
+            } else if part.contains("months") {
+                ageMonths = Int(part.replacingOccurrences(of: " months", with: "").trimmingCharacters(in: .whitespaces))
+            } else if part.contains("kg") {
+                averageWeight = Double(part.replacingOccurrences(of: " kg", with: "").trimmingCharacters(in: .whitespaces))
+            }
+        }
+        
+        guard let count = headCount, count > 0, let age = ageMonths else {
+            return nil
+        }
+        
+        return (count, age, averageWeight)
+    }
+    
+    /// Generates individual calf records from manual "calves at foot" data
+    /// Debug: Creates real HerdGroup entities with proper DWG and backdated creation dates
+    private func generateManualCalves(
+        from motherHerd: HerdGroup,
+        calvesData: (headCount: Int, ageMonths: Int, averageWeight: Double?),
+        modelContext: ModelContext
+    ) async -> Int {
+        let headCount = calvesData.headCount
+        let ageMonths = calvesData.ageMonths
+        let averageWeight = calvesData.averageWeight
+        
+        // Debug: Get appropriate daily weight gain for species
+        let dwg = defaultDailyWeightGain[motherHerd.species] ?? 0.9
+        
+        // Debug: Determine calf category based on species
+        let calfCategory = getCalfCategory(for: motherHerd.species)
+        
+        // Debug: Calculate birth date based on age (backdate creation)
+        let birthDate = Calendar.current.date(byAdding: .month, value: -ageMonths, to: Date()) ?? Date()
+        
+        // Debug: Calculate initial weight at birth
+        let birthWeightRatio = birthWeightRatio[motherHerd.species] ?? 0.07
+        let calculatedBirthWeight: Double
+        
+        if let userWeight = averageWeight {
+            // Debug: User provided average weight - work backward to calculate birth weight
+            // Formula: userWeight = birthWeight + (dwg × days)
+            let daysOld = Double(ageMonths) * 30.0 // Approximate days in a month
+            calculatedBirthWeight = max(userWeight - (dwg * daysOld), userWeight * 0.3) // Ensure birth weight is at least 30% of current
+        } else {
+            // Debug: No weight provided - use mother's weight to estimate
+            calculatedBirthWeight = motherHerd.approximateCurrentWeight * birthWeightRatio
+        }
+        
+        #if DEBUG
+        print("   Birth weight: \(String(format: "%.1f", calculatedBirthWeight)) kg")
+        print("   Daily weight gain: \(dwg) kg/day")
+        print("   Birth date (backdated): \(birthDate.formatted(date: .abbreviated, time: .omitted))")
+        #endif
+        
+        // Debug: Generate individual calf records
+        for i in 1...headCount {
+            let calf = HerdGroup(
+                name: "Calf \(i) from \(motherHerd.name)",
+                species: motherHerd.species,
+                breed: motherHerd.breed,
+                sex: "Mixed",
+                category: calfCategory,
+                ageMonths: ageMonths,
+                headCount: 1,
+                initialWeight: calculatedBirthWeight,
+                dailyWeightGain: dwg,
+                isBreeder: false,
+                selectedSaleyard: motherHerd.selectedSaleyard
+            )
+            
+            // Debug: Set creation date to birth date (backdate for accurate weight tracking)
+            calf.createdAt = birthDate
+            calf.updatedAt = Date()
+            
+            // Debug: Copy location from mother
+            calf.paddockName = motherHerd.paddockName
+            calf.locationLatitude = motherHerd.locationLatitude
+            calf.locationLongitude = motherHerd.locationLongitude
+            
+            // Debug: Add note about origin
+            calf.notes = "Converted from manual 'calves at foot' entry on \(motherHerd.displayName)"
+            
+            modelContext.insert(calf)
+        }
+        
+        return headCount
+    }
+    
+    /// Removes "Calves at Foot" entry from additionalInfo while preserving other data
+    /// Debug: Returns cleaned additionalInfo or nil if empty after removal
+    private func removeCalvesAtFootFromInfo(_ additionalInfo: String) -> String? {
+        // Split by pipe and filter out calves at foot entries
+        let parts = additionalInfo.components(separatedBy: " | ")
+        let filtered = parts.filter { !$0.contains("Calves at Foot:") }
+        
+        let result = filtered.joined(separator: " | ").trimmingCharacters(in: .whitespaces)
+        return result.isEmpty ? nil : result
     }
 }

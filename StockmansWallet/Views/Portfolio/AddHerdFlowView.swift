@@ -801,7 +801,12 @@ struct AddHerdFlowView: View {
         var infoParts: [String] = []
         if !additionalInfo.isEmpty { infoParts.append(additionalInfo) }
         if let calvesCount = calvesAtFootHeadCount, let calvesAge = calvesAtFootAgeMonths, calvesCount > 0 {
-            infoParts.append("Calves at Foot: \(calvesCount) head, \(calvesAge) months")
+            var calvesInfo = "Calves at Foot: \(calvesCount) head, \(calvesAge) months"
+            // Debug: Add weight if provided
+            if let calvesWeight = calvesAtFootAverageWeight, calvesWeight > 0 {
+                calvesInfo += ", \(calvesWeight) kg"
+            }
+            infoParts.append(calvesInfo)
         }
         // Debug: Add breeding program information to additional info
         if isBreederCategory, let programType = breedingProgramType {

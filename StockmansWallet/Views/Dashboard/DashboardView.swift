@@ -906,6 +906,10 @@ struct DashboardView: View {
                 // This must happen BEFORE calculating portfolio value so new calves are included
                 await CalvingManager.shared.processCalvingEvents(herds: Array(herds), modelContext: modelContext)
                 
+                // Debug: STEP 2 - Convert manual "calves at foot" text entries to real HerdGroup entities
+                // This ensures all calves (auto and manual) are tracked with proper DWG (0.9 kg/day for cattle)
+                await CalvingManager.shared.processManualCalvesAtFoot(herds: Array(herds), modelContext: modelContext)
+                
                 // Debug: Prepare for animation - always show cached value first when animation flag is set
                 await MainActor.run {
                     let prefs = self.preferences.first ?? UserPreferences()

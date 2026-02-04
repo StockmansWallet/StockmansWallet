@@ -113,17 +113,13 @@ struct HerdDetailView: View {
                                 .padding(.horizontal)
                         }
                         
-                        // Debug: Mustering records card - only show if there are muster records
-                        if let musterRecords = activeHerd.musterRecords, !musterRecords.isEmpty {
-                            MusteringHistoryCard(herd: activeHerd)
-                                .padding(.horizontal)
-                        }
+                        // Debug: Mustering records card - always shown so users know this feature exists
+                        MusteringHistoryCard(herd: activeHerd)
+                            .padding(.horizontal)
                         
-                        // Debug: Health records card - only show if there are health records
-                        if let healthRecords = activeHerd.healthRecords, !healthRecords.isEmpty {
-                            HealthRecordsCard(herd: activeHerd)
-                                .padding(.horizontal)
-                        }
+                        // Debug: Health records card - always shown so users know this feature exists
+                        HealthRecordsCard(herd: activeHerd)
+                            .padding(.horizontal)
                         
                         // Debug: Button to open searchable animal list sheet - only show for herds (not individual animals)
                         if activeHerd.headCount > 1 {
@@ -1023,7 +1019,7 @@ struct BreedingDetailsCard: View {
 }
 
 // MARK: - Mustering Records Card
-// Debug: Display full mustering records with dates and notes
+// Debug: Display full mustering records with dates and notes - always shown with empty state
 struct MusteringHistoryCard: View {
     let herd: HerdGroup
     
@@ -1037,22 +1033,50 @@ struct MusteringHistoryCard: View {
                 
                 Spacer()
                 
-                // Debug: Show count of muster records
-                if let recordCount = herd.musterRecords?.count, recordCount > 0 {
-                    Text("\(recordCount) record\(recordCount == 1 ? "" : "s")")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                }
+                // Debug: Show count of muster records (even if 0 to indicate feature exists)
+                let recordCount = herd.musterRecords?.count ?? 0
+                Text("\(recordCount) record\(recordCount == 1 ? "" : "s")")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
             }
             .padding(.horizontal, Theme.dashboardCardPadding)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(Theme.tertiaryBackground)
             
-            // Debug: Content area with muster records
+            // Debug: Content area with muster records or empty state
             VStack(spacing: 12) {
-                ForEach(herd.sortedMusterRecords) { record in
-                    MusterRecordRow(record: record)
+                if let records = herd.musterRecords, !records.isEmpty {
+                    // Debug: Show existing muster records
+                    ForEach(herd.sortedMusterRecords) { record in
+                        MusterRecordRow(record: record)
+                    }
+                } else {
+                    // Debug: Empty state - inform user about feature availability
+                    VStack(spacing: 8) {
+                        Image(systemName: "calendar.badge.clock")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                            .padding(.bottom, 4)
+                        
+                        Text("No records yet")
+                            .font(Theme.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Theme.primaryText)
+                        
+                        Text("Track muster dates, head counts, weaners, branders, and cattle yards")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 8)
+                        
+                        Text("Tap Edit to add mustering records")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.accentColor)
+                            .padding(.top, 4)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
                 }
             }
             .padding(Theme.dashboardCardPadding)
@@ -1163,7 +1187,7 @@ struct MusterRecordRow: View {
 }
 
 // MARK: - Health Records Card
-// Debug: Display health treatment history with dates and treatment types
+// Debug: Display health treatment history with dates and treatment types - always shown with empty state
 struct HealthRecordsCard: View {
     let herd: HerdGroup
     
@@ -1177,22 +1201,50 @@ struct HealthRecordsCard: View {
                 
                 Spacer()
                 
-                // Debug: Show count of health records
-                if let recordCount = herd.healthRecords?.count, recordCount > 0 {
-                    Text("\(recordCount) record\(recordCount == 1 ? "" : "s")")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                }
+                // Debug: Show count of health records (even if 0 to indicate feature exists)
+                let recordCount = herd.healthRecords?.count ?? 0
+                Text("\(recordCount) record\(recordCount == 1 ? "" : "s")")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
             }
             .padding(.horizontal, Theme.dashboardCardPadding)
             .padding(.vertical, 12)
             .frame(maxWidth: .infinity)
             .background(Theme.tertiaryBackground)
             
-            // Debug: Content area with health records
+            // Debug: Content area with health records or empty state
             VStack(spacing: 12) {
-                ForEach(herd.sortedHealthRecords) { record in
-                    HealthRecordRow(record: record)
+                if let records = herd.healthRecords, !records.isEmpty {
+                    // Debug: Show existing health records
+                    ForEach(herd.sortedHealthRecords) { record in
+                        HealthRecordRow(record: record)
+                    }
+                } else {
+                    // Debug: Empty state - inform user about feature availability
+                    VStack(spacing: 8) {
+                        Image(systemName: "cross.case")
+                            .font(.system(size: 32))
+                            .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                            .padding(.bottom, 4)
+                        
+                        Text("No records yet")
+                            .font(Theme.subheadline)
+                            .fontWeight(.semibold)
+                            .foregroundStyle(Theme.primaryText)
+                        
+                        Text("Track vaccinations, drenching, treatments, and other health interventions")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .multilineTextAlignment(.center)
+                            .padding(.horizontal, 8)
+                        
+                        Text("Tap Edit to add health records")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.accentColor)
+                            .padding(.top, 4)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 20)
                 }
             }
             .padding(Theme.dashboardCardPadding)
