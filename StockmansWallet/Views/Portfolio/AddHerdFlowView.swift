@@ -732,7 +732,9 @@ struct AddHerdFlowView: View {
         print("💾 AddHerdFlowView: Starting saveHerd()")
         
         let prefs = preferences.first ?? UserPreferences()
-        let dailyWeightGain = Double(dailyGainGrams) / 1000.0
+        // Debug: dailyGainGrams is in tenths (0-30 slider where 10 = 1.0 kg/day), so divide by 10
+        let dailyWeightGain = Double(dailyGainGrams) / 10.0
+        print("💾 AddHerdFlowView: dailyGainGrams=\(dailyGainGrams), converted to dailyWeightGain=\(dailyWeightGain) kg/day")
         
         // Debug: Safely unwrap optional numeric values with sensible defaults
         let finalHeadCount = headCount ?? 1
@@ -781,6 +783,7 @@ struct AddHerdFlowView: View {
         
         print("💾 AddHerdFlowView: Created herd object with ID: \(herd.id)")
         print("   Name: \(herd.name), HeadCount: \(herd.headCount), Species: \(herd.species)")
+        print("   InitialWeight: \(herd.initialWeight) kg, DailyWeightGain: \(herd.dailyWeightGain) kg/day")
         
         herd.paddockName = paddockLocation.isEmpty ? nil : paddockLocation
         herd.mortalityRate = Double(mortalityRate) / 100.0

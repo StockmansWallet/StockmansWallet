@@ -98,7 +98,8 @@ struct EditHerdView: View {
         _isBreeder = State(initialValue: herd.isBreeder)
         _isPregnant = State(initialValue: herd.isPregnant)
         _joinedDate = State(initialValue: herd.joinedDate ?? Date())
-        _calvingRate = State(initialValue: herd.calvingRate)
+        // Debug: Convert decimal (0.85) to percentage (85.0) for display
+        _calvingRate = State(initialValue: herd.calvingRate * 100.0)
         _selectedSaleyard = State(initialValue: herd.selectedSaleyard)
         _paddockName = State(initialValue: herd.paddockName ?? "")
         _useCreationDateForWeight = State(initialValue: herd.useCreationDateForWeight)
@@ -913,7 +914,8 @@ struct EditHerdView: View {
         herd.useCreationDateForWeight = useCreationDateForWeight
         herd.isBreeder = isBreeder
         herd.isPregnant = isBreeder && isPregnant
-        herd.calvingRate = calvingRate
+        // Debug: Convert percentage (85.0) back to decimal (0.85) for storage
+        herd.calvingRate = calvingRate / 100.0
         herd.selectedSaleyard = selectedSaleyard
         herd.paddockName = paddockName.isEmpty ? nil : paddockName
         herd.notes = notes.isEmpty ? nil : notes

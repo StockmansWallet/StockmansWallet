@@ -19,6 +19,7 @@ struct DashboardView: View {
     @Query private var preferences: [UserPreferences]
     
     // Debug: Use 'let' with @Observable instead of @StateObject (modern pattern)
+    // ValuationEngine also holds session state that persists across view recreations
     let valuationEngine = ValuationEngine.shared
     
     // Debug: State management for dashboard data
@@ -60,7 +61,11 @@ struct DashboardView: View {
     // Debug: Smart refresh tracking - optimized for daily MLA price updates
     // MLA updates once daily at 1:30am, so no time-based polling needed
     // Only fetch when: first load (cache stale check), user adds/edits herd, manual refresh
-    @State private var hasLoadedData = false // Track if we've loaded data this session
+    // Note: Session state tracking moved to SessionState.shared (persists across view recreations)
+    
+    // Debug: Track herd changes to prevent false onChange triggers on view rebuild
+    @State private var trackedHerdCount: Int = -1 // -1 = uninitialized
+    @State private var trackedHerdUpdateTime: Date? = nil
     
     // Debug: Track if we need to show animation on next load (dopamine hit)
     @State private var shouldAnimateValue = false
@@ -115,6 +120,12 @@ struct DashboardView: View {
     var body: some View {
         NavigationStack {
             mainContentWithModifiers
+                .onAppear {
+                    print("🚀🚀🚀 DASHBOARD VIEW APPEARED - NEW CODE IS RUNNING 🚀🚀🚀")
+                    print("🚀 dashboardHasLoadedThisSession = \(valuationEngine.dashboardHasLoadedThisSession)")
+                    print("🚀 trackedHerdCount = \(trackedHerdCount)")
+                    print("🚀 herds.count = \(herds.count)")
+                }
         }
     }
     
@@ -126,10 +137,21 @@ struct DashboardView: View {
             
         
         contentWithNav
-            .task {
-                // Performance: .task automatically cancels when view disappears
-                // Debug: Smart loading - like Coinbase/production apps
-                // Only load if: first time, or data is stale (>5 min old)
+            .task(id: valuationEngine.dashboardHasLoadedThisSession) {
+                // Performance: .task with ID only runs when dashboardHasLoadedThisSession changes
+                // ValuationEngine persists across view recreations (tab switches, navigation)
+                // This prevents reloading when: preferences change, tab switches, view rebuilds
+                // Task runs when: app first launches (dashboardHasLoadedThisSession = false)
+                // Task skips when: returning from settings, switching tabs (dashboardHasLoadedThisSession = true)
+                
+                // Debug: Initialize tracked values on first appearance to prevent false onChange triggers
+                if trackedHerdCount == -1 {
+                    trackedHerdCount = herds.count
+                    trackedHerdUpdateTime = herds.map(\.updatedAt).max()
+                    #if DEBUG
+                    print("📊 Initialized tracked values: count=\(trackedHerdCount), updateTime=\(trackedHerdUpdateTime?.formatted() ?? "nil")")
+                    #endif
+                }
                 
                 // Debug: User is viewing dashboard - prepare for dopamine hit animation
                 shouldAnimateValue = true
@@ -165,7 +187,10 @@ struct DashboardView: View {
                         self.valuationHistory = []
                         self.portfolioValue = 0.0
                         self.baseValue = 0.0
-                        self.hasLoadedData = false // Force reload after clearing data
+                        self.valuationEngine.dashboardHasLoadedThisSession = false // Force reload after clearing data
+                        #if DEBUG
+                        print("🔵 Dashboard state reset after data clear")
+                        #endif
                     }
                     await loadDataIfNeeded(force: true)
                 }
@@ -182,7 +207,13 @@ struct DashboardView: View {
                     #endif
                 }
             }
-            .onChange(of: herds.count) { _, _ in
+            .onChange(of: herds.count) { oldCount, newCount in
+                // Debug: Track herd count changes to detect add/remove operations
+                // Only trigger if count actually changed from last tracked value
+                guard newCount != trackedHerdCount else { return }
+                
+                trackedHerdCount = newCount
+                
                 // Debug: Herd count changed - user added/removed herd, show dopamine hit animation
                 Task {
                     await MainActor.run {
@@ -191,22 +222,31 @@ struct DashboardView: View {
                         self.displayValue = prefs.lastPortfolioValue
                         self.shouldAnimateValue = true
                         #if DEBUG
-                        print("💰 Herd count changed - reset display to \(self.displayValue), animation enabled")
+                        print("💰 Herd count changed (\(oldCount) → \(newCount)) - reset display to \(self.displayValue), animation enabled")
                         #endif
                     }
                     await loadDataIfNeeded(force: true)
                 }
             }
             .onChange(of: herds.map(\.updatedAt).max()) { oldValue, newValue in
+                // Debug: Track herd update times to detect edit operations
+                // Only trigger if update time actually changed from last tracked value
+                guard newValue != trackedHerdUpdateTime else {
+                    #if DEBUG
+                    print("💰 Dashboard: Herd update time unchanged (view rebuild), skipping reload")
+                    #endif
+                    return
+                }
+                guard herds.count > 0 else { return }
+                
+                trackedHerdUpdateTime = newValue
+                
                 // Debug: Herd was edited (breed, saleyard, weight, etc.) - recalculate with cached prices
-                // This is different from count change - just updates values, no dopamine animation
-                guard oldValue != newValue else { return }
-                guard herds.count > 0 else { return } // Skip if no herds
+                #if DEBUG
+                print("💰 Dashboard: Herd edited (breed/saleyard/weight), recalculating with cached prices...")
+                #endif
                 
                 Task {
-                    #if DEBUG
-                    print("💰 Dashboard: Herd edited (breed/saleyard/weight), recalculating with cached prices...")
-                    #endif
                     // Don't animate - user is editing, not adding assets
                     shouldAnimateValue = false
                     await loadDataIfNeeded(force: true)
@@ -284,25 +324,6 @@ struct DashboardView: View {
             Color(hex: "1B150E")
                 .ignoresSafeArea()
             
-            // Debug: Offline indicator banner at the very top
-            if valuationEngine.isOffline {
-                VStack {
-                    HStack(spacing: 8) {
-                        Image(systemName: "wifi.slash")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text("Offline - Showing cached prices")
-                            .font(.system(size: 13, weight: .medium))
-                    }
-                    .foregroundStyle(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 8)
-                    .background(Color.orange.opacity(0.9))
-                    
-                    Spacer()
-                }
-                .ignoresSafeArea(edges: .top)
-            }
-            
             // Debug: Background image with parallax effect (like iOS home screen wallpapers)
             // Uses user's selected background from preferences (built-in or custom)
             // Only show background if backgroundImageName is not nil
@@ -363,6 +384,24 @@ struct DashboardView: View {
             
             // Debug: Fixed portfolio value header - stays in place while content scrolls beneath
             VStack(spacing: 0) {
+                // Debug: Offline indicator pill above the value card
+                if valuationEngine.isOffline {
+                    HStack(spacing: 8) {
+                        Image(systemName: "wifi.slash")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Offline - Showing cached prices")
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color.orange.opacity(0.9))
+                    .clipShape(Capsule())
+                    .padding(.top, 10) // Debug: Space from top safe area
+                    .transition(.opacity.animation(.easeInOut)) // Debug: Smooth fade in/out
+                    .frame(maxWidth: .infinity, alignment: .center)
+                }
+                
                 PortfolioValueCard(
                     value: selectedValue ?? displayValue,
                     change: isScrubbing ? (selectedValue ?? displayValue) - baseValue : (portfolioValue - baseValue),
@@ -818,7 +857,7 @@ struct DashboardView: View {
                 // Debug: Simplified load logic - no time-based polling needed
                 // MLA updates daily at 1:30am, ValuationEngine checks cache freshness
                 let (needsRefresh, isFirstLoad) = await MainActor.run {
-                    let isFirst = !self.hasLoadedData
+                    let isFirst = !self.valuationEngine.dashboardHasLoadedThisSession
                     
                     // Force refresh (user pull-to-refresh, herd added/edited)
                     if force {
@@ -852,6 +891,17 @@ struct DashboardView: View {
                     return
                 }
                 
+                // Debug: Mark as loading IMMEDIATELY to prevent duplicate loads from view recreations
+                // This must happen before any async work that could be cancelled
+                if isFirstLoad {
+                    await MainActor.run {
+                        self.valuationEngine.dashboardHasLoadedThisSession = true
+                        #if DEBUG
+                        print("✅ Dashboard marked as loaded IMMEDIATELY (prevents duplicate loads)")
+                        #endif
+                    }
+                }
+                
                 // Debug: Prepare for animation - always show cached value first when animation flag is set
                 await MainActor.run {
                     let prefs = self.preferences.first ?? UserPreferences()
@@ -875,11 +925,6 @@ struct DashboardView: View {
                 
                 // Debug: Now load fresh data
                 await self.loadValuations()
-                
-                // Debug: Mark as loaded
-                await MainActor.run {
-                    self.hasLoadedData = true
-                }
             }
         } catch {
             // Race condition resolved by coordinator - previous load was cancelled

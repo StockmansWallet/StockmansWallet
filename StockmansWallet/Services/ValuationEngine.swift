@@ -32,6 +32,10 @@ class ValuationEngine {
     // Debug: Offline state tracking
     var isOffline: Bool = false
     
+    // Debug: Session state - tracks if dashboard has loaded data this app session
+    // Persists across view recreations (tab switches, navigation) to prevent unnecessary reloads
+    var dashboardHasLoadedThisSession: Bool = false
+    
     // Debug: Generate cache key for price lookups
     private func priceCacheKey(category: String, breed: String, saleyard: String?, state: String?) -> String {
         return "\(category)|\(breed)|\(saleyard ?? "nil")|\(state ?? "nil")"
@@ -238,13 +242,38 @@ class ValuationEngine {
             
             // Update cache timestamp
             priceCacheTimestamp = Date()
-            isOffline = false
+            
+            // Debug: Reset offline status on MainActor so SwiftUI immediately reacts
+            await MainActor.run {
+                self.isOffline = false
+            }
             
             print("✅ Debug: Price cache populated with \(priceCache.count) entries")
             
         } catch {
-            print("❌ Debug: Batch prefetch failed: \(error.localizedDescription)")
-            isOffline = true
+            // Debug: Check if error is task cancellation (Code -999) - not a real network failure
+            let nsError = error as NSError
+            let isCancellation = nsError.code == NSURLErrorCancelled
+            
+            // Debug: Check for other transient errors that aren't "offline" scenarios
+            let isTransientError = [
+                NSURLErrorCancelled,           // -999: Task was cancelled by app
+                NSURLErrorNetworkConnectionLost, // -1005: Connection dropped mid-request (can recover)
+            ].contains(nsError.code)
+            
+            if isCancellation {
+                print("⚠️ Debug: Batch prefetch cancelled (task interrupted)")
+                // Don't mark as offline - this is expected when navigating away
+            } else if isTransientError {
+                print("⚠️ Debug: Batch prefetch had transient error (code \(nsError.code)), will retry later")
+                // Don't mark as offline - transient errors can recover
+            } else {
+                print("❌ Debug: Batch prefetch failed with network error: \(error.localizedDescription) (code: \(nsError.code))")
+                // Debug: Only mark as offline on MainActor so SwiftUI immediately reacts
+                await MainActor.run {
+                    self.isOffline = true
+                }
+            }
             // Keep existing cache if available
         }
     }
@@ -511,6 +540,28 @@ class ValuationEngine {
                 breed: breed
             )
             
+            // Debug: Cache ALL returned prices for future use (prevents duplicate fetches)
+            for price in prices {
+                // Cache by saleyard+breed if saleyard exists
+                if !price.source.isEmpty {
+                    let key1 = priceCacheKey(category: price.category, breed: price.breed ?? "general", saleyard: price.source, state: nil)
+                    if priceCache[key1] == nil { // Don't overwrite existing cache entries
+                        priceCache[key1] = (price.price, price.source)
+                    }
+                }
+                
+                // Cache by category+breed only (national/general)
+                let key2 = priceCacheKey(category: price.category, breed: price.breed ?? "general", saleyard: nil, state: nil)
+                if priceCache[key2] == nil {
+                    priceCache[key2] = (price.price, price.source)
+                }
+            }
+            
+            // Debug: Successfully fetched prices - reset offline status on MainActor
+            await MainActor.run {
+                self.isOffline = false
+            }
+            
             // Find exact match for this category + breed
             if let matchingPrice = prices.first(where: { $0.category == mlaCategory && $0.breed == breed }) {
                 print("✅ ValuationEngine: Found Supabase price for \(category) [→\(mlaCategory)] (\(breed)): $\(matchingPrice.price)/kg from \(matchingPrice.source)")
@@ -522,7 +573,22 @@ class ValuationEngine {
             return nil
             
         } catch {
-            print("❌ ValuationEngine: Error fetching from Supabase: \(error)")
+            // Debug: Check if error is task cancellation or transient - not a real network failure
+            let nsError = error as NSError
+            let isTransientError = [
+                NSURLErrorCancelled,           // -999: Task was cancelled by app
+                NSURLErrorNetworkConnectionLost, // -1005: Connection dropped mid-request (can recover)
+            ].contains(nsError.code)
+            
+            if !isTransientError {
+                print("❌ ValuationEngine: Error fetching from Supabase: \(error) (code: \(nsError.code))")
+                // Debug: Only mark as offline on MainActor for genuine network failures
+                await MainActor.run {
+                    self.isOffline = true
+                }
+            } else {
+                print("⚠️ ValuationEngine: Individual fetch had transient error (code \(nsError.code)), will use fallback")
+            }
             return nil
         }
     }
