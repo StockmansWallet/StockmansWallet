@@ -22,7 +22,7 @@ struct PortfolioView: View {
     // Debug: Use 'let' with @Observable instead of @StateObject
     let valuationEngine = ValuationEngine.shared
     
-    @State private var showingAddAssetMenu = false
+    @State private var showingAddHerd = false
     @State private var showingSearchPanel = false
     @State private var portfolioSummary: PortfolioSummary?
     @State private var isLoading = true
@@ -38,14 +38,11 @@ struct PortfolioView: View {
     // Debug: Track last known updatedAt to detect when herds are edited (breed, saleyard, etc.)
     @State private var lastKnownUpdatedAt: Date? = nil
     
-    // Debug: Search functionality for Herds and Individual sections
+    // Debug: Search functionality for Herds section
     @State private var herdsSearchText = ""
-    @State private var individualSearchText = ""
     
     // Performance: Cache filtered results to avoid recalculating on every render
     @State private var cachedFilteredHerds: [HerdGroup] = []
-    // Performance: Store individuals as plain structs to break SwiftData observation
-    @State private var cachedFilteredIndividuals: [AnimalDisplayData] = []
     
     // Debug: Sell functionality - track selected herd ID (nil means sheet is dismissed)
     // Wrapper to make UUID Identifiable for fullScreenCover(item:)
@@ -59,10 +56,9 @@ struct PortfolioView: View {
     // Performance: Task cancellation - prevent wasted CPU when user navigates away
     @State private var loadingTask: Task<Void, Never>? = nil
     
-    // Debug: Two-section portfolio view - Herds for groups, Individual for single animals
+    // Debug: Portfolio view mode enum (simplified to herds only)
     enum PortfolioViewMode: String, CaseIterable {
         case herds = "Herds"
-        case individual = "Individual"
     }
     
     var body: some View {
@@ -90,8 +86,8 @@ struct PortfolioView: View {
                 }
                 .toolbarBackground(.clear, for: .navigationBar)
                 .toolbarBackground(.visible, for: .navigationBar)
-                .fullScreenCover(isPresented: $showingAddAssetMenu) {
-                    AddAssetMenuView(isPresented: $showingAddAssetMenu)
+                .fullScreenCover(isPresented: $showingAddHerd) {
+                    AddHerdFlowView()
                         .transition(.move(edge: .trailing))
                         .presentationBackground(Theme.sheetBackground)
                 }
@@ -157,10 +153,6 @@ struct PortfolioView: View {
                     // Performance: Update cache when search changes
                     updateFilteredCaches()
                 }
-                .onChange(of: individualSearchText) { _, _ in
-                    // Performance: Update cache when search changes
-                    updateFilteredCaches()
-                }
                 .onChange(of: allHerds.count) { _, _ in
                     // Performance: Update cache when herds change
                     updateFilteredCaches()
@@ -172,7 +164,7 @@ struct PortfolioView: View {
     private var mainContent: some View {
         Group {
             if allHerds.isEmpty {
-                EmptyPortfolioView(showingAddAssetMenu: $showingAddAssetMenu)
+                EmptyPortfolioView(showingAddHerd: $showingAddHerd)
             } else {
                 VStack(spacing: 0) {
                     // Debug: Offline indicator banner
@@ -189,62 +181,29 @@ struct PortfolioView: View {
                         .background(Color.orange.opacity(0.9))
                     }
                     
-                    // Debug: Custom tab bar at the very top
-                    customTabBar
-                    
-                    // Debug: TabView for swipeable content
-                    TabView(selection: $selectedView) {
-                        // Herds Tab
-                        ScrollView {
-                            VStack(spacing: 16) {
-                                // Debug: Show total value of herds only with skeleton loader
-                                if isLoading {
-                                    StatsCardSkeleton()
-                                        .padding(.horizontal, Theme.cardPadding)
-                                        .padding(.top, 16)
-                                } else {
-                                    PortfolioStatsCards(
-                                        summary: portfolioSummary,
-                                        isLoading: isLoading,
-                                        viewMode: .herds
-                                    )
+                    // Debug: Main portfolio content - Herds only
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            // Debug: Show total value of herds with skeleton loader
+                            if isLoading {
+                                StatsCardSkeleton()
                                     .padding(.horizontal, Theme.cardPadding)
                                     .padding(.top, 16)
-                                }
-                                
-                                herdsContent
+                            } else {
+                                PortfolioStatsCards(
+                                    summary: portfolioSummary,
+                                    isLoading: isLoading,
+                                    viewMode: .herds
+                                )
+                                .padding(.horizontal, Theme.cardPadding)
+                                .padding(.top, 16)
                             }
-                            .padding(.bottom, 100)
+                            
+                            herdsContent
                         }
-                        .scrollContentBackground(.hidden)
-                        .tag(PortfolioViewMode.herds)
-                        
-                        // Individual Tab
-                        ScrollView {
-                            VStack(spacing: 16) {
-                                // Debug: Show total value of individual animals only with skeleton loader
-                                if isLoading {
-                                    StatsCardSkeleton()
-                                        .padding(.horizontal, Theme.cardPadding)
-                                        .padding(.top, 16)
-                                } else {
-                                    PortfolioStatsCards(
-                                        summary: portfolioSummary,
-                                        isLoading: isLoading,
-                                        viewMode: .individual
-                                    )
-                                    .padding(.horizontal, Theme.cardPadding)
-                                    .padding(.top, 16)
-                                }
-                                
-                                individualContent
-                            }
-                            .padding(.bottom, 100)
-                        }
-                        .scrollContentBackground(.hidden)
-                        .tag(PortfolioViewMode.individual)
+                        .padding(.bottom, 100)
                     }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    .scrollContentBackground(.hidden)
                     .background(Theme.backgroundGradient)
                 }
                 .background(Theme.backgroundGradient)
@@ -252,38 +211,6 @@ struct PortfolioView: View {
         }
     }
     
-    // MARK: - Custom Tab Bar
-    // Debug: iOS-style tab bar for switching between Herds and Individual
-    private var customTabBar: some View {
-        HStack(spacing: 0) {
-            ForEach(PortfolioViewMode.allCases, id: \.self) { mode in
-                Button {
-                    HapticManager.selectionChanged()
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        selectedView = mode
-                    }
-                } label: {
-                    VStack(spacing: 8) {
-                        Text(mode.rawValue)
-                            .font(.system(size: 15, weight: selectedView == mode ? .semibold : .regular))
-                            .foregroundStyle(selectedView == mode ? Theme.accentColor : Theme.secondaryText)
-                        
-                        // Debug: Active indicator line
-                        Rectangle()
-                            .fill(selectedView == mode ? Theme.accentColor : Color.clear)
-                            .frame(height: 3)
-                            .clipShape(RoundedRectangle(cornerRadius: 1.5, style: .continuous))
-                    }
-                    .frame(maxWidth: .infinity)
-                    .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, Theme.cardPadding)
-        .padding(.vertical, 8)
-        .background(Theme.cardBackground.opacity(0.5))
-    }
     
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
@@ -308,10 +235,10 @@ struct PortfolioView: View {
         ToolbarItem(placement: .navigationBarTrailing) {
             Button("Add") {
                 HapticManager.tap()
-                showingAddAssetMenu = true
+                showingAddHerd = true
             }
             .foregroundStyle(Theme.accentColor)
-            .accessibilityLabel("Add Stock")
+            .accessibilityLabel("Add Herd")
         }
     }
     
@@ -356,45 +283,11 @@ struct PortfolioView: View {
         }
     }
     
-    // MARK: - Individual Content
-    // Debug: Display only individual animals (headCount == 1)
-    // Performance: Uses lightweight card for better scroll performance with many items
-    // Debug: Progressive loader shows skeleton cards while data loads
-    private var individualContent: some View {
-        Group {
-            if isLoading {
-                // Debug: Show skeleton loaders while loading
-                ProgressiveLoadingContainer(
-                    isLoading: true,
-                    skeletonCount: 4,
-                    skeletonType: .portfolioCard
-                ) {
-                    EmptyView()
-                }
-            } else if portfolioSummary != nil {
-                LazyVStack(spacing: 12) {
-                    ForEach(cachedFilteredIndividuals) { data in
-                        LightweightAnimalCard(data: data)
-                            .padding(.horizontal, Theme.cardPadding)
-                    }
-                }
-                
-                // Debug: Show message if no individuals found
-                if cachedFilteredIndividuals.isEmpty {
-                    EmptySearchResultView(
-                        searchText: individualSearchText,
-                        type: "individual animals"
-                    )
-                }
-            }
-        }
-    }
-    
     // MARK: - Update Filtered Caches
     // Performance: Update cached filtered results only when search text or herds change
     private func updateFilteredCaches() {
-        // Filter herds
-        let herdsOnly = allHerds.filter { !$0.isSold && $0.headCount > 1 }
+        // Debug: Filter herds only (no individual animals)
+        let herdsOnly = allHerds.filter { !$0.isSold }
         if herdsSearchText.isEmpty {
             cachedFilteredHerds = herdsOnly
         } else {
@@ -407,50 +300,6 @@ struct PortfolioView: View {
                 (herd.paddockName?.lowercased().contains(searchLower) ?? false) ||
                 (herd.additionalInfo?.lowercased().contains(searchLower) ?? false)
             }
-        }
-        
-        // Filter individuals and convert to plain structs with valuations
-        let individualsOnly = allHerds.filter { !$0.isSold && $0.headCount == 1 }
-        let filteredIndividuals: [HerdGroup]
-        if individualSearchText.isEmpty {
-            filteredIndividuals = individualsOnly
-        } else {
-            let searchLower = individualSearchText.lowercased()
-            filteredIndividuals = individualsOnly.filter { herd in
-                herd.name.lowercased().contains(searchLower) ||
-                herd.breed.lowercased().contains(searchLower) ||
-                herd.category.lowercased().contains(searchLower) ||
-                herd.species.lowercased().contains(searchLower) ||
-                (herd.paddockName?.lowercased().contains(searchLower) ?? false) ||
-                (herd.additionalInfo?.lowercased().contains(searchLower) ?? false)
-            }
-        }
-        
-        // Performance: Calculate valuations in background and update cache
-        Task {
-            await updateIndividualValuations(filteredIndividuals)
-        }
-    }
-    
-    // Performance: Calculate valuations for individual animals in batch
-    private func updateIndividualValuations(_ individuals: [HerdGroup]) async {
-        let prefs = preferences.first ?? UserPreferences()
-        
-        // Debug: Calculate valuations for each individual animal
-        var displayData: [AnimalDisplayData] = []
-        
-        for individual in individuals {
-            let valuation = await valuationEngine.calculateHerdValue(
-                herd: individual,
-                preferences: prefs,
-                modelContext: modelContext
-            )
-            displayData.append(AnimalDisplayData(from: individual, valuation: valuation))
-        }
-        
-        // Update cache on main thread
-        await MainActor.run {
-            cachedFilteredIndividuals = displayData
         }
     }
     
@@ -474,12 +323,10 @@ struct PortfolioView: View {
         // This ensures all calves (auto and manual) are tracked with proper DWG (0.9 kg/day for cattle)
         await CalvingManager.shared.processManualCalvesAtFoot(herds: allHerds, modelContext: modelContext)
         
-        // Debug: Calculate valuations for both herds and individual animals
-        let activeHerds = allHerds.filter { !$0.isSold && $0.headCount > 1 }
-        let activeIndividuals = allHerds.filter { !$0.isSold && $0.headCount == 1 }
-        let allActiveAssets = allHerds.filter { !$0.isSold } // For head count totals
+        // Debug: Calculate valuations for all herds
+        let activeHerds = allHerds.filter { !$0.isSold }
         
-        guard !allActiveAssets.isEmpty else {
+        guard !activeHerds.isEmpty else {
             await MainActor.run {
                 self.portfolioSummary = nil
                 self.isLoading = false
@@ -492,14 +339,13 @@ struct PortfolioView: View {
         
         // Debug: BATCH PREFETCH - Fetch ALL prices in ONE API call before calculations
         // This reduces hundreds of individual API calls to just ONE
-        await valuationEngine.prefetchPricesForHerds(allActiveAssets)
+        await valuationEngine.prefetchPricesForHerds(activeHerds)
         
-        // Create mappings for later lookup
+        // Create mapping for later lookup
         let herdMap = Dictionary(uniqueKeysWithValues: activeHerds.map { ($0.id, $0) })
-        let individualMap = Dictionary(uniqueKeysWithValues: activeIndividuals.map { ($0.id, $0) })
         
-        // Debug: Calculate valuations for herds
-        var herdResults: [(herdId: UUID, valuation: HerdValuation)] = []
+        // Debug: Calculate valuations for all herds
+        var results: [(herdId: UUID, valuation: HerdValuation)] = []
         
         for herd in activeHerds {
             // Performance: Check if task was cancelled
@@ -517,31 +363,8 @@ struct PortfolioView: View {
                 modelContext: modelContext
             )
             
-            herdResults.append((herdId: herd.id, valuation: valuation))
+            results.append((herdId: herd.id, valuation: valuation))
         }
-        
-        // Debug: Calculate valuations for individual animals
-        var individualResults: [(herdId: UUID, valuation: HerdValuation)] = []
-        
-        for individual in activeIndividuals {
-            if Task.isCancelled {
-                #if DEBUG
-                print("📊 Portfolio valuation cancelled - skipping remaining individuals")
-                #endif
-                break
-            }
-            
-            let valuation = await valuationEngine.calculateHerdValue(
-                herd: individual,
-                preferences: prefs,
-                modelContext: modelContext
-            )
-            
-            individualResults.append((herdId: individual.id, valuation: valuation))
-        }
-        
-        // Combine results for overall totals
-        let results = herdResults + individualResults
         
         // Aggregate results
         var valuations: [UUID: HerdValuation] = [:]
@@ -602,29 +425,8 @@ struct PortfolioView: View {
         let largestCategory = categoryBreakdown.values.max(by: { $0.totalValue < $1.totalValue })
         let largestCategoryPercent = totalNetWorth > 0 ? ((largestCategory?.totalValue ?? 0) / totalNetWorth) * 100 : 0
         
-        // Debug: Calculate separate head counts for herds and individuals
-        let headInHerds = activeHerds.reduce(0) { $0 + $1.headCount }
-        let headInIndividuals = activeIndividuals.reduce(0) { $0 + $1.headCount }
-        let totalHeadCount = headInHerds + headInIndividuals
-        
-        // Debug: Calculate separate values for herds and individuals
-        let herdsValue = herdResults.reduce(0) { $0 + $1.valuation.netRealizableValue }
-        let individualsValue = individualResults.reduce(0) { $0 + $1.valuation.netRealizableValue }
-        
-        // Debug: Calculate separate initial values for change calculations
-        var herdsInitialValue: Double = 0
-        for entry in herdResults {
-            guard let herd = herdMap[entry.herdId] else { continue }
-            let valuation = entry.valuation
-            herdsInitialValue += Double(herd.headCount) * herd.initialWeight * valuation.pricePerKg
-        }
-        
-        var individualsInitialValue: Double = 0
-        for entry in individualResults {
-            guard let individual = individualMap[entry.herdId] else { continue }
-            let valuation = entry.valuation
-            individualsInitialValue += Double(individual.headCount) * individual.initialWeight * valuation.pricePerKg
-        }
+        // Debug: Calculate total head count for all herds
+        let totalHeadCount = activeHerds.reduce(0) { $0 + $1.headCount }
         
         await MainActor.run {
             let summary = PortfolioSummary(
@@ -637,16 +439,9 @@ struct PortfolioView: View {
                 totalInitialValue: totalInitialValue,
                 unrealizedGains: unrealizedGains,
                 unrealizedGainsPercent: unrealizedGainsPercent,
-                // Performance: Total head count includes all animals (herds + individuals)
+                // Debug: Total head count and herd count
                 totalHeadCount: totalHeadCount,
-                // Performance: Active herd count only includes actual herds (headCount > 1)
                 activeHerdCount: activeHerds.count,
-                headInHerds: headInHerds,
-                headInIndividuals: headInIndividuals,
-                herdsValue: herdsValue,
-                individualsValue: individualsValue,
-                herdsInitialValue: herdsInitialValue,
-                individualsInitialValue: individualsInitialValue,
                 categoryBreakdown: Array(categoryBreakdown.values),
                 speciesBreakdown: Array(speciesBreakdown.values),
                 largestCategory: largestCategory?.category ?? "",
@@ -661,10 +456,10 @@ struct PortfolioView: View {
             cachePortfolioSummary(summary)
             
             // Debug: Update tracking state
-            self.lastLoadedHerdCount = allActiveAssets.count
-            self.lastKnownUpdatedAt = allActiveAssets.map(\.updatedAt).max()
+            self.lastLoadedHerdCount = activeHerds.count
+            self.lastKnownUpdatedAt = activeHerds.map(\.updatedAt).max()
             #if DEBUG
-            print("📊 PortfolioView: Data loaded successfully (herds: \(allActiveAssets.count))")
+            print("📊 PortfolioView: Data loaded successfully (herds: \(activeHerds.count))")
             #endif
         }
     }
@@ -725,12 +520,6 @@ struct PortfolioSummary: Codable {
     let unrealizedGainsPercent: Double
     let totalHeadCount: Int
     let activeHerdCount: Int
-    let headInHerds: Int // Debug: Total head count in herds (headCount > 1)
-    let headInIndividuals: Int // Debug: Total head count in individual animals (headCount == 1)
-    let herdsValue: Double // Debug: Total value of herds only
-    let individualsValue: Double // Debug: Total value of individual animals only
-    let herdsInitialValue: Double // Debug: Initial value of herds for change calculation
-    let individualsInitialValue: Double // Debug: Initial value of individuals for change calculation
     let categoryBreakdown: [CategoryBreakdown]
     let speciesBreakdown: [SpeciesBreakdown]
     let largestCategory: String
@@ -744,8 +533,7 @@ struct PortfolioSummary: Codable {
         case totalNetWorth, totalPhysicalValue, totalBreedingAccrual
         case totalGrossValue, totalMortalityDeduction, totalCostToCarry
         case totalInitialValue, unrealizedGains, unrealizedGainsPercent
-        case totalHeadCount, activeHerdCount, headInHerds, headInIndividuals
-        case herdsValue, individualsValue, herdsInitialValue, individualsInitialValue
+        case totalHeadCount, activeHerdCount
         case categoryBreakdown, speciesBreakdown
         case largestCategory, largestCategoryPercent
         // Note: valuations excluded from encoding
@@ -765,12 +553,6 @@ struct PortfolioSummary: Codable {
         unrealizedGainsPercent = try container.decode(Double.self, forKey: .unrealizedGainsPercent)
         totalHeadCount = try container.decode(Int.self, forKey: .totalHeadCount)
         activeHerdCount = try container.decode(Int.self, forKey: .activeHerdCount)
-        headInHerds = try container.decode(Int.self, forKey: .headInHerds)
-        headInIndividuals = try container.decode(Int.self, forKey: .headInIndividuals)
-        herdsValue = try container.decode(Double.self, forKey: .herdsValue)
-        individualsValue = try container.decode(Double.self, forKey: .individualsValue)
-        herdsInitialValue = try container.decode(Double.self, forKey: .herdsInitialValue)
-        individualsInitialValue = try container.decode(Double.self, forKey: .individualsInitialValue)
         categoryBreakdown = try container.decode([CategoryBreakdown].self, forKey: .categoryBreakdown)
         speciesBreakdown = try container.decode([SpeciesBreakdown].self, forKey: .speciesBreakdown)
         largestCategory = try container.decode(String.self, forKey: .largestCategory)
@@ -792,12 +574,6 @@ struct PortfolioSummary: Codable {
         try container.encode(unrealizedGainsPercent, forKey: .unrealizedGainsPercent)
         try container.encode(totalHeadCount, forKey: .totalHeadCount)
         try container.encode(activeHerdCount, forKey: .activeHerdCount)
-        try container.encode(headInHerds, forKey: .headInHerds)
-        try container.encode(headInIndividuals, forKey: .headInIndividuals)
-        try container.encode(herdsValue, forKey: .herdsValue)
-        try container.encode(individualsValue, forKey: .individualsValue)
-        try container.encode(herdsInitialValue, forKey: .herdsInitialValue)
-        try container.encode(individualsInitialValue, forKey: .individualsInitialValue)
         try container.encode(categoryBreakdown, forKey: .categoryBreakdown)
         try container.encode(speciesBreakdown, forKey: .speciesBreakdown)
         try container.encode(largestCategory, forKey: .largestCategory)
@@ -818,12 +594,6 @@ struct PortfolioSummary: Codable {
         unrealizedGainsPercent: Double,
         totalHeadCount: Int,
         activeHerdCount: Int,
-        headInHerds: Int,
-        headInIndividuals: Int,
-        herdsValue: Double,
-        individualsValue: Double,
-        herdsInitialValue: Double,
-        individualsInitialValue: Double,
         categoryBreakdown: [CategoryBreakdown],
         speciesBreakdown: [SpeciesBreakdown],
         largestCategory: String,
@@ -841,12 +611,6 @@ struct PortfolioSummary: Codable {
         self.unrealizedGainsPercent = unrealizedGainsPercent
         self.totalHeadCount = totalHeadCount
         self.activeHerdCount = activeHerdCount
-        self.headInHerds = headInHerds
-        self.headInIndividuals = headInIndividuals
-        self.herdsValue = herdsValue
-        self.individualsValue = individualsValue
-        self.herdsInitialValue = herdsInitialValue
-        self.individualsInitialValue = individualsInitialValue
         self.categoryBreakdown = categoryBreakdown
         self.speciesBreakdown = speciesBreakdown
         self.largestCategory = largestCategory
@@ -871,51 +635,31 @@ struct SpeciesBreakdown: Codable {
 }
 
 // MARK: - Portfolio Stats Cards
-// Debug: Shows featured value based on selected view mode (herds or individual animals)
+// Debug: Shows portfolio value and statistics for all herds
 struct PortfolioStatsCards: View {
     let summary: PortfolioSummary?
     let isLoading: Bool
-    let viewMode: PortfolioView.PortfolioViewMode
+    let viewMode: PortfolioView.PortfolioViewMode // Kept for compatibility
     
-    // Debug: Calculate values based on view mode
+    // Debug: Calculate values from summary
     private var displayValue: Double {
         guard let summary = summary else { return 0 }
-        switch viewMode {
-        case .herds:
-            return summary.herdsValue
-        case .individual:
-            return summary.individualsValue
-        }
+        return summary.totalNetWorth
     }
     
     private var displayInitialValue: Double {
         guard let summary = summary else { return 0 }
-        switch viewMode {
-        case .herds:
-            return summary.herdsInitialValue
-        case .individual:
-            return summary.individualsInitialValue
-        }
+        return summary.totalInitialValue
     }
     
     private var displayCount: Int {
         guard let summary = summary else { return 0 }
-        switch viewMode {
-        case .herds:
-            return summary.activeHerdCount
-        case .individual:
-            return summary.headInIndividuals
-        }
+        return summary.activeHerdCount
     }
     
     private var displayHeadCount: Int {
         guard let summary = summary else { return 0 }
-        switch viewMode {
-        case .herds:
-            return summary.headInHerds
-        case .individual:
-            return summary.headInIndividuals
-        }
+        return summary.totalHeadCount
     }
     
     // Calculate change from initial purchase cost
@@ -941,7 +685,7 @@ struct PortfolioStatsCards: View {
                 .opacity(isLoading ? 0.5 : 1.0) // Subtle fade during loading
                 .animation(.easeInOut(duration: 0.3), value: isLoading)
                 .padding(.bottom, 8)
-                .accessibilityLabel(viewMode == .herds ? "Total herds value" : "Total individuals value")
+                .accessibilityLabel("Total portfolio value")
                 
                 // Change pill (matches Dashboard)
                 HStack(spacing: 6) {
@@ -989,7 +733,7 @@ struct PortfolioStatsCards: View {
                         .foregroundStyle(Theme.primaryText)
                         .lineLimit(1)
                         .minimumScaleFactor(0.7)
-                    Text(viewMode == .herds ? "Herds" : "Individuals")
+                    Text("Herds")
                         .font(.system(size: 11, weight: .regular))
                         .foregroundStyle(Theme.secondaryText)
                         .lineLimit(1)
@@ -1509,183 +1253,6 @@ struct AssetRegisterHeader: View {
     }
 }
 
-    // MARK: - Animal Display Data
-// Performance: Simple struct to hold display data, breaking SwiftData observation
-struct AnimalDisplayData: Identifiable, Equatable {
-    let id: UUID
-    let displayName: String // Formatted name with ID number for individuals
-    let species: String
-    let breed: String
-    let category: String
-    let paddockName: String?
-    let selectedSaleyard: String?
-    let currentWeight: Double
-    let additionalInfo: String?
-    let totalValue: Double // Pre-calculated valuation
-    let pricePerKg: Double // Market price
-    let isBreeder: Bool
-    let createdAt: Date // Debug: Added date for display
-    let updatedAt: Date // Debug: Last edited date for display
-    
-    init(from herd: HerdGroup, valuation: HerdValuation?) {
-        self.id = herd.id
-        self.displayName = herd.displayName // Uses computed property for formatting
-        self.species = herd.species
-        self.breed = herd.breed
-        self.category = herd.category
-        self.selectedSaleyard = herd.selectedSaleyard
-        self.isBreeder = herd.isBreeder
-        self.paddockName = herd.paddockName
-        self.currentWeight = herd.currentWeight
-        self.additionalInfo = herd.additionalInfo
-        self.totalValue = valuation?.netRealizableValue ?? 0
-        self.pricePerKg = valuation?.pricePerKg ?? 0
-        self.createdAt = herd.createdAt
-        self.updatedAt = herd.updatedAt
-    }
-}
-
-// MARK: - Lightweight Animal Card
-// Performance: Uses plain struct instead of SwiftData model to avoid observation overhead
-struct LightweightAnimalCard: View {
-    let data: AnimalDisplayData
-    @State private var showingSellSheet = false
-    
-    var body: some View {
-        NavigationLink(destination: HerdDetailView(herdId: data.id)) {
-            VStack(alignment: .leading, spacing: 0) {
-                // Debug: Header row with animal name and chevron - dark background like dashboard
-                HStack(alignment: .center) {
-                    Text(data.displayName)
-                        .font(.system(size: 16, weight: .regular))
-                        .foregroundStyle(Theme.primaryText)
-                        .lineLimit(1)
-                    Spacer()
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundStyle(Theme.secondaryText.opacity(0.6))
-                }
-                .padding(.horizontal, Theme.dashboardCardPadding)
-                .padding(.vertical, 12)
-                .frame(maxWidth: .infinity)
-                .background(Theme.tertiaryBackground)
-                
-                // Debug: Label-value rows
-                VStack(spacing: 12) {
-                    // Type row
-                    HStack(alignment: .top) {
-                        Text("Type")
-                            .font(.system(size: 14, weight: .regular))
-                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                        Spacer()
-                        Text("\(data.species) | \(data.breed) | \(data.category)\(data.isBreeder ? " (Breeder)" : "")")
-                            .font(.system(size: 14, weight: .regular))
-                            .foregroundStyle(Theme.secondaryText)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    
-                    // Location row
-                    if let paddock = data.paddockName, !paddock.isEmpty {
-                        HStack(alignment: .top) {
-                            Text("Location")
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                            Spacer()
-                            Text(paddock)
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundStyle(Theme.secondaryText)
-                                .multilineTextAlignment(.trailing)
-                        }
-                    }
-                    
-                    // Head row (weight and price)
-                    HStack(alignment: .top) {
-                        Text("Head")
-                            .font(.system(size: 14, weight: .regular))
-                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                        Spacer()
-                        Text("\(Int(data.currentWeight))kg | \(data.pricePerKg, format: .currency(code: "AUD"))")
-                            .font(.system(size: 14, weight: .regular))
-                            .foregroundStyle(Theme.secondaryText)
-                            .multilineTextAlignment(.trailing)
-                    }
-                    
-                    // Value row
-                    if data.totalValue > 0 {
-                        HStack(alignment: .top) {
-                            Text("Value")
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                            Spacer()
-                            Text(data.totalValue, format: .currency(code: "AUD"))
-                                .font(.system(size: 14, weight: .regular))
-                                .foregroundStyle(Theme.accentColor)
-                                .multilineTextAlignment(.trailing)
-                        }
-                    }
-                }
-                .padding(.horizontal, Theme.dashboardCardPadding)
-                .padding(.top, 16)
-                .padding(.bottom, 12)
-                
-                // Debug: Added and Edited dates row - matches screenshot style
-                HStack(spacing: 16) {
-                    HStack(spacing: 4) {
-                        Text("Added")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                        Text(data.createdAt.formatted(.dateTime.day().month().year().locale(Locale(identifier: "en_AU"))))
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                    
-                    HStack(spacing: 4) {
-                        Text("Edited")
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                        Text(data.updatedAt.formatted(.dateTime.day().month().year().locale(Locale(identifier: "en_AU"))))
-                            .font(.system(size: 12, weight: .regular))
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                    
-                    Spacer()
-                }
-                .padding(.horizontal, Theme.dashboardCardPadding)
-                .padding(.bottom, 8)
-                
-                // Debug: Sell button at bottom right - matches dashboard style
-                HStack {
-                    Spacer()
-                    Button {
-                        HapticManager.tap()
-                        showingSellSheet = true
-                    } label: {
-                        HStack(spacing: 6) {
-                            Image(systemName: "dollarsign.circle.fill")
-                                .font(.system(size: 14))
-                            Text("Sell")
-                                .font(.system(size: 14, weight: .medium))
-                        }
-                        .foregroundStyle(Theme.accentColor)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8, style: .continuous)
-                                .fill(Theme.accentColor.opacity(0.15))
-                        )
-                    }
-                    .buttonStyle(.plain)
-                }
-                .padding(.horizontal, Theme.dashboardCardPadding)
-                .padding(.bottom, Theme.dashboardCardPadding)
-            }
-        }
-        .cardStyle()
-        .sheet(isPresented: $showingSellSheet) {
-            SellStockView(preselectedHerdId: data.id)
-        }
-    }
-}
 
 // MARK: - Enhanced Herd Card
 // Debug: Clear layout showing all essential herd information with optional sell button
@@ -1934,7 +1501,7 @@ struct ValuationDetailRow: View {
 
 // MARK: - Empty Portfolio View
 struct EmptyPortfolioView: View {
-    @Binding var showingAddAssetMenu: Bool
+    @Binding var showingAddHerd: Bool
     
     var body: some View {
         VStack(spacing: 24) {
@@ -1942,25 +1509,25 @@ struct EmptyPortfolioView: View {
                 .font(.system(size: 60))
                 .foregroundStyle(Theme.primaryText.opacity(0.3))
             
-            Text("No Assets Yet")
+            Text("No Herds Yet")
                 .font(Theme.title)
                 .foregroundStyle(Theme.primaryText)
             
-            Text("Add your first herd, animal, or import from CSV to start tracking portfolio value")
+            Text("Add your first herd to start tracking your portfolio value")
                 .font(Theme.body)
                 .foregroundStyle(Theme.secondaryText)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             
             // Debug: Per iOS HIG - Use .borderedProminent for primary CTA in empty states
-            Button("Add Asset") {
+            Button("Add Herd") {
                 HapticManager.tap()
-                showingAddAssetMenu = true
+                showingAddHerd = true
             }
             .buttonStyle(.borderedProminent)
             .tint(Theme.accentColor)
             .controlSize(.large)
-            .accessibilityLabel("Add asset")
+            .accessibilityLabel("Add herd")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
     }
@@ -2201,13 +1768,9 @@ struct PortfolioSearchPanel: View {
 }
 
 // MARK: - Search Result Card
-// Debug: Display search result with herd/animal details
+// Debug: Display search result with herd details
 struct SearchResultCard: View {
     let herd: HerdGroup
-    
-    var isIndividualAnimal: Bool {
-        herd.headCount == 1
-    }
     
     var body: some View {
         // Debug: Capture herd properties early to avoid SwiftData access issues
@@ -2223,18 +1786,10 @@ struct SearchResultCard: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 6) {
-                        // Name with tag indicator
-                        HStack(spacing: 8) {
-                            Text(herdName)
-                                .font(Theme.headline)
-                                .foregroundStyle(Theme.primaryText)
-                            
-                            if isIndividualAnimal {
-                                Image(systemName: "tag.fill")
-                                    .font(.system(size: 12))
-                                    .foregroundStyle(Theme.accentColor)
-                            }
-                        }
+                        // Name
+                        Text(herdName)
+                            .font(Theme.headline)
+                            .foregroundStyle(Theme.primaryText)
                         
                         // Details
                         Text("\(herdHeadCount) head • \(herdBreed) \(herdCategory)")

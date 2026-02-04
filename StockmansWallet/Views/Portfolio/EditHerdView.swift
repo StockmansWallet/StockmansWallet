@@ -161,7 +161,7 @@ struct EditHerdView: View {
                             VStack(alignment: .leading, spacing: 12) {
                                 // Full width: Herd Name / Animal Name
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(herd.headCount == 1 ? "Animal Name" : "Herd Name")
+                                    Text("Herd Name")
                                         .font(.system(size: 10))
                                         .foregroundStyle(Theme.secondaryText.opacity(0.7))
                                     TextField("", text: $herdName)
@@ -332,18 +332,12 @@ struct EditHerdView: View {
                                     Text("Head")
                                         .font(.system(size: 10))
                                         .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                                    if herd.headCount == 1 {
-                                        Text("1")
-                                            .font(.system(size: 13, weight: .medium))
-                                            .foregroundStyle(Theme.secondaryText)
-                                    } else {
-                                        TextField("", value: $headCount, format: .number)
-                                            .keyboardType(.numberPad)
-                                            .font(.system(size: 13, weight: .medium))
-                                            .foregroundStyle(Theme.primaryText)
-                                            .textFieldStyle(.plain)
-                                            .multilineTextAlignment(.leading)
-                                    }
+                                    TextField("", value: $headCount, format: .number)
+                                        .keyboardType(.numberPad)
+                                        .font(.system(size: 13, weight: .medium))
+                                        .foregroundStyle(Theme.primaryText)
+                                        .textFieldStyle(.plain)
+                                        .multilineTextAlignment(.leading)
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 10)
@@ -640,7 +634,7 @@ struct EditHerdView: View {
                                     Text("Mustering Records")
                                         .font(Theme.headline)
                                         .foregroundStyle(Theme.primaryText)
-                                    Text(herd.headCount == 1 ? "Track muster dates and notes for this animal" : "Track muster dates and notes for this herd")
+                                    Text("Track muster dates and notes for this herd")
                                         .font(Theme.caption)
                                         .foregroundStyle(Theme.secondaryText)
                                 }
@@ -797,7 +791,7 @@ struct EditHerdView: View {
                                     Text("Health Records")
                                         .font(Theme.headline)
                                         .foregroundStyle(Theme.primaryText)
-                                    Text(herd.headCount == 1 ? "Track vaccinations, drenching, and treatments" : "Track vaccinations, drenching, and treatments etc")
+                                    Text("Track vaccinations, drenching, and treatments etc")
                                         .font(Theme.caption)
                                         .foregroundStyle(Theme.secondaryText)
                                 }
@@ -911,7 +905,7 @@ struct EditHerdView: View {
                     .padding()
                 }
             }
-            .navigationTitle(herd.headCount == 1 ? "Edit Animal" : "Edit Herd")
+            .navigationTitle("Edit Herd")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
