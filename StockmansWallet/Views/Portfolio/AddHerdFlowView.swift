@@ -16,8 +16,7 @@ struct AddHerdFlowView: View {
     
     @State private var currentStep = 1
     @State private var isMovingForward = true
-    @State private var herdName = "" // Herd ID
-    @State private var herdNickname = "" // Optional nickname
+    @State private var herdName = "" // Debug: Herd Name (required, simplified from previous Herd ID + Nickname)
     @State private var paddockLocation = ""
     @State private var selectedSpecies = "Cattle"
     @State private var selectedBreed = ""
@@ -312,7 +311,7 @@ struct AddHerdFlowView: View {
     }
     
     // MARK: - Step 1: ID & Location
-    // Debug: Herd ID, optional nickname, and paddock location
+    // Debug: Herd Name (required) and optional paddock location
     private var locationContent: some View {
         VStack(alignment: .leading, spacing: 24) {
             // Debug: Section header
@@ -323,26 +322,12 @@ struct AddHerdFlowView: View {
                 .padding(.bottom, 8)
             
             VStack(alignment: .leading, spacing: 8) {
-                Text("Herd ID")
+                Text("Herd Name")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
-                TextField("e.g. #0000", text: $herdName)
+                TextField("e.g. The Angus Herd", text: $herdName)
                     .textFieldStyle(AddHerdTextFieldStyle())
-                    .accessibilityLabel("Herd ID")
-            }
-            
-            VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 4) {
-                    Text("Herd Nickname")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                    Text("Optional")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                }
-                TextField("e.g. The Angus Herd", text: $herdNickname)
-                    .textFieldStyle(AddHerdTextFieldStyle())
-                    .accessibilityLabel("Herd nickname")
+                    .accessibilityLabel("Herd Name")
             }
             
             VStack(alignment: .leading, spacing: 8) {
@@ -354,7 +339,7 @@ struct AddHerdFlowView: View {
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondaryText)
                 }
-                TextField("e.g. North Paddock", text: $paddockLocation)
+                TextField("e.g. Swamp Paddock", text: $paddockLocation)
                     .textFieldStyle(AddHerdTextFieldStyle())
                     .accessibilityLabel("Location")
             }
@@ -694,7 +679,7 @@ struct AddHerdFlowView: View {
     private var isStepValid: Bool {
         switch currentStep {
         case 1:
-            // Step 1: ID & Location - only herd ID is required
+            // Step 1: ID & Location - only herd name is required
             return !herdName.isEmpty
         case 2:
             // Step 2: Species - species selection required
@@ -768,8 +753,9 @@ struct AddHerdFlowView: View {
         // Debug: Determine if this is a breeder category (removed inCalf dependency)
         let isBreeder = selectedCategory.lowercased().contains("breeding") || selectedCategory.lowercased().contains("breeder")
         
+        // Debug: Create herd with simplified name field (no separate ID field anymore)
         let herd = HerdGroup(
-            name: herdNickname, // Nickname (optional)
+            name: herdName, // Debug: Herd Name (required, simplified identifier)
             species: selectedSpecies,
             breed: selectedBreed,
             sex: sex,
@@ -780,7 +766,7 @@ struct AddHerdFlowView: View {
             dailyWeightGain: dailyWeightGain,
             isBreeder: isBreeder,
             selectedSaleyard: effectiveSaleyard,
-            animalIdNumber: herdName.isEmpty ? nil : herdName // Herd ID
+            animalIdNumber: nil // Debug: No longer using separate ID field
         )
         
         print("💾 AddHerdFlowView: Created herd object with ID: \(herd.id)")

@@ -159,7 +159,7 @@ struct EditHerdView: View {
                             
                             // Debug: Layout and styling matching Physical Sales Report format exactly
                             VStack(alignment: .leading, spacing: 12) {
-                                // Full width: Herd Name / Animal Name
+                                // Debug: Full width: Herd Name (simplified, no separate ID field)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("Herd Name")
                                         .font(.system(size: 10))

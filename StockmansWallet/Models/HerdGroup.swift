@@ -130,19 +130,10 @@ final class HerdGroup {
     // MARK: - Computed Properties
     // Debug: Lightweight computed properties for common data access patterns
     
-    /// Display name for herds: "#ID 'Name'" or just "#ID" if no name, or just name if no ID
+    /// Display name for herds: Just returns the name (simplified, no separate ID field)
     var displayName: String {
-        // Check if we have an ID number
-        if let idNumber = animalIdNumber, !idNumber.isEmpty {
-            if !name.isEmpty && name != idNumber {
-                return "#\(idNumber) \"\(name)\""
-            } else {
-                return "#\(idNumber)"
-            }
-        } else {
-            // No ID number - just return name
-            return name
-        }
+        // Debug: Simplified to just return name (animalIdNumber deprecated)
+        return name
     }
     
     /// Days the herd has been held (from creation to now or sold date)

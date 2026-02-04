@@ -352,19 +352,20 @@ class MockDataGenerator {
         for prefs in preferences {
             // Debug: Reset to default values while keeping the object
             prefs.hasCompletedOnboarding = false
-            prefs.userRole = .farmerGrazier
-            prefs.firstName = ""
-            prefs.lastName = ""
-            prefs.farmName = nil
-            prefs.defaultSaleyard = "Wagga Wagga Livestock Marketing Centre"
-            prefs.defaultState = "NSW"
-            prefs.defaultSaleyardDistance = 35.0
-            prefs.mortalityRate = 0.05
-            prefs.calvingRate = 0.85
-            prefs.monthlyAgistmentCost = 20.0
-            prefs.monthlyFeedCost = 15.0
-            prefs.monthlyVetCost = 5.0
-            prefs.freightCostPerKm = 2.5
+            prefs.role = UserRole.farmerGrazier.rawValue
+            prefs.firstName = nil
+            prefs.lastName = nil
+            prefs.email = nil
+            prefs.propertyName = nil
+            prefs.propertyPIC = nil
+            prefs.defaultSaleyard = nil
+            prefs.defaultState = "QLD"
+            prefs.defaultMortalityRate = 0.05
+            prefs.defaultCalvingRate = 0.85
+            prefs.monthlyAgistmentCost = 0.0
+            prefs.monthlyFeedCost = 0.0
+            prefs.monthlyVetCost = 0.0
+            prefs.freightCostPerKm = 0.0
         }
         #if DEBUG
         print("♻️ Reset user preferences to defaults")
