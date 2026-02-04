@@ -52,7 +52,7 @@ struct DashboardView: View {
     // non-nil = overrides all herds to use specified saleyard (comparison mode)
     @State private var selectedSaleyard: String? = nil
     
-    @State private var showingAddAssetMenu = false
+    @State private var showingAddHerd = false
     @State private var showingCustomDatePicker = false
     @State private var backgroundImageTrigger = false // Debug: Trigger to force view refresh on background change
     @State private var isReorderMode = false // Debug: Long-press to enable card reordering
@@ -269,8 +269,8 @@ struct DashboardView: View {
                     await loadDataIfNeeded(force: true)
                 }
             }
-            .sheet(isPresented: $showingAddAssetMenu) {
-                AddAssetMenuView(isPresented: $showingAddAssetMenu)
+            .fullScreenCover(isPresented: $showingAddHerd) {
+                AddHerdFlowView()
                     .transition(.move(edge: .trailing))
                     .presentationBackground(Theme.sheetBackground)
             }
@@ -292,7 +292,7 @@ struct DashboardView: View {
             
             // Debug: Handle empty, error, and loaded states
             if activeHerds.isEmpty {
-                EmptyDashboardView(showingAddAssetMenu: $showingAddAssetMenu)
+                EmptyDashboardView(showingAddHerd: $showingAddHerd)
                     .accessibilityElement(children: .contain)
                     .accessibilityLabel("Empty dashboard")
                     .accessibilityHint("Add your first herd to get started.")

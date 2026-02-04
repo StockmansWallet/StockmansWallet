@@ -71,8 +71,7 @@ struct PortfolioView: View {
                 .presentationBackground(Theme.sheetBackground)
         }
         .onAppear {
-            // Debug: Load cached portfolio summary for instant display (like Dashboard cached chart)
-            loadCachedPortfolioSummary()
+            // Debug: Cache loading happens in loadPortfolioSummary() now
         }
     }
     
@@ -305,6 +304,11 @@ struct PortfolioView: View {
     
     // MARK: - Load Portfolio Summary (Parallelized)
     private func loadPortfolioSummary() async {
+        // Debug: Load cached data immediately for instant display (like Dashboard)
+        await MainActor.run {
+            loadCachedPortfolioSummary()
+        }
+        
         // Debug: Only show loading indicator if we don't have a summary yet
         // This prevents flashing spinner when updating existing data
         let shouldShowLoader = portfolioSummary == nil
@@ -470,11 +474,21 @@ struct PortfolioView: View {
     private func loadCachedPortfolioSummary() {
         guard let prefs = preferences.first,
               let cachedData = prefs.cachedPortfolioSummary,
-              let decoded = try? JSONDecoder().decode(PortfolioSummary.self, from: cachedData),
               !allHerds.isEmpty else {
             #if DEBUG
             print("📊 Portfolio: No cached summary available")
             #endif
+            return
+        }
+        
+        // Debug: Try to decode cached data, invalidate if it fails (schema changed)
+        guard let decoded = try? JSONDecoder().decode(PortfolioSummary.self, from: cachedData) else {
+            #if DEBUG
+            print("📊 Portfolio: Cache decode failed (likely schema changed), invalidating cache")
+            #endif
+            // Clear invalid cache
+            prefs.cachedPortfolioSummary = nil
+            prefs.portfolioSummaryCacheDate = nil
             return
         }
         
@@ -1283,7 +1297,7 @@ struct EnhancedHerdCard: View {
         let herdBreed = herd.breed
         let herdCategory = herd.category
         let herdLocation = herd.paddockName
-        let herdSaleyard = herd.selectedSaleyard
+        let _ = herd.selectedSaleyard
         let isBreeder = herd.isBreeder
         let herdCreatedAt = herd.createdAt
         let herdUpdatedAt = herd.updatedAt

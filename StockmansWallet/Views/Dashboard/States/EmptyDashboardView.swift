@@ -9,7 +9,7 @@ import SwiftUI
 import SwiftData
 
 struct EmptyDashboardView: View {
-    @Binding var showingAddAssetMenu: Bool
+    @Binding var showingAddHerd: Bool
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
     
@@ -36,7 +36,7 @@ struct EmptyDashboardView: View {
             
             Button(action: {
                 HapticManager.tap()
-                showingAddAssetMenu = true
+                showingAddHerd = true
             }) {
                 Text("Add Your First Herd")
                     .frame(maxWidth: .infinity)
@@ -54,6 +54,6 @@ struct EmptyDashboardView: View {
 }
 
 #Preview {
-    EmptyDashboardView(showingAddAssetMenu: .constant(false))
+    EmptyDashboardView(showingAddHerd: .constant(false))
 }
 
