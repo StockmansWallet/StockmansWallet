@@ -32,8 +32,12 @@ class ValuationEngine {
     // Debug: Offline state tracking
     var isOffline: Bool = false
     
-    // Debug: Session state - tracks if dashboard has loaded data this app session
-    // Persists across view recreations (tab switches, navigation) to prevent unnecessary reloads
+    // Debug: Session state - tracks if prices have been fetched this app session
+    // Persists across view recreations (tab switches, navigation) to prevent duplicate server calls
+    // Dashboard, Portfolio, and all views share this flag to avoid redundant MLA price fetching
+    var pricesLoadedThisSession: Bool = false
+    
+    // Debug: Legacy flag for backward compatibility with Dashboard
     var dashboardHasLoadedThisSession: Bool = false
     
     // Debug: Generate cache key for price lookups
@@ -176,16 +180,32 @@ class ValuationEngine {
     // MARK: - Batch Price Prefetch
     /// Pre-fetches all prices for a list of herds in ONE API call
     /// Debug: Dramatically reduces API calls from hundreds to ONE
+    /// Debug: Session-aware - skips fetch if already loaded this session (prevents duplicate calls from Portfolio, Dashboard, etc.)
     func prefetchPricesForHerds(_ herds: [HerdGroup]) async {
-        // Debug: Skip if cache is still fresh
+        // Debug: Check session flag first - if already loaded this session, skip completely
+        // This prevents Portfolio from re-fetching prices that Dashboard already loaded
+        if pricesLoadedThisSession && isPriceCacheFresh() && !priceCache.isEmpty {
+            #if DEBUG
+            print("✅ Prices already loaded this session - skipping prefetch (shared cache)")
+            #endif
+            return
+        }
+        
+        // Debug: Skip if cache is still fresh (within 24 hours and after last 1:30am)
         if isPriceCacheFresh() && !priceCache.isEmpty {
-            print("✅ Debug: Using cached prices (age: \(Int(Date().timeIntervalSince(priceCacheTimestamp!)))s)")
+            #if DEBUG
+            print("✅ Using cached prices (age: \(Int(Date().timeIntervalSince(priceCacheTimestamp!)))s)")
+            #endif
+            // Set session flag even if we didn't fetch (cache is valid)
+            pricesLoadedThisSession = true
             return
         }
         
         // Debug: If offline and we have cached prices, keep using them
         if isOffline && !priceCache.isEmpty {
-            print("⚠️ Debug: Offline - keeping cached prices")
+            #if DEBUG
+            print("⚠️ Offline - keeping cached prices")
+            #endif
             return
         }
         
@@ -243,12 +263,17 @@ class ValuationEngine {
             // Update cache timestamp
             priceCacheTimestamp = Date()
             
+            // Debug: Mark prices as loaded this session (prevents redundant fetches from other views)
+            pricesLoadedThisSession = true
+            
             // Debug: Reset offline status on MainActor so SwiftUI immediately reacts
             await MainActor.run {
                 self.isOffline = false
             }
             
-            print("✅ Debug: Price cache populated with \(priceCache.count) entries")
+            #if DEBUG
+            print("✅ Price cache populated with \(priceCache.count) entries - available to all views")
+            #endif
             
         } catch {
             // Debug: Check if error is task cancellation (Code -999) - not a real network failure

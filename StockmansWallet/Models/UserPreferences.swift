@@ -116,6 +116,12 @@ final class UserPreferences {
     var lastPortfolioUpdateDate: Date? // When the value was last updated
     var lastChartData: Data? // Debug: Cached chart history as JSON for instant display
     
+    // MARK: - Portfolio Cache
+    // Debug: Cached portfolio summary for instant display across app sessions
+    // Populated by any view that calculates portfolio (Dashboard, Portfolio, etc.)
+    var cachedPortfolioSummary: Data? // Debug: JSON-encoded PortfolioSummary for instant display
+    var portfolioSummaryCacheDate: Date? // Debug: When the summary was last cached
+    
     init() {
         self.id = UUID()
         self.hasCompletedOnboarding = false
@@ -166,6 +172,8 @@ final class UserPreferences {
         self.lastPortfolioValue = 0.0 // Debug: Start at 0, will be updated after first calculation
         self.lastPortfolioUpdateDate = nil // Debug: No previous update
         self.lastChartData = nil // Debug: No cached chart data initially
+        self.cachedPortfolioSummary = nil // Debug: No cached portfolio summary initially
+        self.portfolioSummaryCacheDate = nil // Debug: No cache date initially
     }
     
     // Helper to get/set role as enum

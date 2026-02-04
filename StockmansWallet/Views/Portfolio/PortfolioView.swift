@@ -74,6 +74,10 @@ struct PortfolioView: View {
                 .transition(.move(edge: .trailing))
                 .presentationBackground(Theme.sheetBackground)
         }
+        .onAppear {
+            // Debug: Load cached portfolio summary for instant display (like Dashboard cached chart)
+            loadCachedPortfolioSummary()
+        }
     }
     
     // Debug: Break up body into smaller computed properties to help compiler
@@ -623,7 +627,7 @@ struct PortfolioView: View {
         }
         
         await MainActor.run {
-            self.portfolioSummary = PortfolioSummary(
+            let summary = PortfolioSummary(
                 totalNetWorth: totalNetWorth,
                 totalPhysicalValue: totalPhysicalValue,
                 totalBreedingAccrual: totalBreedingAccrual,
@@ -649,7 +653,13 @@ struct PortfolioView: View {
                 largestCategoryPercent: largestCategoryPercent,
                 valuations: valuations
             )
+            
+            self.portfolioSummary = summary
             self.isLoading = false
+            
+            // Debug: Cache summary for instant display on next load
+            cachePortfolioSummary(summary)
+            
             // Debug: Update tracking state
             self.lastLoadedHerdCount = allActiveAssets.count
             self.lastKnownUpdatedAt = allActiveAssets.map(\.updatedAt).max()
@@ -658,10 +668,52 @@ struct PortfolioView: View {
             #endif
         }
     }
+    
+    // MARK: - Cache Management
+    // Debug: Load cached portfolio summary for instant display (like Dashboard cached chart)
+    @MainActor
+    private func loadCachedPortfolioSummary() {
+        guard let prefs = preferences.first,
+              let cachedData = prefs.cachedPortfolioSummary,
+              let decoded = try? JSONDecoder().decode(PortfolioSummary.self, from: cachedData),
+              !allHerds.isEmpty else {
+            #if DEBUG
+            print("📊 Portfolio: No cached summary available")
+            #endif
+            return
+        }
+        
+        // Debug: Show cached summary immediately (instant display)
+        self.portfolioSummary = decoded
+        self.isLoading = false
+        
+        #if DEBUG
+        if let cacheDate = prefs.portfolioSummaryCacheDate {
+            print("📊 Portfolio: Loaded cached summary from \(cacheDate.formatted())")
+        }
+        #endif
+    }
+    
+    // Debug: Cache portfolio summary for instant display on next load
+    @MainActor
+    private func cachePortfolioSummary(_ summary: PortfolioSummary) {
+        guard let prefs = preferences.first,
+              let encoded = try? JSONEncoder().encode(summary) else {
+            return
+        }
+        
+        prefs.cachedPortfolioSummary = encoded
+        prefs.portfolioSummaryCacheDate = Date()
+        
+        #if DEBUG
+        print("📊 Portfolio: Cached summary for next session")
+        #endif
+    }
 }
 
 // MARK: - Portfolio Summary Model
-struct PortfolioSummary {
+// Debug: Codable for caching in UserPreferences
+struct PortfolioSummary: Codable {
     let totalNetWorth: Double
     let totalPhysicalValue: Double
     let totalBreedingAccrual: Double
@@ -683,10 +735,127 @@ struct PortfolioSummary {
     let speciesBreakdown: [SpeciesBreakdown]
     let largestCategory: String
     let largestCategoryPercent: Double
+    // Debug: Exclude valuations from cache (contains non-Codable HerdValuation)
+    // Valuations are recalculated on-demand from cached prices (fast)
     let valuations: [UUID: HerdValuation]
+    
+    // Debug: Custom coding keys to exclude valuations from JSON encoding
+    enum CodingKeys: String, CodingKey {
+        case totalNetWorth, totalPhysicalValue, totalBreedingAccrual
+        case totalGrossValue, totalMortalityDeduction, totalCostToCarry
+        case totalInitialValue, unrealizedGains, unrealizedGainsPercent
+        case totalHeadCount, activeHerdCount, headInHerds, headInIndividuals
+        case herdsValue, individualsValue, herdsInitialValue, individualsInitialValue
+        case categoryBreakdown, speciesBreakdown
+        case largestCategory, largestCategoryPercent
+        // Note: valuations excluded from encoding
+    }
+    
+    // Debug: Custom decoder to handle missing valuations
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        totalNetWorth = try container.decode(Double.self, forKey: .totalNetWorth)
+        totalPhysicalValue = try container.decode(Double.self, forKey: .totalPhysicalValue)
+        totalBreedingAccrual = try container.decode(Double.self, forKey: .totalBreedingAccrual)
+        totalGrossValue = try container.decode(Double.self, forKey: .totalGrossValue)
+        totalMortalityDeduction = try container.decode(Double.self, forKey: .totalMortalityDeduction)
+        totalCostToCarry = try container.decode(Double.self, forKey: .totalCostToCarry)
+        totalInitialValue = try container.decode(Double.self, forKey: .totalInitialValue)
+        unrealizedGains = try container.decode(Double.self, forKey: .unrealizedGains)
+        unrealizedGainsPercent = try container.decode(Double.self, forKey: .unrealizedGainsPercent)
+        totalHeadCount = try container.decode(Int.self, forKey: .totalHeadCount)
+        activeHerdCount = try container.decode(Int.self, forKey: .activeHerdCount)
+        headInHerds = try container.decode(Int.self, forKey: .headInHerds)
+        headInIndividuals = try container.decode(Int.self, forKey: .headInIndividuals)
+        herdsValue = try container.decode(Double.self, forKey: .herdsValue)
+        individualsValue = try container.decode(Double.self, forKey: .individualsValue)
+        herdsInitialValue = try container.decode(Double.self, forKey: .herdsInitialValue)
+        individualsInitialValue = try container.decode(Double.self, forKey: .individualsInitialValue)
+        categoryBreakdown = try container.decode([CategoryBreakdown].self, forKey: .categoryBreakdown)
+        speciesBreakdown = try container.decode([SpeciesBreakdown].self, forKey: .speciesBreakdown)
+        largestCategory = try container.decode(String.self, forKey: .largestCategory)
+        largestCategoryPercent = try container.decode(Double.self, forKey: .largestCategoryPercent)
+        valuations = [:] // Empty - will be recalculated from cached prices
+    }
+    
+    // Debug: Custom encoder to exclude valuations
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(totalNetWorth, forKey: .totalNetWorth)
+        try container.encode(totalPhysicalValue, forKey: .totalPhysicalValue)
+        try container.encode(totalBreedingAccrual, forKey: .totalBreedingAccrual)
+        try container.encode(totalGrossValue, forKey: .totalGrossValue)
+        try container.encode(totalMortalityDeduction, forKey: .totalMortalityDeduction)
+        try container.encode(totalCostToCarry, forKey: .totalCostToCarry)
+        try container.encode(totalInitialValue, forKey: .totalInitialValue)
+        try container.encode(unrealizedGains, forKey: .unrealizedGains)
+        try container.encode(unrealizedGainsPercent, forKey: .unrealizedGainsPercent)
+        try container.encode(totalHeadCount, forKey: .totalHeadCount)
+        try container.encode(activeHerdCount, forKey: .activeHerdCount)
+        try container.encode(headInHerds, forKey: .headInHerds)
+        try container.encode(headInIndividuals, forKey: .headInIndividuals)
+        try container.encode(herdsValue, forKey: .herdsValue)
+        try container.encode(individualsValue, forKey: .individualsValue)
+        try container.encode(herdsInitialValue, forKey: .herdsInitialValue)
+        try container.encode(individualsInitialValue, forKey: .individualsInitialValue)
+        try container.encode(categoryBreakdown, forKey: .categoryBreakdown)
+        try container.encode(speciesBreakdown, forKey: .speciesBreakdown)
+        try container.encode(largestCategory, forKey: .largestCategory)
+        try container.encode(largestCategoryPercent, forKey: .largestCategoryPercent)
+        // Note: valuations not encoded
+    }
+    
+    // Debug: Standard init for creating new summaries
+    init(
+        totalNetWorth: Double,
+        totalPhysicalValue: Double,
+        totalBreedingAccrual: Double,
+        totalGrossValue: Double,
+        totalMortalityDeduction: Double,
+        totalCostToCarry: Double,
+        totalInitialValue: Double,
+        unrealizedGains: Double,
+        unrealizedGainsPercent: Double,
+        totalHeadCount: Int,
+        activeHerdCount: Int,
+        headInHerds: Int,
+        headInIndividuals: Int,
+        herdsValue: Double,
+        individualsValue: Double,
+        herdsInitialValue: Double,
+        individualsInitialValue: Double,
+        categoryBreakdown: [CategoryBreakdown],
+        speciesBreakdown: [SpeciesBreakdown],
+        largestCategory: String,
+        largestCategoryPercent: Double,
+        valuations: [UUID: HerdValuation]
+    ) {
+        self.totalNetWorth = totalNetWorth
+        self.totalPhysicalValue = totalPhysicalValue
+        self.totalBreedingAccrual = totalBreedingAccrual
+        self.totalGrossValue = totalGrossValue
+        self.totalMortalityDeduction = totalMortalityDeduction
+        self.totalCostToCarry = totalCostToCarry
+        self.totalInitialValue = totalInitialValue
+        self.unrealizedGains = unrealizedGains
+        self.unrealizedGainsPercent = unrealizedGainsPercent
+        self.totalHeadCount = totalHeadCount
+        self.activeHerdCount = activeHerdCount
+        self.headInHerds = headInHerds
+        self.headInIndividuals = headInIndividuals
+        self.herdsValue = herdsValue
+        self.individualsValue = individualsValue
+        self.herdsInitialValue = herdsInitialValue
+        self.individualsInitialValue = individualsInitialValue
+        self.categoryBreakdown = categoryBreakdown
+        self.speciesBreakdown = speciesBreakdown
+        self.largestCategory = largestCategory
+        self.largestCategoryPercent = largestCategoryPercent
+        self.valuations = valuations
+    }
 }
 
-struct CategoryBreakdown {
+struct CategoryBreakdown: Codable {
     var category: String
     var totalValue: Double
     var headCount: Int
@@ -694,7 +863,7 @@ struct CategoryBreakdown {
     var breedingAccrual: Double
 }
 
-struct SpeciesBreakdown {
+struct SpeciesBreakdown: Codable {
     var species: String
     var totalValue: Double
     var headCount: Int
