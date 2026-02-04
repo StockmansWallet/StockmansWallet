@@ -270,6 +270,25 @@ struct DashboardView: View {
             Color(hex: "1B150E")
                 .ignoresSafeArea()
             
+            // Debug: Offline indicator banner at the very top
+            if valuationEngine.isOffline {
+                VStack {
+                    HStack(spacing: 8) {
+                        Image(systemName: "wifi.slash")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Offline - Showing cached prices")
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(Color.orange.opacity(0.9))
+                    
+                    Spacer()
+                }
+                .ignoresSafeArea(edges: .top)
+            }
+            
             // Debug: Background image with parallax effect (like iOS home screen wallpapers)
             // Uses user's selected background from preferences (built-in or custom)
             // Only show background if backgroundImageName is not nil
@@ -913,6 +932,10 @@ struct DashboardView: View {
     
     // Debug: Extracted calculation logic for better organization
     private func performValuationCalculations(activeHerds: [HerdGroup], prefs: UserPreferences) async throws {
+        // Debug: BATCH PREFETCH - Fetch ALL prices in ONE API call before calculations
+        // This reduces hundreds of individual API calls to just ONE
+        await valuationEngine.prefetchPricesForHerds(activeHerds)
+        
         // Debug: Parallel calculation of herd valuations using task groups
         let results = await withTaskGroup(of: (netValue: Double, category: String, cost: Double, breeding: Double, initial: Double).self) { group in
             var results: [(netValue: Double, category: String, cost: Double, breeding: Double, initial: Double)] = []

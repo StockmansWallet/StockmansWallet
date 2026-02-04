@@ -23,6 +23,19 @@ struct LandingPageView: View {
                 .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: .infinity)
                 .clipped()
                 .ignoresSafeArea()
+            
+            // Debug: Environment badge for non-production builds (top-right)
+            if Config.environment.shouldShowBadge {
+                VStack {
+                    HStack {
+                        Spacer()
+                        EnvironmentBadge()
+                            .padding(.top, 60)
+                            .padding(.trailing, 16)
+                    }
+                    Spacer()
+                }
+            }
 
             // Content: logo larger and lower; bottom CTAs via safeAreaInset
             VStack(spacing: 0) {

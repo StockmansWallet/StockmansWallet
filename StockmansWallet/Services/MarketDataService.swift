@@ -195,6 +195,7 @@ class MarketDataService {
                 return filteredPrices
             } catch {
                 print("❌ Debug: Error fetching from Supabase: \(error)")
+                // Debug: Return empty array but don't mask the error - offline detection happens at viewmodel level
                 return [] // Return empty array on error
             }
         } else {

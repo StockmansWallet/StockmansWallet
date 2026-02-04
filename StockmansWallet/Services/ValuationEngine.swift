@@ -22,6 +22,33 @@ class ValuationEngine {
     private let cattleGestationDays = 283
     private let sheepGestationDays = 150
     
+    // MARK: - Price Cache
+    // Debug: Cache fetched prices to avoid redundant API calls
+    private var priceCache: [String: (price: Double, source: String)] = [:]
+    private var priceCacheTimestamp: Date? = nil
+    private let priceCacheDuration: TimeInterval = 3600 // 1 hour
+    
+    // Debug: Offline state tracking
+    var isOffline: Bool = false
+    
+    // Debug: Generate cache key for price lookups
+    private func priceCacheKey(category: String, breed: String, saleyard: String?, state: String?) -> String {
+        return "\(category)|\(breed)|\(saleyard ?? "nil")|\(state ?? "nil")"
+    }
+    
+    // Debug: Check if price cache is still fresh
+    private func isPriceCacheFresh() -> Bool {
+        guard let timestamp = priceCacheTimestamp else { return false }
+        return Date().timeIntervalSince(timestamp) < priceCacheDuration
+    }
+    
+    // Debug: Clear price cache (forces fresh fetch)
+    func clearPriceCache() {
+        priceCache = [:]
+        priceCacheTimestamp = nil
+        print("🔵 Debug: ValuationEngine price cache cleared")
+    }
+    
     // MARK: - Weight Gain Calculation (Split Approach)
     /// Calculates projected weight using Scenario B: Split Calculation
     /// Formula: ProjectedWeight = WeightInitial + (DWG_Old × DaysPhase1) + (DWG_New × DaysPhase2)
@@ -84,6 +111,86 @@ class ValuationEngine {
         return netValue
     }
     
+    // MARK: - Batch Price Prefetch
+    /// Pre-fetches all prices for a list of herds in ONE API call
+    /// Debug: Dramatically reduces API calls from hundreds to ONE
+    func prefetchPricesForHerds(_ herds: [HerdGroup]) async {
+        // Debug: Skip if cache is still fresh
+        if isPriceCacheFresh() && !priceCache.isEmpty {
+            print("✅ Debug: Using cached prices (age: \(Int(Date().timeIntervalSince(priceCacheTimestamp!)))s)")
+            return
+        }
+        
+        // Debug: If offline and we have cached prices, keep using them
+        if isOffline && !priceCache.isEmpty {
+            print("⚠️ Debug: Offline - keeping cached prices")
+            return
+        }
+        
+        // Collect all unique category+breed+saleyard combinations
+        var uniqueCombos: Set<String> = []
+        var categories: Set<String> = []
+        var breeds: Set<String> = []
+        var saleyards: Set<String> = []
+        
+        for herd in herds where !herd.isSold {
+            let mlaCategory = mapCategoryToMLACategory(herd.category)
+            categories.insert(mlaCategory)
+            breeds.insert(herd.breed)
+            if let saleyard = herd.selectedSaleyard {
+                saleyards.insert(saleyard)
+            }
+            uniqueCombos.insert("\(mlaCategory)|\(herd.breed)|\(herd.selectedSaleyard ?? "nil")")
+        }
+        
+        print("🔵 Debug: Batch prefetching prices for \(uniqueCombos.count) unique combinations")
+        print("   Categories: \(categories.sorted().joined(separator: ", "))")
+        print("   Breeds: \(Array(breeds.prefix(10)).sorted().joined(separator: ", "))\(breeds.count > 10 ? "..." : "")")
+        print("   Saleyards: \(Array(saleyards.prefix(5)).sorted().joined(separator: ", "))\(saleyards.count > 5 ? "..." : "")")
+        
+        do {
+            // Fetch ALL prices in ONE query
+            let prices = try await supabaseService.fetchCategoryPrices(
+                categories: Array(categories),
+                saleyard: nil, // Get all saleyards
+                state: nil, // Get all states
+                states: nil, // Don't filter by state - get nationwide data
+                breed: nil // Get all breeds
+            )
+            
+            print("✅ Debug: Batch fetched \(prices.count) prices from Supabase")
+            
+            // Clear old cache and populate with new data
+            priceCache = [:]
+            
+            // Index prices by all possible lookup patterns
+            for price in prices {
+                // Cache by saleyard+breed
+                if !price.source.isEmpty {
+                    let key1 = priceCacheKey(category: price.category, breed: price.breed ?? "general", saleyard: price.source, state: nil)
+                    priceCache[key1] = (price.price, price.source)
+                }
+                
+                // Cache by category+breed only (national/general)
+                let key2 = priceCacheKey(category: price.category, breed: price.breed ?? "general", saleyard: nil, state: nil)
+                if priceCache[key2] == nil { // Only if not already set by more specific price
+                    priceCache[key2] = (price.price, price.source)
+                }
+            }
+            
+            // Update cache timestamp
+            priceCacheTimestamp = Date()
+            isOffline = false
+            
+            print("✅ Debug: Price cache populated with \(priceCache.count) entries")
+            
+        } catch {
+            print("❌ Debug: Batch prefetch failed: \(error.localizedDescription)")
+            isOffline = true
+            // Keep existing cache if available
+        }
+    }
+    
     // MARK: - Category Mapping
     /// Maps app categories to MLA database categories
     /// Debug: Handles cases where app UI uses different terminology than MLA data
@@ -109,8 +216,8 @@ class ValuationEngine {
     }
     
     // MARK: - Market Pricing (Fallback Hierarchy)
-    /// Gets market price with fallback: Saleyard → State → National
-    /// Debug: Now fetches from Supabase category_prices table with real MLA data
+    /// Gets market price with fallback: Cache → Saleyard → State → National → Default
+    /// Debug: Now checks cache first to avoid redundant API calls
     func getMarketPrice(
         category: String,
         breed: String,
@@ -119,6 +226,34 @@ class ValuationEngine {
         modelContext: ModelContext,
         asOfDate: Date = Date()
     ) async -> (price: Double, source: String) {
+        let mlaCategory = mapCategoryToMLACategory(category)
+        
+        // Debug: Check cache first (saleyard level)
+        if let saleyard = saleyard {
+            let key = priceCacheKey(category: mlaCategory, breed: breed, saleyard: saleyard, state: nil)
+            if let cached = priceCache[key] {
+                return cached
+            }
+        }
+        
+        // Debug: Check cache (state level)
+        if let state = state {
+            let key = priceCacheKey(category: mlaCategory, breed: breed, saleyard: nil, state: state)
+            if let cached = priceCache[key] {
+                return cached
+            }
+        }
+        
+        // Debug: Check cache (national level)
+        let nationalKey = priceCacheKey(category: mlaCategory, breed: breed, saleyard: nil, state: nil)
+        if let cached = priceCache[nationalKey] {
+            return cached
+        }
+        
+        // Debug: Cache miss - fetch from Supabase (fallback for individual lookups)
+        // This should rarely happen if prefetchPricesForHerds was called first
+        print("⚠️ Debug: Cache miss for \(category) (\(breed)) - fetching individually")
+        
         // Try direct saleyard quote first (with breed-specific pricing)
         if let saleyard = saleyard {
             if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: saleyard, state: nil) {

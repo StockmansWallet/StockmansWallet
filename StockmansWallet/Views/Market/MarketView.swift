@@ -65,6 +65,20 @@ struct MarketView: View {
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                // Debug: Offline indicator banner
+                if viewModel.isOffline {
+                    HStack(spacing: 8) {
+                        Image(systemName: "wifi.slash")
+                            .font(.system(size: 12, weight: .semibold))
+                        Text("Offline - Showing cached data")
+                            .font(.system(size: 13, weight: .medium))
+                    }
+                    .foregroundStyle(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 8)
+                    .background(Color.orange.opacity(0.9))
+                }
+                
                 // Debug: Tab selector (segmented control)
                 MarketTabSelector(selectedTab: $selectedTab)
                     .padding(.horizontal)
@@ -101,19 +115,19 @@ struct MarketView: View {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
                         HapticManager.tap()
-                        // Debug: Recompute and reload data for current tab
+                        // Debug: Recompute and force refresh data for current tab
                         computeHerdData()
                         Task {
                             switch selectedTab {
                             case .myMarkets:
                                 if !userHerdCategories.isEmpty {
-                                    await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs)
+                                    await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs, forceRefresh: true)
                                 }
                             case .pulse:
-                                await viewModel.loadNationalIndicators()
-                                await viewModel.loadPhysicalSalesReport()
+                                await viewModel.loadNationalIndicators(forceRefresh: true)
+                                await viewModel.loadPhysicalSalesReport(forceRefresh: true)
                             case .intelligence:
-                                await viewModel.loadMarketIntelligence()
+                                await viewModel.loadMarketIntelligence(forceRefresh: true)
                             }
                         }
                     } label: {
@@ -127,14 +141,11 @@ struct MarketView: View {
                 // Debug: Compute herd data immediately (synchronous, fast)
                 computeHerdData()
                 
-                // Debug: Set loading state IMMEDIATELY so skeleton appears instantly
-                viewModel.isLoadingPrices = true
-                
-                // Debug: Ensure data loads on first appearance
+                // Debug: Load data on first appearance (cache will prevent redundant loads)
                 if !hasLoadedInitialData {
                     hasLoadedInitialData = true
                     
-                    // Debug: Prioritize My Markets data (user sees skeleton immediately)
+                    // Debug: Load data asynchronously - cache checking prevents unnecessary fetches
                     Task {
                         // Load prices FIRST (what user sees on default tab)
                         if !userHerdCategories.isEmpty {
@@ -151,17 +162,17 @@ struct MarketView: View {
                 // Debug: Recompute herd data on refresh
                 computeHerdData()
                 
-                // Debug: Load current tab's data based on selection
+                // Debug: Force refresh current tab's data (bypasses cache)
                 switch selectedTab {
                 case .myMarkets:
                     if !userHerdCategories.isEmpty {
-                        await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs)
+                        await viewModel.loadCategoryPrices(forCategoryBreedPairs: userCategoryBreedPairs, forceRefresh: true)
                     }
                 case .pulse:
-                    await viewModel.loadNationalIndicators()
-                    await viewModel.loadPhysicalSalesReport()
+                    await viewModel.loadNationalIndicators(forceRefresh: true)
+                    await viewModel.loadPhysicalSalesReport(forceRefresh: true)
                 case .intelligence:
-                    await viewModel.loadMarketIntelligence()
+                    await viewModel.loadMarketIntelligence(forceRefresh: true)
                 }
             }
             .onChange(of: viewModel.selectedPhysicalSaleyard) { _, newSaleyard in
@@ -351,7 +362,7 @@ struct MarketView: View {
                             Button("All") {
                                 Task { 
                                     await viewModel.selectState(nil)
-                                    await viewModel.loadPhysicalSalesReport()
+                                    await viewModel.loadPhysicalSalesReport(forceRefresh: true)
                                 }
                             }
                             Divider()
@@ -359,7 +370,7 @@ struct MarketView: View {
                                 Button(state) {
                                     Task { 
                                         await viewModel.selectState(state)
-                                        await viewModel.loadPhysicalSalesReport()
+                                        await viewModel.loadPhysicalSalesReport(forceRefresh: true)
                                     }
                                 }
                             }

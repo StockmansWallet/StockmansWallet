@@ -145,9 +145,8 @@ struct GoogleSignInButtonStyledRepresentable: UIViewRepresentable {
         button.setTitleColor(.black, for: .normal)
         button.setTitleColor(UIColor.black.withAlphaComponent(0.4), for: .disabled)
         
-        // Use UIButtonConfiguration for iOS 15+ which handles layout properly
-        if #available(iOS 15.0, *) {
-            var config = UIButton.Configuration.plain()
+        // Debug: iOS 18+ minimum - UIButton.Configuration is always available
+        var config = UIButton.Configuration.plain()
             config.contentInsets = NSDirectionalEdgeInsets(top: 0, leading: 14, bottom: 0, trailing: 14)
             // Add image to the configuration - resize to 20x20 to match Apple's button icon size
             if let originalImage = UIImage(named: "google_logo")?.withRenderingMode(.alwaysOriginal) {
@@ -164,25 +163,7 @@ struct GoogleSignInButtonStyledRepresentable: UIViewRepresentable {
                     config.imagePadding = 8
                 }
             }
-            button.configuration = config
-        } else {
-            // Fallback for iOS 14 - use contentEdgeInsets and position icon manually
-            button.contentEdgeInsets = UIEdgeInsets(top: 0, left: 14, bottom: 0, right: 14)
-            button.titleEdgeInsets = UIEdgeInsets(top: 0, left: 8, bottom: 0, right: 0) // Space for icon
-            
-            // Google logo view (20x20) with official asset if available
-            let iconView = makeGoogleIconView(size: 20)
-            iconView.translatesAutoresizingMaskIntoConstraints = false
-            button.addSubview(iconView)
-            
-            // Position icon to the left of the title
-            NSLayoutConstraint.activate([
-                iconView.leadingAnchor.constraint(equalTo: button.leadingAnchor, constant: 14),
-                iconView.centerYAnchor.constraint(equalTo: button.centerYAnchor),
-                iconView.widthAnchor.constraint(equalToConstant: 20),
-                iconView.heightAnchor.constraint(equalToConstant: 20)
-            ])
-        }
+        button.configuration = config
         
         button.titleLabel?.lineBreakMode = .byClipping
         

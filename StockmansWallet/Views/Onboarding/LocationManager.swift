@@ -34,12 +34,8 @@ class LocationManager: NSObject {
     func requestLocation(completion: @escaping (CLLocation) -> Void) {
         self.completion = completion
         
-        let status: CLAuthorizationStatus
-        if #available(iOS 14.0, *) {
-            status = manager.authorizationStatus
-        } else {
-            status = CLLocationManager.authorizationStatus()
-        }
+        // Debug: iOS 18+ minimum - authorizationStatus is always available
+        let status = manager.authorizationStatus
         
         switch status {
         case .notDetermined:
@@ -72,12 +68,8 @@ class LocationManagerDelegate: NSObject, CLLocationManagerDelegate {
     }
     
     func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
-        let status: CLAuthorizationStatus
-        if #available(iOS 14.0, *) {
-            status = manager.authorizationStatus
-        } else {
-            status = CLLocationManager.authorizationStatus()
-        }
+        // Debug: iOS 18+ minimum - authorizationStatus is always available
+        let status = manager.authorizationStatus
         
         if status == .authorizedWhenInUse || .authorizedAlways == status {
             manager.requestLocation()

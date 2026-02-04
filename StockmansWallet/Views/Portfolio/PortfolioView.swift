@@ -138,6 +138,20 @@ struct PortfolioView: View {
                 EmptyPortfolioView(showingAddAssetMenu: $showingAddAssetMenu)
             } else {
                 VStack(spacing: 0) {
+                    // Debug: Offline indicator banner
+                    if valuationEngine.isOffline {
+                        HStack(spacing: 8) {
+                            Image(systemName: "wifi.slash")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("Offline - Showing cached prices")
+                                .font(.system(size: 13, weight: .medium))
+                        }
+                        .foregroundStyle(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background(Color.orange.opacity(0.9))
+                    }
+                    
                     // Debug: Custom tab bar at the very top
                     customTabBar
                     
@@ -430,6 +444,10 @@ struct PortfolioView: View {
         
         // Debug: Get user preferences for ValuationEngine
         let prefs = preferences.first ?? UserPreferences()
+        
+        // Debug: BATCH PREFETCH - Fetch ALL prices in ONE API call before calculations
+        // This reduces hundreds of individual API calls to just ONE
+        await valuationEngine.prefetchPricesForHerds(allActiveAssets)
         
         // Create mappings for later lookup
         let herdMap = Dictionary(uniqueKeysWithValues: activeHerds.map { ($0.id, $0) })

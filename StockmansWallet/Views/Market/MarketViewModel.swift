@@ -36,6 +36,19 @@ class MarketViewModel {
     var lastUpdated: Date? = nil
     var errorMessage: String? = nil
     
+    // MARK: - Cache Timestamps
+    // Debug: Track when each data type was last loaded for smart caching
+    private var pricesLoadedAt: Date? = nil
+    private var indicatorsLoadedAt: Date? = nil
+    private var physicalReportLoadedAt: Date? = nil
+    private var intelligenceLoadedAt: Date? = nil
+    
+    // Debug: Cache duration - data older than this will be refreshed (1 hour)
+    private let cacheDuration: TimeInterval = 3600
+    
+    // Debug: Offline state tracking
+    var isOffline: Bool = false
+    
     // MARK: - Filter State
     var selectedState: String? = nil
     // Debug: Saleyard selector for filtering market data (same as dashboard)
@@ -54,6 +67,23 @@ class MarketViewModel {
     // MARK: - Initialization
     init() {
         // Debug: Initialize with empty state
+    }
+    
+    // MARK: - Cache Management
+    // Debug: Check if cached data is still fresh (within cacheDuration)
+    private func isCacheFresh(_ loadedAt: Date?) -> Bool {
+        guard let loadedAt = loadedAt else { return false }
+        let age = Date().timeIntervalSince(loadedAt)
+        return age < cacheDuration
+    }
+    
+    // Debug: Clear all cached timestamps (forces refresh on next load)
+    func clearCache() {
+        pricesLoadedAt = nil
+        indicatorsLoadedAt = nil
+        physicalReportLoadedAt = nil
+        intelligenceLoadedAt = nil
+        print("🔵 Debug: Cache cleared - next load will fetch fresh data")
     }
     
     // MARK: - Load All Data
@@ -95,12 +125,26 @@ class MarketViewModel {
     
     // MARK: - Load National Indicators
     /// Fetches national market indicators (EYCI, WYCI, NSI, etc.)
-    func loadNationalIndicators() async {
+    func loadNationalIndicators(forceRefresh: Bool = false) async {
+        // Debug: Check cache first (unless force refresh requested)
+        if !forceRefresh && isCacheFresh(indicatorsLoadedAt) && !nationalIndicators.isEmpty {
+            print("✅ Debug: Using cached national indicators (age: \(Int(Date().timeIntervalSince(indicatorsLoadedAt!)))s)")
+            return
+        }
+        
+        // Debug: If we have cached data but no network, keep showing it
+        if !nationalIndicators.isEmpty && isOffline {
+            print("⚠️ Debug: Offline - keeping existing cached indicators")
+            return
+        }
+        
         await MainActor.run { self.isLoadingIndicators = true }
         
         let indicators = await dataService.fetchNationalIndicators()
         await MainActor.run {
             self.nationalIndicators = indicators
+            self.indicatorsLoadedAt = Date() // Debug: Store cache timestamp
+            self.isOffline = false // Debug: Successful load means we're online
             self.isLoadingIndicators = false
         }
     }
@@ -129,7 +173,19 @@ class MarketViewModel {
         }
     }
     
-    func loadCategoryPrices(forCategoryBreedPairs pairs: [(category: String, breed: String, state: String)]) async {
+    func loadCategoryPrices(forCategoryBreedPairs pairs: [(category: String, breed: String, state: String)], forceRefresh: Bool = false) async {
+        // Debug: Check cache first (unless force refresh requested)
+        if !forceRefresh && isCacheFresh(pricesLoadedAt) && !categoryPrices.isEmpty {
+            print("✅ Debug: Using cached category prices (age: \(Int(Date().timeIntervalSince(pricesLoadedAt!)))s, fresh for \(Int(cacheDuration))s)")
+            return
+        }
+        
+        // Debug: If we have cached data but no network, keep showing it
+        if !categoryPrices.isEmpty && isOffline {
+            print("⚠️ Debug: Offline - keeping existing cached prices")
+            return
+        }
+        
         await MainActor.run { self.isLoadingPrices = true }
         
         // Debug: Map app categories to MLA categories for comparison
@@ -176,19 +232,35 @@ class MarketViewModel {
         }
         
         // Fetch prices for ONLY the categories and states we need
-        let allPrices = await dataService.fetchCategoryPrices(
-            categories: Array(uniqueMLACategories),
-            livestockType: nil,
-            saleyard: nil,
-            state: singleState,
-            states: multipleStates
-        )
-        
-        // If fetch was cancelled or returned no data, keep existing prices
-        // Debug: Don't clear the UI on task cancellation
-        guard !allPrices.isEmpty else {
-            print("⚠️ Debug: No prices returned (possibly cancelled), keeping existing data")
-            await MainActor.run { self.isLoadingPrices = false }
+        // Debug: Wrap in error handling to detect offline state
+        let allPrices: [CategoryPrice]
+        do {
+            allPrices = await dataService.fetchCategoryPrices(
+                categories: Array(uniqueMLACategories),
+                livestockType: nil,
+                saleyard: nil,
+                state: singleState,
+                states: multipleStates
+            )
+            
+            // If fetch was cancelled or returned no data, keep existing prices
+            // Debug: Don't clear the UI on task cancellation or network errors
+            guard !allPrices.isEmpty else {
+                print("⚠️ Debug: No prices returned (possibly cancelled or offline), keeping existing data")
+                await MainActor.run { 
+                    self.isOffline = true
+                    self.isLoadingPrices = false 
+                }
+                return
+            }
+        } catch {
+            // Debug: Network error - mark as offline and keep existing data
+            print("❌ Debug: Error fetching prices (likely offline): \(error.localizedDescription)")
+            await MainActor.run {
+                self.isOffline = true
+                self.errorMessage = "Unable to load latest prices. Showing cached data."
+                self.isLoadingPrices = false
+            }
             return
         }
         
@@ -270,6 +342,8 @@ class MarketViewModel {
         
         await MainActor.run {
             self.categoryPrices = deduplicatedPrices
+            self.pricesLoadedAt = Date() // Debug: Store cache timestamp
+            self.isOffline = false // Debug: Successful load means we're online
             self.isLoadingPrices = false
         }
     }
@@ -288,12 +362,26 @@ class MarketViewModel {
     
     // MARK: - Load Market Intelligence
     /// Fetches AI predictive insights
-    func loadMarketIntelligence(forCategories categories: [String] = []) async {
+    func loadMarketIntelligence(forCategories categories: [String] = [], forceRefresh: Bool = false) async {
+        // Debug: Check cache first (unless force refresh requested)
+        if !forceRefresh && isCacheFresh(intelligenceLoadedAt) && !marketIntelligence.isEmpty {
+            print("✅ Debug: Using cached market intelligence (age: \(Int(Date().timeIntervalSince(intelligenceLoadedAt!)))s)")
+            return
+        }
+        
+        // Debug: If we have cached data but no network, keep showing it
+        if !marketIntelligence.isEmpty && isOffline {
+            print("⚠️ Debug: Offline - keeping existing cached intelligence")
+            return
+        }
+        
         await MainActor.run { self.isLoadingIntelligence = true }
         
         let intelligence = await dataService.fetchMarketIntelligence(categories: categories)
         await MainActor.run {
             self.marketIntelligence = intelligence
+            self.intelligenceLoadedAt = Date() // Debug: Store cache timestamp
+            self.isOffline = false // Debug: Successful load means we're online
             self.isLoadingIntelligence = false
         }
     }
@@ -332,10 +420,28 @@ class MarketViewModel {
     // MARK: - Load Physical Sales Report
     /// Fetches MLA physical sales report
     /// Debug: First tries MLA API directly, then falls back to Supabase, then mock data
-    func loadPhysicalSalesReport(saleyard: String? = nil, date: Date = Date()) async {
+    func loadPhysicalSalesReport(saleyard: String? = nil, date: Date = Date(), forceRefresh: Bool = false) async {
+        let selectedYard = saleyard ?? selectedPhysicalSaleyard
+        
+        // Debug: Check cache first (unless force refresh requested or different saleyard/date)
+        if !forceRefresh && isCacheFresh(physicalReportLoadedAt) && physicalSalesReport != nil {
+            // Check if cached report matches requested saleyard and date
+            if let cached = physicalSalesReport,
+               cached.saleyard == selectedYard,
+               Calendar.current.isDate(cached.reportDate, inSameDayAs: date) {
+                print("✅ Debug: Using cached physical sales report (age: \(Int(Date().timeIntervalSince(physicalReportLoadedAt!)))s)")
+                return
+            }
+        }
+        
+        // Debug: If we have cached data but no network, keep showing it
+        if physicalSalesReport != nil && isOffline {
+            print("⚠️ Debug: Offline - keeping existing cached physical report")
+            return
+        }
+        
         await MainActor.run { self.isLoadingPhysicalReport = true }
         
-        let selectedYard = saleyard ?? selectedPhysicalSaleyard
         print("🔵 Debug: loadPhysicalSalesReport called for \(selectedYard)")
         
         // Debug: Try MLA API first to see what data structure we get
@@ -349,6 +455,8 @@ class MarketViewModel {
                 print("✅ Debug: Successfully fetched physical sales report from MLA API")
                 await MainActor.run {
                     self.physicalSalesReport = report
+                    self.physicalReportLoadedAt = Date() // Debug: Store cache timestamp
+                    self.isOffline = false // Debug: Successful load means we're online
                     self.isLoadingPhysicalReport = false
                 }
                 return
@@ -363,6 +471,7 @@ class MarketViewModel {
         print("🔵 Debug: Using mock physical sales data")
         await MainActor.run {
             self.physicalSalesReport = createMockPhysicalReport(saleyard: selectedYard, date: date)
+            self.physicalReportLoadedAt = Date() // Debug: Store cache timestamp even for mock data
             self.isLoadingPhysicalReport = false
         }
     }

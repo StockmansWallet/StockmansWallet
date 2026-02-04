@@ -12,7 +12,8 @@ struct AppVersionFooter: View {
             Text(versionString)
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondaryText)
-            Text("© \(Calendar.current.component(.year, from: Date()))")
+            // Debug: Format year without thousands separator (2026 not 2,026)
+            Text("© \(String(Calendar.current.component(.year, from: Date())))")
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondaryText.opacity(0.8))
         }
