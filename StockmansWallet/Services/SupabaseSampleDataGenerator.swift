@@ -106,17 +106,9 @@ class SupabaseSampleDataGenerator {
              130, 240.0, 1.0, nil, nil, -400, false, 0.0, saleyards[0]),
             
             ("Red Angus Heifers", "Cattle", "Red Angus", "Heifer", "Female",
-             90, 310.0, 0.75, nil, nil, -250, false, 0.0, saleyards[3]),
+             90, 310.0, 0.75, nil, nil, -250, false, 0.0, saleyards[3])
             
-            // Sheep herds (3)
-            ("Merino Breeding Ewes", "Sheep", "Merino", "Breeding Ewe", "Female",
-             500, 65.0, 0.05, nil, nil, -1020, true, 0.92, saleyards[0]),
-            
-            ("Poll Dorset Breeding Ewes", "Sheep", "Poll Dorset", "Breeding Ewe", "Female",
-             400, 70.0, 0.06, nil, nil, -980, true, 0.90, saleyards[1]),
-            
-            ("Merino Wethers", "Sheep", "Merino", "Wether Lamb", "Male",
-             600, 45.0, 0.08, nil, nil, -600, false, 0.0, saleyards[0])
+            // Debug: CATTLE ONLY for Beta - Sheep, pigs, goats coming in future versions
         ]
         
         var herds: [SupabaseSampleHerd] = []

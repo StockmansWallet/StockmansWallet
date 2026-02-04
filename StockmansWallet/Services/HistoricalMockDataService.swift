@@ -97,17 +97,9 @@ class HistoricalMockDataService {
              130, 240.0, 1.0, nil, nil, -400, false, 0.0, saleyards[0]),
             
             ("Bottom Paddock - Heifers", "Cattle", "Red Angus", "Heifer", "Female",
-             90, 310.0, 0.75, nil, nil, -250, false, 0.0, saleyards[3]),
+             90, 310.0, 0.75, nil, nil, -250, false, 0.0, saleyards[3])
             
-            // Sheep herds (3) - Starting from mid 2023
-            ("Green Valley - Merino Breeding Ewes", "Sheep", "Merino", "Breeding Ewe", "Female",
-             500, 65.0, 0.05, nil, nil, -1020, true, 0.92, saleyards[0]),
-            
-            ("Dry Creek - Poll Dorset Breeding Ewes", "Sheep", "Poll Dorset", "Breeding Ewe", "Female",
-             400, 70.0, 0.06, nil, nil, -980, true, 0.90, saleyards[1]),
-            
-            ("Sunset Ridge - Merino Wethers", "Sheep", "Merino", "Wether Lamb", "Male",
-             600, 45.0, 0.08, nil, nil, -600, false, 0.0, saleyards[0])
+            // Debug: CATTLE ONLY for Beta - Sheep, pigs, goats coming in future versions
         ]
         
         for (index, config) in herdConfigs.enumerated() {
@@ -329,18 +321,20 @@ class HistoricalMockDataService {
             "Weaner Steer", "Weaner Bull", "Weaner Heifer",
             "Breeding Cow", "Breeder", "Dry Cow", "Cull Cow",
             "Heifer", "First Calf Heifer",
-            "Slaughter Cattle", "Calves",
+            "Slaughter Cattle", "Calves"
+            
+            // Debug: CATTLE ONLY for Beta - Sheep, pigs, goats coming in future versions
             // Sheep categories  
-            "Breeding Ewe", "Maiden Ewe", "Dry Ewe", "Cull Ewe",
-            "Weaner Ewe", "Feeder Ewe", "Slaughter Ewe",
-            "Wether Lamb", "Weaner Lamb", "Feeder Lamb", "Slaughter Lamb", "Lambs",
+            // "Breeding Ewe", "Maiden Ewe", "Dry Ewe", "Cull Ewe",
+            // "Weaner Ewe", "Feeder Ewe", "Slaughter Ewe",
+            // "Wether Lamb", "Weaner Lamb", "Feeder Lamb", "Slaughter Lamb", "Lambs",
             // Pig categories
-            "Breeder", "Dry Sow", "Cull Sow",
-            "Weaner Pig", "Feeder Pig", "Grower Pig", "Finisher Pig",
-            "Porker", "Baconer", "Grower Barrow", "Finisher Barrow",
+            // "Breeder", "Dry Sow", "Cull Sow",
+            // "Weaner Pig", "Feeder Pig", "Grower Pig", "Finisher Pig",
+            // "Porker", "Baconer", "Grower Barrow", "Finisher Barrow",
             // Goat categories
-            "Breeder Doe", "Dry Doe", "Cull Doe", "Breeder Buck", "Sale Buck",
-            "Mature Wether", "Rangeland Goat", "Capretto", "Chevon"
+            // "Breeder Doe", "Dry Doe", "Cull Doe", "Breeder Buck", "Sale Buck",
+            // "Mature Wether", "Rangeland Goat", "Capretto", "Chevon"
         ]
         
         // Calculate days from start to end
@@ -431,7 +425,10 @@ class HistoricalMockDataService {
                     categoryPrice = finalPrice * 0.92 // ~$3.04/kg (slaughter typically lower)
                 } else if category.contains("Calves") {
                     categoryPrice = finalPrice * 1.25 // ~$4.13/kg (calves premium)
-                } 
+                }
+                
+                // Debug: CATTLE ONLY for Beta - Non-cattle pricing commented out
+                /*
                 // Sheep categories (higher per kg than cattle)
                 else if category.contains("Breeding Ewe") || category.contains("Maiden Ewe") || category.contains("Dry Ewe") {
                     categoryPrice = finalPrice * 3.2 // ~$10.56/kg
@@ -468,6 +465,7 @@ class HistoricalMockDataService {
                 } else if category.contains("Chevon") {
                     categoryPrice = finalPrice * 1.25 // ~$4.13/kg
                 }
+                */
                 // Default fallback
                 else {
                     categoryPrice = finalPrice

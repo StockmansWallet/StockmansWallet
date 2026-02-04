@@ -206,18 +206,20 @@ class MockDataService {
             "Weaner Steer", "Weaner Bull", "Weaner Heifer",
             "Breeding Cow", "Breeder", "Dry Cow", "Cull Cow",
             "Heifer", "First Calf Heifer",
-            "Slaughter Cattle", "Calves",
+            "Slaughter Cattle", "Calves"
+            
+            // Debug: CATTLE ONLY for Beta - Sheep, pigs, goats coming in future versions
             // Sheep categories  
-            "Breeding Ewe", "Maiden Ewe", "Dry Ewe", "Cull Ewe",
-            "Weaner Ewe", "Feeder Ewe", "Slaughter Ewe",
-            "Wether Lamb", "Weaner Lamb", "Feeder Lamb", "Slaughter Lamb", "Lambs",
+            // "Breeding Ewe", "Maiden Ewe", "Dry Ewe", "Cull Ewe",
+            // "Weaner Ewe", "Feeder Ewe", "Slaughter Ewe",
+            // "Wether Lamb", "Weaner Lamb", "Feeder Lamb", "Slaughter Lamb", "Lambs",
             // Pig categories
-            "Breeder", "Dry Sow", "Cull Sow",
-            "Weaner Pig", "Feeder Pig", "Grower Pig", "Finisher Pig",
-            "Porker", "Baconer", "Grower Barrow", "Finisher Barrow",
+            // "Breeder", "Dry Sow", "Cull Sow",
+            // "Weaner Pig", "Feeder Pig", "Grower Pig", "Finisher Pig",
+            // "Porker", "Baconer", "Grower Barrow", "Finisher Barrow",
             // Goat categories
-            "Breeder Doe", "Dry Doe", "Cull Doe", "Breeder Buck", "Sale Buck",
-            "Mature Wether", "Rangeland Goat", "Capretto", "Chevon"
+            // "Breeder Doe", "Dry Doe", "Cull Doe", "Breeder Buck", "Sale Buck",
+            // "Mature Wether", "Rangeland Goat", "Capretto", "Chevon"
         ]
         
         // Generate prices for the past year (daily)
@@ -259,7 +261,10 @@ class MockDataService {
                     categoryPrice = basePrice * 0.92 // ~$3.04/kg (slaughter typically lower)
                 } else if category.contains("Calves") {
                     categoryPrice = basePrice * 1.25 // ~$4.13/kg (calves premium)
-                } 
+                }
+                
+                // Debug: CATTLE ONLY for Beta - Non-cattle pricing commented out
+                /* 
                 // Sheep categories (higher per kg than cattle)
                 else if category.contains("Breeding Ewe") || category.contains("Maiden Ewe") || category.contains("Dry Ewe") {
                     categoryPrice = basePrice * 3.2 // ~$10.56/kg
@@ -296,6 +301,7 @@ class MockDataService {
                 } else if category.contains("Chevon") {
                     categoryPrice = basePrice * 1.25 // ~$4.13/kg
                 }
+                */
                 // Default fallback
                 else {
                     categoryPrice = basePrice
