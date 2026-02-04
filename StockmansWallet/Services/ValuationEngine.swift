@@ -475,8 +475,11 @@ class ValuationEngine {
             let daysElapsed = Calendar.current.dateComponents([.day], from: joinedDate, to: asOfDate).day ?? 0
             let cycleLength = herd.species == "Cattle" ? cattleGestationDays : sheepGestationDays
             
-            // Estimate calf value (simplified - could be enhanced)
-            let calfValue = projectedWeight * 0.3 * pricePerKg // Rough estimate
+            // Debug: Estimate newborn progeny value based on realistic birth weights
+            // Cattle calves: ~7% of mother's weight (35-40kg from 500-550kg cow)
+            // Sheep lambs: ~8% of mother's weight (5-6kg from 60-70kg ewe)
+            let birthWeightRatio = herd.species == "Cattle" ? 0.07 : 0.08
+            let calfValue = projectedWeight * birthWeightRatio * pricePerKg
             
             breedingAccrual = calculateBreedingAccrual(
                 headCount: herd.headCount,

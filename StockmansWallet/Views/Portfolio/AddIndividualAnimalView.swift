@@ -42,6 +42,7 @@ struct AddIndividualAnimalView: View {
     // Debug: Calves at foot state (not typically used for individual animals, but needed for component compatibility)
     @State private var calvesAtFootHeadCount: Int? = nil
     @State private var calvesAtFootAgeMonths: Int? = nil
+    @State private var calvesAtFootAverageWeight: Int? = nil // Debug: Average weight of calves at foot in kg
     
     private let speciesOptions = ["Cattle", "Sheep", "Pigs", "Goats"]
     
@@ -465,7 +466,8 @@ struct AddIndividualAnimalView: View {
             joiningPeriodStart: $joiningPeriodStart,
             joiningPeriodEnd: $joiningPeriodEnd,
             calvesAtFootHeadCount: $calvesAtFootHeadCount,
-            calvesAtFootAgeMonths: $calvesAtFootAgeMonths
+            calvesAtFootAgeMonths: $calvesAtFootAgeMonths,
+            calvesAtFootAverageWeight: $calvesAtFootAverageWeight
         )
     }
     

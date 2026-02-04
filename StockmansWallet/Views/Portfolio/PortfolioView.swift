@@ -462,6 +462,10 @@ struct PortfolioView: View {
             }
         }
         
+        // Debug: STEP 1 - Check for calving events and auto-generate calves
+        // This must happen BEFORE filtering active herds so new calves are included
+        await CalvingManager.shared.processCalvingEvents(herds: allHerds, modelContext: modelContext)
+        
         // Debug: Calculate valuations for both herds and individual animals
         let activeHerds = allHerds.filter { !$0.isSold && $0.headCount > 1 }
         let activeIndividuals = allHerds.filter { !$0.isSold && $0.headCount == 1 }

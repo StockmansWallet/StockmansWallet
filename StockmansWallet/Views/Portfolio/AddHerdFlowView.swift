@@ -30,6 +30,7 @@ struct AddHerdFlowView: View {
     @State private var mortalityRate = 0 // Default: 0% (starting at zero)
     @State private var calvesAtFootHeadCount: Int? = nil
     @State private var calvesAtFootAgeMonths: Int? = nil
+    @State private var calvesAtFootAverageWeight: Int? = nil // Debug: Average weight of calves at foot in kg
     @State private var selectedSaleyard: String? = nil
     @State private var additionalInfo = ""
     @State private var breedSearchText = ""
@@ -527,7 +528,8 @@ struct AddHerdFlowView: View {
             joiningPeriodStart: $joiningPeriodStart,
             joiningPeriodEnd: $joiningPeriodEnd,
             calvesAtFootHeadCount: $calvesAtFootHeadCount,
-            calvesAtFootAgeMonths: $calvesAtFootAgeMonths
+            calvesAtFootAgeMonths: $calvesAtFootAgeMonths,
+            calvesAtFootAverageWeight: $calvesAtFootAverageWeight
         )
     }
     

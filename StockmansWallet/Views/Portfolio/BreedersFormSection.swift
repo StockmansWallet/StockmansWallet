@@ -172,6 +172,7 @@ struct BreedingDetailsScreen: View {
     @Binding var joiningPeriodEnd: Date
     @Binding var calvesAtFootHeadCount: Int?
     @Binding var calvesAtFootAgeMonths: Int?
+    @Binding var calvesAtFootAverageWeight: Int? // Debug: Average weight of calves at foot in kg
     
     var body: some View {
         // Debug: Show selection screen if no program type selected, otherwise show details
@@ -262,33 +263,48 @@ struct BreedingDetailsScreen: View {
                     .font(Theme.body)
                     .foregroundStyle(Theme.secondaryText)
                 
-                // Debug: Two text fields side by side for Head and Average Age
-                HStack(spacing: 12) {
-                    // Head field
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Head")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                        TextField("", value: $calvesAtFootHeadCount, format: .number)
-                            .keyboardType(.numberPad)
-                            .textFieldStyle(AddHerdTextFieldStyle())
-                            .multilineTextAlignment(.center)
-                            .accessibilityLabel("Calves head count")
+                // Debug: Three text fields for Head, Average Age, and Average Weight
+                VStack(spacing: 12) {
+                    // Head and Age fields side by side
+                    HStack(spacing: 12) {
+                        // Head field
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Head")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            TextField("", value: $calvesAtFootHeadCount, format: .number)
+                                .keyboardType(.numberPad)
+                                .textFieldStyle(AddHerdTextFieldStyle())
+                                .multilineTextAlignment(.center)
+                                .accessibilityLabel("Calves head count")
+                        }
+                        .frame(maxWidth: .infinity)
+                        
+                        // Average Age field
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Average Age (Months)")
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondaryText)
+                            TextField("", value: $calvesAtFootAgeMonths, format: .number)
+                                .keyboardType(.numberPad)
+                                .textFieldStyle(AddHerdTextFieldStyle())
+                                .multilineTextAlignment(.center)
+                                .accessibilityLabel("Calves average age in months")
+                        }
+                        .frame(maxWidth: .infinity)
                     }
-                    .frame(maxWidth: .infinity)
                     
-                    // Average Age field
+                    // Average Weight field (full width)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Average Age (Months)")
+                        Text("Average Weight (kg)")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondaryText)
-                        TextField("", value: $calvesAtFootAgeMonths, format: .number)
-                            .keyboardType(.numberPad)
+                        TextField("", value: $calvesAtFootAverageWeight, format: .number)
+                            .keyboardType(.decimalPad)
                             .textFieldStyle(AddHerdTextFieldStyle())
                             .multilineTextAlignment(.center)
-                            .accessibilityLabel("Calves average age in months")
+                            .accessibilityLabel("Calves average weight in kilograms")
                     }
-                    .frame(maxWidth: .infinity)
                 }
                 .padding()
                 .background(Theme.inputFieldBackground)
@@ -327,6 +343,7 @@ struct BreedersFormSection: View {
     @Binding var joiningPeriodEnd: Date
     @Binding var calvesAtFootHeadCount: Int?
     @Binding var calvesAtFootAgeMonths: Int?
+    @Binding var calvesAtFootAverageWeight: Int? // Debug: Average weight of calves at foot in kg
     
     var body: some View {
         // Debug: Show selection screen if no program type selected, otherwise show details
@@ -339,7 +356,8 @@ struct BreedersFormSection: View {
                 joiningPeriodStart: $joiningPeriodStart,
                 joiningPeriodEnd: $joiningPeriodEnd,
                 calvesAtFootHeadCount: $calvesAtFootHeadCount,
-                calvesAtFootAgeMonths: $calvesAtFootAgeMonths
+                calvesAtFootAgeMonths: $calvesAtFootAgeMonths,
+                calvesAtFootAverageWeight: $calvesAtFootAverageWeight
             )
         }
     }

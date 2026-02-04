@@ -40,6 +40,7 @@ final class HerdGroup {
     var joinedDate: Date? // Conception date
     var calvingRate: Double // Percentage (e.g., 0.85 for 85%)
     var lactationStatus: String? // "Lactating", "Dry"
+    var calvingProcessedDate: Date? // Debug: Date when calves were auto-generated (prevents duplicates)
     
     // MARK: - Market Mapping
     var selectedSaleyard: String? // From saleyard list
@@ -109,6 +110,7 @@ final class HerdGroup {
         self.joinedDate = nil
         self.calvingRate = 0.85 // Default
         self.lactationStatus = nil
+        self.calvingProcessedDate = nil
         self.selectedSaleyard = selectedSaleyard
         self.marketCategory = nil
         self.isSold = false

@@ -902,6 +902,10 @@ struct DashboardView: View {
                     }
                 }
                 
+                // Debug: STEP 1 - Check for calving events and auto-generate calves
+                // This must happen BEFORE calculating portfolio value so new calves are included
+                await CalvingManager.shared.processCalvingEvents(herds: Array(herds), modelContext: modelContext)
+                
                 // Debug: Prepare for animation - always show cached value first when animation flag is set
                 await MainActor.run {
                     let prefs = self.preferences.first ?? UserPreferences()
