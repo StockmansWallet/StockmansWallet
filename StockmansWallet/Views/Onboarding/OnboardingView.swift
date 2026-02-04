@@ -37,11 +37,21 @@ struct OnboardingView: View {
             
             Group {
                 switch onboardingStep {
-                case .landing, .features:
+                case .landing:
+                    // Debug: Full-screen landing page with background image - first impression
+                    LandingPageView {
+                        // User taps Continue - transition to features/welcome cards
+                        withAnimation {
+                            onboardingStep = .features
+                        }
+                    }
+                    
+                case .features:
+                    // Debug: Card-based welcome flow with app intro and terms acceptance
                     WelcomeFeaturesPage(
                         onboardingStep: $onboardingStep,
                         hasAcceptedTerms: $hasAcceptedTerms,
-                        // Pass down intro completion so Lottie can start after fade
+                        // Pass down intro completion so animations can sequence properly
                         introComplete: introComplete,
                         // Debug: TEMPORARY - Skip onboarding for development (DELETE BEFORE LAUNCH) ⚠️
                         onSkipAsFarmer: skipAsFarmerForDev,

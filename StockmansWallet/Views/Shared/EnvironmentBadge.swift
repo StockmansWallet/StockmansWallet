@@ -12,7 +12,7 @@ struct EnvironmentBadge: View {
     var body: some View {
         // Debug: Only show badge for non-production environments
         if Config.environment.shouldShowBadge {
-            Text(Config.environment.displayName)
+            Text(badgeText)
                 .font(.system(size: 11, weight: .bold, design: .rounded))
                 .foregroundStyle(.white)
                 .padding(.horizontal, 10)
@@ -29,6 +29,24 @@ struct EnvironmentBadge: View {
                 )
                 .shadow(color: .black.opacity(0.2), radius: 2, x: 0, y: 1)
         }
+    }
+    
+    // Debug: Badge text with version number from Info.plist
+    private var badgeText: String {
+        let envName = Config.environment.displayName
+        
+        // Get version from Info.plist automatically
+        if let version = appVersion {
+            return "\(envName) v\(version)"
+        }
+        
+        // Fallback if version not found
+        return envName
+    }
+    
+    // Debug: Read app version from Info.plist (CFBundleShortVersionString)
+    private var appVersion: String? {
+        return Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String
     }
     
     // Debug: Badge color based on environment type
