@@ -26,6 +26,11 @@ struct HerdDetailView: View {
     @State private var valuation: HerdValuation?
     @State private var isLoading = true
     
+    // Debug: Error types for herd detail loading
+    enum HerdDetailLoadError: Error, Equatable {
+        case timeout
+    }
+    
     // Debug: Sell functionality for this herd
     @State private var showingSellSheet = false
     
@@ -283,9 +288,51 @@ struct HerdDetailView: View {
         
         let prefs = preferences.first ?? UserPreferences()
         
+        // Debug: Wrap in do-catch with timeout for proper error handling (prevents skeleton loader from hanging)
+        do {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                // Add calculation task
+                group.addTask {
+                    try await self.performHerdValuationCalculation(herd: activeHerd, prefs: prefs)
+                }
+                
+                // Add timeout task (30 seconds - reasonable for slow networks)
+                group.addTask {
+                    try await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+                    throw HerdDetailLoadError.timeout
+                }
+                
+                // Wait for first task to complete (either calculation or timeout)
+                try await group.next()
+                
+                // Cancel remaining tasks
+                group.cancelAll()
+            }
+        } catch is CancellationError {
+            print("⚠️ HerdDetailView: Load cancelled by user navigation")
+            await MainActor.run {
+                self.isLoading = false
+            }
+        } catch let error as HerdDetailLoadError where error == .timeout {
+            print("⏱️ HerdDetailView: Load timed out after 30 seconds")
+            await MainActor.run {
+                self.isLoading = false
+            }
+            HapticManager.error()
+        } catch {
+            print("❌ HerdDetailView: Failed to load valuation - \(error.localizedDescription)")
+            await MainActor.run {
+                self.isLoading = false
+            }
+            HapticManager.error()
+        }
+    }
+    
+    // Debug: Extracted calculation logic for better error handling
+    private func performHerdValuationCalculation(herd: HerdGroup, prefs: UserPreferences) async throws {
         print("🔄 HerdDetailView: Calculating valuation...")
         let calculatedValuation = await valuationEngine.calculateHerdValue(
-            herd: activeHerd,
+            herd: herd,
             preferences: prefs,
             modelContext: modelContext
         )
@@ -297,7 +344,7 @@ struct HerdDetailView: View {
         
         // Debug: Load historical valuation data for chart
         print("📊 HerdDetailView: Loading historical valuation data...")
-        await loadHistoricalValuationData(herd: activeHerd, prefs: prefs)
+        await loadHistoricalValuationData(herd: herd, prefs: prefs)
     }
     
     // Debug: Load historical valuation data for a single herd (similar to dashboard but for one herd)

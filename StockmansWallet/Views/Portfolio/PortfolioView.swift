@@ -61,6 +61,11 @@ struct PortfolioView: View {
         case herds = "Herds"
     }
     
+    // Debug: Error types for portfolio loading
+    enum PortfolioLoadError: Error, Equatable {
+        case timeout
+    }
+    
     var body: some View {
         ZStack {
             portfolioContent
@@ -341,6 +346,67 @@ struct PortfolioView: View {
         // Debug: Get user preferences for ValuationEngine
         let prefs = preferences.first ?? UserPreferences()
         
+        // Debug: Wrap in do-catch with timeout for proper error handling (prevents skeleton loader from hanging)
+        // Timeout ensures UI always recovers even if network hangs indefinitely
+        do {
+            try await withThrowingTaskGroup(of: Void.self) { group in
+                // Add calculation task
+                group.addTask {
+                    try await self.performPortfolioCalculations(activeHerds: activeHerds, prefs: prefs)
+                }
+                
+                // Add timeout task (30 seconds - reasonable for slow networks)
+                group.addTask {
+                    try await Task.sleep(nanoseconds: 30_000_000_000) // 30 seconds
+                    throw PortfolioLoadError.timeout
+                }
+                
+                // Wait for first task to complete (either calculation or timeout)
+                try await group.next()
+                
+                // Cancel remaining tasks
+                group.cancelAll()
+            }
+        } catch is CancellationError {
+            #if DEBUG
+            print("⚠️ Portfolio: Load cancelled by user navigation")
+            #endif
+            
+            // Debug: Set isLoading = false on cancellation
+            await MainActor.run {
+                self.isLoading = false
+            }
+        } catch let error as PortfolioLoadError where error == .timeout {
+            #if DEBUG
+            print("⏱️ Portfolio: Load timed out after 30 seconds - showing cached data if available")
+            #endif
+            
+            // Debug: Always set isLoading = false on timeout (prevents infinite skeleton loader)
+            await MainActor.run {
+                self.isLoading = false
+            }
+            
+            // Debug: If we have cached data, keep showing it (graceful degradation)
+            // Otherwise, the skeleton will be hidden and the view will show empty state
+            HapticManager.error()
+        } catch {
+            #if DEBUG
+            print("❌ Portfolio: Failed to load valuations - \(error.localizedDescription)")
+            #endif
+            
+            // Debug: Always set isLoading = false, even on error (prevents infinite skeleton loader)
+            await MainActor.run {
+                self.isLoading = false
+            }
+            
+            // Debug: If we have cached data, keep showing it (graceful degradation)
+            // Otherwise, the skeleton will be hidden and the view will show empty state
+            HapticManager.error()
+        }
+    }
+    
+    // Debug: Extracted calculation logic for better error handling
+    private func performPortfolioCalculations(activeHerds: [HerdGroup], prefs: UserPreferences) async throws {
         // Debug: BATCH PREFETCH - Fetch ALL prices in ONE API call before calculations
         // This reduces hundreds of individual API calls to just ONE
         await valuationEngine.prefetchPricesForHerds(activeHerds)
