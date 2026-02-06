@@ -167,7 +167,7 @@ struct HerdDetailView: View {
                         .padding(.horizontal)
                         
                         // Debug: Consolidated herd details - all key info in one card
-                        HerdDetailsCard(herd: activeHerd, valuation: valuation)
+                        HerdDetailsCard(herd: activeHerd, valuation: valuation, allHerds: allHerds)
                             .padding(.horizontal)
                         
                         // Debug: Breeding info only if applicable - shown before other records
@@ -760,6 +760,33 @@ struct PrimaryMetricsCard: View {
 struct HerdDetailsCard: View {
     let herd: HerdGroup
     let valuation: HerdValuation?
+    let allHerds: [HerdGroup] // Debug: Needed to find offspring for weight calculations
+    
+    // Debug: Computed property to find all offspring of this herd
+    private var offspring: [HerdGroup] {
+        allHerds.filter { calf in
+            guard let notes = calf.notes else { return false }
+            return notes.contains("Auto-generated from \(herd.displayName)") || 
+                   notes.contains("Converted from manual 'calves at foot' entry on \(herd.displayName)")
+        }
+    }
+    
+    // Debug: Computed property for parent herd weight gain
+    private var parentWeightGain: Double {
+        herd.dailyWeightGain * Double(herd.daysHeld) * Double(herd.headCount)
+    }
+    
+    // Debug: Computed property for offspring weight gain
+    private var offspringWeightGain: Double {
+        offspring.reduce(0.0) { total, calf in
+            total + (calf.dailyWeightGain * Double(calf.daysHeld) * Double(calf.headCount))
+        }
+    }
+    
+    // Debug: Computed property for total weight gained (parent + offspring)
+    private var totalWeightGained: Double {
+        parentWeightGain + offspringWeightGain
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -823,6 +850,23 @@ struct HerdDetailsCard: View {
                 SectionHeader(title: "Weight Tracking")
                 DetailRow(label: "Initial Weight", value: "\(Int(herd.initialWeight)) kg")
                 DetailRow(label: "Daily Weight Gain", value: String(format: "%.2f kg/day", herd.dailyWeightGain))
+                
+                // Debug: Display total accumulated weight gain for entire herd including offspring
+                DetailRow(label: "Total Weight Gained", value: String(format: "%.0f kg", totalWeightGained))
+                
+                // Debug: Show breakdown if there are offspring
+                if !offspring.isEmpty {
+                    let totalOffspringHead = offspring.reduce(0) { $0 + $1.headCount }
+                    HStack(alignment: .top) {
+                        Text("  (incl. \(totalOffspringHead) offspring)")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                        Spacer()
+                        Text(String(format: "+%.0f kg", offspringWeightGain))
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                }
             }
             
             Divider()

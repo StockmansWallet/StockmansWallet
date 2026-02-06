@@ -384,8 +384,7 @@ class MockDataGenerator {
     /// Generate a single random herd with realistic properties
     /// Debug: Creates varied herds with appropriate attributes for Australian farming
     private func generateRandomHerd(createdAt: Date) -> HerdGroup {
-        // Debug: Randomly select species (70% cattle, 25% sheep, 5% pigs)
-        let random = Double.random(in: 0...1)
+        // Debug: Only generate Cattle (100%) - other species not supported yet
         let species: String
         let breed: String
         let category: String
@@ -394,96 +393,37 @@ class MockDataGenerator {
         let dwg: Double
         let isBreeder: Bool
         
-        if random < 0.70 {
-            // Debug: Cattle - most common in Australian grazing
-            species = "Cattle"
-            breed = ReferenceData.cattleBreeds.randomElement() ?? "Angus"
-            
-            // Debug: Select realistic cattle category
-            let categoryOptions = ReferenceData.cattleCategories
-            category = categoryOptions.randomElement() ?? "Weaner Steer"
-            
-            // Debug: Determine if this is a breeding herd
-            isBreeder = category.contains("Breeder") || category.contains("Cow")
-            
-            // Debug: Realistic head count for cattle with wider variation for more fluctuation
-            headCount = isBreeder ? Int.random(in: 3...35) : Int.random(in: 5...60)
-            
-            // Debug: Realistic cattle weights (kg) based on category with wider variation
-            if category.contains("Weaner") {
-                weight = Double.random(in: 180...300)
-                dwg = Double.random(in: 0.5...1.1)
-            } else if category.contains("Yearling") {
-                weight = Double.random(in: 260...400)
-                dwg = Double.random(in: 0.7...1.3)
-            } else if category.contains("Breeder") || category.contains("Cow") {
-                weight = Double.random(in: 420...620)
-                dwg = 0.0 // Breeders typically don't have weight gain tracking
-            } else if category.contains("Calves") {
-                weight = Double.random(in: 140...230)
-                dwg = Double.random(in: 0.6...1.2)
-            } else {
-                // Debug: Grown/Feeder cattle
-                weight = Double.random(in: 330...520)
-                dwg = Double.random(in: 0.6...1.4)
-            }
-            
-        } else if random < 0.95 {
-            // Debug: Sheep - common in Australian agriculture
-            species = "Sheep"
-            breed = ReferenceData.sheepBreeds.randomElement() ?? "Merino"
-            
-            let categoryOptions = ReferenceData.sheepCategories
-            category = categoryOptions.randomElement() ?? "Weaner Lamb"
-            
-            isBreeder = category.contains("Breeder") || category.contains("Ewe")
-            
-            // Debug: Realistic head count for sheep with wider variation (larger flocks)
-            headCount = isBreeder ? Int.random(in: 15...120) : Int.random(in: 25...180)
-            
-            // Debug: Realistic sheep weights (kg) based on category with wider variation
-            if category.contains("Lamb") || category.contains("Weaner") {
-                weight = Double.random(in: 22...48)
-                dwg = Double.random(in: 0.12...0.35)
-            } else if category.contains("Breeder") || category.contains("Ewe") {
-                weight = Double.random(in: 50...80)
-                dwg = 0.0 // Breeders typically don't have weight gain tracking
-            } else {
-                // Debug: Feeder/Slaughter sheep
-                weight = Double.random(in: 38...68)
-                dwg = Double.random(in: 0.18...0.38)
-            }
-            
+        // Debug: Cattle only - most common in Australian grazing
+        species = "Cattle"
+        breed = ReferenceData.cattleBreeds.randomElement() ?? "Angus"
+        
+        // Debug: Select realistic cattle category
+        let categoryOptions = ReferenceData.cattleCategories
+        category = categoryOptions.randomElement() ?? "Weaner Steer"
+        
+        // Debug: Determine if this is a breeding herd
+        isBreeder = category.contains("Breeder") || category.contains("Cow")
+        
+        // Debug: Realistic head count for cattle with wider variation for more fluctuation
+        headCount = isBreeder ? Int.random(in: 3...35) : Int.random(in: 5...60)
+        
+        // Debug: Realistic cattle weights (kg) based on category with wider variation
+        if category.contains("Weaner") {
+            weight = Double.random(in: 180...300)
+            dwg = Double.random(in: 0.5...1.1)
+        } else if category.contains("Yearling") {
+            weight = Double.random(in: 260...400)
+            dwg = Double.random(in: 0.7...1.3)
+        } else if category.contains("Breeder") || category.contains("Cow") {
+            weight = Double.random(in: 420...620)
+            dwg = 0.0 // Breeders typically don't have weight gain tracking
+        } else if category.contains("Calves") {
+            weight = Double.random(in: 140...230)
+            dwg = Double.random(in: 0.6...1.2)
         } else {
-            // Debug: Pigs - less common but included for variety
-            species = "Pig"
-            breed = ReferenceData.pigBreeds.randomElement() ?? "Large White"
-            
-            let categoryOptions = ReferenceData.pigCategories
-            category = categoryOptions.randomElement() ?? "Grower Pig"
-            
-            isBreeder = category.contains("Breeder") || category.contains("Sow")
-            
-            // Debug: Realistic head count for pigs with variation
-            headCount = isBreeder ? Int.random(in: 3...18) : Int.random(in: 8...45)
-            
-            // Debug: Realistic pig weights (kg) based on category with wider variation
-            if category.contains("Weaner") {
-                weight = Double.random(in: 12...28)
-                dwg = Double.random(in: 0.35...0.65)
-            } else if category.contains("Grower") {
-                weight = Double.random(in: 28...65)
-                dwg = Double.random(in: 0.55...0.95)
-            } else if category.contains("Finisher") || category.contains("Baconer") {
-                weight = Double.random(in: 55...105)
-                dwg = Double.random(in: 0.65...1.05)
-            } else if category.contains("Breeder") || category.contains("Sow") {
-                weight = Double.random(in: 140...260)
-                dwg = 0.0
-            } else {
-                weight = Double.random(in: 45...95)
-                dwg = Double.random(in: 0.45...0.85)
-            }
+            // Debug: Grown/Feeder cattle
+            weight = Double.random(in: 330...520)
+            dwg = Double.random(in: 0.6...1.4)
         }
         
         // Debug: Generate realistic paddock names
