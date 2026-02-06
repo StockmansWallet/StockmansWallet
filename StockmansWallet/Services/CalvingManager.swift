@@ -2,8 +2,8 @@
 //  CalvingManager.swift
 //  StockmansWallet
 //
-//  Automatic calf generation service for breeding herds
-//  Debug: Monitors pregnant herds and auto-creates calf records after gestation completes
+//  DEPRECATED: Automatic calf generation service (no longer creates separate HerdGroups)
+//  Debug: Calf value is now calculated within breeding herd valuation (see ValuationEngine.calculateHerdValue)
 //
 
 import Foundation
@@ -40,10 +40,12 @@ class CalvingManager {
     private init() {}
     
     // MARK: - Main Processing Function
-    /// Checks all breeding herds and auto-generates calves for those past gestation
-    /// Debug: Should be called when portfolio loads or when viewing breeding herds
+    /// DEPRECATED: No longer creates separate calf HerdGroups
+    /// Debug: Calf value is now calculated within breeding herd's breedingAccrual (see ValuationEngine)
     @MainActor
     func processCalvingEvents(herds: [HerdGroup], modelContext: ModelContext) async {
+        // Debug: Disabled - calves are now included in parent herd valuation
+        return
         var calvesGenerated = 0
         
         for herd in herds {
@@ -103,10 +105,12 @@ class CalvingManager {
     }
     
     // MARK: - Manual Calves at Foot Conversion
-    /// Converts manual "calves at foot" text entries into real HerdGroup entities
-    /// Debug: Processes all herds with "Calves at Foot" in additionalInfo and creates actual calf records
+    /// DEPRECATED: No longer creates separate calf HerdGroups
+    /// Debug: Calves at foot are now displayed in BreedingDetailsCard and included in parent herd valuation
     @MainActor
     func processManualCalvesAtFoot(herds: [HerdGroup], modelContext: ModelContext) async {
+        // Debug: Disabled - calves at foot are now part of parent herd valuation
+        return
         var calvesGenerated = 0
         
         for herd in herds {
@@ -156,7 +160,8 @@ class CalvingManager {
     }
     
     // MARK: - Calf Generation
-    /// Generates individual calf records for a breeding herd
+    /// Generates a grouped calf herd for a breeding herd
+    /// Debug: Creates one HerdGroup entity with headCount = total progeny (efficient for portfolio management)
     private func generateCalves(
         from motherHerd: HerdGroup,
         calvingDate: Date,
@@ -182,42 +187,49 @@ class CalvingManager {
         // Debug: Determine calf category based on species
         let calfCategory = getCalfCategory(for: motherHerd.species)
         
+        // Debug: Format year for calf group name
+        let yearFormatter = DateFormatter()
+        yearFormatter.dateFormat = "yyyy"
+        let calvingYear = yearFormatter.string(from: calvingDate)
+        
         #if DEBUG
         print("   Expected progeny: \(expectedProgeny)")
         print("   Birth weight: \(String(format: "%.1f", birthWeight)) kg")
         print("   Daily weight gain: \(dwg) kg/day")
+        print("   Creating grouped calf herd with \(expectedProgeny) head")
         #endif
         
-        // Debug: Generate individual calf records
-        for i in 1...expectedProgeny {
-            let calf = HerdGroup(
-                name: "Calf \(i) from \(motherHerd.name)",
-                species: motherHerd.species,
-                breed: motherHerd.breed,
-                sex: "Mixed", // Could randomize M/F if needed
-                category: calfCategory,
-                ageMonths: 0, // Newborn
-                headCount: 1,
-                initialWeight: birthWeight,
-                dailyWeightGain: dwg,
-                isBreeder: false,
-                selectedSaleyard: motherHerd.selectedSaleyard
-            )
-            
-            // Debug: Set creation date to calving date (not today)
-            calf.createdAt = calvingDate
-            calf.updatedAt = Date()
-            
-            // Debug: Copy location from mother
-            calf.paddockName = motherHerd.paddockName
-            calf.locationLatitude = motherHerd.locationLatitude
-            calf.locationLongitude = motherHerd.locationLongitude
-            
-            // Debug: Add note about origin
-            calf.notes = "Auto-generated from \(motherHerd.displayName) on \(calvingDate.formatted(date: .abbreviated, time: .omitted))"
-            
-            modelContext.insert(calf)
-        }
+        // Debug: Generate one grouped calf herd (efficient for commercial operations)
+        let calfHerd = HerdGroup(
+            name: "\(calvingYear) \(calfCategory) from \(motherHerd.name)",
+            species: motherHerd.species,
+            breed: motherHerd.breed,
+            sex: "Mixed", // Mixed sex for commercial calves
+            category: calfCategory,
+            ageMonths: 0, // Newborn
+            headCount: expectedProgeny, // Group all calves together
+            initialWeight: birthWeight,
+            dailyWeightGain: dwg,
+            isBreeder: false,
+            selectedSaleyard: motherHerd.selectedSaleyard
+        )
+        
+        // Debug: Set creation date to calving date (not today)
+        calfHerd.createdAt = calvingDate
+        calfHerd.updatedAt = Date()
+        
+        // Debug: DEPRECATED - parentHerdId no longer used (calves not created as separate HerdGroups)
+        // calfHerd.parentHerdId = motherHerd.id
+        
+        // Debug: Copy location from mother
+        calfHerd.paddockName = motherHerd.paddockName
+        calfHerd.locationLatitude = motherHerd.locationLatitude
+        calfHerd.locationLongitude = motherHerd.locationLongitude
+        
+        // Debug: Add note about origin
+        calfHerd.notes = "Auto-generated from \(motherHerd.displayName) on \(calvingDate.formatted(date: .abbreviated, time: .omitted))"
+        
+        modelContext.insert(calfHerd)
         
         return expectedProgeny
     }
@@ -290,8 +302,8 @@ class CalvingManager {
         return (count, age, averageWeight)
     }
     
-    /// Generates individual calf records from manual "calves at foot" data
-    /// Debug: Creates real HerdGroup entities with proper DWG and backdated creation dates
+    /// Generates a grouped calf herd from manual "calves at foot" data
+    /// Debug: Creates one HerdGroup entity with proper DWG and backdated creation date
     private func generateManualCalves(
         from motherHerd: HerdGroup,
         calvesData: (headCount: Int, ageMonths: Int, averageWeight: Double?),
@@ -301,6 +313,10 @@ class CalvingManager {
         let ageMonths = calvesData.ageMonths
         let averageWeight = calvesData.averageWeight
         
+        guard headCount > 0 else {
+            return 0
+        }
+        
         // Debug: Get appropriate daily weight gain for species
         let dwg = defaultDailyWeightGain[motherHerd.species] ?? 0.9
         
@@ -309,6 +325,11 @@ class CalvingManager {
         
         // Debug: Calculate birth date based on age (backdate creation)
         let birthDate = Calendar.current.date(byAdding: .month, value: -ageMonths, to: Date()) ?? Date()
+        
+        // Debug: Format year for calf group name
+        let yearFormatter = DateFormatter()
+        yearFormatter.dateFormat = "yyyy"
+        let birthYear = yearFormatter.string(from: birthDate)
         
         // Debug: Calculate initial weight at birth
         let birthWeightRatio = birthWeightRatio[motherHerd.species] ?? 0.07
@@ -328,38 +349,40 @@ class CalvingManager {
         print("   Birth weight: \(String(format: "%.1f", calculatedBirthWeight)) kg")
         print("   Daily weight gain: \(dwg) kg/day")
         print("   Birth date (backdated): \(birthDate.formatted(date: .abbreviated, time: .omitted))")
+        print("   Creating grouped calf herd with \(headCount) head")
         #endif
         
-        // Debug: Generate individual calf records
-        for i in 1...headCount {
-            let calf = HerdGroup(
-                name: "Calf \(i) from \(motherHerd.name)",
-                species: motherHerd.species,
-                breed: motherHerd.breed,
-                sex: "Mixed",
-                category: calfCategory,
-                ageMonths: ageMonths,
-                headCount: 1,
-                initialWeight: calculatedBirthWeight,
-                dailyWeightGain: dwg,
-                isBreeder: false,
-                selectedSaleyard: motherHerd.selectedSaleyard
-            )
-            
-            // Debug: Set creation date to birth date (backdate for accurate weight tracking)
-            calf.createdAt = birthDate
-            calf.updatedAt = Date()
-            
-            // Debug: Copy location from mother
-            calf.paddockName = motherHerd.paddockName
-            calf.locationLatitude = motherHerd.locationLatitude
-            calf.locationLongitude = motherHerd.locationLongitude
-            
-            // Debug: Add note about origin
-            calf.notes = "Converted from manual 'calves at foot' entry on \(motherHerd.displayName)"
-            
-            modelContext.insert(calf)
-        }
+        // Debug: Generate one grouped calf herd (efficient for commercial operations)
+        let calfHerd = HerdGroup(
+            name: "\(birthYear) \(calfCategory) from \(motherHerd.name)",
+            species: motherHerd.species,
+            breed: motherHerd.breed,
+            sex: "Mixed",
+            category: calfCategory,
+            ageMonths: ageMonths,
+            headCount: headCount, // Group all calves together
+            initialWeight: calculatedBirthWeight,
+            dailyWeightGain: dwg,
+            isBreeder: false,
+            selectedSaleyard: motherHerd.selectedSaleyard
+        )
+        
+        // Debug: Set creation date to birth date (backdate for accurate weight tracking)
+        calfHerd.createdAt = birthDate
+        calfHerd.updatedAt = Date()
+        
+        // Debug: DEPRECATED - parentHerdId no longer used (calves not created as separate HerdGroups)
+        // calfHerd.parentHerdId = motherHerd.id
+        
+        // Debug: Copy location from mother
+        calfHerd.paddockName = motherHerd.paddockName
+        calfHerd.locationLatitude = motherHerd.locationLatitude
+        calfHerd.locationLongitude = motherHerd.locationLongitude
+        
+        // Debug: Add note about origin
+        calfHerd.notes = "Converted from manual 'calves at foot' entry on \(motherHerd.displayName)"
+        
+        modelContext.insert(calfHerd)
         
         return headCount
     }

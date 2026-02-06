@@ -288,7 +288,9 @@ struct DemoDataView: View {
                 HapticManager.success()
                 successMessage = "Generated \(selectedDuration.herdCount) mock herds over \(selectedDuration.rawValue.lowercased())"
                 showSuccessMessage = true
-                hasMockData = true
+                
+                // Debug: Re-check data state to update button visibility
+                checkForExistingData()
                 
                 // Debug: Hide success message after 3 seconds
                 try? await Task.sleep(for: .seconds(3))
@@ -330,7 +332,9 @@ struct DemoDataView: View {
                 HapticManager.success()
                 successMessage = "All mock data removed successfully"
                 showSuccessMessage = true
-                hasMockData = false
+                
+                // Debug: Re-check data state to update button visibility
+                checkForExistingData()
                 
                 // Debug: Hide success message after 3 seconds
                 try? await Task.sleep(for: .seconds(3))
@@ -372,8 +376,9 @@ struct DemoDataView: View {
                 HapticManager.success()
                 successMessage = "All data has been reset successfully"
                 showSuccessMessage = true
-                hasMockData = false
-                hasUserData = false
+                
+                // Debug: Re-check data state to update button visibility
+                checkForExistingData()
                 
                 // Debug: Post notification that data was cleared (for other views to refresh)
                 NotificationCenter.default.post(name: .dataCleared, object: nil)

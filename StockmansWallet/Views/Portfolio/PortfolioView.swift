@@ -15,8 +15,7 @@ struct PortfolioView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
     
-    // Debug: Use @Query with stable sort to get automatic SwiftData updates without manual fetching
-    // This prevents navigation toolbar blur by removing async fetching during transitions
+    // Debug: Query all herds (no need to filter - calves are valued within breeding herds)
     @Query(sort: \HerdGroup.updatedAt, order: .reverse) private var allHerds: [HerdGroup]
     
     // Debug: Use 'let' with @Observable instead of @StateObject
@@ -247,7 +246,7 @@ struct PortfolioView: View {
     }
     
     // MARK: - Herds Content
-    // Debug: Display only herds (headCount > 1)
+    // Debug: Display all active herds including calf groups
     // Debug: Progressive loader shows skeleton cards while data loads
     private var herdsContent: some View {
         Group {
@@ -290,7 +289,7 @@ struct PortfolioView: View {
     // MARK: - Update Filtered Caches
     // Performance: Update cached filtered results only when search text or herds change
     private func updateFilteredCaches() {
-        // Debug: Filter herds only (no individual animals)
+        // Debug: Filter active herds (exclude sold stock)
         let herdsOnly = allHerds.filter { !$0.isSold }
         if herdsSearchText.isEmpty {
             cachedFilteredHerds = herdsOnly
@@ -324,13 +323,15 @@ struct PortfolioView: View {
             }
         }
         
-        // Debug: STEP 1 - Check for calving events and auto-generate calves
-        // This must happen BEFORE filtering active herds so new calves are included
+        // Debug: CalvingManager is now deprecated - calf value calculated within breeding herd valuation
+        // No need to generate separate calf HerdGroups anymore
         await CalvingManager.shared.processCalvingEvents(herds: allHerds, modelContext: modelContext)
-        
-        // Debug: STEP 2 - Convert manual "calves at foot" text entries to real HerdGroup entities
-        // This ensures all calves (auto and manual) are tracked with proper DWG (0.9 kg/day for cattle)
         await CalvingManager.shared.processManualCalvesAtFoot(herds: allHerds, modelContext: modelContext)
+        
+        // Debug: Update filtered caches
+        await MainActor.run {
+            updateFilteredCaches()
+        }
         
         // Debug: Calculate valuations for all herds
         let activeHerds = allHerds.filter { !$0.isSold }

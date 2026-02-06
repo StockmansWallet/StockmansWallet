@@ -249,18 +249,38 @@ class MockDataGenerator {
             }
         )
         
-        // Debug: Check for properties
-        let propertyDescriptor = FetchDescriptor<Property>()
+        // Debug: Check for non-simulated properties (exclude demo/test properties)
+        let propertyDescriptor = FetchDescriptor<Property>(
+            predicate: #Predicate<Property> { property in
+                property.isSimulated == false
+            }
+        )
         
-        // Debug: Check for sales records
-        let salesDescriptor = FetchDescriptor<SalesRecord>()
-        
+        // Debug: Check for sales records from non-mock herds only
+        // First get all non-mock herd IDs, then check if any sales exist for them
         do {
             let herdCount = try modelContext.fetchCount(herdDescriptor)
             let propertyCount = try modelContext.fetchCount(propertyDescriptor)
-            let salesCount = try modelContext.fetchCount(salesDescriptor)
             
-            return herdCount > 0 || propertyCount > 0 || salesCount > 0
+            // Debug: For sales, we need to check if they're from non-mock herds
+            // Get all non-mock herd IDs
+            let nonMockHerds = try modelContext.fetch(herdDescriptor)
+            let nonMockHerdIds = Set(nonMockHerds.map { $0.id })
+            
+            // Check if any sales records exist for non-mock herds
+            let allSalesDescriptor = FetchDescriptor<SalesRecord>()
+            let allSales = try modelContext.fetch(allSalesDescriptor)
+            let userSalesCount = allSales.filter { nonMockHerdIds.contains($0.herdGroupId) }.count
+            
+            #if DEBUG
+            print("🔍 hasUserData check:")
+            print("   Non-mock herds: \(herdCount)")
+            print("   Non-simulated properties: \(propertyCount)")
+            print("   Sales from non-mock herds: \(userSalesCount)")
+            print("   Result: \(herdCount > 0 || propertyCount > 0 || userSalesCount > 0)")
+            #endif
+            
+            return herdCount > 0 || propertyCount > 0 || userSalesCount > 0
         } catch {
             #if DEBUG
             print("⚠️ Error checking for user data: \(error)")

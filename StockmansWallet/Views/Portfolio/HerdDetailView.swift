@@ -172,7 +172,7 @@ struct HerdDetailView: View {
                         
                         // Debug: Breeding info only if applicable - shown before other records
                         if activeHerd.isBreeder {
-                            BreedingDetailsCard(herd: activeHerd)
+                            BreedingDetailsCard(herd: activeHerd, valuation: valuation)
                                 .padding(.horizontal)
                         }
                         
@@ -954,6 +954,7 @@ struct DetailRow: View {
 // Debug: Breeding information only shown when herd.isBreeder is true
 struct BreedingDetailsCard: View {
     let herd: HerdGroup
+    let valuation: HerdValuation?
     
     // Debug: Get breeding program information from dedicated fields
     private var breedingProgramInfo: (type: String?, startDate: Date?, endDate: Date?) {
@@ -1012,7 +1013,7 @@ struct BreedingDetailsCard: View {
                 ZStack {
                     Circle()
                         .fill(Theme.dashboardIconBackground)
-                    Image(systemName: "heart.circle.fill")
+                    Image(systemName: "figure.2.and.child.holdinghands")
                         .font(.system(size: 14, weight: .semibold))
                         .foregroundStyle(Theme.sectionClay)
                 }
@@ -1067,6 +1068,37 @@ struct BreedingDetailsCard: View {
                 // Debug: Show calves at foot information if available
                 if let calvesInfo = calvesAtFootInfo {
                     DetailRow(label: "Calves at Foot", value: calvesInfo)
+                }
+                
+                // Debug: Show breeding accrual value (includes both unborn progeny + calves at foot)
+                if let valuation = valuation, valuation.breedingAccrual > 0 {
+                    Divider()
+                        .background(Theme.separator.opacity(0.3))
+                        .padding(.vertical, 8)
+                    
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Calf Value Contribution")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .textCase(.uppercase)
+                            .tracking(0.5)
+                        
+                        HStack {
+                            Text("Included in Herd Value:")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.primaryText)
+                            Spacer()
+                            Text(valuation.breedingAccrual.formatted(.currency(code: "AUD").precision(.fractionLength(0))))
+                                .font(Theme.body)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(Theme.successLight)
+                        }
+                        
+                        Text("Calves at foot and unborn progeny contribute to overall herd value")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
                 }
             }
             
@@ -1818,3 +1850,6 @@ struct MultipleSaleyardSelectionSheet: View {
         .presentationBackground(Theme.tertiaryBackground)
     }
 }
+
+// MARK: - Calves Card
+// Debug: Display calf groups generated from this breeding herd

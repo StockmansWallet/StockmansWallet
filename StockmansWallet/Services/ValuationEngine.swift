@@ -542,7 +542,10 @@ class ValuationEngine {
         let physicalValue = Double(herd.headCount) * projectedWeight * pricePerKg
         
         // 4. Calculate breeding accrual if applicable
+        // Debug: Includes both (a) accrued value of unborn progeny and (b) full value of calves at foot
         var breedingAccrual: Double = 0.0
+        
+        // (a) Accrued value of unborn progeny (if pregnant)
         if herd.isPregnant, let joinedDate = herd.joinedDate {
             let daysElapsed = Calendar.current.dateComponents([.day], from: joinedDate, to: asOfDate).day ?? 0
             
@@ -571,6 +574,18 @@ class ValuationEngine {
                 cycleLength: cycleLength,
                 valueCalf: calfValue
             )
+        }
+        
+        // (b) Full value of calves at foot (already born, living with mothers)
+        // Debug: Calves at foot sell with mothers and contribute to overall herd value
+        if let calvesAtFootData = parseCalvesAtFootData(from: herd.additionalInfo) {
+            let calfValue = calculateCalfAtFootValue(
+                calvesData: calvesAtFootData,
+                motherWeight: projectedWeight,
+                species: herd.species,
+                pricePerKg: pricePerKg
+            )
+            breedingAccrual += calfValue
         }
         
         // 5. Calculate gross value
@@ -908,6 +923,77 @@ class ValuationEngine {
             return 4.13
         }
         return 3.30 // Grown Steer base price (default)
+    }
+    
+    // MARK: - Calves At Foot Helpers
+    
+    /// Parses calves at foot data from additionalInfo string
+    /// Debug: Extracts head count, age in months, and optional average weight
+    private func parseCalvesAtFootData(from additionalInfo: String?) -> (headCount: Int, ageMonths: Int, averageWeight: Double?)? {
+        guard let additionalInfo = additionalInfo else { return nil }
+        
+        // Look for pattern: "Calves at Foot: X head, Y months" or "Calves at Foot: X head, Y months, Z kg"
+        guard let range = additionalInfo.range(of: "Calves at Foot: ([^|\\n]+)", options: .regularExpression) else {
+            return nil
+        }
+        
+        let calvesInfo = String(additionalInfo[range])
+        let parts = calvesInfo.replacingOccurrences(of: "Calves at Foot: ", with: "").components(separatedBy: ", ")
+        
+        var headCount: Int? = nil
+        var ageMonths: Int? = nil
+        var averageWeight: Double? = nil
+        
+        for part in parts {
+            if part.contains("head") {
+                headCount = Int(part.replacingOccurrences(of: " head", with: "").trimmingCharacters(in: .whitespaces))
+            } else if part.contains("months") {
+                ageMonths = Int(part.replacingOccurrences(of: " months", with: "").trimmingCharacters(in: .whitespaces))
+            } else if part.contains("kg") {
+                averageWeight = Double(part.replacingOccurrences(of: " kg", with: "").trimmingCharacters(in: .whitespaces))
+            }
+        }
+        
+        guard let count = headCount, count > 0, let age = ageMonths else {
+            return nil
+        }
+        
+        return (count, age, averageWeight)
+    }
+    
+    /// Calculates the full market value of calves at foot
+    /// Debug: Calves at foot are already born and living with mothers, so they have full market value
+    private func calculateCalfAtFootValue(
+        calvesData: (headCount: Int, ageMonths: Int, averageWeight: Double?),
+        motherWeight: Double,
+        species: String,
+        pricePerKg: Double
+    ) -> Double {
+        let headCount = calvesData.headCount
+        let ageMonths = calvesData.ageMonths
+        
+        // Debug: Calculate current calf weight
+        let currentCalfWeight: Double
+        if let userWeight = calvesData.averageWeight {
+            // User provided average weight - use it
+            currentCalfWeight = userWeight
+        } else {
+            // Estimate based on age and growth rate
+            let birthWeightRatio = species == "Cattle" ? 0.07 : 0.08
+            let birthWeight = motherWeight * birthWeightRatio
+            let dwg = species == "Cattle" ? 0.9 : 0.25 // Daily weight gain
+            let daysOld = Double(ageMonths) * 30.0
+            currentCalfWeight = birthWeight + (dwg * daysOld)
+        }
+        
+        // Debug: Calculate total value (head count × weight × price)
+        let totalValue = Double(headCount) * currentCalfWeight * pricePerKg
+        
+        #if DEBUG
+        print("🐄 ValuationEngine: Calves at foot value = \(headCount) head × \(String(format: "%.1f", currentCalfWeight)) kg × $\(String(format: "%.2f", pricePerKg))/kg = $\(String(format: "%.2f", totalValue))")
+        #endif
+        
+        return totalValue
     }
 }
 

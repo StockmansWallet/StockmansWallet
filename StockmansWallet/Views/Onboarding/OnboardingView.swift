@@ -274,7 +274,8 @@ struct OnboardingView: View {
                 propertyName: "Test Farm",
                 propertyPIC: "QTEST1234",
                 state: "QLD",
-                isDefault: true
+                isDefault: true,
+                isSimulated: true // Debug: Mark as simulated so it doesn't trigger "Reset All Data" button
             )
             testProperty.address = "123 Test Road, Test Valley"
             modelContext.insert(testProperty)

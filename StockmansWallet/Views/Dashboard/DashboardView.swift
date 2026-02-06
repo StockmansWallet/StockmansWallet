@@ -14,8 +14,8 @@ import UniformTypeIdentifiers
 
 struct DashboardView: View {
     @Environment(\.modelContext) private var modelContext
-    // Performance: Only query herds (headCount > 1), not individual animals
-    @Query(filter: #Predicate<HerdGroup> { $0.headCount > 1 }) private var herds: [HerdGroup]
+    // Debug: Query all herds (no need to filter - calves are valued within breeding herds)
+    @Query private var herds: [HerdGroup]
     @Query private var preferences: [UserPreferences]
     
     // Debug: Use 'let' with @Observable instead of @StateObject (modern pattern)
@@ -288,6 +288,7 @@ struct DashboardView: View {
     @ViewBuilder
     private var mainContent: some View {
         Group {
+            // Debug: Filter out sold herds (calf groups already excluded via @Query predicate)
             let activeHerds = herds.filter { !$0.isSold }
             
             // Debug: Handle empty, error, and loaded states
@@ -955,6 +956,7 @@ struct DashboardView: View {
         // Debug: Fetch preferences and active herds
         let prefs = preferences.first ?? UserPreferences()
         let currentHerds = herds
+        // Debug: Filter out sold herds (calf groups already excluded via @Query predicate)
         let activeHerds = currentHerds.filter { !$0.isSold }
         
         // Debug: Early return if no active herds
