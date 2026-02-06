@@ -1,32 +1,69 @@
 {
   "fill" : {
-    "solid" : "srgb:0.15294,0.12157,0.08627,1.00000"
+    "linear-gradient" : [
+      "srgb:0.15294,0.12157,0.08627,1.00000",
+      "display-p3:0.22453,0.19555,0.15862,1.00000"
+    ],
+    "orientation" : {
+      "start" : {
+        "x" : 0.5,
+        "y" : 0
+      },
+      "stop" : {
+        "x" : 0.5,
+        "y" : 0.7
+      }
+    }
   },
   "groups" : [
     {
       "layers" : [
+
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "specular" : false,
+      "translucency" : {
+        "enabled" : false,
+        "value" : 0.5
+      }
+    },
+    {
+      "layers" : [
         {
-          "blend-mode" : "normal",
-          "fill" : {
-            "solid" : "srgb:0.81569,0.45098,0.12941,1.00000"
-          },
+          "image-name" : "3.3 – layer.svg",
+          "name" : "3.3 – layer"
+        },
+        {
           "glass" : false,
-          "hidden" : false,
-          "image-name" : "3.2 – layer.svg",
-          "name" : "3.2 – layer",
-          "opacity" : 0.63,
-          "position" : {
-            "scale" : 0.97,
-            "translation-in-points" : [
-              0,
-              -9.869864584288734e-06
-            ]
-          }
+          "image-name" : "2.1 – layer 4.svg",
+          "name" : "2.1 – layer 4"
+        },
+        {
+          "fill" : {
+            "linear-gradient" : [
+              "display-p3:0.34058,0.31345,0.27929,0.57965",
+              "srgb:0.00000,0.00000,0.00000,1.00000"
+            ],
+            "orientation" : {
+              "start" : {
+                "x" : 0.5,
+                "y" : 0
+              },
+              "stop" : {
+                "x" : 0.5,
+                "y" : 0.7
+              }
+            }
+          },
+          "image-name" : "1.background 4.svg",
+          "name" : "1.background 4"
         }
       ],
-      "lighting" : "combined",
       "shadow" : {
-        "kind" : "none",
+        "kind" : "neutral",
         "opacity" : 0.5
       },
       "translucency" : {

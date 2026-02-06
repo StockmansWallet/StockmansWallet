@@ -29,6 +29,17 @@ struct HerdDetailView: View {
     // Debug: Sell functionality for this herd
     @State private var showingSellSheet = false
     
+    // Debug: Historical valuation data for chart (same as dashboard but for single herd)
+    @State private var valuationHistory: [ValuationDataPoint] = []
+    @State private var selectedDate: Date?
+    @State private var selectedValue: Double?
+    @State private var isScrubbing: Bool = false
+    @State private var timeRange: TimeRange = .all
+    @State private var customStartDate: Date?
+    @State private var customEndDate: Date?
+    @State private var baseValue: Double = 0.0
+    @State private var showingCustomDatePicker = false
+    
     // Debug: Fetch herd from current context using ID - safest SwiftData pattern
     private var herd: HerdGroup? {
         let foundHerd = allHerds.first(where: { $0.id == herdId })
@@ -76,25 +87,39 @@ struct HerdDetailView: View {
                                 .padding(.horizontal)
                         }
                         
-                        // Debug: Horizontal stats card for herd type and head count
+                        // Debug: Head count text below value
                         // Only show for herds (headCount > 1), not for individual animals to avoid duplication
                         if activeHerd.headCount > 1 {
                             HerdStatsCard(herd: activeHerd)
                                 .padding(.horizontal)
+                                .padding(.top, -12) // Debug: Reduce spacing from value above
                         }
                             
-                        // Debug: Weight Growth Chart for visual insight
-                        // Pass data directly to avoid SwiftData access issues
-                        if let valuation = valuation, activeHerd.dailyWeightGain > 0 {
-                            WeightGrowthChart(
-                                initialWeight: activeHerd.initialWeight,
-                                dailyWeightGain: activeHerd.dailyWeightGain,
-                                daysHeld: activeHerd.daysHeld,
-                                createdAt: activeHerd.createdAt,
-                                projectedWeight: valuation.projectedWeight
+                        // Debug: Herd Value Chart - shows value over time (same as dashboard but for single herd)
+                        // Replaces weight growth chart; weight info already shown in cards below
+                        if !valuationHistory.isEmpty {
+                            HerdValueChartCard(
+                                data: filteredHistory,
+                                selectedDate: $selectedDate,
+                                selectedValue: $selectedValue,
+                                isScrubbing: $isScrubbing,
+                                timeRange: $timeRange,
+                                customStartDate: customStartDate,
+                                customEndDate: customEndDate,
+                                baseValue: baseValue,
+                                showingCustomDatePicker: $showingCustomDatePicker,
+                                herdName: activeHerd.name
                             )
                             .padding(.horizontal)
                         }
+                        
+                        // Debug: Growth & Mortality card (same as dashboard but for single herd)
+                        HerdDynamicsView(
+                            showsDashboardHeader: false,
+                            herds: [activeHerd]
+                        )
+                        .cardStyle()
+                        .padding(.horizontal)
                         
                         // Debug: Primary valuation metrics
                         if let valuation = valuation {
@@ -162,6 +187,19 @@ struct HerdDetailView: View {
                     .transition(.move(edge: .trailing))
                     .presentationBackground(Theme.sheetBackground)
             }
+            .sheet(isPresented: $showingCustomDatePicker) {
+                CustomDateRangeSheet(
+                    startDate: $customStartDate,
+                    endDate: $customEndDate,
+                    timeRange: $timeRange
+                )
+            }
+            .onChange(of: timeRange) { _, _ in
+                // Debug: Reset scrubbing state when time range changes
+                isScrubbing = false
+                selectedDate = nil
+                selectedValue = nil
+            }
             .task {
                 await loadValuation()
             }
@@ -184,6 +222,45 @@ struct HerdDetailView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.backgroundGradient)
+        }
+    }
+    
+    // Debug: Filter history based on selected time range (same as dashboard)
+    private var filteredHistory: [ValuationDataPoint] {
+        let now = Date()
+        let calendar = Calendar.current
+        
+        switch timeRange {
+        case .custom:
+            // Debug: Use custom date range if specified
+            guard let startDate = customStartDate, let endDate = customEndDate else {
+                return valuationHistory
+            }
+            return valuationHistory.filter { point in
+                point.date >= startDate && point.date <= endDate
+            }
+        case .day:
+            guard let startDate = calendar.date(byAdding: .day, value: -1, to: now) else {
+                return valuationHistory
+            }
+            return valuationHistory.filter { $0.date >= startDate }
+        case .week:
+            guard let startDate = calendar.date(byAdding: .weekOfYear, value: -1, to: now) else {
+                return valuationHistory
+            }
+            return valuationHistory.filter { $0.date >= startDate }
+        case .month:
+            guard let startDate = calendar.date(byAdding: .month, value: -1, to: now) else {
+                return valuationHistory
+            }
+            return valuationHistory.filter { $0.date >= startDate }
+        case .year:
+            guard let startDate = calendar.date(byAdding: .year, value: -1, to: now) else {
+                return valuationHistory
+            }
+            return valuationHistory.filter { $0.date >= startDate }
+        case .all:
+            return valuationHistory
         }
     }
     
@@ -216,6 +293,90 @@ struct HerdDetailView: View {
         await MainActor.run {
             self.valuation = calculatedValuation
             self.isLoading = false
+        }
+        
+        // Debug: Load historical valuation data for chart
+        print("📊 HerdDetailView: Loading historical valuation data...")
+        await loadHistoricalValuationData(herd: activeHerd, prefs: prefs)
+    }
+    
+    // Debug: Load historical valuation data for a single herd (similar to dashboard but for one herd)
+    // This generates daily valuation points from herd creation date to today
+    private func loadHistoricalValuationData(herd: HerdGroup, prefs: UserPreferences) async {
+        let calendar = Calendar.current
+        let today = Date()
+        let startDate = calendar.startOfDay(for: herd.createdAt)
+        let endDate = calendar.startOfDay(for: today)
+        
+        // Debug: Calculate number of days of history
+        let dayComponents = calendar.dateComponents([.day], from: startDate, to: endDate)
+        let totalDays = (dayComponents.day ?? 0) + 1 // +1 to include today
+        
+        print("📊 Generating \(totalDays) days of valuation history for herd: \(herd.name)")
+        
+        var history: [ValuationDataPoint] = []
+        
+        // Debug: Generate data point for each day
+        for dayOffset in 0..<totalDays {
+            guard let dateAtStartOfDay = calendar.date(byAdding: .day, value: dayOffset, to: startDate) else {
+                continue
+            }
+            
+            // Debug: Set time to end of day (11:59:59 PM) for accurate daily valuations
+            let dateAtEndOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: dateAtStartOfDay) ?? dateAtStartOfDay
+            
+            // Debug: Calculate valuation for this specific date
+            let valuation = await valuationEngine.calculateHerdValue(
+                herd: herd,
+                preferences: prefs,
+                modelContext: modelContext,
+                asOfDate: dateAtEndOfDay
+            )
+            
+            history.append(ValuationDataPoint(
+                date: dateAtEndOfDay,
+                value: valuation.netRealizableValue,
+                physicalValue: valuation.physicalValue,
+                breedingAccrual: valuation.breedingAccrual
+            ))
+            
+            // Debug: Log progress for longer histories
+            #if DEBUG
+            if totalDays > 7 && (dayOffset <= 3 || dayOffset % 7 == 0 || dayOffset == totalDays - 1) {
+                print("📊 Day \(dayOffset + 1)/\(totalDays): \(dateAtStartOfDay.formatted(.dateTime.month().day())) = $\(String(format: "%.0f", valuation.netRealizableValue))")
+            }
+            #endif
+        }
+        
+        // Debug: Ensure chart has at least 2 points to display a line
+        // If we only have 1 point (brand new herd), add a starting point at $0
+        if history.count == 1, let firstPoint = history.first {
+            let dayBefore = calendar.date(byAdding: .day, value: -1, to: firstPoint.date) ?? firstPoint.date
+            history.insert(ValuationDataPoint(
+                date: dayBefore,
+                value: 0.0,
+                physicalValue: 0.0,
+                breedingAccrual: 0.0
+            ), at: 0)
+            print("📊 Added starting point at $0 for single-day herd")
+        }
+        
+        await MainActor.run {
+            self.valuationHistory = history
+            // Debug: Set base value to first data point for change calculations
+            self.baseValue = history.first?.value ?? 0.0
+            
+            #if DEBUG
+            print("📊 ============================================")
+            print("📊 Herd history loaded: \(history.count) data points")
+            if let first = history.first, let last = history.last {
+                print("📊 Date range: \(first.date.formatted(.dateTime.month().day())) ($\(String(format: "%.0f", first.value))) to \(last.date.formatted(.dateTime.month().day())) ($\(String(format: "%.0f", last.value)))")
+                let totalChange = last.value - first.value
+                let percentChange = first.value > 0 ? (totalChange / first.value * 100) : 0
+                print("📊 Total change: $\(String(format: "%.0f", totalChange)) (\(String(format: "%.1f", percentChange))%)")
+            }
+            print("📊 ============================================")
+            #endif
         }
     }
 }
@@ -302,140 +463,91 @@ struct TotalValueCard: View {
 }
 
 // MARK: - Herd Stats Card
-// Debug: Simplified to show only head count in accent-colored rounded rectangle
+// Debug: Simple text showing head count below main value
 struct HerdStatsCard: View {
     let herd: HerdGroup
     
     var body: some View {
         Text("\(herd.headCount) Head")
-            .font(.system(size: 18, weight: .bold))
-            .foregroundStyle(.white)
-            .lineLimit(1)
-            .minimumScaleFactor(0.7)
-            .padding(.horizontal, 24)
-            .padding(.vertical, 10)
-            .background(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .fill(Theme.accentColor)
-            )
+            .font(Theme.subheadline)
+            .foregroundStyle(Theme.secondaryText)
             .frame(maxWidth: .infinity, alignment: .center)
     }
 }
 
-// MARK: - Weight Growth Chart
-// Debug: Visual representation of weight gain over time
-// Pass data directly instead of HerdGroup object to avoid SwiftData access issues
-struct WeightGrowthChart: View {
-    let initialWeight: Double
-    let dailyWeightGain: Double
-    let daysHeld: Int
-    let createdAt: Date
-    let projectedWeight: Double
+// MARK: - Herd Value Chart Card
+// Debug: Shows herd value over time with interactive scrubbing (same as dashboard chart)
+// Replaces weight growth chart; weight info already shown in cards below
+struct HerdValueChartCard: View {
+    let data: [ValuationDataPoint]
+    @Binding var selectedDate: Date?
+    @Binding var selectedValue: Double?
+    @Binding var isScrubbing: Bool
+    @Binding var timeRange: TimeRange
+    let customStartDate: Date?
+    let customEndDate: Date?
+    let baseValue: Double
+    @Binding var showingCustomDatePicker: Bool
+    let herdName: String
     
-    // Debug: Generate weight progression data points from passed-in data
-    private var weightData: [WeightDataPoint] {
-        // Debug: Generate data points for the chart
-        var points: [WeightDataPoint] = []
-        
-        // Debug: For new herds with no history, create a line from 0 to current weight
-        if daysHeld == 0 {
-            // Add starting point at 0kg
-            points.append(WeightDataPoint(date: createdAt, weight: 0))
-            // Add current point at initial weight
-            points.append(WeightDataPoint(date: createdAt, weight: initialWeight))
-            return points
+    // Debug: Format time range label for the pill menu
+    private var timeRangeLabel: String {
+        if timeRange == .custom, let startDate = customStartDate, let endDate = customEndDate {
+            return "\(startDate.formatted(.dateTime.month().day())) - \(endDate.formatted(.dateTime.month().day()))"
         }
-        
-        let intervals = min(daysHeld, 30) // Show up to 30 data points
-        let step = max(1, daysHeld / intervals)
-        
-        for day in stride(from: 0, through: daysHeld, by: step) {
-            let weight = initialWeight + (dailyWeightGain * Double(day))
-            let date = Calendar.current.date(byAdding: .day, value: day, to: createdAt) ?? createdAt
-            points.append(WeightDataPoint(date: date, weight: weight))
-        }
-        
-        return points
+        return timeRange.rawValue
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            // Debug: Header bar with dark background like dashboard cards
+        VStack(spacing: 0) {
+            // Debug: Range selector pill only (no header bar - matches dashboard chart)
             HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Weight Growth")
-                        .font(Theme.headline)
-                        .foregroundStyle(Theme.primaryText)
-                    Text("\(Int(initialWeight)) → \(Int(projectedWeight)) kg")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                }
                 Spacer()
-                if projectedWeight > initialWeight {
-                    Text("+\(Int(projectedWeight - initialWeight)) kg")
-                        .font(Theme.subheadline)
-                        .fontWeight(.semibold)
-                        .foregroundStyle(Theme.positiveChange)
+                DashboardTimeRangePill(label: timeRangeLabel) {
+                    ForEach(TimeRange.allCases, id: \.self) { range in
+                        Button {
+                            HapticManager.tap()
+                            if range == .custom {
+                                showingCustomDatePicker = true
+                            } else {
+                                timeRange = range
+                            }
+                        } label: {
+                            HStack {
+                                Text(range.rawValue)
+                                if timeRange == range {
+                                    Image(systemName: "checkmark")
+                                }
+                            }
+                        }
+                    }
                 }
             }
             .padding(.horizontal, Theme.dashboardCardPadding)
-            .padding(.vertical, 12)
+            .padding(.vertical, 10)
             .frame(maxWidth: .infinity)
-            .background(Theme.tertiaryBackground)
+            .background(Color.clear)
             
-            // Debug: Chart content area
-            VStack(spacing: 12) {
-                // Debug: Always show chart with at least 2 data points for line rendering
-                Chart(weightData) { point in
-                    LineMark(
-                        x: .value("Date", point.date),
-                        y: .value("Weight", point.weight)
-                    )
-                    .foregroundStyle(Theme.accentColor)
-                    .lineStyle(StrokeStyle(lineWidth: 2))
-                    
-                    AreaMark(
-                        x: .value("Date", point.date),
-                        y: .value("Weight", point.weight)
-                    )
-                    .foregroundStyle(
-                        LinearGradient(
-                            colors: [Theme.accentColor.opacity(0.3), Theme.accentColor.opacity(0.05)],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+            // Debug: Interactive chart (reuses dashboard chart component)
+            InteractiveChartView(
+                data: data,
+                selectedDate: $selectedDate,
+                selectedValue: $selectedValue,
+                isScrubbing: $isScrubbing,
+                timeRange: $timeRange,
+                customStartDate: customStartDate,
+                customEndDate: customEndDate,
+                baseValue: baseValue,
+                onValueChange: { _, _ in
+                    // Debug: No-op for herd chart; value display handled in header
                 }
-                .frame(height: 120)
-                .chartYAxis {
-                    AxisMarks(position: .leading) { value in
-                        AxisGridLine()
-                            .foregroundStyle(Theme.separator.opacity(0.3))
-                        AxisValueLabel()
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                }
-                .chartXAxis {
-                    AxisMarks { value in
-                        AxisGridLine()
-                            .foregroundStyle(Theme.separator.opacity(0.3))
-                        AxisValueLabel(format: .dateTime.month().day())
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondaryText)
-                    }
-                }
-            }
-            .padding(Theme.dashboardCardPadding)
+            )
+            .clipped()
+            .padding(.top, -32) // Debug: Compensate for internal date hover pill spacer
+            .padding(.horizontal, 0) // Debug: Chart line should reach card edges
         }
         .cardStyle()
     }
-}
-
-struct WeightDataPoint: Identifiable {
-    let id = UUID()
-    let date: Date
-    let weight: Double
 }
 
 // MARK: - Primary Metrics Card

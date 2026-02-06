@@ -132,7 +132,7 @@ struct AddHerdFlowView: View {
             VStack(spacing: 0) {
                 // Header
                 HStack {
-                    // Debug: Back button meets iOS 26 HIG minimum touch target of 44x44pt
+                    // Debug: Close button (X) on step 1, back button (chevron) on other steps - meets iOS 26 HIG minimum touch target of 44x44pt
                     Button(action: {
                         HapticManager.tap()
                         if currentStep > 1 {
@@ -144,7 +144,7 @@ struct AddHerdFlowView: View {
                             dismiss()
                         }
                     }) {
-                        Image(systemName: "chevron.left")
+                        Image(systemName: currentStep == 1 ? "xmark" : "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
                             .foregroundStyle(Theme.primaryText)
                             .frame(width: 44, height: 44) // iOS 26 HIG: Minimum 44x44pt
@@ -152,7 +152,7 @@ struct AddHerdFlowView: View {
                             .clipShape(Circle())
                     }
                     .buttonBorderShape(.roundedRectangle)
-                    .accessibilityLabel("Back")
+                    .accessibilityLabel(currentStep == 1 ? "Close" : "Back")
                     
                     Spacer()
                     
