@@ -55,6 +55,7 @@ struct HerdDetailView: View {
     @State private var customEndDate: Date?
     @State private var baseValue: Double = 0.0
     @State private var showingCustomDatePicker = false
+    @State private var isLoadingChart = false // Debug: Loading state for chart (Apple HIG)
     
     // Debug: Saleyard comparison state
     @State private var selectedComparisonSaleyards: Set<String> = []
@@ -118,7 +119,11 @@ struct HerdDetailView: View {
                             
                         // Debug: Herd Value Chart - shows value over time (same as dashboard but for single herd)
                         // Replaces weight growth chart; weight info already shown in cards below
-                        if !valuationHistory.isEmpty {
+                        // Apple HIG: Show loading skeleton while chart data loads asynchronously
+                        if isLoadingChart {
+                            ChartSkeletonLoader()
+                                .padding(.horizontal)
+                        } else if !valuationHistory.isEmpty {
                             HerdValueChartCard(
                                 data: filteredHistory,
                                 selectedDate: $selectedDate,
@@ -337,6 +342,16 @@ struct HerdDetailView: View {
                 // Cancel remaining tasks
                 group.cancelAll()
             }
+            
+            // Debug: Load historical valuation data AFTER main valuation completes
+            // This runs outside the timeout so older herds with long histories can complete loading
+            // The chart will appear once the data finishes loading (even if it takes >30 seconds)
+            // Apple HIG: Show loading skeleton while data loads
+            await MainActor.run { isLoadingChart = true }
+            print("📊 HerdDetailView: Loading historical valuation data (background)...")
+            await loadHistoricalValuationData(herd: activeHerd, prefs: prefs)
+            await MainActor.run { isLoadingChart = false }
+            
         } catch is CancellationError {
             print("⚠️ HerdDetailView: Load cancelled by user navigation")
             await MainActor.run {
@@ -348,6 +363,13 @@ struct HerdDetailView: View {
                 self.isLoading = false
             }
             HapticManager.error()
+            
+            // Debug: Still load historical data even after timeout - chart will appear when ready
+            // Apple HIG: Show loading skeleton while data loads
+            await MainActor.run { isLoadingChart = true }
+            print("📊 HerdDetailView: Loading historical valuation data (after timeout)...")
+            await loadHistoricalValuationData(herd: activeHerd, prefs: prefs)
+            await MainActor.run { isLoadingChart = false }
         } catch {
             print("❌ HerdDetailView: Failed to load valuation - \(error.localizedDescription)")
             await MainActor.run {
@@ -375,13 +397,11 @@ struct HerdDetailView: View {
             self.isLoading = false
         }
         
-        // Debug: Load historical valuation data for chart
-        print("📊 HerdDetailView: Loading historical valuation data...")
-        await loadHistoricalValuationData(herd: herd, prefs: prefs)
+        // Debug: Historical data loading moved outside this function to avoid timeout issues
     }
     
     // Debug: Load historical valuation data for a single herd (similar to dashboard but for one herd)
-    // This generates daily valuation points from herd creation date to today
+    // Performance: Uses smart sampling - daily for last 30 days, weekly for older data
     private func loadHistoricalValuationData(herd: HerdGroup, prefs: UserPreferences) async {
         let calendar = Calendar.current
         let today = Date()
@@ -392,22 +412,47 @@ struct HerdDetailView: View {
         let dayComponents = calendar.dateComponents([.day], from: startDate, to: endDate)
         let totalDays = (dayComponents.day ?? 0) + 1 // +1 to include today
         
-        print("📊 Generating \(totalDays) days of valuation history for herd: \(herd.name)")
-        
         // Debug: CRITICAL - Prefetch prices ONCE before looping through all days
         // This prevents hundreds of redundant database queries
         print("📊 Prefetching prices for historical calculations...")
         await valuationEngine.prefetchPricesForHerds([herd])
-        print("📊 Prefetch complete, now calculating \(totalDays) days of history...")
+        print("📊 Prefetch complete, now calculating history...")
         
         var history: [ValuationDataPoint] = []
         
-        // Debug: Generate data point for each day
+        // Debug: Smart sampling based on herd age (performance optimization)
+        // - Last 30 days: Daily data points (max 30 points)
+        // - Older than 30 days: Weekly data points (1 point per 7 days)
+        // This dramatically reduces calculations for older herds (e.g. 180 days = 30 daily + 21 weekly = 51 points vs 180)
+        let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: today) ?? today
+        
+        var datesToCalculate: [Date] = []
+        
+        // Generate dates to calculate
         for dayOffset in 0..<totalDays {
             guard let dateAtStartOfDay = calendar.date(byAdding: .day, value: dayOffset, to: startDate) else {
                 continue
             }
             
+            // Last 30 days: Calculate every day
+            if dateAtStartOfDay >= thirtyDaysAgo {
+                datesToCalculate.append(dateAtStartOfDay)
+            }
+            // Older than 30 days: Calculate weekly (every 7th day)
+            else if dayOffset % 7 == 0 {
+                datesToCalculate.append(dateAtStartOfDay)
+            }
+        }
+        
+        // Always include today if not already included
+        if !datesToCalculate.contains(where: { calendar.isDate($0, inSameDayAs: today) }) {
+            datesToCalculate.append(today)
+        }
+        
+        print("📊 Generating \(datesToCalculate.count) sampled data points for herd: \(herd.name) (total days: \(totalDays))")
+        
+        // Debug: Generate data points for sampled dates
+        for (index, dateAtStartOfDay) in datesToCalculate.enumerated() {
             // Debug: Set time to end of day (11:59:59 PM) for accurate daily valuations
             let dateAtEndOfDay = calendar.date(bySettingHour: 23, minute: 59, second: 59, of: dateAtStartOfDay) ?? dateAtStartOfDay
             
@@ -426,10 +471,10 @@ struct HerdDetailView: View {
                 breedingAccrual: valuation.breedingAccrual
             ))
             
-            // Debug: Log progress for longer histories
+            // Debug: Log progress for longer histories (every 10 points or first/last)
             #if DEBUG
-            if totalDays > 7 && (dayOffset <= 3 || dayOffset % 7 == 0 || dayOffset == totalDays - 1) {
-                print("📊 Day \(dayOffset + 1)/\(totalDays): \(dateAtStartOfDay.formatted(.dateTime.month().day())) = $\(String(format: "%.0f", valuation.netRealizableValue))")
+            if datesToCalculate.count > 10 && (index == 0 || index % 10 == 0 || index == datesToCalculate.count - 1) {
+                print("📊 Point \(index + 1)/\(datesToCalculate.count): \(dateAtStartOfDay.formatted(.dateTime.month().day())) = $\(String(format: "%.0f", valuation.netRealizableValue))")
             }
             #endif
         }
@@ -1571,6 +1616,90 @@ struct SaleyardComparisonRow: View {
         .padding(12)
         .background(Theme.cardBackground.opacity(0.5))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// MARK: - Chart Skeleton Loader
+// Debug: Apple HIG compliant loading skeleton for chart area
+struct ChartSkeletonLoader: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Debug: Time range pill skeleton
+            HStack {
+                Spacer()
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Theme.secondaryBackground.opacity(0.3))
+                    .frame(width: 80, height: 32)
+                    .shimmer(isAnimating: isAnimating)
+            }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 10)
+            
+            // Debug: Chart area skeleton with gradient bars
+            VStack(alignment: .leading, spacing: 8) {
+                // Value label skeleton
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(Theme.secondaryBackground.opacity(0.3))
+                    .frame(width: 120, height: 24)
+                    .shimmer(isAnimating: isAnimating)
+                
+                // Chart bars skeleton
+                HStack(alignment: .bottom, spacing: 6) {
+                    ForEach(0..<12, id: \.self) { index in
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(Theme.secondaryBackground.opacity(0.3))
+                            .frame(height: CGFloat.random(in: 80...160))
+                            .shimmer(isAnimating: isAnimating, delay: Double(index) * 0.05)
+                    }
+                }
+                .frame(height: 180)
+                .padding(.top, 8)
+                
+                // Date label skeleton
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(Theme.secondaryBackground.opacity(0.3))
+                    .frame(width: 100, height: 16)
+                    .shimmer(isAnimating: isAnimating)
+                    .padding(.top, 4)
+            }
+            .padding(Theme.dashboardCardPadding)
+        }
+        .cardStyle()
+        .onAppear {
+            isAnimating = true
+        }
+    }
+}
+
+// Debug: Shimmer effect modifier for skeleton loaders (Apple HIG standard)
+extension View {
+    func shimmer(isAnimating: Bool, delay: Double = 0) -> some View {
+        self.overlay(
+            GeometryReader { geometry in
+                if isAnimating {
+                    LinearGradient(
+                        gradient: Gradient(colors: [
+                            .clear,
+                            Theme.secondaryBackground.opacity(0.5),
+                            .clear
+                        ]),
+                        startPoint: .leading,
+                        endPoint: .trailing
+                    )
+                    .frame(width: geometry.size.width * 2)
+                    .offset(x: isAnimating ? geometry.size.width * 2 : -geometry.size.width * 2)
+                    .animation(
+                        Animation.linear(duration: 1.5)
+                            .repeatForever(autoreverses: false)
+                            .delay(delay),
+                        value: isAnimating
+                    )
+                }
+            }
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
 }
 

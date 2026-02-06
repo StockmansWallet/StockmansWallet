@@ -25,9 +25,13 @@ class ValuationEngine {
     // MARK: - Price Cache
     // Debug: Cache fetched prices to avoid redundant API calls
     // MLA data updates once daily at 1am, so cache for 24 hours
+    // Performance: Also caches "not found" results (price = -1.0) to avoid redundant Supabase queries
     private var priceCache: [String: (price: Double, source: String)] = [:]
     private var priceCacheTimestamp: Date? = nil
     private let priceCacheDuration: TimeInterval = 86400 // 24 hours (MLA updates daily)
+    
+    // Debug: Sentinel value for "not found" prices cached to prevent redundant queries
+    private let PRICE_NOT_FOUND: Double = -1.0
     
     // Debug: Offline state tracking
     var isOffline: Bool = false
@@ -340,11 +344,21 @@ class ValuationEngine {
     ) async -> (price: Double, source: String) {
         let mlaCategory = mapCategoryToMLACategory(category)
         
+        // Debug: Track if all fallback levels have been checked and found as "not found" in cache
+        var allLevelsNotFound = true
+        
         // Debug: Check cache first (saleyard level)
         if let saleyard = saleyard {
             let key = priceCacheKey(category: mlaCategory, breed: breed, saleyard: saleyard, state: nil)
             if let cached = priceCache[key] {
-                return cached
+                // Performance: If found in cache and it's a real price, return it
+                if cached.price != PRICE_NOT_FOUND {
+                    return cached
+                }
+                // If PRICE_NOT_FOUND, continue to next fallback
+            } else {
+                // Not in cache at all - we'll need to query
+                allLevelsNotFound = false
             }
         }
         
@@ -352,37 +366,72 @@ class ValuationEngine {
         if let state = state {
             let key = priceCacheKey(category: mlaCategory, breed: breed, saleyard: nil, state: state)
             if let cached = priceCache[key] {
-                return cached
+                // Performance: If found in cache and it's a real price, return it
+                if cached.price != PRICE_NOT_FOUND {
+                    return cached
+                }
+                // If PRICE_NOT_FOUND, continue to next fallback
+            } else {
+                // Not in cache at all - we'll need to query
+                allLevelsNotFound = false
             }
         }
         
         // Debug: Check cache (national level)
         let nationalKey = priceCacheKey(category: mlaCategory, breed: breed, saleyard: nil, state: nil)
         if let cached = priceCache[nationalKey] {
-            return cached
-        }
-        
-        // Debug: Cache miss - fetch from Supabase (fallback for individual lookups)
-        // This should rarely happen if prefetchPricesForHerds was called first
-        print("⚠️ Debug: Cache miss for \(category) (\(breed)) - fetching individually")
-        
-        // Try direct saleyard quote first (with breed-specific pricing)
-        if let saleyard = saleyard {
-            if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: saleyard, state: nil) {
-                return (price, "\(saleyard) - \(breed)")
+            // Performance: If found in cache and it's a real price, return it
+            if cached.price != PRICE_NOT_FOUND {
+                return cached
             }
+            // If PRICE_NOT_FOUND, continue to default fallback
+        } else {
+            // Not in cache at all - we'll need to query
+            allLevelsNotFound = false
         }
         
-        // Fallback to state-level pricing (with breed)
-        if let state = state {
-            if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: nil, state: state) {
-                return (price, "\(state) - \(breed)")
+        // Performance: If ALL levels are cached as "not found", skip Supabase queries entirely
+        // and jump directly to default fallback price
+        if allLevelsNotFound {
+            #if DEBUG
+            print("✅ All price levels cached as not found - using default fallback immediately")
+            #endif
+            // Jump directly to default fallback (code below will handle this)
+        } else {
+            // Debug: Cache miss - fetch from Supabase (fallback for individual lookups)
+            // This should rarely happen if prefetchPricesForHerds was called first
+            print("⚠️ Debug: Cache miss for \(category) (\(breed)) - fetching individually")
+            
+            // Try direct saleyard quote first (with breed-specific pricing)
+            if let saleyard = saleyard {
+                if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: saleyard, state: nil) {
+                    return (price, "\(saleyard) - \(breed)")
+                } else {
+                    // Performance: Cache "not found" result to avoid redundant queries
+                    let key = priceCacheKey(category: mlaCategory, breed: breed, saleyard: saleyard, state: nil)
+                    priceCache[key] = (PRICE_NOT_FOUND, "not_found")
+                }
             }
-        }
-        
-        // Fallback to any available price for this category+breed combination
-        if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: nil, state: nil) {
-            return (price, "National - \(breed)")
+            
+            // Fallback to state-level pricing (with breed)
+            if let state = state {
+                if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: nil, state: state) {
+                    return (price, "\(state) - \(breed)")
+                } else {
+                    // Performance: Cache "not found" result to avoid redundant queries
+                    let key = priceCacheKey(category: mlaCategory, breed: breed, saleyard: nil, state: state)
+                    priceCache[key] = (PRICE_NOT_FOUND, "not_found")
+                }
+            }
+            
+            // Fallback to any available price for this category+breed combination
+            if let price = await fetchSupabasePrice(category: category, breed: breed, saleyard: nil, state: nil) {
+                return (price, "National - \(breed)")
+            } else {
+                // Performance: Cache "not found" result to avoid redundant queries
+                let key = priceCacheKey(category: mlaCategory, breed: breed, saleyard: nil, state: nil)
+                priceCache[key] = (PRICE_NOT_FOUND, "not_found")
+            }
         }
         
         // Default fallback price (should rarely happen)
