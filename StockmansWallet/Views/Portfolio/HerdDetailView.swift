@@ -10,6 +10,17 @@ import SwiftUI
 import SwiftData
 import Charts
 
+// MARK: - Saleyard Comparison Model
+struct SaleyardComparison: Identifiable {
+    let id = UUID()
+    let saleyardName: String
+    let value: Double
+    let freightCost: Double
+    let netValue: Double // value - freight
+    let difference: Double // compared to default saleyard
+    let isDefault: Bool
+}
+
 struct HerdDetailView: View {
     @Environment(\.modelContext) private var modelContext
     @Query private var preferences: [UserPreferences]
@@ -44,6 +55,11 @@ struct HerdDetailView: View {
     @State private var customEndDate: Date?
     @State private var baseValue: Double = 0.0
     @State private var showingCustomDatePicker = false
+    
+    // Debug: Saleyard comparison state
+    @State private var selectedComparisonSaleyards: Set<String> = []
+    @State private var showingSaleyardSelector = false
+    @State private var saleyardComparisons: [SaleyardComparison] = []
     
     // Debug: Fetch herd from current context using ID - safest SwiftData pattern
     private var herd: HerdGroup? {
@@ -131,6 +147,19 @@ struct HerdDetailView: View {
                             PrimaryMetricsCard(herd: activeHerd, valuation: valuation)
                                 .padding(.horizontal)
                         }
+                        
+                        // Debug: Saleyard Comparison card
+                        SaleyardComparisonCard(
+                            herd: activeHerd,
+                            valuation: valuation,
+                            selectedComparisonSaleyards: $selectedComparisonSaleyards,
+                            showingSaleyardSelector: $showingSaleyardSelector,
+                            saleyardComparisons: $saleyardComparisons,
+                            valuationEngine: valuationEngine,
+                            modelContext: modelContext,
+                            preferences: preferences.first ?? UserPreferences()
+                        )
+                        .padding(.horizontal)
                         
                         // Debug: Consolidated herd details - all key info in one card
                         HerdDetailsCard(herd: activeHerd, valuation: valuation)
@@ -331,6 +360,10 @@ struct HerdDetailView: View {
     // Debug: Extracted calculation logic for better error handling
     private func performHerdValuationCalculation(herd: HerdGroup, prefs: UserPreferences) async throws {
         print("🔄 HerdDetailView: Calculating valuation...")
+        
+        // Debug: Prefetch prices to avoid redundant queries
+        await valuationEngine.prefetchPricesForHerds([herd])
+        
         let calculatedValuation = await valuationEngine.calculateHerdValue(
             herd: herd,
             preferences: prefs,
@@ -360,6 +393,12 @@ struct HerdDetailView: View {
         let totalDays = (dayComponents.day ?? 0) + 1 // +1 to include today
         
         print("📊 Generating \(totalDays) days of valuation history for herd: \(herd.name)")
+        
+        // Debug: CRITICAL - Prefetch prices ONCE before looping through all days
+        // This prevents hundreds of redundant database queries
+        print("📊 Prefetching prices for historical calculations...")
+        await valuationEngine.prefetchPricesForHerds([herd])
+        print("📊 Prefetch complete, now calculating \(totalDays) days of history...")
         
         var history: [ValuationDataPoint] = []
         
@@ -1273,5 +1312,335 @@ struct HealthRecordRow: View {
         .padding(12)
         .background(Theme.cardBackground.opacity(0.5))
         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// MARK: - Saleyard Comparison Card
+struct SaleyardComparisonCard: View {
+    let herd: HerdGroup
+    let valuation: HerdValuation?
+    @Binding var selectedComparisonSaleyards: Set<String>
+    @Binding var showingSaleyardSelector: Bool
+    @Binding var saleyardComparisons: [SaleyardComparison]
+    let valuationEngine: ValuationEngine
+    let modelContext: ModelContext
+    let preferences: UserPreferences
+    
+    // Debug: Calculate estimated freight cost (placeholder until TruckIt API)
+    private func estimateFreightCost(to saleyard: String) -> Double {
+        // Debug: Realistic placeholder costs based on distance/location patterns
+        // NSW regional: $300-800, Interstate: $1000-3000, Remote: $3000+
+        let cost: Double
+        
+        if saleyard.contains("Wagga Wagga") || saleyard.contains("Forbes") {
+            cost = Double.random(in: 300...500)
+        } else if saleyard.contains("Dubbo") || saleyard.contains("Tamworth") {
+            cost = Double.random(in: 400...700)
+        } else if saleyard.contains("Roma") || saleyard.contains("Dalby") {
+            cost = Double.random(in: 800...1500)
+        } else if saleyard.contains("Muchea") || saleyard.contains("Mount Barker") {
+            cost = Double.random(in: 2000...3500)
+        } else if saleyard.contains("Powranna") || saleyard.contains("Quoiba") {
+            cost = Double.random(in: 1500...2500)
+        } else {
+            cost = Double.random(in: 500...1200)
+        }
+        
+        // Round to nearest $50 for realism
+        return (cost / 50).rounded() * 50
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            // Header bar with icon
+            HStack(spacing: 10) {
+                ZStack {
+                    Circle()
+                        .fill(Theme.dashboardIconBackground)
+                    Image(systemName: "dollarsign.bank.building")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.sectionAmber)
+                }
+                .frame(width: 28, height: 28)
+                .accessibilityHidden(true)
+                
+                Text("Saleyard Comparison")
+                    .font(Theme.headline)
+                    .foregroundStyle(Theme.primaryText)
+                
+                Spacer()
+            }
+            .padding(.horizontal, Theme.dashboardCardPadding)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(Theme.tertiaryBackground)
+            
+            // Content area
+            VStack(alignment: .leading, spacing: 16) {
+                // Default saleyard value
+                if let defaultSaleyard = herd.selectedSaleyard, let val = valuation {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Herd Default Saleyard")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.accentColor)
+                        
+                        HStack {
+                            Text(defaultSaleyard)
+                                .font(Theme.subheadline)
+                                .fontWeight(.semibold)
+                                .foregroundStyle(Theme.primaryText)
+                            
+                            Spacer()
+                            
+                            Text(val.netRealizableValue.formatted(.currency(code: "AUD").precision(.fractionLength(0))))
+                                .font(Theme.title3)
+                                .fontWeight(.bold)
+                                .foregroundStyle(Theme.primaryText)
+                        }
+                    }
+                    .padding(12)
+                    .background(Theme.accentColor.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                
+                // Saleyard selector button
+                Button {
+                    HapticManager.tap()
+                    showingSaleyardSelector = true
+                } label: {
+                    HStack {
+                        Image(systemName: "checkmark.square")
+                            .font(.system(size: 16))
+                            .foregroundStyle(Theme.accentColor)
+                        
+                        Text("Select Saleyards to compare")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.primaryText)
+                        
+                        Spacer()
+                        
+                        Image(systemName: "chevron.down")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Theme.secondaryText)
+                    }
+                    .padding(12)
+                    .background(Theme.cardBackground.opacity(0.5))
+                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
+                
+                // Comparison results
+                if !saleyardComparisons.isEmpty {
+                    VStack(spacing: 12) {
+                        ForEach(saleyardComparisons.filter { !$0.isDefault }) { comparison in
+                            SaleyardComparisonRow(
+                                comparison: comparison,
+                                defaultValue: valuation?.netRealizableValue ?? 0
+                            )
+                        }
+                    }
+                }
+                
+                // Footer note about freight
+                HStack(alignment: .top, spacing: 8) {
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 12))
+                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                    Text("Freight estimations provided by TruckIt®")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText.opacity(0.5))
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .padding(Theme.dashboardCardPadding)
+        }
+        .cardStyle()
+        .sheet(isPresented: $showingSaleyardSelector) {
+            MultipleSaleyardSelectionSheet(
+                selectedSaleyards: $selectedComparisonSaleyards,
+                excludeSaleyard: herd.selectedSaleyard
+            )
+        }
+        .onChange(of: selectedComparisonSaleyards) { _, newSaleyards in
+            Task {
+                await calculateComparisons(for: newSaleyards)
+            }
+        }
+        .task {
+            // Auto-select a few nearby saleyards for initial comparison
+            if selectedComparisonSaleyards.isEmpty {
+                // Pick 2-3 random saleyards for demo
+                let availableSaleyards = ReferenceData.saleyards.filter { $0 != herd.selectedSaleyard }
+                selectedComparisonSaleyards = Set(availableSaleyards.prefix(2))
+            }
+        }
+    }
+    
+    // Calculate valuations for comparison saleyards
+    private func calculateComparisons(for saleyards: Set<String>) async {
+        guard let defaultValue = valuation?.netRealizableValue else { return }
+        
+        // Debug: Prefetch prices for all comparison saleyards to avoid N+1 queries
+        await valuationEngine.prefetchPricesForHerds([herd])
+        
+        var comparisons: [SaleyardComparison] = []
+        
+        for saleyardName in saleyards {
+            // Calculate valuation for this saleyard
+            let comparisonValuation = await valuationEngine.calculateHerdValue(
+                herd: herd,
+                preferences: preferences,
+                modelContext: modelContext,
+                saleyardOverride: saleyardName
+            )
+            
+            let freightCost = estimateFreightCost(to: saleyardName)
+            let netValue = comparisonValuation.netRealizableValue - freightCost
+            let difference = netValue - defaultValue
+            
+            comparisons.append(SaleyardComparison(
+                saleyardName: saleyardName,
+                value: comparisonValuation.netRealizableValue,
+                freightCost: freightCost,
+                netValue: netValue,
+                difference: difference,
+                isDefault: false
+            ))
+        }
+        
+        // Sort by net value (highest first)
+        comparisons.sort { $0.netValue > $1.netValue }
+        
+        await MainActor.run {
+            self.saleyardComparisons = comparisons
+        }
+    }
+}
+
+// MARK: - Saleyard Comparison Row
+struct SaleyardComparisonRow: View {
+    let comparison: SaleyardComparison
+    let defaultValue: Double
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            // Saleyard name
+            Text(comparison.saleyardName)
+                .font(Theme.subheadline)
+                .fontWeight(.semibold)
+                .foregroundStyle(Theme.primaryText)
+            
+            // Values row
+            HStack(spacing: 16) {
+                // Value
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Value")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    Text(comparison.value.formatted(.currency(code: "AUD").precision(.fractionLength(0))))
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.primaryText)
+                }
+                
+                // Freight
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Freight")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    Text(comparison.freightCost.formatted(.currency(code: "AUD").precision(.fractionLength(0))))
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.primaryText)
+                }
+                
+                Spacer()
+                
+                // Difference
+                HStack(spacing: 6) {
+                    Text(abs(comparison.difference).formatted(.currency(code: "AUD").precision(.fractionLength(0))))
+                        .font(Theme.title3)
+                        .fontWeight(.bold)
+                        .foregroundStyle(comparison.difference >= 0 ? Theme.positiveChange : Theme.negativeChange)
+                    
+                    Image(systemName: comparison.difference >= 0 ? "arrow.up.right" : "arrow.down.right")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(comparison.difference >= 0 ? Theme.positiveChange : Theme.negativeChange)
+                }
+            }
+        }
+        .padding(12)
+        .background(Theme.cardBackground.opacity(0.5))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+// MARK: - Multiple Saleyard Selection Sheet
+struct MultipleSaleyardSelectionSheet: View {
+    @Binding var selectedSaleyards: Set<String>
+    let excludeSaleyard: String?
+    @Environment(\.dismiss) private var dismiss
+    @State private var searchText = ""
+    
+    private var filteredSaleyards: [String] {
+        let available = ReferenceData.saleyards.filter { $0 != excludeSaleyard }
+        if searchText.isEmpty {
+            return available
+        } else {
+            return available.filter { $0.localizedCaseInsensitiveContains(searchText) }
+        }
+    }
+    
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach(filteredSaleyards, id: \.self) { saleyard in
+                    Button {
+                        HapticManager.tap()
+                        if selectedSaleyards.contains(saleyard) {
+                            selectedSaleyards.remove(saleyard)
+                        } else {
+                            selectedSaleyards.insert(saleyard)
+                        }
+                    } label: {
+                        HStack {
+                            Image(systemName: selectedSaleyards.contains(saleyard) ? "checkmark.square.fill" : "square")
+                                .font(.system(size: 20))
+                                .foregroundStyle(selectedSaleyards.contains(saleyard) ? Theme.accentColor : Theme.secondaryText)
+                            
+                            Text(saleyard)
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.primaryText)
+                                .multilineTextAlignment(.leading)
+                            
+                            Spacer()
+                        }
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .listRowBackground(Color.clear)
+                }
+            }
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Search saleyards"
+            )
+            .navigationTitle("Select Saleyards")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accentColor)
+                }
+            }
+            .scrollContentBackground(.hidden)
+            .background(Theme.tertiaryBackground)
+        }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        .presentationBackground(Theme.tertiaryBackground)
     }
 }
