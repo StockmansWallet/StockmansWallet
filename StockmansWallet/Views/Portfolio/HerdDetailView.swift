@@ -623,11 +623,23 @@ struct PrimaryMetricsCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Debug: Header bar with dark background like dashboard cards
-            HStack {
+            // Debug: Header bar with icon and dark background like dashboard cards
+            HStack(spacing: 10) {
+                // Debug: Icon with circular background
+                ZStack {
+                    Circle()
+                        .fill(Theme.dashboardIconBackground)
+                    Image(systemName: "chart.bar.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.dashboardPerformanceAccent)
+                }
+                .frame(width: 28, height: 28)
+                .accessibilityHidden(true)
+                
                 Text("Key Metrics")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
+                
                 Spacer()
             }
             .padding(.horizontal, Theme.dashboardCardPadding)
@@ -667,11 +679,23 @@ struct HerdDetailsCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Debug: Header bar with dark background like dashboard cards
-            HStack {
+            // Debug: Header bar with icon and dark background like dashboard cards
+            HStack(spacing: 10) {
+                // Debug: Icon with circular background
+                ZStack {
+                    Circle()
+                        .fill(Theme.dashboardIconBackground)
+                    Image(systemName: "info.circle.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.sectionRiver)
+                }
+                .frame(width: 28, height: 28)
+                .accessibilityHidden(true)
+                
                 Text("Herd Details")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
+                
                 Spacer()
             }
             .padding(.horizontal, Theme.dashboardCardPadding)
@@ -854,11 +878,23 @@ struct BreedingDetailsCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Debug: Header bar with dark background like dashboard cards
-            HStack {
+            // Debug: Header bar with icon and dark background like dashboard cards
+            HStack(spacing: 10) {
+                // Debug: Icon with circular background
+                ZStack {
+                    Circle()
+                        .fill(Theme.dashboardIconBackground)
+                    Image(systemName: "heart.circle.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.sectionClay)
+                }
+                .frame(width: 28, height: 28)
+                .accessibilityHidden(true)
+                
                 Text("Breeding Information")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
+                
                 Spacer()
             }
             .padding(.horizontal, Theme.dashboardCardPadding)
@@ -932,8 +968,19 @@ struct MusteringHistoryCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Debug: Header bar with dark background like dashboard cards
-            HStack {
+            // Debug: Header bar with icon and dark background like dashboard cards
+            HStack(spacing: 10) {
+                // Debug: Icon with circular background
+                ZStack {
+                    Circle()
+                        .fill(Theme.dashboardIconBackground)
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(Theme.sectionPasture)
+                }
+                .frame(width: 28, height: 28)
+                .accessibilityHidden(true)
+                
                 Text("Mustering Records")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)
@@ -1100,8 +1147,19 @@ struct HealthRecordsCard: View {
     
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            // Debug: Header bar with dark background like dashboard cards
-            HStack {
+            // Debug: Header bar with icon and dark background like dashboard cards
+            HStack(spacing: 10) {
+                // Debug: Icon with circular background
+                ZStack {
+                    Circle()
+                        .fill(Theme.dashboardIconBackground)
+                    Image(systemName: "cross.case.fill")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.red)
+                }
+                .frame(width: 28, height: 28)
+                .accessibilityHidden(true)
+                
                 Text("Health Records")
                     .font(Theme.headline)
                     .foregroundStyle(Theme.primaryText)

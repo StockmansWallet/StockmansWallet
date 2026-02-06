@@ -561,9 +561,9 @@ struct HerdDynamicsView: View {
     }
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            if showsDashboardHeader {
-                // Debug: Dashboard-style header with icon, time range, and drag handle.
+        if showsDashboardHeader {
+            // Debug: Dashboard layout with header at top level
+            VStack(alignment: .leading, spacing: 16) {
                 DashboardCardHeader(
                     title: "Growth & Mortality",
                     iconName: "heart.fill",
@@ -588,15 +588,86 @@ struct HerdDynamicsView: View {
                         }
                     }
                 }
-            } else {
-                HStack {
+                
+                VStack(alignment: .leading, spacing: 12) {
+                    // Weight Gain Impact
+                    if let weightGainMetrics = calculateWeightGainMetrics() {
+                        BiologicalMetricRow(
+                            title: "Weight Gain",
+                            middleValue: "\(weightGainMetrics.totalKgGained.formatted(.number.precision(.fractionLength(0))))kg",
+                            value: weightGainMetrics.valueImpact,
+                            trend: .up
+                        )
+                    }
+                    
+                    // Calf Accrual
+                    if let breedingMetrics = calculateBreedingMetrics() {
+                        BiologicalMetricRow(
+                            title: "Calf Accrual",
+                            middleValue: "\(breedingMetrics.expectedProgeny)",
+                            value: breedingMetrics.valueImpact,
+                            trend: .up
+                        )
+                    }
+                    
+                    // Mortality Impact - always show, even if zero
+                    let mortalityMetrics = calculateMortalityMetrics()
+                    BiologicalMetricRow(
+                        title: "Mortality",
+                        middleValue: "\(mortalityMetrics.projectedLosses.formatted(.number.precision(.fractionLength(1))))",
+                        value: -mortalityMetrics.valueImpact,
+                        trend: mortalityMetrics.projectedLosses > 0 ? .down : .neutral
+                    )
+                    
+                    // Show message if no biological data is available
+                    if calculateWeightGainMetrics() == nil &&
+                       calculateBreedingMetrics() == nil {
+                        Text("No growth or breeding data tracked")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .padding(.vertical, 4)
+                    }
+                }
+                .padding(.horizontal, Theme.dashboardCardPadding + 4)
+                .padding(.bottom, Theme.dashboardCardPadding)
+            }
+            .sheet(isPresented: $showingCustomDatePicker) {
+                CustomDateRangeSheet(
+                    startDate: $customStartDate,
+                    endDate: $customEndDate,
+                    timeRange: Binding(
+                        get: { 
+                            dynamicsTimeRange == .custom ? .custom : .week 
+                        },
+                        set: { _ in 
+                            dynamicsTimeRange = .custom 
+                        }
+                    )
+                )
+            }
+        } else {
+            // Debug: Herd detail layout - wrap everything in card structure
+            VStack(alignment: .leading, spacing: 0) {
+                // Header bar with icon and background
+                HStack(spacing: 10) {
+                    ZStack {
+                        Circle()
+                            .fill(Theme.dashboardIconBackground)
+                        Image(systemName: "heart.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(Theme.dashboardDynamicsAccent)
+                    }
+                    .frame(width: 28, height: 28)
+                    .accessibilityHidden(true)
+                    
                     Text("Growth & Mortality")
                         .font(Theme.headline)
                         .foregroundStyle(Theme.primaryText)
-                    Spacer()
                     
-                    // Debug: Time range selector menu
-                    Menu {
+                    Spacer(minLength: 8)
+                    
+                    // Time range selector pill - matches dashboard style
+                    DashboardTimeRangePill(label: customDateRangeLabel) {
                         ForEach(DynamicsTimeRange.allCases, id: \.self) { range in
                             Button {
                                 HapticManager.tap()
@@ -614,84 +685,69 @@ struct HerdDynamicsView: View {
                                 }
                             }
                         }
-                    } label: {
-                        HStack(spacing: 4) {
-                            // Debug: Show custom date range or standard label
-                            Text(customDateRangeLabel)
-                                .font(Theme.caption)
-                                .foregroundStyle(Theme.secondaryText)
-                            Image(systemName: "chevron.down.circle.fill")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Theme.accentColor)
+                    }
+                }
+                .padding(.horizontal, Theme.dashboardCardPadding)
+                .padding(.vertical, 10)
+                .frame(maxWidth: .infinity)
+                .background(Theme.tertiaryBackground)
+                
+                // Content area
+                VStack(alignment: .leading, spacing: 12) {
+                    // Weight Gain Impact
+                    if let weightGainMetrics = calculateWeightGainMetrics() {
+                        BiologicalMetricRow(
+                            title: "Weight Gain",
+                            middleValue: "\(weightGainMetrics.totalKgGained.formatted(.number.precision(.fractionLength(0))))kg",
+                            value: weightGainMetrics.valueImpact,
+                            trend: .up
+                        )
+                    }
+                    
+                    // Calf Accrual
+                    if let breedingMetrics = calculateBreedingMetrics() {
+                        BiologicalMetricRow(
+                            title: "Calf Accrual",
+                            middleValue: "\(breedingMetrics.expectedProgeny)",
+                            value: breedingMetrics.valueImpact,
+                            trend: .up
+                        )
+                    }
+                    
+                    // Mortality Impact - always show, even if zero
+                    let mortalityMetrics = calculateMortalityMetrics()
+                    BiologicalMetricRow(
+                        title: "Mortality",
+                        middleValue: "\(mortalityMetrics.projectedLosses.formatted(.number.precision(.fractionLength(1))))",
+                        value: -mortalityMetrics.valueImpact,
+                        trend: mortalityMetrics.projectedLosses > 0 ? .down : .neutral
+                    )
+                    
+                    // Show message if no biological data is available
+                    if calculateWeightGainMetrics() == nil &&
+                       calculateBreedingMetrics() == nil {
+                        Text("No growth or breeding data tracked")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                            .padding(.vertical, 4)
+                    }
+                }
+                .padding(Theme.dashboardCardPadding)
+            }
+            .sheet(isPresented: $showingCustomDatePicker) {
+                CustomDateRangeSheet(
+                    startDate: $customStartDate,
+                    endDate: $customEndDate,
+                    timeRange: Binding(
+                        get: { 
+                            dynamicsTimeRange == .custom ? .custom : .week 
+                        },
+                        set: { _ in 
+                            dynamicsTimeRange = .custom 
                         }
-                        .contentShape(Rectangle())
-                    }
-                    .accessibilityLabel("Select dynamics time range")
-                    .accessibilityValue(dynamicsTimeRange.rawValue)
-                }
-            }
-            
-            VStack(alignment: .leading, spacing: 12) {
-                // Weight Gain Impact
-                if let weightGainMetrics = calculateWeightGainMetrics() {
-                    BiologicalMetricRow(
-                        title: "Weight Gain",
-                        middleValue: "\(weightGainMetrics.totalKgGained.formatted(.number.precision(.fractionLength(0))))kg",
-                        value: weightGainMetrics.valueImpact,
-                        trend: .up
                     )
-                }
-                
-                // Calf Accrual
-                if let breedingMetrics = calculateBreedingMetrics() {
-                    BiologicalMetricRow(
-                        title: "Calf Accrual",
-                        middleValue: "\(breedingMetrics.expectedProgeny)",
-                        value: breedingMetrics.valueImpact,
-                        trend: .up
-                    )
-                }
-                
-                // Mortality Impact - always show, even if zero
-                let mortalityMetrics = calculateMortalityMetrics()
-                BiologicalMetricRow(
-                    title: "Mortality",
-                    middleValue: "\(mortalityMetrics.projectedLosses.formatted(.number.precision(.fractionLength(1))))",
-                    value: -mortalityMetrics.valueImpact,
-                    trend: mortalityMetrics.projectedLosses > 0 ? .down : .neutral
                 )
-                
-                // Show message if no biological data is available
-                if calculateWeightGainMetrics() == nil &&
-                   calculateBreedingMetrics() == nil {
-                    Text("No growth or breeding data tracked")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondaryText)
-                        .padding(.vertical, 4)
-                }
             }
-            // Debug: Slightly more horizontal padding for bottom content area.
-            .padding(.horizontal, showsDashboardHeader ? Theme.dashboardCardPadding + 4 : 0)
-            .padding(.bottom, showsDashboardHeader ? Theme.dashboardCardPadding : 0)
-        }
-        // Debug: Use standard padding for non-dashboard usage.
-        .padding(showsDashboardHeader ? 0 : Theme.cardPadding)
-        // Debug: No card background/stroke for cleaner dashboard look
-        // .cardStyle()
-        .sheet(isPresented: $showingCustomDatePicker) {
-            CustomDateRangeSheet(
-                startDate: $customStartDate,
-                endDate: $customEndDate,
-                timeRange: Binding(
-                    get: { 
-                        // Debug: Map DynamicsTimeRange to TimeRange for sheet compatibility
-                        dynamicsTimeRange == .custom ? .custom : .week 
-                    },
-                    set: { _ in 
-                        dynamicsTimeRange = .custom 
-                    }
-                )
-            )
         }
     }
     
