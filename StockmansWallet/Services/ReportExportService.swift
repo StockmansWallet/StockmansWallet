@@ -69,97 +69,261 @@ class ReportExportService {
         let pageWidth = 8.5 * 72.0
         let pageHeight = 11 * 72.0
         let pageRect = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
+        let margin: CGFloat = 72.0
         
         let renderer = UIGraphicsPDFRenderer(bounds: pageRect, format: format)
         
         let fileName = "AssetRegister_\(Date().timeIntervalSince1970).pdf"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         
+        // Debug: Track page numbers
+        var currentPage = 0
+        
         let data = renderer.pdfData { context in
             context.beginPage()
+            currentPage += 1
             
-            var yPosition: CGFloat = 72
+            var yPosition: CGFloat = margin
             
-            // Title
-            let titleAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.boldSystemFont(ofSize: 24),
-                .foregroundColor: UIColor.black
-            ]
-            "Asset Register".draw(at: CGPoint(x: 72, y: yPosition), withAttributes: titleAttributes)
-            yPosition += 40
+            // MARK: - Apple-inspired Header Design
             
-            // Date
+            // Top bar: Logo on left, date on right
+            let topBarY = yPosition
+            if let logoImage = UIImage(named: "stockmanswallet_logo_bw") {
+                let logoHeight: CGFloat = 40 // Increased from 28
+                let logoAspect = logoImage.size.width / logoImage.size.height
+                let logoWidth = logoHeight * logoAspect
+                let logoRect = CGRect(x: margin, y: topBarY, width: logoWidth, height: logoHeight)
+                logoImage.draw(in: logoRect)
+            }
+            
+            // Generated date on right (subtle)
             let dateFormatter = DateFormatter()
-            dateFormatter.dateStyle = .long
-            dateFormatter.timeStyle = .none
-            let dateAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 12),
-                .foregroundColor: UIColor.gray
+            dateFormatter.dateStyle = .medium
+            let generatedText = dateFormatter.string(from: Date())
+            let captionAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 11),
+                .foregroundColor: UIColor(white: 0.6, alpha: 1.0)
             ]
-            "Generated: \(dateFormatter.string(from: Date()))".draw(at: CGPoint(x: 72, y: yPosition), withAttributes: dateAttributes)
-            yPosition += 30
+            let generatedSize = generatedText.size(withAttributes: captionAttributes)
+            generatedText.draw(at: CGPoint(x: pageWidth - margin - generatedSize.width, y: topBarY + 8), withAttributes: captionAttributes)
             
-            // Total Value
-            let totalAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.boldSystemFont(ofSize: 18),
+            yPosition += 52 // Increased from 44
+            
+            // Large title
+            let titleAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 28, weight: .bold), // Reduced from 32
                 .foregroundColor: UIColor.black
             ]
-            "Total Portfolio Value: \(formatCurrency(totalValue))".draw(at: CGPoint(x: 72, y: yPosition), withAttributes: totalAttributes)
-            yPosition += 50
+            "Asset Register".draw(at: CGPoint(x: margin, y: yPosition), withAttributes: titleAttributes)
+            yPosition += 38 // Reduced from 44
             
-            // Herds
+            // Subtle divider
+            let dividerPath = UIBezierPath()
+            dividerPath.move(to: CGPoint(x: margin, y: yPosition))
+            dividerPath.addLine(to: CGPoint(x: pageWidth - margin, y: yPosition))
+            UIColor(white: 0.9, alpha: 1.0).setStroke()
+            dividerPath.lineWidth = 0.5
+            dividerPath.stroke()
+            yPosition += 20
+            
+            // User details in two-column grid
+            let labelAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 10, weight: .medium),
+                .foregroundColor: UIColor(white: 0.6, alpha: 1.0),
+                .kern: 0.5
+            ]
+            let valueAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 13),
+                .foregroundColor: UIColor.black
+            ]
+            
+            let col1X = margin
+            let col2X = margin + ((pageWidth - margin * 2) * 0.5)
+            
+            // Row 1: Name | Property
+            if let firstName = preferences.firstName, let lastName = preferences.lastName {
+                "PREPARED FOR".draw(at: CGPoint(x: col1X, y: yPosition), withAttributes: labelAttributes)
+                "\(firstName) \(lastName)".draw(at: CGPoint(x: col1X, y: yPosition + 14), withAttributes: valueAttributes)
+            }
+            
+            if let propertyName = preferences.propertyName {
+                "PROPERTY".draw(at: CGPoint(x: col2X, y: yPosition), withAttributes: labelAttributes)
+                propertyName.draw(at: CGPoint(x: col2X, y: yPosition + 14), withAttributes: valueAttributes)
+                }
+                yPosition += 36
+                
+                // Row 2: PIC | State
+                if let pic = preferences.propertyPIC {
+                    "PIC CODE".draw(at: CGPoint(x: col1X, y: yPosition), withAttributes: labelAttributes)
+                    pic.draw(at: CGPoint(x: col1X, y: yPosition + 14), withAttributes: valueAttributes)
+                }
+                
+                let state = preferences.defaultState
+                if !state.isEmpty {
+                    "STATE".draw(at: CGPoint(x: col2X, y: yPosition), withAttributes: labelAttributes)
+                    state.draw(at: CGPoint(x: col2X, y: yPosition + 14), withAttributes: valueAttributes)
+                }
+                yPosition += 40
+            
+            // Bottom divider
+            let divider2 = UIBezierPath()
+            divider2.move(to: CGPoint(x: margin, y: yPosition))
+            divider2.addLine(to: CGPoint(x: pageWidth - margin, y: yPosition))
+            UIColor(white: 0.9, alpha: 1.0).setStroke()
+            divider2.lineWidth = 0.5
+            divider2.stroke()
+            yPosition += 28
+            
+            // Total Portfolio Value - Hero Card (optimized)
+            let cardWidth = pageWidth - (margin * 2)
+            let heroCardHeight: CGFloat = 90 // Reduced from 100
+            let cardRect = CGRect(x: margin, y: yPosition, width: cardWidth, height: heroCardHeight)
+            let cardPath = UIBezierPath(roundedRect: cardRect, cornerRadius: 12)
+            
+            UIColor(white: 0.98, alpha: 1.0).setFill()
+            cardPath.fill()
+            
+            UIColor(white: 0.9, alpha: 1.0).setStroke()
+            cardPath.lineWidth = 1
+            cardPath.stroke()
+            
+            let heroLabelAttr: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 9, weight: .medium), // Reduced from 10
+                .foregroundColor: UIColor(white: 0.6, alpha: 1.0),
+                .kern: 1.0
+            ]
+            "TOTAL PORTFOLIO VALUE".draw(at: CGPoint(x: margin + 20, y: yPosition + 20), withAttributes: heroLabelAttr)
+            
+            let heroValueAttr: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 36, weight: .bold), // Reduced from 44
+                .foregroundColor: UIColor.black
+            ]
+            formatCurrency(totalValue).draw(at: CGPoint(x: margin + 20, y: yPosition + 42), withAttributes: heroValueAttr)
+            
+            yPosition += heroCardHeight + 12 // Adjusted spacing
+            
+            // Section Header
+            let sectionHeaderAttr: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 18, weight: .semibold), // Reduced from 20
+                .foregroundColor: UIColor.black
+            ]
+            "Livestock Assets".draw(at: CGPoint(x: margin, y: yPosition), withAttributes: sectionHeaderAttr)
+            yPosition += 24 // Reduced from 32
+            
+            // Herds as cards
             let activeHerds = herds.filter { !$0.isSold }
             for herd in activeHerds {
                 if yPosition > pageHeight - 200 {
+                    // Draw footer for current page
+                    let footerText = "\(currentPage)"
+                    let footerAttr: [NSAttributedString.Key: Any] = [
+                        .font: UIFont.systemFont(ofSize: 11),
+                        .foregroundColor: UIColor(white: 0.6, alpha: 1.0)
+                    ]
+                    let textSize = footerText.size(withAttributes: footerAttr)
+                    let xPosition = (pageWidth - textSize.width) / 2
+                    footerText.draw(at: CGPoint(x: xPosition, y: pageHeight - margin/2), withAttributes: footerAttr)
+                    
                     context.beginPage()
-                    yPosition = 72
+                    currentPage += 1
+                    yPosition = margin + 20
                 }
                 
-                let herdAttributes: [NSAttributedString.Key: Any] = [
-                    .font: UIFont.boldSystemFont(ofSize: 16),
+                // Herd Card (with labels)
+                let herdCardHeight: CGFloat = 120 // Increased from 110
+                let herdCardRect = CGRect(x: margin, y: yPosition, width: cardWidth, height: herdCardHeight)
+                let herdCardPath = UIBezierPath(roundedRect: herdCardRect, cornerRadius: 12)
+                
+                UIColor(white: 0.98, alpha: 1.0).setFill()
+                herdCardPath.fill()
+                
+                UIColor(white: 0.9, alpha: 1.0).setStroke()
+                herdCardPath.lineWidth = 0.5
+                herdCardPath.stroke()
+                
+                let cardPadding: CGFloat = 20 // Increased from 16
+                var cardY = yPosition + cardPadding
+                let leftX = margin + cardPadding
+                let rightCol = margin + (cardWidth * 0.55)
+                
+                // Herd name + value
+                let nameAttr: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 15, weight: .semibold),
                     .foregroundColor: UIColor.black
                 ]
-                herd.name.draw(at: CGPoint(x: 72, y: yPosition), withAttributes: herdAttributes)
-                yPosition += 25
-                
-                let bodyAttributes: [NSAttributedString.Key: Any] = [
-                    .font: UIFont.systemFont(ofSize: 12),
-                    .foregroundColor: UIColor.black
-                ]
-                
-                // Debug: Format dates for display
-                let dateFormatter = DateFormatter()
-                dateFormatter.dateStyle = .medium
-                dateFormatter.timeStyle = .none
-                
-                var lines = [
-                    "Category: \(herd.breed) \(herd.category)",
-                    "Head Count: \(herd.headCount)",
-                    "Species: \(herd.species)",
-                    "Age: \(herd.ageMonths) months",
-                    "Herd last updated: \(dateFormatter.string(from: herd.updatedAt))"
-                ]
-                
-                // Debug: Add last muster date if available
-                if let lastMuster = herd.lastMusterDate {
-                    lines.append("Last Mustered: \(dateFormatter.string(from: lastMuster))")
-                }
+                herd.name.draw(at: CGPoint(x: leftX, y: cardY), withAttributes: nameAttr)
                 
                 if let valuation = valuations[herd.id] {
-                    lines.append(contentsOf: [
-                        "Projected Weight: \(Int(valuation.projectedWeight)) kg",
-                        "Price per kg: \(String(format: "%.2f", valuation.pricePerKg)) $/kg",
-                        "Net Value: \(formatCurrency(valuation.netRealizableValue))"
-                    ])
+                    let valueAttr: [NSAttributedString.Key: Any] = [
+                        .font: UIFont.systemFont(ofSize: 16, weight: .semibold), // Reduced from 17
+                        .foregroundColor: UIColor.black
+                    ]
+                    let valueText = formatCurrency(valuation.netRealizableValue)
+                    let valueSize = valueText.size(withAttributes: valueAttr)
+                    valueText.draw(at: CGPoint(x: margin + cardWidth - cardPadding - valueSize.width, y: cardY), withAttributes: valueAttr)
                 }
                 
-                for line in lines {
-                    line.draw(at: CGPoint(x: 90, y: yPosition), withAttributes: bodyAttributes)
-                    yPosition += 20
+                cardY += 22
+                
+                // Category subtitle
+                let subtitleAttr: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 11),
+                    .foregroundColor: UIColor(white: 0.4, alpha: 1.0)
+                ]
+                "\(herd.breed) \(herd.category)".draw(at: CGPoint(x: leftX, y: cardY), withAttributes: subtitleAttr)
+                cardY += 18
+                
+                // Details in grid WITH LABELS
+                let detailAttr: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 13),
+                    .foregroundColor: UIColor.black
+                ]
+                let labelAttr: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 9, weight: .medium),
+                    .foregroundColor: UIColor(white: 0.6, alpha: 1.0),
+                    .kern: 0.3
+                ]
+                
+                var leftY = cardY
+                var rightY = cardY
+                
+                // Left column with labels
+                "HEAD COUNT".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: labelAttr)
+                leftY += 12
+                "\(herd.headCount) head".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: detailAttr)
+                leftY += 18
+                
+                "AGE".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: labelAttr)
+                leftY += 12
+                "\(herd.ageMonths) months".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: detailAttr)
+                
+                // Right column with labels
+                if let valuation = valuations[herd.id] {
+                    "WEIGHT".draw(at: CGPoint(x: rightCol, y: rightY), withAttributes: labelAttr)
+                    rightY += 12
+                    let weightText = "\(Int(valuation.projectedWeight)) kg"
+                    weightText.draw(at: CGPoint(x: rightCol, y: rightY), withAttributes: detailAttr)
+                    rightY += 18
+                    
+                    "PRICE".draw(at: CGPoint(x: rightCol, y: rightY), withAttributes: labelAttr)
+                    rightY += 12
+                    let priceText = "$\(String(format: "%.2f", valuation.pricePerKg))/kg"
+                    priceText.draw(at: CGPoint(x: rightCol, y: rightY), withAttributes: detailAttr)
                 }
                 
-                yPosition += 20
+                yPosition += herdCardHeight + 12 // Card height + reduced spacing
             }
+            
+            // Draw footer for last page (Asset Register)
+            let footerText = "\(currentPage)"
+            let footerAttr: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 11),
+                .foregroundColor: UIColor(white: 0.6, alpha: 1.0)
+            ]
+            let textSize = footerText.size(withAttributes: footerAttr)
+            let xPosition = (pageWidth - textSize.width) / 2
+            footerText.draw(at: CGPoint(x: xPosition, y: pageHeight - margin/2), withAttributes: footerAttr)
         }
         
         do {
@@ -172,7 +336,7 @@ class ReportExportService {
     }
     
     /// Generates Sales Summary PDF
-    func generateSalesSummaryPDF(sales: [SalesRecord]) -> URL? {
+    func generateSalesSummaryPDF(sales: [SalesRecord], preferences: UserPreferences? = nil) -> URL? {
         let pdfMetaData = [
             kCGPDFContextCreator: "Stockman's Wallet",
             kCGPDFContextAuthor: "Stockman's Wallet",
@@ -184,6 +348,7 @@ class ReportExportService {
         let pageWidth = 8.5 * 72.0
         let pageHeight = 11 * 72.0
         let pageRect = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
+        let margin: CGFloat = 72.0
         
         let renderer = UIGraphicsPDFRenderer(bounds: pageRect, format: format)
         
@@ -195,83 +360,241 @@ class ReportExportService {
         let totalGross = sales.reduce(0) { $0 + $1.totalGrossValue }
         let totalFreight = sales.reduce(0) { $0 + $1.freightCost }
         
+        // Debug: Track page numbers
+        var currentPage = 0
+        
         let data = renderer.pdfData { context in
             context.beginPage()
+            currentPage += 1
             
-            var yPosition: CGFloat = 72
+            var yPosition: CGFloat = margin
+            let cardWidth = pageWidth - (margin * 2)
             
-            // Title
-            let titleAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.boldSystemFont(ofSize: 24),
-                .foregroundColor: UIColor.black
-            ]
-            "Sales Summary".draw(at: CGPoint(x: 72, y: yPosition), withAttributes: titleAttributes)
-            yPosition += 40
+            // MARK: - Apple-inspired Header (Sales Summary)
             
-            // Date
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateStyle = .long
-            dateFormatter.timeStyle = .none
-            let dateAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 12),
-                .foregroundColor: UIColor.gray
-            ]
-            "Generated: \(dateFormatter.string(from: Date()))".draw(at: CGPoint(x: 72, y: yPosition), withAttributes: dateAttributes)
-            yPosition += 40
-            
-            // Summary
-            let summaryAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.boldSystemFont(ofSize: 14),
-                .foregroundColor: UIColor.black
-            ]
-            let bodyAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 12),
-                .foregroundColor: UIColor.black
-            ]
-            
-            "Total Sales Value: \(formatCurrency(totalSales))".draw(at: CGPoint(x: 72, y: yPosition), withAttributes: summaryAttributes)
-            yPosition += 25
-            "Total Gross Value: \(formatCurrency(totalGross))".draw(at: CGPoint(x: 72, y: yPosition), withAttributes: bodyAttributes)
-            yPosition += 20
-            if totalFreight > 0 {
-                "Total Freight Costs: \(formatCurrency(totalFreight))".draw(at: CGPoint(x: 72, y: yPosition), withAttributes: bodyAttributes)
-                yPosition += 20
+            // Top bar: Logo on left, date on right
+            let topBarY = yPosition
+            if let logoImage = UIImage(named: "stockmanswallet_logo_bw") {
+                let logoHeight: CGFloat = 40 // Increased from 28
+                let logoAspect = logoImage.size.width / logoImage.size.height
+                let logoWidth = logoHeight * logoAspect
+                let logoRect = CGRect(x: margin, y: topBarY, width: logoWidth, height: logoHeight)
+                logoImage.draw(in: logoRect)
             }
+            
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .medium
+            let generatedText = dateFormatter.string(from: Date())
+            let captionAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 11),
+                .foregroundColor: UIColor(white: 0.6, alpha: 1.0)
+            ]
+            let generatedSize = generatedText.size(withAttributes: captionAttributes)
+            generatedText.draw(at: CGPoint(x: pageWidth - margin - generatedSize.width, y: topBarY + 8), withAttributes: captionAttributes)
+            
+            yPosition += 52
+            
+            // Large title
+            let titleAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 28, weight: .bold), // Reduced from 32
+                .foregroundColor: UIColor.black
+            ]
+            "Sales Summary".draw(at: CGPoint(x: margin, y: yPosition), withAttributes: titleAttributes)
+            yPosition += 38
+            
+            // Subtle divider
+            let dividerPath = UIBezierPath()
+            dividerPath.move(to: CGPoint(x: margin, y: yPosition))
+            dividerPath.addLine(to: CGPoint(x: pageWidth - margin, y: yPosition))
+            UIColor(white: 0.9, alpha: 1.0).setStroke()
+            dividerPath.lineWidth = 0.5
+            dividerPath.stroke()
             yPosition += 20
             
-            // Sales List
-            for sale in sortedSales {
-                if yPosition > pageHeight - 150 {
-                    context.beginPage()
-                    yPosition = 72
+            // User details in two-column grid (if available)
+            if let prefs = preferences {
+                let labelAttributes: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 10, weight: .medium),
+                    .foregroundColor: UIColor(white: 0.6, alpha: 1.0),
+                    .kern: 0.5
+                ]
+                let valueAttributes: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 13),
+                    .foregroundColor: UIColor.black
+                ]
+                
+                let col1X = margin
+                let col2X = margin + (cardWidth * 0.5)
+                
+                if let firstName = prefs.firstName, let lastName = prefs.lastName {
+                    "PREPARED FOR".draw(at: CGPoint(x: col1X, y: yPosition), withAttributes: labelAttributes)
+                    "\(firstName) \(lastName)".draw(at: CGPoint(x: col1X, y: yPosition + 14), withAttributes: valueAttributes)
                 }
                 
+                if let propertyName = prefs.propertyName {
+                    "PROPERTY".draw(at: CGPoint(x: col2X, y: yPosition), withAttributes: labelAttributes)
+                    propertyName.draw(at: CGPoint(x: col2X, y: yPosition + 14), withAttributes: valueAttributes)
+                }
+                yPosition += 40
+                
+                let divider2 = UIBezierPath()
+                divider2.move(to: CGPoint(x: margin, y: yPosition))
+                divider2.addLine(to: CGPoint(x: pageWidth - margin, y: yPosition))
+                UIColor(white: 0.9, alpha: 1.0).setStroke()
+                divider2.lineWidth = 0.5
+                divider2.stroke()
+                yPosition += 28
+            }
+            
+            // Summary Hero Card (optimized)
+            let summaryCardHeight: CGFloat = 90 // Reduced from 100
+            let summaryCardRect = CGRect(x: margin, y: yPosition, width: cardWidth, height: summaryCardHeight)
+            let summaryCardPath = UIBezierPath(roundedRect: summaryCardRect, cornerRadius: 12)
+            
+            UIColor(white: 0.98, alpha: 1.0).setFill()
+            summaryCardPath.fill()
+            
+            UIColor(white: 0.9, alpha: 1.0).setStroke()
+            summaryCardPath.lineWidth = 1
+            summaryCardPath.stroke()
+            
+            let heroLabelAttr: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 9, weight: .medium), // Reduced from 10
+                .foregroundColor: UIColor(white: 0.6, alpha: 1.0),
+                .kern: 1.0
+            ]
+            "TOTAL SALES VALUE".draw(at: CGPoint(x: margin + 20, y: yPosition + 20), withAttributes: heroLabelAttr)
+            
+            let heroValueAttr: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 36, weight: .bold), // Reduced from 44
+                .foregroundColor: UIColor.black
+            ]
+            formatCurrency(totalSales).draw(at: CGPoint(x: margin + 20, y: yPosition + 42), withAttributes: heroValueAttr)
+            
+            yPosition += summaryCardHeight + 12
+            
+            // Additional summary stats (compact, inline)
+            let detailAttr: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 13),
+                .foregroundColor: UIColor(white: 0.4, alpha: 1.0)
+            ]
+            "Gross: \(formatCurrency(totalGross))".draw(at: CGPoint(x: margin, y: yPosition), withAttributes: detailAttr)
+            if totalFreight > 0 {
+                let grossSize = "Gross: \(formatCurrency(totalGross))  ".size(withAttributes: detailAttr)
+                "Freight: \(formatCurrency(totalFreight))".draw(at: CGPoint(x: margin + grossSize.width, y: yPosition), withAttributes: detailAttr)
+            }
+            yPosition += 32
+            
+            // Section header
+            let sectionHeaderAttr: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 18, weight: .semibold), // Reduced from 20
+                .foregroundColor: UIColor.black
+            ]
+            "Sales History".draw(at: CGPoint(x: margin, y: yPosition), withAttributes: sectionHeaderAttr)
+            yPosition += 24 // Reduced from 32
+            
+            // Sales as cards
+            for sale in sortedSales {
+                if yPosition > pageHeight - 150 {
+                    // Draw footer for current page
+                    let footerText = "\(currentPage)"
+                    let footerAttr: [NSAttributedString.Key: Any] = [
+                        .font: UIFont.systemFont(ofSize: 11),
+                        .foregroundColor: UIColor(white: 0.6, alpha: 1.0)
+                    ]
+                    let textSize = footerText.size(withAttributes: footerAttr)
+                    let xPosition = (pageWidth - textSize.width) / 2
+                    footerText.draw(at: CGPoint(x: xPosition, y: pageHeight - margin/2), withAttributes: footerAttr)
+                    
+                    context.beginPage()
+                    currentPage += 1
+                    yPosition = margin + 20
+                }
+                
+                // Sale Card (with labels, optimized)
+                let saleCardHeight: CGFloat = 110 // Increased from 100
+                let saleCardRect = CGRect(x: margin, y: yPosition, width: cardWidth, height: saleCardHeight)
+                let saleCardPath = UIBezierPath(roundedRect: saleCardRect, cornerRadius: 12)
+                
+                UIColor(white: 0.98, alpha: 1.0).setFill()
+                saleCardPath.fill()
+                
+                UIColor(white: 0.9, alpha: 1.0).setStroke()
+                saleCardPath.lineWidth = 0.5
+                saleCardPath.stroke()
+                
+                let cardPadding: CGFloat = 20 // Increased from 16
+                var cardY = yPosition + cardPadding
+                let leftX = margin + cardPadding
+                let rightCol = margin + (cardWidth * 0.55)
+                
+                // Date + Net value
                 let dateFormatter = DateFormatter()
                 dateFormatter.dateStyle = .medium
                 dateFormatter.timeStyle = .none
                 
-                let saleAttributes: [NSAttributedString.Key: Any] = [
-                    .font: UIFont.boldSystemFont(ofSize: 14),
+                let dateAttr: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 15, weight: .semibold),
                     .foregroundColor: UIColor.black
                 ]
-                dateFormatter.string(from: sale.saleDate).draw(at: CGPoint(x: 72, y: yPosition), withAttributes: saleAttributes)
-                yPosition += 25
+                dateFormatter.string(from: sale.saleDate).draw(at: CGPoint(x: leftX, y: cardY), withAttributes: dateAttr)
                 
-                let lines = [
-                    "Head Count: \(sale.headCount)",
-                    "Average Weight: \(Int(sale.averageWeight)) kg",
-                    "Price per kg: \(String(format: "%.2f", sale.pricePerKg)) $/kg",
-                    "Gross Value: \(formatCurrency(sale.totalGrossValue))",
-                    "Net Value: \(formatCurrency(sale.netValue))"
+                let valueAttr: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 16, weight: .semibold), // Reduced from 17
+                    .foregroundColor: UIColor.black
+                ]
+                let valueText = formatCurrency(sale.netValue)
+                let valueSize = valueText.size(withAttributes: valueAttr)
+                valueText.draw(at: CGPoint(x: margin + cardWidth - cardPadding - valueSize.width, y: cardY), withAttributes: valueAttr)
+                
+                cardY += 22
+                
+                // Details in two columns WITH LABELS
+                let detailAttr: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 13),
+                    .foregroundColor: UIColor.black
+                ]
+                let labelAttr: [NSAttributedString.Key: Any] = [
+                    .font: UIFont.systemFont(ofSize: 9, weight: .medium),
+                    .foregroundColor: UIColor(white: 0.6, alpha: 1.0),
+                    .kern: 0.3
                 ]
                 
-                for line in lines {
-                    line.draw(at: CGPoint(x: 90, y: yPosition), withAttributes: bodyAttributes)
-                    yPosition += 20
-                }
+                var leftY = cardY
+                var rightY = cardY
                 
-                yPosition += 20
+                // Left column with labels
+                "HEAD COUNT".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: labelAttr)
+                leftY += 12
+                "\(sale.headCount) head".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: detailAttr)
+                leftY += 18
+                
+                "AVG WEIGHT".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: labelAttr)
+                leftY += 12
+                "\(Int(sale.averageWeight)) kg".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: detailAttr)
+                
+                // Right column with labels
+                "PRICE".draw(at: CGPoint(x: rightCol, y: rightY), withAttributes: labelAttr)
+                rightY += 12
+                "$\(String(format: "%.2f", sale.pricePerKg))/kg".draw(at: CGPoint(x: rightCol, y: rightY), withAttributes: detailAttr)
+                rightY += 18
+                
+                "GROSS VALUE".draw(at: CGPoint(x: rightCol, y: rightY), withAttributes: labelAttr)
+                rightY += 12
+                formatCurrency(sale.totalGrossValue).draw(at: CGPoint(x: rightCol, y: rightY), withAttributes: detailAttr)
+                
+                yPosition += saleCardHeight + 12 // Card height + spacing
             }
+            
+            // Draw footer for last page (Sales Summary)
+            let footerText = "\(currentPage)"
+            let footerAttr: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 11),
+                .foregroundColor: UIColor(white: 0.6, alpha: 1.0)
+            ]
+            let textSize = footerText.size(withAttributes: footerAttr)
+            let xPosition = (pageWidth - textSize.width) / 2
+            footerText.draw(at: CGPoint(x: xPosition, y: pageHeight - margin/2), withAttributes: footerAttr)
         }
         
         do {

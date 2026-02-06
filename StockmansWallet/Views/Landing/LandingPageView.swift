@@ -14,6 +14,8 @@ struct LandingPageView: View {
     
     // Debug: Control Lottie animation playback state
     @State private var isAnimationPlaying = false
+    // Debug: Track if animation has played once to prevent replay on view updates
+    @State private var hasPlayedOnce = false
     
     var body: some View {
         ZStack {
@@ -42,8 +44,12 @@ struct LandingPageView: View {
                     .frame(maxWidth: 350, maxHeight: 250)
                     .accessibilityLabel("Stockman's Wallet")
                     .onAppear {
-                        // Debug: Start animation immediately when landing page appears
-                        isAnimationPlaying = true
+                        // Debug: Start animation only on first appearance
+                        if !hasPlayedOnce {
+                            print("LandingPageView: Starting logo animation (first time)")
+                            isAnimationPlaying = true
+                            hasPlayedOnce = true
+                        }
                     }
                     
                     // Debug: Environment badge for non-production builds (directly under logo)

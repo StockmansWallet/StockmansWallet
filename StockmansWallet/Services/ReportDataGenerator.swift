@@ -12,6 +12,50 @@ import SwiftData
 // Debug: Main report data generator
 class ReportDataGenerator {
     
+    // MARK: - Helper Methods for User/Property Details
+    
+    /// Extract user details from UserPreferences
+    // Debug: Populate user details for PDF header
+    private static func extractUserDetails(from preferences: UserPreferences) -> UserDetails {
+        // Build full name
+        let fullName: String? = {
+            let first = preferences.firstName ?? ""
+            let last = preferences.lastName ?? ""
+            if first.isEmpty && last.isEmpty {
+                return nil
+            }
+            return "\(first) \(last)".trimmingCharacters(in: .whitespaces)
+        }()
+        
+        return UserDetails(
+            fullName: fullName,
+            email: preferences.email,
+            propertyName: preferences.propertyName,
+            propertyPIC: preferences.propertyPIC,
+            propertyRole: preferences.propertyRole,
+            propertyAddress: preferences.propertyAddress,
+            state: preferences.defaultState.isEmpty ? nil : preferences.defaultState,
+            companyName: preferences.companyName,
+            companyType: preferences.companyType,
+            roleInCompany: preferences.roleInCompany
+        )
+    }
+    
+    /// Extract property details from Property array
+    // Debug: Get default property details for PDF
+    private static func extractPropertyDetails(from properties: [Property]) -> PropertyDetails? {
+        guard let defaultProperty = properties.first(where: { $0.isDefault }) ?? properties.first else {
+            return nil
+        }
+        
+        return PropertyDetails(
+            acreage: defaultProperty.acreage,
+            propertyType: defaultProperty.propertyType,
+            defaultSaleyard: defaultProperty.defaultSaleyard,
+            region: defaultProperty.region
+        )
+    }
+    
     // MARK: - Main Generation Method
     // Debug: Entry point for generating report data
     static func generateReportData(
@@ -35,6 +79,7 @@ class ReportDataGenerator {
                 herds: filteredHerds,
                 configuration: configuration,
                 preferences: preferences,
+                properties: properties,
                 modelContext: modelContext,
                 valuationEngine: valuationEngine
             )
@@ -43,7 +88,8 @@ class ReportDataGenerator {
             return generateSalesSummaryData(
                 sales: filteredSales,
                 configuration: configuration,
-                preferences: preferences
+                preferences: preferences,
+                properties: properties
             )
             
         case .saleyardComparison:
@@ -100,6 +146,7 @@ class ReportDataGenerator {
         herds: [HerdGroup],
         configuration: ReportConfiguration,
         preferences: UserPreferences,
+        properties: [Property],
         modelContext: ModelContext,
         valuationEngine: ValuationEngine
     ) async -> ReportData {
@@ -107,7 +154,7 @@ class ReportDataGenerator {
         var herdDataArray: [HerdReportData] = []
         var totalValue: Double = 0.0
         
-        // TODO: Calculate valuations for each herd
+        // Calculate valuations for each herd
         for herd in herds {
             // Calculate valuation
             let valuation = await valuationEngine.calculateHerdValue(
@@ -144,6 +191,10 @@ class ReportDataGenerator {
         // Get farm name if configured
         let farmName = configuration.includeFarmName ? (preferences.propertyName ?? "My Farm") : nil
         
+        // Debug: Extract user and property details for PDF header
+        let userDetails = extractUserDetails(from: preferences)
+        let propertyDetails = configuration.includePropertyDetails ? extractPropertyDetails(from: properties) : nil
+        
         return ReportData(
             farmName: farmName,
             totalValue: totalValue,
@@ -152,7 +203,9 @@ class ReportDataGenerator {
             salesData: [],
             saleyardComparison: [],
             landValueAnalysis: [],
-            farmComparison: []
+            farmComparison: [],
+            userDetails: userDetails,
+            propertyDetails: propertyDetails
         )
     }
     
@@ -161,7 +214,8 @@ class ReportDataGenerator {
     private static func generateSalesSummaryData(
         sales: [SalesRecord],
         configuration: ReportConfiguration,
-        preferences: UserPreferences
+        preferences: UserPreferences,
+        properties: [Property]
     ) -> ReportData {
         
         var salesDataArray: [SaleReportData] = []
@@ -188,6 +242,10 @@ class ReportDataGenerator {
         
         let farmName = configuration.includeFarmName ? (preferences.propertyName ?? "My Farm") : nil
         
+        // Debug: Extract user and property details for PDF header
+        let userDetails = extractUserDetails(from: preferences)
+        let propertyDetails = configuration.includePropertyDetails ? extractPropertyDetails(from: properties) : nil
+        
         return ReportData(
             farmName: farmName,
             totalValue: 0,
@@ -196,7 +254,9 @@ class ReportDataGenerator {
             salesData: salesDataArray,
             saleyardComparison: [],
             landValueAnalysis: [],
-            farmComparison: []
+            farmComparison: [],
+            userDetails: userDetails,
+            propertyDetails: propertyDetails
         )
     }
     
@@ -263,6 +323,10 @@ class ReportDataGenerator {
         
         let farmName = configuration.includeFarmName ? (preferences.propertyName ?? "My Farm") : nil
         
+        // Debug: Extract user and property details for PDF header
+        let userDetails = extractUserDetails(from: preferences)
+        let propertyDetails = configuration.includePropertyDetails ? extractPropertyDetails(from: []) : nil
+        
         return ReportData(
             farmName: farmName,
             totalValue: 0,
@@ -271,7 +335,9 @@ class ReportDataGenerator {
             salesData: [],
             saleyardComparison: comparisonData,
             landValueAnalysis: [],
-            farmComparison: []
+            farmComparison: [],
+            userDetails: userDetails,
+            propertyDetails: propertyDetails
         )
     }
     
@@ -322,6 +388,10 @@ class ReportDataGenerator {
         
         let farmName = configuration.includeFarmName ? (preferences.propertyName ?? "My Farm") : nil
         
+        // Debug: Extract user and property details for PDF header
+        let userDetails = extractUserDetails(from: preferences)
+        let propertyDetails = configuration.includePropertyDetails ? extractPropertyDetails(from: properties) : nil
+        
         return ReportData(
             farmName: farmName,
             totalValue: 0,
@@ -330,7 +400,9 @@ class ReportDataGenerator {
             salesData: [],
             saleyardComparison: [],
             landValueAnalysis: analysisData,
-            farmComparison: []
+            farmComparison: [],
+            userDetails: userDetails,
+            propertyDetails: propertyDetails
         )
     }
     
@@ -389,6 +461,10 @@ class ReportDataGenerator {
         
         let farmName = configuration.includeFarmName ? (preferences.propertyName ?? "My Farm") : nil
         
+        // Debug: Extract user and property details for PDF header
+        let userDetails = extractUserDetails(from: preferences)
+        let propertyDetails = configuration.includePropertyDetails ? extractPropertyDetails(from: properties) : nil
+        
         return ReportData(
             farmName: farmName,
             totalValue: 0,
@@ -397,7 +473,9 @@ class ReportDataGenerator {
             salesData: [],
             saleyardComparison: [],
             landValueAnalysis: [],
-            farmComparison: comparisonData
+            farmComparison: comparisonData,
+            userDetails: userDetails,
+            propertyDetails: propertyDetails
         )
     }
 }

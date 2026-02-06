@@ -9,10 +9,9 @@ import SwiftUI
 
 // MARK: - Card Pages
 // Debug: Removed landing card - now shown as separate full-screen view before this
+// Debug: Removed beta and feedback cards - streamlined onboarding flow
 private enum WelcomeCardPage: Int, CaseIterable, Identifiable {
     case welcome
-    case beta
-    case feedback
     case terms
 
     var id: Int { rawValue }
@@ -21,10 +20,6 @@ private enum WelcomeCardPage: Int, CaseIterable, Identifiable {
         switch self {
         case .welcome:
             return "Welcome to\nStockman's Wallet"
-        case .beta:
-            return "Early Access\nBeta Testing"
-        case .feedback:
-            return "Your Testing\nFeedback"
         case .terms:
             return "Terms, Conditions\n& Your Privacy"
         }
@@ -153,10 +148,6 @@ struct WelcomeFeaturesPage: View {
                     switch page {
                     case .welcome:
                         welcomeCardContent
-                    case .beta:
-                        betaCardContent
-                    case .feedback:
-                        feedbackCardContent
                     case .terms:
                         termsCardContent
                     }
@@ -171,33 +162,33 @@ struct WelcomeFeaturesPage: View {
     // MARK: - Page Sections
     private var welcomeCardContent: some View {
         VStack(alignment: .leading, spacing: 32) {
-            cardHeader(
-                title: WelcomeCardPage.welcome.title,
-                subtitle: "Stockman's Wallet helps you track livestock like a financial asset."
-            )
-
-            VStack(alignment: .center, spacing: 8) {
-                Text("Not just head count. Real value.")
+            // Debug: Updated welcome card - simplified with tagline and feature grid
+            VStack(alignment: .center, spacing: 16) {
+                Text(WelcomeCardPage.welcome.title)
+                    .font(.system(size: 28, weight: .bold))
+                    .foregroundStyle(Theme.primaryText)
+                    .multilineTextAlignment(.center)
+                    .lineSpacing(2)
+                
+                Text("Intelligent Livestock Valuation")
                     .font(.system(size: 17, weight: .medium))
                     .foregroundStyle(Theme.accentColor)
                     .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
 
+            // Debug: Feature cards in 2x2 grid layout
             VStack(spacing: 16) {
-                KeyPointRow(icon: "checkmark.circle.fill", text: "Record herds in minutes")
-                KeyPointRow(icon: "chart.line.uptrend.xyaxis", text: "See live value based on real market data")
-                KeyPointRow(icon: "arrow.up.arrow.down.circle.fill", text: "Track changes over time as weights, numbers, and markets move")
-                KeyPointRow(icon: "tray.full.fill", text: "Keep everything in one place instead of notebooks and spreadsheets")
+                HStack(spacing: 16) {
+                    FeatureCard(title: "Live valuations")
+                    FeatureCard(title: "Biological Performance")
+                }
+                HStack(spacing: 16) {
+                    FeatureCard(title: "Herd Management")
+                    FeatureCard(title: "Financier Reports")
+                }
             }
-
-            Text("This version focuses on the core experience. It's about getting the foundations right.")
-                .font(.system(size: 15))
-                .foregroundStyle(Theme.secondaryText)
-                .multilineTextAlignment(.center)
-                .lineSpacing(3)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 8)
+            .padding(.vertical, 8)
             
             // Debug: Skip button for internal testing - allows quick dashboard access
             if let onSkipAsFarmer {
@@ -219,72 +210,6 @@ struct WelcomeFeaturesPage: View {
         }
     }
 
-    private var betaCardContent: some View {
-        VStack(alignment: .leading, spacing: 32) {
-            cardHeader(
-                title: WelcomeCardPage.beta.title,
-                subtitle: "This is an early beta build for testing purposes only."
-            )
-
-            VStack(alignment: .leading, spacing: 20) {
-                Text("This release is for")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.primaryText)
-
-                VStack(spacing: 16) {
-                    KeyPointRow(icon: "sparkles", text: "Testing the overall experience")
-                    KeyPointRow(icon: "rectangle.grid.2x2.fill", text: "Checking layouts and navigation")
-                    KeyPointRow(icon: "bolt.fill", text: "Trying the core features")
-                    KeyPointRow(icon: "ladybug.fill", text: "Finding bugs, errors, or things that feel confusing")
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 20) {
-                Text("Limited features compared to the final product")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.primaryText)
-
-                VStack(spacing: 16) {
-                    KeyPointRow(icon: "minus.circle.fill", text: "Some data may be placeholders or simplified")
-                    KeyPointRow(icon: "arrow.triangle.2.circlepath.circle.fill", text: "Things may change or break as we improve the app")
-                }
-            }
-        }
-    }
-
-    private var feedbackCardContent: some View {
-        VStack(alignment: .leading, spacing: 32) {
-            cardHeader(
-                title: WelcomeCardPage.feedback.title,
-                subtitle: "Your feedback matters."
-            )
-
-            VStack(alignment: .leading, spacing: 20) {
-                Text("If something feels off, slow, unclear, or broken, that's exactly what we want to know.")
-                    .font(.system(size: 17))
-                    .foregroundStyle(Theme.primaryText)
-                    .lineSpacing(4)
-
-                Text("Use the app as you normally would. Think like a stockman, not a tester.")
-                    .font(.system(size: 15))
-                    .foregroundStyle(Theme.secondaryText)
-                    .lineSpacing(3)
-            }
-
-            VStack(spacing: 16) {
-                KeyPointRow(icon: "questionmark.circle.fill", text: "What would you expect to see here?")
-                KeyPointRow(icon: "exclamationmark.circle.fill", text: "What feels missing?")
-                KeyPointRow(icon: "clock.fill", text: "What would save you time in the paddock or the office?")
-            }
-
-            Text("Thanks for helping shape Stockman's Wallet.")
-                .font(.system(size: 15))
-                .foregroundStyle(Theme.secondaryText)
-                .multilineTextAlignment(.center)
-                .frame(maxWidth: .infinity)
-                .padding(.top, 8)
-        }
-    }
 
     private var termsCardContent: some View {
         VStack(alignment: .leading, spacing: 32) {
@@ -402,5 +327,31 @@ private struct OnboardingWelcomeCard<Content: View>: View {
             content
         }
         .shadow(color: Theme.background.opacity(0.4), radius: 10, x: 0, y: 8)
+    }
+}
+
+// MARK: - Feature Card Component
+// Debug: Individual feature card for 2x2 grid layout on welcome screen
+private struct FeatureCard: View {
+    let title: String
+    
+    var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .fill(Theme.secondaryBackground)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .strokeBorder(Theme.borderColor.opacity(0.4), lineWidth: 1)
+                )
+            
+            Text(title)
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundStyle(Theme.primaryText)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 20)
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 80)
     }
 }

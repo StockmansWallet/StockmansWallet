@@ -1,8 +1,12 @@
 import SwiftUI
 import PDFKit
+import SwiftData
 
 struct SalesSummaryPDFView: View {
     let sales: [SalesRecord]
+    
+    @Environment(\.modelContext) private var modelContext
+    @Query private var preferences: [UserPreferences]
     
     @State private var pdfURL: URL?
     @State private var isGenerating = true
@@ -59,7 +63,9 @@ struct SalesSummaryPDFView: View {
     
     private func generate() {
         isGenerating = true
-        pdfURL = ReportExportService.shared.generateSalesSummaryPDF(sales: sales)
+        // Debug: Pass user preferences to include farmer details in PDF header
+        let userPrefs = preferences.first
+        pdfURL = ReportExportService.shared.generateSalesSummaryPDF(sales: sales, preferences: userPrefs)
         isGenerating = false
     }
 }

@@ -19,6 +19,34 @@ struct ReportData {
     var saleyardComparison: [SaleyardComparisonData]
     var landValueAnalysis: [LandValueAnalysisData]
     var farmComparison: [FarmComparisonData]
+    // Debug: User and property details for PDF headers
+    var userDetails: UserDetails?
+    var propertyDetails: PropertyDetails?
+}
+
+// MARK: - User Details
+// Debug: User information for PDF headers from UserPreferences
+struct UserDetails {
+    let fullName: String?
+    let email: String?
+    let propertyName: String?
+    let propertyPIC: String?
+    let propertyRole: String?
+    let propertyAddress: String?
+    let state: String?
+    // For advisory users
+    let companyName: String?
+    let companyType: String?
+    let roleInCompany: String?
+}
+
+// MARK: - Property Details
+// Debug: Additional property information for reports
+struct PropertyDetails {
+    let acreage: Double?
+    let propertyType: String?
+    let defaultSaleyard: String?
+    let region: String?
 }
 
 // MARK: - Herd Report Data
