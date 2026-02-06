@@ -955,26 +955,26 @@ struct DetailRow: View {
 struct BreedingDetailsCard: View {
     let herd: HerdGroup
     
-    // Debug: Parse breeding program information from additionalInfo
-    private var breedingProgramInfo: (type: String?, details: String?) {
-        guard let additionalInfo = herd.additionalInfo else {
-            return (nil, nil)
+    // Debug: Get breeding program information from dedicated fields
+    private var breedingProgramInfo: (type: String?, startDate: Date?, endDate: Date?) {
+        guard let programType = herd.breedingProgramType else {
+            return (nil, nil, nil)
         }
         
-        // Parse breeding program type (AI, Controlled, Uncontrolled)
-        if additionalInfo.contains("Breeding: AI") {
-            let components = additionalInfo.components(separatedBy: "Insemination Period: ")
-            let details = components.count > 1 ? components[1].components(separatedBy: "\n").first : nil
-            return ("AI (Artificial Insemination)", details)
-        } else if additionalInfo.contains("Breeding: Controlled") {
-            let components = additionalInfo.components(separatedBy: "Joining Period: ")
-            let details = components.count > 1 ? components[1].components(separatedBy: "\n").first : nil
-            return ("Controlled Breeding", details)
-        } else if additionalInfo.contains("Breeding: Uncontrolled") {
-            return ("Uncontrolled Breeding", nil)
+        // Convert stored type to display name
+        let displayType: String
+        switch programType {
+        case "artificial_insemination", "ai":
+            displayType = "AI (Artificial Insemination)"
+        case "controlled_breeding", "controlled":
+            displayType = "Controlled Breeding"
+        case "uncontrolled_breeding", "uncontrolled":
+            displayType = "Uncontrolled Breeding"
+        default:
+            displayType = programType.capitalized
         }
         
-        return (nil, nil)
+        return (displayType, herd.joiningPeriodStart, herd.joiningPeriodEnd)
     }
     
     // Debug: Parse calves at foot information from additionalInfo
@@ -1038,8 +1038,9 @@ struct BreedingDetailsCard: View {
                         DetailRow(label: "Breeding Program", value: programType)
                         
                         // Show joining/insemination period if available
-                        if let periodDetails = breedingProgramInfo.details {
-                            DetailRow(label: "Period", value: periodDetails)
+                        if let startDate = breedingProgramInfo.startDate, let endDate = breedingProgramInfo.endDate {
+                            DetailRow(label: programType.contains("AI") ? "Insemination Period" : "Joining Period", 
+                                     value: "\(startDate.formatted(date: .abbreviated, time: .omitted)) - \(endDate.formatted(date: .abbreviated, time: .omitted))")
                         }
                     }
                 

@@ -42,6 +42,12 @@ final class HerdGroup {
     var lactationStatus: String? // "Lactating", "Dry"
     var calvingProcessedDate: Date? // Debug: Date when calves were auto-generated (prevents duplicates)
     
+    // MARK: - Breeding Program Information
+    // Debug: Dedicated fields for breeder management (replaces parsing from additionalInfo)
+    var breedingProgramType: String? // "ai", "controlled", or "uncontrolled"
+    var joiningPeriodStart: Date? // Start date for AI/Controlled programs
+    var joiningPeriodEnd: Date? // End date for AI/Controlled programs
+    
     // MARK: - Market Mapping
     var selectedSaleyard: String? // From saleyard list
     var marketCategory: String? // Mapped market category
@@ -111,6 +117,9 @@ final class HerdGroup {
         self.calvingRate = 0.85 // Default
         self.lactationStatus = nil
         self.calvingProcessedDate = nil
+        self.breedingProgramType = nil
+        self.joiningPeriodStart = nil
+        self.joiningPeriodEnd = nil
         self.selectedSaleyard = selectedSaleyard
         self.marketCategory = nil
         self.isSold = false

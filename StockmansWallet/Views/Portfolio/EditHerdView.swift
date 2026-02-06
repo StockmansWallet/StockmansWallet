@@ -25,13 +25,16 @@ struct EditHerdView: View {
     @State private var initialWeight: Int?
     @State private var dailyWeightGain: Double
     @State private var isBreeder: Bool
-    @State private var isPregnant: Bool
     @State private var joinedDate: Date
     @State private var calvingRate: Double
     @State private var selectedSaleyard: String?
     @State private var paddockName: String
     @State private var notes: String
     @State private var showingSaleyardSheet = false
+    // Debug: Breeding program state
+    @State private var breedingProgramType: String?
+    @State private var joiningPeriodStart: Date
+    @State private var joiningPeriodEnd: Date
     // Debug: Calves at foot state
     @State private var calvesAtFootHeadCount: Int?
     @State private var calvesAtFootAgeMonths: Int?
@@ -87,6 +90,24 @@ struct EditHerdView: View {
         }
     }
     
+    // Debug: Display name for breeding program type
+    private var breedingProgramDisplayName: String {
+        guard let programType = breedingProgramType else {
+            return "None"
+        }
+        
+        switch programType {
+        case "artificial_insemination", "ai":
+            return "AI (Artificial Insemination)"
+        case "controlled_breeding", "controlled":
+            return "Controlled Breeding"
+        case "uncontrolled_breeding", "uncontrolled":
+            return "Uncontrolled Breeding"
+        default:
+            return programType.capitalized
+        }
+    }
+    
     init(herd: HerdGroup) {
         self.herd = herd
         _herdName = State(initialValue: herd.name)
@@ -99,13 +120,17 @@ struct EditHerdView: View {
         _initialWeight = State(initialValue: Int(herd.initialWeight))
         _dailyWeightGain = State(initialValue: herd.dailyWeightGain)
         _isBreeder = State(initialValue: herd.isBreeder)
-        _isPregnant = State(initialValue: herd.isPregnant)
         _joinedDate = State(initialValue: herd.joinedDate ?? Date())
         // Debug: Convert decimal (0.85) to percentage (85.0) for display
         _calvingRate = State(initialValue: herd.calvingRate * 100.0)
         _selectedSaleyard = State(initialValue: herd.selectedSaleyard)
         _paddockName = State(initialValue: herd.paddockName ?? "")
         _notes = State(initialValue: herd.notes ?? "")
+        
+        // Debug: Initialize breeding program state from dedicated fields
+        _breedingProgramType = State(initialValue: herd.breedingProgramType)
+        _joiningPeriodStart = State(initialValue: herd.joiningPeriodStart ?? Date())
+        _joiningPeriodEnd = State(initialValue: herd.joiningPeriodEnd ?? Date())
         
         // Debug: Parse calves at foot from additionalInfo
         let calvesInfo = Self.parseCalvesAtFoot(from: herd.additionalInfo)
@@ -417,66 +442,118 @@ struct EditHerdView: View {
                             
                             // Show breeding-related fields only when Breeding Stock is enabled
                             if isBreeder {
-                                // Currently Pregnant toggle
-                                Toggle(isOn: $isPregnant) {
-                                    Text("Currently Pregnant")
-                                        .font(.system(size: 13, weight: .medium))
-                                        .foregroundStyle(Theme.primaryText)
-                                }
-                                .tint(Theme.accentColor)
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 10)
-                                .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
-                                .clipShape(Theme.continuousRoundedRect(8))
-                                
-                                // Show pregnancy-related fields only when Currently Pregnant is enabled
-                                if isPregnant {
-                                    // Row 3: Joined Date | Calving Rate
-                                    HStack(spacing: 12) {
-                                        Menu {
-                                            Button("Select Date") {
-                                                // Date picker will be shown
-                                            }
-                                        } label: {
-                                            HStack {
-                                                VStack(alignment: .leading, spacing: 2) {
-                                                    Text("Joined Date")
-                                                        .font(.system(size: 10))
-                                                        .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                                                    Text(joinedDate.formatted(date: .abbreviated, time: .omitted))
-                                                        .font(.system(size: 13, weight: .medium))
-                                                        .foregroundStyle(Theme.primaryText)
-                                                }
-                                                Spacer()
-                                                Image(systemName: "chevron.down")
-                                                    .font(.system(size: 10))
-                                                    .foregroundStyle(Theme.secondaryText)
-                                            }
-                                            .padding(.horizontal, 12)
-                                            .padding(.vertical, 10)
-                                            .frame(maxWidth: .infinity)
-                                            .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
-                                            .clipShape(Theme.continuousRoundedRect(8))
-                                        }
-                                        .buttonStyle(.plain)
-                                        
+                                // Debug: Breeding Program Type picker
+                                Menu {
+                                    Button("AI (Artificial Insemination)") {
+                                        HapticManager.tap()
+                                        breedingProgramType = "artificial_insemination"
+                                    }
+                                    Button("Controlled Breeding") {
+                                        HapticManager.tap()
+                                        breedingProgramType = "controlled_breeding"
+                                    }
+                                    Button("Uncontrolled Breeding") {
+                                        HapticManager.tap()
+                                        breedingProgramType = "uncontrolled_breeding"
+                                    }
+                                    Button("None") {
+                                        HapticManager.tap()
+                                        breedingProgramType = nil
+                                    }
+                                } label: {
+                                    HStack {
                                         VStack(alignment: .leading, spacing: 2) {
-                                            Text("Calving Rate (%)")
+                                            Text("Breeding Program")
                                                 .font(.system(size: 10))
                                                 .foregroundStyle(Theme.secondaryText.opacity(0.7))
-                                            TextField("", value: $calvingRate, format: .number)
-                                                .keyboardType(.numberPad)
+                                            Text(breedingProgramDisplayName)
                                                 .font(.system(size: 13, weight: .medium))
                                                 .foregroundStyle(Theme.primaryText)
-                                                .textFieldStyle(.plain)
-                                                .multilineTextAlignment(.leading)
+                                        }
+                                        Spacer()
+                                        Image(systemName: "chevron.down")
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .frame(maxWidth: .infinity)
+                                    .background(Theme.tertiaryBackground)
+                                    .clipShape(Theme.continuousRoundedRect(8))
+                                }
+                                .buttonStyle(.plain)
+                                
+                                // Debug: Show joining period dates for AI and Controlled breeding
+                                if let programType = breedingProgramType, programType != "uncontrolled_breeding" {
+                                    HStack(spacing: 12) {
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("Start Date")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                            DatePicker("", selection: $joiningPeriodStart, displayedComponents: .date)
+                                                .datePickerStyle(.compact)
+                                                .labelsHidden()
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundStyle(Theme.primaryText)
                                         }
                                         .padding(.horizontal, 12)
                                         .padding(.vertical, 10)
                                         .frame(maxWidth: .infinity, alignment: .leading)
-                                        .background(Theme.tertiaryBackground) // Debug: Use tertiary for visibility
+                                        .background(Theme.tertiaryBackground)
+                                        .clipShape(Theme.continuousRoundedRect(8))
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text("End Date")
+                                                .font(.system(size: 10))
+                                                .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                            DatePicker("", selection: $joiningPeriodEnd, displayedComponents: .date)
+                                                .datePickerStyle(.compact)
+                                                .labelsHidden()
+                                                .font(.system(size: 13, weight: .medium))
+                                                .foregroundStyle(Theme.primaryText)
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .background(Theme.tertiaryBackground)
                                         .clipShape(Theme.continuousRoundedRect(8))
                                     }
+                                }
+                                
+                                // Debug: Joined Date and Calving Rate (always shown for breeding herds)
+                                HStack(spacing: 12) {
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Joined Date")
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                        DatePicker("", selection: $joinedDate, displayedComponents: .date)
+                                            .datePickerStyle(.compact)
+                                            .labelsHidden()
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundStyle(Theme.primaryText)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Theme.tertiaryBackground)
+                                    .clipShape(Theme.continuousRoundedRect(8))
+                                    
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text("Calving Rate (%)")
+                                            .font(.system(size: 10))
+                                            .foregroundStyle(Theme.secondaryText.opacity(0.7))
+                                        TextField("", value: $calvingRate, format: .number)
+                                            .keyboardType(.numberPad)
+                                            .font(.system(size: 13, weight: .medium))
+                                            .foregroundStyle(Theme.primaryText)
+                                            .textFieldStyle(.plain)
+                                            .multilineTextAlignment(.leading)
+                                    }
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 10)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Theme.tertiaryBackground)
+                                    .clipShape(Theme.continuousRoundedRect(8))
                                 }
                                 
                                 // Debug: Calves at Foot section (shown for all breeding stock, not just pregnant)
@@ -983,14 +1060,21 @@ struct EditHerdView: View {
         herd.initialWeight = Double(initialWeight ?? 300)
         herd.dailyWeightGain = dailyWeightGain
         herd.isBreeder = isBreeder
-        herd.isPregnant = isBreeder && isPregnant
+        // Debug: Breeding herds are assumed to be pregnant
+        herd.isPregnant = isBreeder
         // Debug: Convert percentage (85.0) back to decimal (0.85) for storage
         herd.calvingRate = calvingRate / 100.0
         herd.selectedSaleyard = selectedSaleyard
         herd.paddockName = paddockName.isEmpty ? nil : paddockName
         herd.notes = notes.isEmpty ? nil : notes
         
-        if herd.isPregnant {
+        // Debug: Save breeding program information to dedicated fields
+        herd.breedingProgramType = isBreeder ? breedingProgramType : nil
+        herd.joiningPeriodStart = (isBreeder && breedingProgramType != nil) ? joiningPeriodStart : nil
+        herd.joiningPeriodEnd = (isBreeder && breedingProgramType != nil) ? joiningPeriodEnd : nil
+        
+        // Debug: Set joinedDate for all breeding herds
+        if isBreeder {
             herd.joinedDate = joinedDate
         } else {
             herd.joinedDate = nil
@@ -1019,14 +1103,14 @@ struct EditHerdView: View {
             return
         }
         
-        // Debug: Parse existing additionalInfo to preserve non-calves data
+        // Debug: Parse existing additionalInfo to preserve non-calves and non-breeding data
         var infoParts: [String] = []
         
         if let existingInfo = herd.additionalInfo {
-            // Split by pipe and filter out old calves at foot entries
+            // Split by pipe and filter out old calves at foot entries and breeding program entries
             let parts = existingInfo.components(separatedBy: " | ")
             for part in parts {
-                if !part.contains("Calves at Foot:") {
+                if !part.contains("Calves at Foot:") && !part.contains("Breeding:") {
                     infoParts.append(part)
                 }
             }

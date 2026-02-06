@@ -780,8 +780,16 @@ struct AddHerdFlowView: View {
         if isBreederCategory {
             herd.isPregnant = true // Fix: Set isPregnant to true so calving accrual shows in Growth and mortality card
             
-            // Debug: Calculate joinedDate based on breeding program type
+            // Debug: Store breeding program type and dates in dedicated fields
             if let programType = breedingProgramType {
+                // Store breeding program type
+                herd.breedingProgramType = programType.rawValue.lowercased().replacingOccurrences(of: " ", with: "_")
+                
+                // Store joining period dates
+                herd.joiningPeriodStart = joiningPeriodStart
+                herd.joiningPeriodEnd = joiningPeriodEnd
+                
+                // Calculate joinedDate based on breeding program type
                 switch programType {
                 case .ai, .controlled:
                     // Debug: For AI and Controlled, use midpoint of period for accrual calculation
@@ -801,7 +809,8 @@ struct AddHerdFlowView: View {
             herd.calvingRate = Double(calvingRate) / 100.0
         }
         
-        // Debug: Additional info for calves at foot and breeding program
+        // Debug: Additional info for calves at foot and other general information
+        // Note: Breeding program info is now stored in dedicated fields (breedingProgramType, joiningPeriodStart, joiningPeriodEnd)
         var infoParts: [String] = []
         if !additionalInfo.isEmpty { infoParts.append(additionalInfo) }
         if let calvesCount = calvesAtFootHeadCount, let calvesAge = calvesAtFootAgeMonths, calvesCount > 0 {
@@ -811,20 +820,6 @@ struct AddHerdFlowView: View {
                 calvesInfo += ", \(calvesWeight) kg"
             }
             infoParts.append(calvesInfo)
-        }
-        // Debug: Add breeding program information to additional info
-        if isBreederCategory, let programType = breedingProgramType {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .short
-            
-            switch programType {
-            case .ai:
-                infoParts.append("Breeding: AI, Insemination Period: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))")
-            case .controlled:
-                infoParts.append("Breeding: Controlled, Joining Period: \(formatter.string(from: joiningPeriodStart)) - \(formatter.string(from: joiningPeriodEnd))")
-            case .uncontrolled:
-                infoParts.append("Breeding: Uncontrolled (year-round)")
-            }
         }
         if !infoParts.isEmpty { herd.additionalInfo = infoParts.joined(separator: " | ") }
         

@@ -548,7 +548,7 @@ class ValuationEngine {
             
             // Debug: Determine cycle length based on breeding program type
             // Uncontrolled breeding uses 12-month rolling accrual, others use gestation period
-            let isUncontrolled = herd.additionalInfo?.contains("Breeding: Uncontrolled") ?? false
+            let isUncontrolled = herd.breedingProgramType == "uncontrolled_breeding" || herd.breedingProgramType == "uncontrolled"
             let cycleLength: Int
             if isUncontrolled {
                 // Debug: 12-month rolling accrual for uncontrolled breeding (365 days)
