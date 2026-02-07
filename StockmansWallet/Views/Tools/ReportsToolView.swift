@@ -92,7 +92,7 @@ struct EnhancedReportsContentView: View {
             .padding(.bottom, 100)
         }
         .background(Theme.backgroundGradient.ignoresSafeArea())
-        .sheet(isPresented: $showingConfiguration) {
+        .navigationDestination(isPresented: $showingConfiguration) {
             if let config = reportConfiguration {
                 ReportConfigurationView(
                     configuration: config,

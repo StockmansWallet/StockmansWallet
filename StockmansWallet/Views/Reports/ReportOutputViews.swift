@@ -377,8 +377,9 @@ struct ReportPDFExportView: View {
             .navigationTitle(configuration.reportType.rawValue)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") {
+                        HapticManager.tap()
                         dismiss()
                     }
                 }

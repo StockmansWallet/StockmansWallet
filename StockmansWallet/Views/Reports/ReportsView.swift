@@ -22,8 +22,6 @@ struct ReportsView: View {
     // Debug: Use 'let' with @Observable instead of @StateObject
     let valuationEngine = ValuationEngine.shared
     
-    @State private var showingAssetRegister = false
-    @State private var showingSalesSummary = false
     @State private var portfolioValue: Double = 0.0
     @State private var isLoadingValuations = false
     
@@ -32,8 +30,11 @@ struct ReportsView: View {
             ScrollView {
                 VStack(spacing: Theme.sectionSpacing) {
                     ReportsOptionsCard(
-                        showingAssetRegister: $showingAssetRegister,
-                        showingSalesSummary: $showingSalesSummary
+                        herds: herds,
+                        sales: sales,
+                        preferences: preferences.first ?? UserPreferences(),
+                        modelContext: modelContext,
+                        valuationEngine: valuationEngine
                     )
                     .padding(.horizontal)
                     .accessibilityElement(children: .contain)
@@ -71,23 +72,6 @@ struct ReportsView: View {
                         .foregroundStyle(Theme.primaryText)
                         .accessibilityAddTraits(.isHeader)
                 }
-            }
-            .sheet(isPresented: $showingAssetRegister) {
-                AssetRegisterPDFView(
-                    herds: herds,
-                    preferences: preferences.first ?? UserPreferences(),
-                    modelContext: modelContext,
-                    valuationEngine: valuationEngine
-                )
-                .presentationDetents([.large])
-                .presentationDragIndicator(.visible)
-                .presentationBackground(Theme.sheetBackground)
-            }
-            .sheet(isPresented: $showingSalesSummary) {
-                SalesSummaryPDFView(sales: sales)
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.visible)
-                    .presentationBackground(Theme.sheetBackground)
             }
             .task {
                 await loadPortfolioValue()
@@ -137,8 +121,11 @@ struct ReportsView: View {
 
 // MARK: - Report Options
 struct ReportsOptionsCard: View {
-    @Binding var showingAssetRegister: Bool
-    @Binding var showingSalesSummary: Bool
+    let herds: [HerdGroup]
+    let sales: [SalesRecord]
+    let preferences: UserPreferences
+    let modelContext: ModelContext
+    let valuationEngine: ValuationEngine
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -153,10 +140,13 @@ struct ReportsOptionsCard: View {
             }
             
             VStack(spacing: 12) {
-                Button {
-                    HapticManager.tap()
-                    showingAssetRegister = true
-                } label: {
+                // Asset Register Report Button
+                NavigationLink(destination: AssetRegisterPDFView(
+                    herds: herds,
+                    preferences: preferences,
+                    modelContext: modelContext,
+                    valuationEngine: valuationEngine
+                )) {
                     HStack {
                         Image(systemName: "doc.on.doc.fill")
                             .foregroundStyle(Theme.accentColor)
@@ -167,17 +157,18 @@ struct ReportsOptionsCard: View {
                         Spacer()
                         Image(systemName: "chevron.right")
                             .foregroundStyle(Theme.secondaryText)
+                            .font(.caption)
                             .accessibilityHidden(true)
                     }
-                    .padding()
-                    .background(Theme.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .padding()
+                .background(Theme.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 
-                Button {
-                    HapticManager.tap()
-                    showingSalesSummary = true
-                } label: {
+                // Sales Summary Report Button
+                NavigationLink(destination: SalesSummaryPDFView(sales: sales)) {
                     HStack {
                         Image(systemName: "doc.richtext.fill")
                             .foregroundStyle(Theme.accentColor)
@@ -188,12 +179,15 @@ struct ReportsOptionsCard: View {
                         Spacer()
                         Image(systemName: "chevron.right")
                             .foregroundStyle(Theme.secondaryText)
+                            .font(.caption)
                             .accessibilityHidden(true)
                     }
-                    .padding()
-                    .background(Theme.cardBackground)
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                    .contentShape(Rectangle())
                 }
+                .buttonStyle(.plain)
+                .padding()
+                .background(Theme.cardBackground)
+                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
             }
         }
         .padding(Theme.cardPadding)

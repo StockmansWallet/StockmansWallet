@@ -1,6 +1,7 @@
 import SwiftUI
 import PDFKit
 import SwiftData
+import Foundation
 
 struct AssetRegisterPDFView: View {
     let herds: [HerdGroup]
@@ -11,89 +12,85 @@ struct AssetRegisterPDFView: View {
     @State private var pdfURL: URL?
     @State private var isGenerating = true
     @State private var showShare = false
-    @State private var valuations: [UUID: HerdValuation] = [:]
-    @State private var totalValue: Double = 0.0
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // Debug: Solid sheet background for modal presentation
-                Theme.sheetBackground.ignoresSafeArea()
-                
-                Group {
-                    if isGenerating {
-                        ProgressView("Generating PDF…")
-                            .tint(Theme.accentColor)
-                            .foregroundStyle(Theme.primaryText)
-                    } else if let url = pdfURL {
-                        PDFKitRepresentedView(url: url)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .padding()
-                    } else {
-                        Text("Failed to generate PDF.")
-                            .foregroundStyle(.red)
+        ZStack {
+            // Debug: Background for push navigation (not sheet)
+            Theme.backgroundGradient.ignoresSafeArea()
+            
+            Group {
+                if isGenerating {
+                    ProgressView("Generating PDF…")
+                        .tint(Theme.accentColor)
+                        .foregroundStyle(Theme.primaryText)
+                } else if let url = pdfURL {
+                    PDFKitRepresentedView(url: url)
+                        .background(Theme.cardBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .padding()
+                } else {
+                    Text("Failed to generate PDF.")
+                        .foregroundStyle(.red)
+                }
+            }
+        }
+        .navigationTitle("Asset Register")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if pdfURL != nil {
+                    Button {
+                        HapticManager.tap()
+                        showShare = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .foregroundStyle(Theme.accentColor)
                     }
+                    .buttonBorderShape(.roundedRectangle)
                 }
             }
-            .navigationTitle("Asset Register")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if pdfURL != nil {
-                        Button {
-                            HapticManager.tap()
-                            showShare = true
-                        } label: {
-                            Image(systemName: "square.and.arrow.up")
-                                .foregroundStyle(Theme.accentColor)
-                        }
-                        .buttonBorderShape(.roundedRectangle)
-                    }
-                }
-            }
-            .task {
-                await generate()
-            }
-            .sheet(isPresented: $showShare) {
-                if let url = pdfURL {
-                    ShareSheet(activityItems: [url])
-                }
+        }
+        .task {
+            await generate()
+        }
+        .sheet(isPresented: $showShare) {
+            if let url = pdfURL {
+                ShareSheet(activityItems: [url])
             }
         }
     }
     
     @MainActor
     private func generate() async {
+        // Ensure isGenerating starts as true
         isGenerating = true
         
-        // Compute valuations for active herds
-        let active = herds.filter { !$0.isSold }
-        var map: [UUID: HerdValuation] = [:]
-        var total: Double = 0.0
-        for herd in active {
-            let v = await valuationEngine.calculateHerdValue(
-                herd: herd,
-                preferences: preferences,
-                modelContext: modelContext
-            )
-            map[herd.id] = v
-            total += v.netRealizableValue
-        }
-        valuations = map
-        totalValue = total
+        // Small delay to ensure UI updates before heavy work
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
         
-        if let url = ReportExportService.shared.generateAssetRegisterPDF(
+        // Fetch properties from modelContext
+        let properties = (try? modelContext.fetch(FetchDescriptor<Property>())) ?? []
+        
+        // Create configuration
+        var configuration = ReportConfiguration(reportType: .assetRegister)
+        configuration.includePropertyDetails = true
+        
+        // Use EnhancedReportExportService for Apple-inspired design
+        let url = await EnhancedReportExportService.shared.generatePDF(
+            configuration: configuration,
             herds: herds,
-            valuations: valuations,
-            totalValue: totalValue,
-            preferences: preferences
-        ) {
-            pdfURL = url
-        } else {
-            pdfURL = nil
+            sales: [],
+            preferences: preferences,
+            properties: properties,
+            modelContext: modelContext,
+            valuationEngine: valuationEngine
+        )
+        
+        // Ensure state update happens on main actor
+        await MainActor.run {
+            self.pdfURL = url
+            self.isGenerating = false
         }
-        isGenerating = false
     }
 }
 

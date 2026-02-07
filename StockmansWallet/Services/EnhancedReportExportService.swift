@@ -111,6 +111,7 @@ class EnhancedReportExportService {
         
         // Debug: Track pages for accurate page numbering
         var currentPage = 0
+        var totalPages = 1 // Will be updated as we add pages
         
         let pdfData = renderer.pdfData { context in
             context.beginPage()
@@ -129,18 +130,7 @@ class EnhancedReportExportService {
                 margin: margin
             )
             
-            // Draw property details if configured
-            if configuration.includePropertyDetails, let propertyDetails = data.propertyDetails {
-                yPosition = drawPropertyDetails(
-                    propertyDetails: propertyDetails,
-                    yPosition: yPosition,
-                    pageWidth: pageWidth,
-                    margin: margin
-                )
-                yPosition += cardSpacing
-            }
-            
-            // Draw total portfolio value as hero card
+            // Draw total portfolio value as hero card (no separate property details section)
             yPosition = drawHeroValueCard(
                 label: "Total Portfolio Value",
                 value: formatCurrency(data.totalValue),
@@ -158,6 +148,7 @@ class EnhancedReportExportService {
                     // Draw footer for current page
                     drawPageFooter(
                         pageNumber: currentPage,
+                        totalPages: totalPages, // Will show current estimate
                         yPosition: pageHeight - margin/2,
                         pageWidth: pageWidth,
                         margin: margin
@@ -165,6 +156,7 @@ class EnhancedReportExportService {
                     
                     context.beginPage()
                     currentPage += 1
+                    totalPages = currentPage // Update total as we go
                     yPosition = margin + 20 // Small top margin on continuation pages
                 }
                 
@@ -178,8 +170,10 @@ class EnhancedReportExportService {
             }
             
             // Draw footer for last page
+            totalPages = currentPage // Final total
             drawPageFooter(
                 pageNumber: currentPage,
+                totalPages: totalPages,
                 yPosition: pageHeight - margin/2,
                 pageWidth: pageWidth,
                 margin: margin
@@ -201,15 +195,188 @@ class EnhancedReportExportService {
         configuration: ReportConfiguration
     ) -> URL? {
         
-        // TODO: Implement enhanced sales summary PDF generation
-        // Similar structure to asset register but with sales data
+        let pdfMetaData = [
+            kCGPDFContextCreator: "Stockman's Wallet",
+            kCGPDFContextAuthor: data.farmName ?? "User",
+            kCGPDFContextTitle: "Sales Summary"
+        ]
+        let format = UIGraphicsPDFRendererFormat()
+        format.documentInfo = pdfMetaData as [String: Any]
+        
+        let pageWidth = 8.5 * 72.0
+        let pageHeight = 11 * 72.0
+        let pageRect = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
+        let margin: CGFloat = 72.0
+        
+        let renderer = UIGraphicsPDFRenderer(bounds: pageRect, format: format)
         
         let fileName = "SalesSummary_\(Date().timeIntervalSince1970).pdf"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
         
-        // Use existing service as fallback for now
-        // TODO: Replace with enhanced formatting
-        return tempURL
+        var currentPage = 0
+        var totalPages = 1 // Will be updated as we add pages
+        
+        let pdfData = renderer.pdfData { context in
+            context.beginPage()
+            currentPage += 1
+            var yPosition: CGFloat = margin
+            
+            // Draw header with logo and user details
+            yPosition = drawReportHeader(
+                title: "Sales Summary",
+                farmName: data.farmName,
+                userDetails: data.userDetails,
+                configuration: configuration,
+                context: context,
+                yPosition: yPosition,
+                pageWidth: pageWidth,
+                margin: margin
+            )
+            
+            // Draw total sales value as hero card
+            yPosition = drawHeroValueCard(
+                label: "Total Sales Value",
+                value: formatCurrency(data.totalSales),
+                yPosition: yPosition,
+                margin: margin,
+                width: pageWidth - (margin * 2)
+            )
+            
+            // Draw sales section
+            yPosition = drawSectionHeader("Sales History", yPosition: yPosition, margin: margin)
+            
+            for saleData in data.salesData {
+                // Check if we need a new page
+                if yPosition > pageHeight - 200 {
+                    drawPageFooter(
+                        pageNumber: currentPage,
+                        totalPages: totalPages,
+                        yPosition: pageHeight - margin/2,
+                        pageWidth: pageWidth,
+                        margin: margin
+                    )
+                    
+                    context.beginPage()
+                    currentPage += 1
+                    totalPages = currentPage // Update total as we go
+                    yPosition = margin + 20
+                }
+                
+                yPosition = drawSaleData(
+                    saleData: saleData,
+                    yPosition: yPosition,
+                    margin: margin,
+                    pageWidth: pageWidth
+                )
+            }
+            
+            // Draw footer for last page
+            totalPages = currentPage // Final total
+            drawPageFooter(
+                pageNumber: currentPage,
+                totalPages: totalPages,
+                yPosition: pageHeight - margin/2,
+                pageWidth: pageWidth,
+                margin: margin
+            )
+        }
+        
+        do {
+            try pdfData.write(to: tempURL)
+            return tempURL
+        } catch {
+            print("Failed to save PDF: \(error)")
+            return nil
+        }
+    }
+    
+    /// Draw sale data card
+    private func drawSaleData(
+        saleData: SaleReportData,
+        yPosition: CGFloat,
+        margin: CGFloat,
+        pageWidth: CGFloat
+    ) -> CGFloat {
+        
+        var y = yPosition
+        let cardWidth = pageWidth - (margin * 2)
+        let cardStartY = y
+        let cardHeight: CGFloat = 120
+        
+        // Card background
+        let cardRect = CGRect(x: margin, y: cardStartY, width: cardWidth, height: cardHeight)
+        let cardPath = UIBezierPath(roundedRect: cardRect, cornerRadius: cardCornerRadius)
+        
+        cardBackgroundColor.setFill()
+        cardPath.fill()
+        
+        dividerColor.setStroke()
+        cardPath.lineWidth = 0.5
+        cardPath.stroke()
+        
+        // Content
+        y += cardPadding
+        let leftX = margin + cardPadding
+        let rightX = margin + (cardWidth * 0.55)
+        
+        // Date + Net value
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateStyle = .medium
+        
+        let nameAttributes: [NSAttributedString.Key: Any] = [
+            .font: headlineFont,
+            .foregroundColor: primaryTextColor
+        ]
+        dateFormatter.string(from: saleData.date).draw(at: CGPoint(x: leftX, y: y), withAttributes: nameAttributes)
+        
+        let valueAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 16, weight: .semibold),
+            .foregroundColor: primaryTextColor
+        ]
+        let valueText = formatCurrency(saleData.netValue)
+        let valueSize = valueText.size(withAttributes: valueAttributes)
+        valueText.draw(at: CGPoint(x: margin + cardWidth - cardPadding - valueSize.width, y: y), withAttributes: valueAttributes)
+        
+        y += 22
+        
+        // Pricing type subtitle
+        let subtitleAttributes: [NSAttributedString.Key: Any] = [
+            .font: captionFont,
+            .foregroundColor: secondaryTextColor
+        ]
+        saleData.pricingType.rawValue.draw(at: CGPoint(x: leftX, y: y), withAttributes: subtitleAttributes)
+        y += 18
+        
+        // Details with labels
+        let dataAttributes: [NSAttributedString.Key: Any] = [
+            .font: bodyFont,
+            .foregroundColor: primaryTextColor
+        ]
+        let labelAttributes: [NSAttributedString.Key: Any] = [
+            .font: labelFont,
+            .foregroundColor: tertiaryTextColor,
+            .kern: 0.3
+        ]
+        
+        var leftY = y
+        var rightY = y
+        
+        // Left column
+        "HEAD COUNT".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: labelAttributes)
+        leftY += 12
+        "\(saleData.headCount) head".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: dataAttributes)
+        leftY += 18
+        
+        "AVG WEIGHT".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: labelAttributes)
+        leftY += 12
+        "\(Int(saleData.avgWeight)) kg".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: dataAttributes)
+        
+        // Right column
+        "PRICE".draw(at: CGPoint(x: rightX, y: rightY), withAttributes: labelAttributes)
+        rightY += 12
+        "$\(String(format: "%.2f", saleData.pricePerKg))/kg".draw(at: CGPoint(x: rightX, y: rightY), withAttributes: dataAttributes)
+        
+        return cardStartY + cardHeight + cardSpacing
     }
     
     // Debug: Generate Saleyard Comparison PDF
@@ -251,7 +418,7 @@ class EnhancedReportExportService {
     // MARK: - PDF Drawing Helper Methods
     
     /// Draw Apple-inspired report header with clean hierarchy
-    // Debug: Modern, minimal header design with clear information architecture
+    // Debug: Logo on RIGHT, title on LEFT, user details below
     private func drawReportHeader(
         title: String,
         farmName: String?,
@@ -266,72 +433,60 @@ class EnhancedReportExportService {
         var y = yPosition
         let contentWidth = pageWidth - (margin * 2)
         
-        // MARK: - Top Bar: Logo + Generated Date (one line, subtle)
+        // MARK: - Top Row: Title LEFT + Logo RIGHT
         let topBarY = y
         
-        // Logo on left (increased size)
-        if let logoImage = UIImage(named: "stockmanswallet_logo_bw") {
-            let logoHeight: CGFloat = 40 // Increased from 28
+        // Title on LEFT (large, bold)
+        let titleAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 32, weight: .bold),
+            .foregroundColor: primaryTextColor
+        ]
+        title.draw(at: CGPoint(x: margin, y: topBarY), withAttributes: titleAttributes)
+        
+        // Logo on RIGHT (includes "REPORT POWERED BY" text)
+        if let logoImage = UIImage(named: "stockmans_reportlogo") {
+            let logoHeight: CGFloat = 70
             let logoAspect = logoImage.size.width / logoImage.size.height
             let logoWidth = logoHeight * logoAspect
-            let logoRect = CGRect(x: margin, y: topBarY, width: logoWidth, height: logoHeight)
+            let logoX = pageWidth - margin - logoWidth
+            let logoRect = CGRect(x: logoX, y: topBarY, width: logoWidth, height: logoHeight)
             logoImage.draw(in: logoRect)
         }
         
-        // Generated date on right (subtle)
+        y += 40 // Space after title
+        
+        // Period subtitle below title (LEFT aligned)
         let dateFormatter = DateFormatter()
         dateFormatter.dateStyle = .medium
-        let generatedText = dateFormatter.string(from: Date())
-        let generatedAttributes: [NSAttributedString.Key: Any] = [
-            .font: captionFont,
-            .foregroundColor: tertiaryTextColor
-        ]
-        let generatedSize = generatedText.size(withAttributes: generatedAttributes)
-        generatedText.draw(at: CGPoint(x: pageWidth - margin - generatedSize.width, y: topBarY + 8), withAttributes: generatedAttributes)
-        
-        y += 52 // Space after top bar (increased from 44)
-        
-        // MARK: - Hero Title
-        let titleAttributes: [NSAttributedString.Key: Any] = [
-            .font: largeTitleFont,
-            .foregroundColor: primaryTextColor
-        ]
-        title.draw(at: CGPoint(x: margin, y: y), withAttributes: titleAttributes)
-        y += 36 // Reduced from 42
-        
-        // Period subtitle (if applicable)
         let periodAttributes: [NSAttributedString.Key: Any] = [
-            .font: bodyFont,
+            .font: UIFont.systemFont(ofSize: 13),
             .foregroundColor: secondaryTextColor
         ]
         let periodText = "\(dateFormatter.string(from: configuration.startDate)) – \(dateFormatter.string(from: configuration.endDate))"
         periodText.draw(at: CGPoint(x: margin, y: y), withAttributes: periodAttributes)
-        y += 24 // Reduced from 28
         
-        // MARK: - User Details (Clean grid layout)
+        y += 32 // Space after period
+        
+        // MARK: - User Details (Two-column grid)
         if let userDetails = userDetails {
-            // Subtle divider line before details
-            drawDivider(at: y, margin: margin, width: contentWidth)
-            y += 20
-            
             let labelAttr: [NSAttributedString.Key: Any] = [
                 .font: labelFont,
                 .foregroundColor: tertiaryTextColor,
-                .kern: 0.5 // Letter spacing for labels
+                .kern: 0.5
             ]
             let valueAttr: [NSAttributedString.Key: Any] = [
                 .font: bodyFont,
                 .foregroundColor: primaryTextColor
             ]
             
-            // Two-column layout for efficient space use
+            // Two-column layout
             let col1X = margin
             let col2X = margin + (contentWidth * 0.5)
             let labelOffset: CGFloat = 14
             
             var currentY = y
             
-            // Row 1: Name | Property
+            // Row 1: PREPARED FOR | PROPERTY
             if let fullName = userDetails.fullName {
                 "PREPARED FOR".draw(at: CGPoint(x: col1X, y: currentY), withAttributes: labelAttr)
                 fullName.draw(at: CGPoint(x: col1X, y: currentY + labelOffset), withAttributes: valueAttr)
@@ -341,15 +496,15 @@ class EnhancedReportExportService {
                 "PROPERTY".draw(at: CGPoint(x: col2X, y: currentY), withAttributes: labelAttr)
                 propertyName.draw(at: CGPoint(x: col2X, y: currentY + labelOffset), withAttributes: valueAttr)
             }
-            currentY += 36
+            currentY += 40
             
-            // Row 2: PIC | State & Address
+            // Row 2: PIC CODE | LOCATION
             if let pic = userDetails.propertyPIC {
                 "PIC CODE".draw(at: CGPoint(x: col1X, y: currentY), withAttributes: labelAttr)
                 pic.draw(at: CGPoint(x: col1X, y: currentY + labelOffset), withAttributes: valueAttr)
             }
             
-            // Combine state and address for compact display
+            // Location (address or state)
             var locationText = ""
             if let address = userDetails.propertyAddress {
                 locationText = address
@@ -361,17 +516,16 @@ class EnhancedReportExportService {
                 "LOCATION".draw(at: CGPoint(x: col2X, y: currentY), withAttributes: labelAttr)
                 locationText.draw(at: CGPoint(x: col2X, y: currentY + labelOffset), withAttributes: valueAttr)
             }
-            currentY += 36
+            currentY += 40
             
-            y = currentY + 8
+            y = currentY + 24 // Increased space before divider
             
-            // Subtle divider line after details
+            // Draw horizontal divider line
             drawDivider(at: y, margin: margin, width: contentWidth)
-            y += sectionSpacing
+            
+            y += 32 // Increased space after divider (more padding)
         } else {
-            // If no user details, just add a divider
-            drawDivider(at: y, margin: margin, width: contentWidth)
-            y += sectionSpacing
+            y += 24
         }
         
         return y
@@ -394,7 +548,7 @@ class EnhancedReportExportService {
             .foregroundColor: primaryTextColor
         ]
         title.draw(at: CGPoint(x: margin, y: yPosition), withAttributes: headerAttributes)
-        return yPosition + 24 // Tighter spacing, more modern
+        return yPosition + 36 // Increased from 24 for more spacing before cards
     }
     
     /// Draw hero value card (Apple style - prominent display for key metrics)
@@ -409,7 +563,7 @@ class EnhancedReportExportService {
         var y = yPosition
         
         // Card background with subtle styling (optimized height)
-        let cardHeight: CGFloat = 90 // Reduced from 100
+        let cardHeight: CGFloat = 90
         let cardRect = CGRect(x: margin, y: y, width: width, height: cardHeight)
         let cardPath = UIBezierPath(roundedRect: cardRect, cornerRadius: cardCornerRadius)
         
@@ -422,22 +576,28 @@ class EnhancedReportExportService {
         cardPath.lineWidth = 1
         cardPath.stroke()
         
-        // Label (small, uppercase)
+        // Label (small, uppercase with normal letter spacing) - CENTERED
         let labelAttributes: [NSAttributedString.Key: Any] = [
             .font: labelFont,
             .foregroundColor: tertiaryTextColor,
-            .kern: 1.0 // Wide letter spacing for labels
+            .kern: 0.5
         ]
-        label.uppercased().draw(at: CGPoint(x: margin + cardPadding, y: y + cardPadding), withAttributes: labelAttributes)
+        let labelText = label.uppercased()
+        let labelSize = labelText.size(withAttributes: labelAttributes)
+        let labelX = margin + (width - labelSize.width) / 2 // Center horizontally
+        labelText.draw(at: CGPoint(x: labelX, y: y + cardPadding), withAttributes: labelAttributes)
         
-        // Hero value (large, bold) - adjusted positioning
+        // Hero value (large, bold) - CENTERED - less space from label
         let valueAttributes: [NSAttributedString.Key: Any] = [
             .font: heroFont,
             .foregroundColor: primaryTextColor
         ]
-        value.draw(at: CGPoint(x: margin + cardPadding, y: y + cardPadding + 24), withAttributes: valueAttributes)
+        let valueSize = value.size(withAttributes: valueAttributes)
+        let valueX = margin + (width - valueSize.width) / 2 // Center horizontally
+        value.draw(at: CGPoint(x: valueX, y: y + cardPadding + 20), withAttributes: valueAttributes)
         
-        return y + cardHeight + cardSpacing
+        // Even more spacing after hero card value
+        return y + cardHeight + 40 // Further increased for more padding below value
     }
     
     /// Draw compact key-value pair (inline style)
@@ -478,8 +638,8 @@ class EnhancedReportExportService {
         let cardWidth = pageWidth - (margin * 2)
         let cardStartY = y
         
-        // Estimate card height based on content
-        let estimatedHeight: CGFloat = 120 // Increased from 110 to accommodate labels
+        // Estimate card height based on content (increased for bottom padding)
+        let estimatedHeight: CGFloat = 130 // Increased from 120 for more bottom padding
         
         // Card background
         let cardRect = CGRect(x: margin, y: cardStartY, width: cardWidth, height: estimatedHeight)
@@ -521,9 +681,9 @@ class EnhancedReportExportService {
             .foregroundColor: secondaryTextColor
         ]
         herdData.category.draw(at: CGPoint(x: leftX, y: y), withAttributes: subtitleAttributes)
-        y += 18 // Reduced from 20
+        y += 28 // Increased space after category (breed text)
         
-        // MARK: - Two-column data grid WITH LABELS
+        // MARK: - Horizontal grid layout (all four fields in one row)
         let dataAttributes: [NSAttributedString.Key: Any] = [
             .font: bodyFont,
             .foregroundColor: primaryTextColor
@@ -534,27 +694,25 @@ class EnhancedReportExportService {
             .kern: 0.3
         ]
         
-        var leftY = y
-        var rightY = y
+        // Calculate column positions (4 columns evenly spaced)
+        let contentWidth = cardWidth - (cardPadding * 2)
+        let col1X = leftX
+        let col2X = leftX + (contentWidth * 0.25)
+        let col3X = leftX + (contentWidth * 0.50)
+        let col4X = leftX + (contentWidth * 0.75)
         
-        // Left column with labels
-        "HEAD COUNT".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: labelAttributes)
-        leftY += 12
-        "\(herdData.headCount) head".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: dataAttributes)
-        leftY += 18
+        // Row 1: Labels
+        "HEAD COUNT".draw(at: CGPoint(x: col1X, y: y), withAttributes: labelAttributes)
+        "AGE".draw(at: CGPoint(x: col2X, y: y), withAttributes: labelAttributes)
+        "WEIGHT".draw(at: CGPoint(x: col3X, y: y), withAttributes: labelAttributes)
+        "PRICE".draw(at: CGPoint(x: col4X, y: y), withAttributes: labelAttributes)
+        y += 14 // Space between label and value
         
-        "AGE".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: labelAttributes)
-        leftY += 12
-        "\(herdData.ageMonths) months".draw(at: CGPoint(x: leftX, y: leftY), withAttributes: dataAttributes)
+        // Row 2: Values
+        "\(herdData.headCount) head".draw(at: CGPoint(x: col1X, y: y), withAttributes: dataAttributes)
+        "\(herdData.ageMonths) months".draw(at: CGPoint(x: col2X, y: y), withAttributes: dataAttributes)
+        "\(Int(herdData.weight)) kg".draw(at: CGPoint(x: col3X, y: y), withAttributes: dataAttributes)
         
-        // Right column with labels - Weight and Price
-        "WEIGHT".draw(at: CGPoint(x: rightX, y: rightY), withAttributes: labelAttributes)
-        rightY += 12
-        "\(Int(herdData.weight)) kg".draw(at: CGPoint(x: rightX, y: rightY), withAttributes: dataAttributes)
-        rightY += 18
-        
-        "PRICE".draw(at: CGPoint(x: rightX, y: rightY), withAttributes: labelAttributes)
-        rightY += 12
         let priceText: String
         switch configuration.priceStatistics {
         case .current:
@@ -568,16 +726,17 @@ class EnhancedReportExportService {
         case .all:
             priceText = "$\(String(format: "%.2f", herdData.pricePerKg))/kg"
         }
-        priceText.draw(at: CGPoint(x: rightX, y: rightY), withAttributes: dataAttributes)
+        priceText.draw(at: CGPoint(x: col4X, y: y), withAttributes: dataAttributes)
         
         // Return position after card with spacing
         return cardStartY + estimatedHeight + cardSpacing
     }
     
     /// Draw minimal footer (Apple style - subtle and unobtrusive)
-    // Debug: Clean footer with page number, centered
+    // Debug: Clean footer with page number in "-- X of Y --" format, centered
     private func drawPageFooter(
         pageNumber: Int,
+        totalPages: Int,
         yPosition: CGFloat,
         pageWidth: CGFloat,
         margin: CGFloat
@@ -587,8 +746,8 @@ class EnhancedReportExportService {
             .foregroundColor: tertiaryTextColor
         ]
         
-        // Simple page number
-        let footerText = "\(pageNumber)"
+        // Page number in "-- X of Y --" format
+        let footerText = "-- \(pageNumber) of \(totalPages) --"
         let textSize = footerText.size(withAttributes: footerAttributes)
         let xPosition = (pageWidth - textSize.width) / 2
         

@@ -85,51 +85,46 @@ class ReportExportService {
             
             var yPosition: CGFloat = margin
             
-            // MARK: - Apple-inspired Header Design
+            // MARK: - Apple-inspired Header Design (matching refined layout)
             
-            // Top bar: Logo on left, date on right
+            let dateFormatter = DateFormatter()
+            dateFormatter.dateStyle = .medium
+            
+            // Top row: Title LEFT + Logo RIGHT
             let topBarY = yPosition
-            if let logoImage = UIImage(named: "stockmanswallet_logo_bw") {
-                let logoHeight: CGFloat = 40 // Increased from 28
+            
+            // Title on LEFT (large, bold)
+            let titleAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 32, weight: .bold),
+                .foregroundColor: UIColor.black
+            ]
+            "Asset Register".draw(at: CGPoint(x: margin, y: topBarY), withAttributes: titleAttributes)
+            
+            // Logo on RIGHT (includes "REPORT POWERED BY")
+            if let logoImage = UIImage(named: "stockmans_reportlogo") {
+                let logoHeight: CGFloat = 70
                 let logoAspect = logoImage.size.width / logoImage.size.height
                 let logoWidth = logoHeight * logoAspect
-                let logoRect = CGRect(x: margin, y: topBarY, width: logoWidth, height: logoHeight)
+                let logoX = pageWidth - margin - logoWidth
+                let logoRect = CGRect(x: logoX, y: topBarY, width: logoWidth, height: logoHeight)
                 logoImage.draw(in: logoRect)
             }
             
-            // Generated date on right (subtle)
-            let dateFormatter = DateFormatter()
-            dateFormatter.dateStyle = .medium
-            let generatedText = dateFormatter.string(from: Date())
-            let captionAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 11),
-                .foregroundColor: UIColor(white: 0.6, alpha: 1.0)
+            yPosition += 40 // Space after title
+            
+            // Date range below title (LEFT aligned)
+            let periodAttributes: [NSAttributedString.Key: Any] = [
+                .font: UIFont.systemFont(ofSize: 13),
+                .foregroundColor: UIColor(white: 0.5, alpha: 1.0)
             ]
-            let generatedSize = generatedText.size(withAttributes: captionAttributes)
-            generatedText.draw(at: CGPoint(x: pageWidth - margin - generatedSize.width, y: topBarY + 8), withAttributes: captionAttributes)
+            let periodText = "\(dateFormatter.string(from: Date())) – \(dateFormatter.string(from: Date()))"
+            periodText.draw(at: CGPoint(x: margin, y: yPosition), withAttributes: periodAttributes)
             
-            yPosition += 52 // Increased from 44
-            
-            // Large title
-            let titleAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 28, weight: .bold), // Reduced from 32
-                .foregroundColor: UIColor.black
-            ]
-            "Asset Register".draw(at: CGPoint(x: margin, y: yPosition), withAttributes: titleAttributes)
-            yPosition += 38 // Reduced from 44
-            
-            // Subtle divider
-            let dividerPath = UIBezierPath()
-            dividerPath.move(to: CGPoint(x: margin, y: yPosition))
-            dividerPath.addLine(to: CGPoint(x: pageWidth - margin, y: yPosition))
-            UIColor(white: 0.9, alpha: 1.0).setStroke()
-            dividerPath.lineWidth = 0.5
-            dividerPath.stroke()
-            yPosition += 20
+            yPosition += 32 // Space after date
             
             // User details in two-column grid
             let labelAttributes: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 10, weight: .medium),
+                .font: UIFont.systemFont(ofSize: 9, weight: .medium),
                 .foregroundColor: UIColor(white: 0.6, alpha: 1.0),
                 .kern: 0.5
             ]
@@ -141,7 +136,7 @@ class ReportExportService {
             let col1X = margin
             let col2X = margin + ((pageWidth - margin * 2) * 0.5)
             
-            // Row 1: Name | Property
+            // Row 1: PREPARED FOR | PROPERTY
             if let firstName = preferences.firstName, let lastName = preferences.lastName {
                 "PREPARED FOR".draw(at: CGPoint(x: col1X, y: yPosition), withAttributes: labelAttributes)
                 "\(firstName) \(lastName)".draw(at: CGPoint(x: col1X, y: yPosition + 14), withAttributes: valueAttributes)
@@ -150,30 +145,30 @@ class ReportExportService {
             if let propertyName = preferences.propertyName {
                 "PROPERTY".draw(at: CGPoint(x: col2X, y: yPosition), withAttributes: labelAttributes)
                 propertyName.draw(at: CGPoint(x: col2X, y: yPosition + 14), withAttributes: valueAttributes)
-                }
-                yPosition += 36
-                
-                // Row 2: PIC | State
-                if let pic = preferences.propertyPIC {
-                    "PIC CODE".draw(at: CGPoint(x: col1X, y: yPosition), withAttributes: labelAttributes)
-                    pic.draw(at: CGPoint(x: col1X, y: yPosition + 14), withAttributes: valueAttributes)
-                }
-                
-                let state = preferences.defaultState
-                if !state.isEmpty {
-                    "STATE".draw(at: CGPoint(x: col2X, y: yPosition), withAttributes: labelAttributes)
-                    state.draw(at: CGPoint(x: col2X, y: yPosition + 14), withAttributes: valueAttributes)
-                }
-                yPosition += 40
+            }
+            yPosition += 40
             
-            // Bottom divider
-            let divider2 = UIBezierPath()
-            divider2.move(to: CGPoint(x: margin, y: yPosition))
-            divider2.addLine(to: CGPoint(x: pageWidth - margin, y: yPosition))
+            // Row 2: PIC CODE | LOCATION
+            if let pic = preferences.propertyPIC {
+                "PIC CODE".draw(at: CGPoint(x: col1X, y: yPosition), withAttributes: labelAttributes)
+                pic.draw(at: CGPoint(x: col1X, y: yPosition + 14), withAttributes: valueAttributes)
+            }
+            
+            let state = preferences.defaultState
+            if !state.isEmpty {
+                "LOCATION".draw(at: CGPoint(x: col2X, y: yPosition), withAttributes: labelAttributes)
+                state.draw(at: CGPoint(x: col2X, y: yPosition + 14), withAttributes: valueAttributes)
+            }
+            yPosition += 64 // Increased space before divider
+            
+            // Draw horizontal divider line
+            let dividerPath = UIBezierPath()
+            dividerPath.move(to: CGPoint(x: margin, y: yPosition))
+            dividerPath.addLine(to: CGPoint(x: pageWidth - margin, y: yPosition))
             UIColor(white: 0.9, alpha: 1.0).setStroke()
-            divider2.lineWidth = 0.5
-            divider2.stroke()
-            yPosition += 28
+            dividerPath.lineWidth = 0.5
+            dividerPath.stroke()
+            yPosition += 32 // Increased space after divider
             
             // Total Portfolio Value - Hero Card (optimized)
             let cardWidth = pageWidth - (margin * 2)
@@ -188,28 +183,36 @@ class ReportExportService {
             cardPath.lineWidth = 1
             cardPath.stroke()
             
+            // Label - CENTERED
             let heroLabelAttr: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 9, weight: .medium), // Reduced from 10
+                .font: UIFont.systemFont(ofSize: 9, weight: .medium),
                 .foregroundColor: UIColor(white: 0.6, alpha: 1.0),
-                .kern: 1.0
+                .kern: 0.5
             ]
-            "TOTAL PORTFOLIO VALUE".draw(at: CGPoint(x: margin + 20, y: yPosition + 20), withAttributes: heroLabelAttr)
+            let labelText = "TOTAL PORTFOLIO VALUE"
+            let labelSize = labelText.size(withAttributes: heroLabelAttr)
+            let labelX = margin + (cardWidth - labelSize.width) / 2
+            labelText.draw(at: CGPoint(x: labelX, y: yPosition + 20), withAttributes: heroLabelAttr)
             
+            // Value - CENTERED
             let heroValueAttr: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 36, weight: .bold), // Reduced from 44
+                .font: UIFont.systemFont(ofSize: 36, weight: .bold),
                 .foregroundColor: UIColor.black
             ]
-            formatCurrency(totalValue).draw(at: CGPoint(x: margin + 20, y: yPosition + 42), withAttributes: heroValueAttr)
+            let valueText = formatCurrency(totalValue)
+            let valueSize = valueText.size(withAttributes: heroValueAttr)
+            let valueX = margin + (cardWidth - valueSize.width) / 2
+            valueText.draw(at: CGPoint(x: valueX, y: yPosition + 40), withAttributes: heroValueAttr)
             
-            yPosition += heroCardHeight + 12 // Adjusted spacing
+            yPosition += heroCardHeight + 40 // Further increased spacing for more padding
             
             // Section Header
             let sectionHeaderAttr: [NSAttributedString.Key: Any] = [
-                .font: UIFont.systemFont(ofSize: 18, weight: .semibold), // Reduced from 20
+                .font: UIFont.systemFont(ofSize: 18, weight: .semibold),
                 .foregroundColor: UIColor.black
             ]
             "Livestock Assets".draw(at: CGPoint(x: margin, y: yPosition), withAttributes: sectionHeaderAttr)
-            yPosition += 24 // Reduced from 32
+            yPosition += 36 // Increased for more spacing before cards
             
             // Herds as cards
             let activeHerds = herds.filter { !$0.isSold }
@@ -230,8 +233,8 @@ class ReportExportService {
                     yPosition = margin + 20
                 }
                 
-                // Herd Card (with labels)
-                let herdCardHeight: CGFloat = 120 // Increased from 110
+                // Herd Card (with labels, increased bottom padding)
+                let herdCardHeight: CGFloat = 130 // Increased from 120 for more bottom padding
                 let herdCardRect = CGRect(x: margin, y: yPosition, width: cardWidth, height: herdCardHeight)
                 let herdCardPath = UIBezierPath(roundedRect: herdCardRect, cornerRadius: 12)
                 
@@ -375,7 +378,7 @@ class ReportExportService {
             // Top bar: Logo on left, date on right
             let topBarY = yPosition
             if let logoImage = UIImage(named: "stockmanswallet_logo_bw") {
-                let logoHeight: CGFloat = 40 // Increased from 28
+                let logoHeight: CGFloat = 55 // Increased from 50 for better visibility
                 let logoAspect = logoImage.size.width / logoImage.size.height
                 let logoWidth = logoHeight * logoAspect
                 let logoRect = CGRect(x: margin, y: topBarY, width: logoWidth, height: logoHeight)
@@ -390,9 +393,9 @@ class ReportExportService {
                 .foregroundColor: UIColor(white: 0.6, alpha: 1.0)
             ]
             let generatedSize = generatedText.size(withAttributes: captionAttributes)
-            generatedText.draw(at: CGPoint(x: pageWidth - margin - generatedSize.width, y: topBarY + 8), withAttributes: captionAttributes)
+            generatedText.draw(at: CGPoint(x: pageWidth - margin - generatedSize.width, y: topBarY + 12), withAttributes: captionAttributes)
             
-            yPosition += 52
+            yPosition += 67
             
             // Large title
             let titleAttributes: [NSAttributedString.Key: Any] = [
@@ -471,7 +474,7 @@ class ReportExportService {
             ]
             formatCurrency(totalSales).draw(at: CGPoint(x: margin + 20, y: yPosition + 42), withAttributes: heroValueAttr)
             
-            yPosition += summaryCardHeight + 12
+            yPosition += summaryCardHeight + 24 // Increased spacing (was 12)
             
             // Additional summary stats (compact, inline)
             let detailAttr: [NSAttributedString.Key: Any] = [
@@ -511,8 +514,8 @@ class ReportExportService {
                     yPosition = margin + 20
                 }
                 
-                // Sale Card (with labels, optimized)
-                let saleCardHeight: CGFloat = 110 // Increased from 100
+                // Sale Card (with labels, optimized with better bottom padding)
+                let saleCardHeight: CGFloat = 120 // Increased from 110 for more bottom padding
                 let saleCardRect = CGRect(x: margin, y: yPosition, width: cardWidth, height: saleCardHeight)
                 let saleCardPath = UIBezierPath(roundedRect: saleCardRect, cornerRadius: 12)
                 

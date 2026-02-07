@@ -13,60 +13,93 @@ struct SalesSummaryPDFView: View {
     @State private var showShare = false
     
     var body: some View {
-        NavigationStack {
-            ZStack {
-                // Debug: Solid sheet background for modal presentation
-                Theme.sheetBackground.ignoresSafeArea()
-                
-                Group {
-                    if isGenerating {
-                        ProgressView("Generating PDF…")
-                            .tint(Theme.accentColor)
-                            .foregroundStyle(Theme.primaryText)
-                    } else if let url = pdfURL {
-                        PDFKitRepresentedView(url: url)
-                            .background(Theme.cardBackground)
-                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                            .padding()
-                    } else {
-                        Text("Failed to generate PDF.")
-                            .foregroundStyle(.red)
+        ZStack {
+            // Debug: Background for push navigation (not sheet)
+            Theme.backgroundGradient.ignoresSafeArea()
+            
+            Group {
+                if isGenerating {
+                    ProgressView("Generating PDF…")
+                        .tint(Theme.accentColor)
+                        .foregroundStyle(Theme.primaryText)
+                } else if let url = pdfURL {
+                    PDFKitRepresentedView(url: url)
+                        .background(Theme.cardBackground)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                        .padding()
+                } else {
+                    Text("Failed to generate PDF.")
+                        .foregroundStyle(.red)
+                }
+            }
+        }
+        .navigationTitle("Sales Summary")
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarTrailing) {
+                if pdfURL != nil {
+                    Button {
+                        HapticManager.tap()
+                        showShare = true
+                    } label: {
+                        Image(systemName: "square.and.arrow.up")
+                            .foregroundStyle(Theme.accentColor)
                     }
+                    .buttonBorderShape(.roundedRectangle)
                 }
             }
-            .navigationTitle("Sales Summary")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    if pdfURL != nil {
-                        Button {
-                            HapticManager.tap()
-                            showShare = true
-                        } label: {
-                            Image(systemName: "square.and.arrow.up")
-                                .foregroundStyle(Theme.accentColor)
-                        }
-                        .buttonBorderShape(.roundedRectangle)
-                    }
-                }
-            }
-            .task {
-                generate()
-            }
-            .sheet(isPresented: $showShare) {
-                if let url = pdfURL {
-                    ShareSheet(activityItems: [url])
-                }
+        }
+        .task {
+            await generate()
+        }
+        .sheet(isPresented: $showShare) {
+            if let url = pdfURL {
+                ShareSheet(activityItems: [url])
             }
         }
     }
     
-    private func generate() {
+    @MainActor
+    private func generate() async {
+        // Ensure isGenerating starts as true
         isGenerating = true
-        // Debug: Pass user preferences to include farmer details in PDF header
-        let userPrefs = preferences.first
-        pdfURL = ReportExportService.shared.generateSalesSummaryPDF(sales: sales, preferences: userPrefs)
-        isGenerating = false
+        
+        // Small delay to ensure UI updates before heavy work
+        try? await Task.sleep(nanoseconds: 100_000_000) // 0.1 seconds
+        
+        // Get user preferences and properties
+        guard let userPrefs = preferences.first else {
+            await MainActor.run {
+                self.pdfURL = nil
+                self.isGenerating = false
+            }
+            return
+        }
+        
+        // Fetch properties from modelContext
+        let properties = (try? modelContext.fetch(FetchDescriptor<Property>())) ?? []
+        
+        // Create configuration
+        var configuration = ReportConfiguration(reportType: .salesSummary)
+        configuration.includePropertyDetails = true
+        
+        // Convert SalesRecord to data needed for report
+        // Use EnhancedReportExportService for Apple-inspired design
+        let url = await EnhancedReportExportService.shared.generatePDF(
+            configuration: configuration,
+            herds: [],
+            sales: sales,
+            preferences: userPrefs,
+            properties: properties,
+            modelContext: modelContext,
+            valuationEngine: ValuationEngine.shared
+        )
+        
+        // Ensure state update happens on main actor
+        await MainActor.run {
+            self.pdfURL = url
+            self.isGenerating = false
+        }
     }
 }
 

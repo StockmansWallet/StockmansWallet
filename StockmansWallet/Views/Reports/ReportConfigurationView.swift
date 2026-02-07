@@ -53,25 +53,6 @@ struct ReportConfigurationView: View {
                 
                 // MARK: - Actions Section
                 Section {
-                    // Preview Button
-                    Button {
-                        HapticManager.tap()
-                        showingPreview = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "eye.fill")
-                                .foregroundStyle(Theme.accentColor)
-                                .frame(width: 24)
-                            Text("Preview Report")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.primaryText)
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Theme.secondaryText)
-                        }
-                    }
-                    
                     // Generate PDF Button
                     Button {
                         HapticManager.tap()
@@ -85,32 +66,13 @@ struct ReportConfigurationView: View {
                                 .font(Theme.body)
                                 .foregroundStyle(Theme.primaryText)
                             Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Theme.secondaryText)
-                        }
-                    }
-                    
-                    // Print Button
-                    Button {
-                        HapticManager.tap()
-                        showingPrint = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "printer.fill")
-                                .foregroundStyle(Theme.accentColor)
-                                .frame(width: 24)
-                            Text("Print Report")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.primaryText)
-                            Spacer()
-                            Image(systemName: "chevron.right")
+                            Image(systemName: "arrow.up.circle")
                                 .font(.system(size: 14))
                                 .foregroundStyle(Theme.secondaryText)
                         }
                     }
                 } header: {
-                    Label("Actions", systemImage: "bolt.fill")
+                    Label("Generate", systemImage: "bolt.fill")
                 }
                 .listRowBackground(Theme.cardBackground)
             }
@@ -120,23 +82,20 @@ struct ReportConfigurationView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button {
                         HapticManager.tap()
                         dismiss()
+                    } label: {
+                        HStack(spacing: 4) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 16, weight: .semibold))
+                            Text("Back")
+                                .font(Theme.body)
+                        }
+                        .foregroundStyle(Theme.accentColor)
                     }
                 }
-            }
-            .sheet(isPresented: $showingPreview) {
-                ReportPreviewView(
-                    configuration: configuration,
-                    herds: herds,
-                    sales: sales,
-                    preferences: preferences,
-                    properties: properties,
-                    modelContext: modelContext,
-                    valuationEngine: valuationEngine
-                )
             }
             .sheet(isPresented: $showingPDFExport) {
                 ReportPDFExportView(
