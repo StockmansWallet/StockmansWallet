@@ -51,10 +51,13 @@ struct ReportPDFExportView: View {
             .navigationTitle(configuration.reportType.rawValue)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
                         HapticManager.tap()
                         dismiss()
+                    } label: {
+                        Image(systemName: "xmark")
+                            .foregroundStyle(Theme.secondaryText)
                     }
                 }
                 

@@ -108,9 +108,9 @@ struct EnhancedReportsContentView: View {
     }
     
     // MARK: - Header Description
-    // Debug: Description text without card, centered alignment
+    // Debug: Simple one-line description
     private var headerCard: some View {
-        Text("Create detailed reports with custom date ranges, comparisons, and analytics. Preview before generating or print directly.")
+        Text("Create detailed livestock reports")
             .font(Theme.body)
             .foregroundStyle(Theme.secondaryText)
             .multilineTextAlignment(.center)

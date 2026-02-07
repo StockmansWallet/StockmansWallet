@@ -92,7 +92,7 @@ struct EnhancedReportsView: View {
                     .foregroundStyle(Theme.primaryText)
             }
             
-            Text("Create detailed reports with custom date ranges, comparisons, and analytics. Preview before generating or print directly.")
+            Text("Create detailed livestock reports")
                 .font(Theme.body)
                 .foregroundStyle(Theme.secondaryText)
         }

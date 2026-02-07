@@ -3,7 +3,7 @@
 //  StockmansWallet
 //
 //  Report configuration models for enhanced reporting system
-//  Debug: Supports multiple report types with customizable options
+//  Debug: Supports multiple report types with customisable options
 //
 
 import Foundation
@@ -14,8 +14,8 @@ enum ReportType: String, CaseIterable, Identifiable {
     case assetRegister = "Asset Register"
     case salesSummary = "Sales Summary"
     case saleyardComparison = "Saleyard Comparison"
-    case livestockValueVsLandArea = "Livestock Value vs Land Area"
-    case farmComparison = "Farm vs Farm Comparison"
+    case livestockValueVsLandArea = "Value vs Land Area"
+    case farmComparison = "Farm vs Farm"
     
     var id: String { rawValue }
     
@@ -43,7 +43,7 @@ enum ReportType: String, CaseIterable, Identifiable {
         case .saleyardComparison:
             return "Compare prices across different saleyards"
         case .livestockValueVsLandArea:
-            return "Analyze livestock value density per acre"
+            return "Analyse livestock value density per acre"
         case .farmComparison:
             return "Compare performance across multiple properties"
         }

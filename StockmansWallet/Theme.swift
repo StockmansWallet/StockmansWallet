@@ -105,7 +105,7 @@ enum Theme {
     static let borderColor = Background.secondary
     
     /// Sheet and modal presentation background.
-    static let sheetBackground = background
+    static let sheetBackground = Background.tertiary
     
     /// Background image opacity for parallax effects.
     static let backgroundImageOpacity: CGFloat = 0.4

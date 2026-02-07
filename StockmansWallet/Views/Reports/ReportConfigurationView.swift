@@ -3,13 +3,56 @@
 //  StockmansWallet
 //
 //  Configuration view for report generation with preview and print options
-//  Debug: Allows customization before generating reports
+//  Debug: Allows customisation before generating reports
 //
 
 import SwiftUI
 import SwiftData
 
-// Debug: Configuration sheet for customizing report parameters
+// MARK: - Date Range Preset
+enum DateRangePreset: String, CaseIterable, Identifiable {
+    case oneMonth = "1 Month"
+    case threeMonths = "3 Months"
+    case sixMonths = "6 Months"
+    case oneYear = "1 Year"
+    case custom = "Custom"
+    
+    var id: String { rawValue }
+    
+    var shortLabel: String {
+        switch self {
+        case .oneMonth: return "1M"
+        case .threeMonths: return "3M"
+        case .sixMonths: return "6M"
+        case .oneYear: return "1Y"
+        case .custom: return "Custom"
+        }
+    }
+    
+    func dateRange() -> (start: Date, end: Date) {
+        let calendar = Calendar.current
+        let end = Date()
+        let start: Date
+        
+        switch self {
+        case .oneMonth:
+            start = calendar.date(byAdding: .month, value: -1, to: end) ?? end
+        case .threeMonths:
+            start = calendar.date(byAdding: .month, value: -3, to: end) ?? end
+        case .sixMonths:
+            start = calendar.date(byAdding: .month, value: -6, to: end) ?? end
+        case .oneYear:
+            start = calendar.date(byAdding: .year, value: -1, to: end) ?? end
+        case .custom:
+            // Default to 12 months for custom
+            start = calendar.date(byAdding: .year, value: -1, to: end) ?? end
+        }
+        
+        return (start, end)
+    }
+}
+
+// Debug: Configuration sheet for customising report parameters
 struct ReportConfigurationView: View {
     @Environment(\.dismiss) private var dismiss
     
@@ -24,80 +67,89 @@ struct ReportConfigurationView: View {
     @State private var showingPreview = false
     @State private var showingPDFExport = false
     @State private var showingPrint = false
+    @State private var selectedPreset: DateRangePreset = .oneYear
+    @State private var showCustomDates = false
+    @State private var showingSaleyardSelection = false
+    @State private var showingPropertySelection = false
     
     var body: some View {
-        NavigationStack {
-            Form {
-                // MARK: - Date Range Section
-                Section {
+        Form {
+            // MARK: - Date Range Section
+            Section {
+                // Preset picker using native iOS style
+                HStack {
+                    Image(systemName: "calendar")
+                        .foregroundStyle(Theme.accentColor)
+                        .frame(width: 24)
+                    
+                    Picker("Time Period", selection: $selectedPreset) {
+                        ForEach(DateRangePreset.allCases) { preset in
+                            Text(preset.rawValue).tag(preset)
+                        }
+                    }
+                    .pickerStyle(.menu)
+                    .foregroundStyle(Theme.primaryText)
+                }
+                .onChange(of: selectedPreset) { oldValue, newValue in
+                    HapticManager.tap()
+                    if newValue == .custom {
+                        showCustomDates = true
+                    } else {
+                        showCustomDates = false
+                        let range = newValue.dateRange()
+                        configuration.startDate = range.start
+                        configuration.endDate = range.end
+                    }
+                }
+                
+                // Show custom date pickers if Custom is selected
+                if showCustomDates {
                     DatePicker("Start Date", selection: $configuration.startDate, displayedComponents: .date)
                     DatePicker("End Date", selection: $configuration.endDate, displayedComponents: .date)
-                } header: {
-                    Label("Date Range", systemImage: "calendar")
-                } footer: {
-                    Text("Select the date range for this report")
                 }
-                .listRowBackground(Theme.cardBackground)
-                
-                // MARK: - Report Details Section
-                Section {
-                    Toggle("Include Farm Name", isOn: $configuration.includeFarmName)
-                    Toggle("Include Property Details", isOn: $configuration.includePropertyDetails)
-                } header: {
-                    Label("Report Details", systemImage: "doc.text")
-                }
-                .listRowBackground(Theme.cardBackground)
-                
-                // MARK: - Type-Specific Options
-                typeSpecificOptions
-                
-                // MARK: - Actions Section
-                Section {
-                    // Generate PDF Button
-                    Button {
-                        HapticManager.tap()
-                        showingPDFExport = true
-                    } label: {
-                        HStack {
-                            Image(systemName: "doc.fill")
-                                .foregroundStyle(Theme.accentColor)
-                                .frame(width: 24)
-                            Text("Generate PDF")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.primaryText)
-                            Spacer()
-                            Image(systemName: "arrow.up.circle")
-                                .font(.system(size: 14))
-                                .foregroundStyle(Theme.secondaryText)
-                        }
+            } footer: {
+                HStack(alignment: .center, spacing: 6) {
+                    Image(systemName: "info.circle")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondaryText)
+                    
+                    if showCustomDates {
+                        Text("Select a custom date range for this report")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
+                    } else {
+                        Text("Report will include data from the last \(selectedPreset.rawValue.lowercased())")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondaryText)
                     }
-                } header: {
-                    Label("Generate", systemImage: "bolt.fill")
                 }
-                .listRowBackground(Theme.cardBackground)
+                .frame(maxWidth: .infinity, alignment: .center)
             }
-            .scrollContentBackground(.hidden)
-            .background(Theme.backgroundGradient)
-            .navigationTitle(configuration.reportType.rawValue)
-            .navigationBarTitleDisplayMode(.inline)
+            .listRowBackground(Theme.cardBackground)
+            
+            // MARK: - Type-Specific Options
+            typeSpecificOptions
+            
+            // MARK: - Actions Section
+            Section {
+                // Generate PDF Button
+                Button {
+                    HapticManager.tap()
+                    showingPDFExport = true
+                } label: {
+                    Label("Generate PDF", systemImage: "doc.fill")
+                }
+                .buttonStyle(Theme.PrimaryButtonStyle())
+                .listRowInsets(EdgeInsets(top: 8, leading: 16, bottom: 8, trailing: 16))
+            }
+            .listRowBackground(Color.clear)
+        }
+        .scrollContentBackground(.hidden)
+        .background(Theme.backgroundGradient)
+        .navigationTitle(configuration.reportType.rawValue)
+        .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button {
-                        HapticManager.tap()
-                        dismiss()
-                    } label: {
-                        HStack(spacing: 4) {
-                            Image(systemName: "chevron.left")
-                                .font(.system(size: 16, weight: .semibold))
-                            Text("Back")
-                                .font(Theme.body)
-                        }
-                        .foregroundStyle(Theme.accentColor)
-                    }
-                }
-            }
-            .sheet(isPresented: $showingPDFExport) {
+        .sheet(isPresented: $showingPDFExport) {
                 ReportPDFExportView(
                     configuration: configuration,
                     herds: herds,
@@ -107,8 +159,8 @@ struct ReportConfigurationView: View {
                     modelContext: modelContext,
                     valuationEngine: valuationEngine
                 )
-            }
-            .sheet(isPresented: $showingPrint) {
+        }
+        .sheet(isPresented: $showingPrint) {
                 ReportPrintView(
                     configuration: configuration,
                     herds: herds,
@@ -118,7 +170,18 @@ struct ReportConfigurationView: View {
                     modelContext: modelContext,
                     valuationEngine: valuationEngine
                 )
-            }
+        }
+        .sheet(isPresented: $showingSaleyardSelection) {
+            SaleyardSelectionView(selectedSaleyards: $configuration.selectedSaleyards)
+        }
+        .sheet(isPresented: $showingPropertySelection) {
+            PropertySelectionView(selectedProperties: $configuration.selectedProperties, properties: properties)
+        }
+        .onAppear {
+            // Initialise date range on first appearance
+            let range = selectedPreset.dateRange()
+            configuration.startDate = range.start
+            configuration.endDate = range.end
         }
     }
     
@@ -141,73 +204,78 @@ struct ReportConfigurationView: View {
     
     // MARK: - Asset Register Options
     private var assetRegisterOptions: some View {
-        Section {
-            Picker("Price Statistics", selection: $configuration.priceStatistics) {
-                ForEach(PriceStatisticsOption.allCases) { option in
-                    Text(option.rawValue).tag(option)
-                }
-            }
-        } header: {
-            Label("Asset Register Options", systemImage: "chart.bar.fill")
-        } footer: {
-            Text("Choose which price statistics to include in the report")
-        }
-        .listRowBackground(Theme.cardBackground)
+        EmptyView()
     }
     
     // MARK: - Saleyard Comparison Options
     private var saleyardComparisonOptions: some View {
         Section {
-            NavigationLink {
-                SaleyardSelectionView(selectedSaleyards: $configuration.selectedSaleyards)
+            Button {
+                HapticManager.tap()
+                showingSaleyardSelection = true
             } label: {
                 HStack {
+                    Image(systemName: "building.columns.fill")
+                        .foregroundStyle(Theme.accentColor)
+                        .frame(width: 24)
+                    
                     Text("Select Saleyards")
+                        .foregroundStyle(Theme.primaryText)
                     Spacer()
                     Text("\(configuration.selectedSaleyards.count) selected")
                         .foregroundStyle(Theme.secondaryText)
                 }
             }
-        } header: {
-            Label("Saleyard Comparison Options", systemImage: "building.columns.fill")
         } footer: {
-            Text("Select saleyards to compare prices")
+            HStack(alignment: .center, spacing: 6) {
+                Image(systemName: "info.circle")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                
+                Text("Select saleyards to compare prices")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
         }
         .listRowBackground(Theme.cardBackground)
     }
     
     // MARK: - Livestock Value vs Land Area Options
     private var livestockValueVsLandAreaOptions: some View {
-        Section {
-            Text("This report analyzes livestock value density per acre across your properties")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondaryText)
-        } header: {
-            Label("Analysis Options", systemImage: "chart.xyaxis.line")
-        }
-        .listRowBackground(Theme.cardBackground)
+        EmptyView()
     }
     
     // MARK: - Farm Comparison Options
     private var farmComparisonOptions: some View {
         Section {
-            NavigationLink {
-                PropertySelectionView(
-                    selectedProperties: $configuration.selectedProperties,
-                    properties: properties
-                )
+            Button {
+                HapticManager.tap()
+                showingPropertySelection = true
             } label: {
                 HStack {
+                    Image(systemName: "building.2.fill")
+                        .foregroundStyle(Theme.accentColor)
+                        .frame(width: 24)
+                    
                     Text("Select Properties")
+                        .foregroundStyle(Theme.primaryText)
                     Spacer()
                     Text("\(configuration.selectedProperties.count) selected")
                         .foregroundStyle(Theme.secondaryText)
                 }
             }
-        } header: {
-            Label("Farm Comparison Options", systemImage: "building.2.fill")
         } footer: {
-            Text("Select properties to compare performance")
+            HStack(alignment: .center, spacing: 6) {
+                Image(systemName: "info.circle")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+                
+                Text("Select properties to compare performance")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondaryText)
+            }
+            .frame(maxWidth: .infinity, alignment: .center)
         }
         .listRowBackground(Theme.cardBackground)
     }
@@ -228,44 +296,60 @@ struct SaleyardSelectionView: View {
     }
     
     var body: some View {
-        List {
-            Section {
-                ForEach(filteredSaleyards, id: \.self) { saleyard in
-                    Button {
-                        HapticManager.tap()
-                        if selectedSaleyards.contains(saleyard) {
-                            selectedSaleyards.removeAll { $0 == saleyard }
-                        } else {
-                            selectedSaleyards.append(saleyard)
-                        }
-                    } label: {
-                        HStack {
-                            Text(saleyard)
-                                .foregroundStyle(Theme.primaryText)
-                            Spacer()
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(filteredSaleyards, id: \.self) { saleyard in
+                        Button {
+                            HapticManager.tap()
                             if selectedSaleyards.contains(saleyard) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(Theme.accentColor)
+                                selectedSaleyards.removeAll { $0 == saleyard }
+                            } else {
+                                selectedSaleyards.append(saleyard)
                             }
+                        } label: {
+                            HStack {
+                                // Checkbox
+                                Image(systemName: selectedSaleyards.contains(saleyard) ? "checkmark.square.fill" : "square")
+                                    .foregroundStyle(selectedSaleyards.contains(saleyard) ? Theme.accentColor : Theme.secondaryText)
+                                    .font(.system(size: 22))
+                                
+                                Text(saleyard)
+                                    .font(Theme.body)
+                                    .foregroundStyle(Theme.primaryText)
+                                    .multilineTextAlignment(.leading)
+                                
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color.clear)
                     }
                 }
             }
-            .listRowBackground(Theme.cardBackground)
-        }
-        .searchable(text: $searchText, prompt: "Search saleyards")
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(Theme.backgroundGradient)
-        .navigationTitle("Select Saleyards")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Done") {
-                    dismiss()
+            .searchable(
+                text: $searchText,
+                placement: .navigationBarDrawer(displayMode: .always),
+                prompt: "Search saleyards"
+            )
+            .navigationTitle("Select Saleyards")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.tertiaryBackground)
         }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        .presentationBackground(Theme.tertiaryBackground)
     }
 }
 
@@ -277,50 +361,60 @@ struct PropertySelectionView: View {
     let properties: [Property]
     
     var body: some View {
-        List {
-            Section {
-                ForEach(properties) { property in
-                    Button {
-                        HapticManager.tap()
-                        if selectedProperties.contains(property.id) {
-                            selectedProperties.removeAll { $0 == property.id }
-                        } else {
-                            selectedProperties.append(property.id)
-                        }
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(property.propertyName)
-                                    .foregroundStyle(Theme.primaryText)
-                                if let pic = property.propertyPIC {
-                                    Text("PIC: \(pic)")
-                                        .font(Theme.caption)
-                                        .foregroundStyle(Theme.secondaryText)
-                                }
-                            }
-                            Spacer()
+        NavigationStack {
+            List {
+                Section {
+                    ForEach(properties) { property in
+                        Button {
+                            HapticManager.tap()
                             if selectedProperties.contains(property.id) {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundStyle(Theme.accentColor)
+                                selectedProperties.removeAll { $0 == property.id }
+                            } else {
+                                selectedProperties.append(property.id)
                             }
+                        } label: {
+                            HStack {
+                                // Checkbox
+                                Image(systemName: selectedProperties.contains(property.id) ? "checkmark.square.fill" : "square")
+                                    .foregroundStyle(selectedProperties.contains(property.id) ? Theme.accentColor : Theme.secondaryText)
+                                    .font(.system(size: 22))
+                                
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(property.propertyName)
+                                        .font(Theme.body)
+                                        .foregroundStyle(Theme.primaryText)
+                                    if let pic = property.propertyPIC {
+                                        Text("PIC: \(pic)")
+                                            .font(Theme.caption)
+                                            .foregroundStyle(Theme.secondaryText)
+                                    }
+                                }
+                                Spacer()
+                            }
+                            .contentShape(Rectangle())
                         }
+                        .buttonStyle(.plain)
+                        .listRowBackground(Color.clear)
                     }
                 }
             }
-            .listRowBackground(Theme.cardBackground)
-        }
-        .listStyle(.insetGrouped)
-        .scrollContentBackground(.hidden)
-        .background(Theme.backgroundGradient)
-        .navigationTitle("Select Properties")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .confirmationAction) {
-                Button("Done") {
-                    dismiss()
+            .navigationTitle("Select Properties")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        HapticManager.tap()
+                        dismiss()
+                    }
+                    .foregroundStyle(Theme.accentColor)
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(Theme.tertiaryBackground)
         }
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+        .presentationBackground(Theme.tertiaryBackground)
     }
 }
 
