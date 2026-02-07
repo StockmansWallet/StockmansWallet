@@ -62,6 +62,11 @@ struct HerdReportData: Identifiable {
     let maxPrice: Double
     let avgPrice: Double
     let netValue: Double
+    // Debug: Additional fields for Asset Register (bank review)
+    let breedingAccrual: Double? // Calf accrual value for breeding stock
+    let dailyWeightGain: Double // DWG allocation in kg/day
+    let mortalityRate: Double // Mortality rate as decimal (e.g., 0.05 for 5%)
+    let isBreeder: Bool // Flag to identify breeding stock
 }
 
 // MARK: - Sale Report Data

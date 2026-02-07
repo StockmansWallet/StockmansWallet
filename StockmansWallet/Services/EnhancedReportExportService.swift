@@ -379,16 +379,349 @@ class EnhancedReportExportService {
         return cardStartY + cardHeight + cardSpacing
     }
     
+    /// Draw saleyard comparison data card
+    private func drawSaleyardComparisonData(
+        saleyardData: SaleyardComparisonData,
+        yPosition: CGFloat,
+        margin: CGFloat,
+        pageWidth: CGFloat
+    ) -> CGFloat {
+        
+        var y = yPosition
+        let cardWidth = pageWidth - (margin * 2)
+        let cardStartY = y
+        let cardHeight: CGFloat = 120
+        
+        // Card background
+        let cardRect = CGRect(x: margin, y: cardStartY, width: cardWidth, height: cardHeight)
+        let cardPath = UIBezierPath(roundedRect: cardRect, cornerRadius: cardCornerRadius)
+        
+        cardBackgroundColor.setFill()
+        cardPath.fill()
+        
+        dividerColor.setStroke()
+        cardPath.lineWidth = 0.5
+        cardPath.stroke()
+        
+        // Content
+        y += cardPadding
+        let leftX = margin + cardPadding
+        
+        // Saleyard name header
+        let nameAttributes: [NSAttributedString.Key: Any] = [
+            .font: headlineFont,
+            .foregroundColor: primaryTextColor
+        ]
+        saleyardData.saleyardName.draw(at: CGPoint(x: leftX, y: y), withAttributes: nameAttributes)
+        
+        y += 22
+        
+        // Head count subtitle
+        let subtitleAttributes: [NSAttributedString.Key: Any] = [
+            .font: captionFont,
+            .foregroundColor: secondaryTextColor
+        ]
+        "\(saleyardData.totalHeadCount) head sold".draw(at: CGPoint(x: leftX, y: y), withAttributes: subtitleAttributes)
+        y += 18
+        
+        // Price details
+        let dataAttributes: [NSAttributedString.Key: Any] = [
+            .font: bodyFont,
+            .foregroundColor: primaryTextColor
+        ]
+        let labelAttributes: [NSAttributedString.Key: Any] = [
+            .font: labelFont,
+            .foregroundColor: tertiaryTextColor,
+            .kern: 0.3
+        ]
+        
+        // Calculate column positions
+        let contentWidth = cardWidth - (cardPadding * 2)
+        let col1X = leftX
+        let col2X = leftX + (contentWidth * 0.33)
+        let col3X = leftX + (contentWidth * 0.66)
+        
+        // Labels
+        "AVG PRICE".draw(at: CGPoint(x: col1X, y: y), withAttributes: labelAttributes)
+        "MIN PRICE".draw(at: CGPoint(x: col2X, y: y), withAttributes: labelAttributes)
+        "MAX PRICE".draw(at: CGPoint(x: col3X, y: y), withAttributes: labelAttributes)
+        y += 14
+        
+        // Values
+        "$\(String(format: "%.2f", saleyardData.avgPrice))/kg".draw(at: CGPoint(x: col1X, y: y), withAttributes: dataAttributes)
+        "$\(String(format: "%.2f", saleyardData.minPrice))/kg".draw(at: CGPoint(x: col2X, y: y), withAttributes: dataAttributes)
+        "$\(String(format: "%.2f", saleyardData.maxPrice))/kg".draw(at: CGPoint(x: col3X, y: y), withAttributes: dataAttributes)
+        
+        return cardStartY + cardHeight + cardSpacing
+    }
+    
+    /// Draw land value analysis data card
+    private func drawLandValueAnalysisData(
+        landData: LandValueAnalysisData,
+        yPosition: CGFloat,
+        margin: CGFloat,
+        pageWidth: CGFloat
+    ) -> CGFloat {
+        
+        var y = yPosition
+        let cardWidth = pageWidth - (margin * 2)
+        let cardStartY = y
+        let cardHeight: CGFloat = 120
+        
+        // Card background
+        let cardRect = CGRect(x: margin, y: cardStartY, width: cardWidth, height: cardHeight)
+        let cardPath = UIBezierPath(roundedRect: cardRect, cornerRadius: cardCornerRadius)
+        
+        cardBackgroundColor.setFill()
+        cardPath.fill()
+        
+        dividerColor.setStroke()
+        cardPath.lineWidth = 0.5
+        cardPath.stroke()
+        
+        // Content
+        y += cardPadding
+        let leftX = margin + cardPadding
+        
+        // Property name header
+        let nameAttributes: [NSAttributedString.Key: Any] = [
+            .font: headlineFont,
+            .foregroundColor: primaryTextColor
+        ]
+        landData.propertyName.draw(at: CGPoint(x: leftX, y: y), withAttributes: nameAttributes)
+        
+        // Livestock value on the right
+        let valueAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 16, weight: .semibold),
+            .foregroundColor: primaryTextColor
+        ]
+        let valueText = formatCurrency(landData.livestockValue)
+        let valueSize = valueText.size(withAttributes: valueAttributes)
+        valueText.draw(at: CGPoint(x: margin + cardWidth - cardPadding - valueSize.width, y: y), withAttributes: valueAttributes)
+        
+        y += 22
+        
+        // Head count subtitle
+        let subtitleAttributes: [NSAttributedString.Key: Any] = [
+            .font: captionFont,
+            .foregroundColor: secondaryTextColor
+        ]
+        "\(landData.totalHeadCount) head".draw(at: CGPoint(x: leftX, y: y), withAttributes: subtitleAttributes)
+        y += 18
+        
+        // Property details
+        let dataAttributes: [NSAttributedString.Key: Any] = [
+            .font: bodyFont,
+            .foregroundColor: primaryTextColor
+        ]
+        let labelAttributes: [NSAttributedString.Key: Any] = [
+            .font: labelFont,
+            .foregroundColor: tertiaryTextColor,
+            .kern: 0.3
+        ]
+        
+        // Calculate column positions
+        let contentWidth = cardWidth - (cardPadding * 2)
+        let col1X = leftX
+        let col2X = leftX + (contentWidth * 0.5)
+        
+        // Labels
+        "ACREAGE".draw(at: CGPoint(x: col1X, y: y), withAttributes: labelAttributes)
+        "VALUE PER ACRE".draw(at: CGPoint(x: col2X, y: y), withAttributes: labelAttributes)
+        y += 14
+        
+        // Values
+        "\(String(format: "%.1f", landData.acreage)) acres".draw(at: CGPoint(x: col1X, y: y), withAttributes: dataAttributes)
+        formatCurrency(landData.valuePerAcre).draw(at: CGPoint(x: col2X, y: y), withAttributes: dataAttributes)
+        
+        return cardStartY + cardHeight + cardSpacing
+    }
+    
+    /// Draw farm comparison data card
+    private func drawFarmComparisonData(
+        farmData: FarmComparisonData,
+        yPosition: CGFloat,
+        margin: CGFloat,
+        pageWidth: CGFloat
+    ) -> CGFloat {
+        
+        var y = yPosition
+        let cardWidth = pageWidth - (margin * 2)
+        let cardStartY = y
+        let cardHeight: CGFloat = 120
+        
+        // Card background
+        let cardRect = CGRect(x: margin, y: cardStartY, width: cardWidth, height: cardHeight)
+        let cardPath = UIBezierPath(roundedRect: cardRect, cornerRadius: cardCornerRadius)
+        
+        cardBackgroundColor.setFill()
+        cardPath.fill()
+        
+        dividerColor.setStroke()
+        cardPath.lineWidth = 0.5
+        cardPath.stroke()
+        
+        // Content
+        y += cardPadding
+        let leftX = margin + cardPadding
+        
+        // Property name header
+        let nameAttributes: [NSAttributedString.Key: Any] = [
+            .font: headlineFont,
+            .foregroundColor: primaryTextColor
+        ]
+        farmData.propertyName.draw(at: CGPoint(x: leftX, y: y), withAttributes: nameAttributes)
+        
+        // Total value on the right
+        let valueAttributes: [NSAttributedString.Key: Any] = [
+            .font: UIFont.systemFont(ofSize: 16, weight: .semibold),
+            .foregroundColor: primaryTextColor
+        ]
+        let valueText = formatCurrency(farmData.totalValue)
+        let valueSize = valueText.size(withAttributes: valueAttributes)
+        valueText.draw(at: CGPoint(x: margin + cardWidth - cardPadding - valueSize.width, y: y), withAttributes: valueAttributes)
+        
+        y += 22
+        
+        // Head count subtitle
+        let subtitleAttributes: [NSAttributedString.Key: Any] = [
+            .font: captionFont,
+            .foregroundColor: secondaryTextColor
+        ]
+        "\(farmData.totalHeadCount) head".draw(at: CGPoint(x: leftX, y: y), withAttributes: subtitleAttributes)
+        y += 18
+        
+        // Farm metrics
+        let dataAttributes: [NSAttributedString.Key: Any] = [
+            .font: bodyFont,
+            .foregroundColor: primaryTextColor
+        ]
+        let labelAttributes: [NSAttributedString.Key: Any] = [
+            .font: labelFont,
+            .foregroundColor: tertiaryTextColor,
+            .kern: 0.3
+        ]
+        
+        // Calculate column positions
+        let contentWidth = cardWidth - (cardPadding * 2)
+        let col1X = leftX
+        let col2X = leftX + (contentWidth * 0.5)
+        
+        // Labels
+        "AVG PRICE/KG".draw(at: CGPoint(x: col1X, y: y), withAttributes: labelAttributes)
+        "VALUE PER HEAD".draw(at: CGPoint(x: col2X, y: y), withAttributes: labelAttributes)
+        y += 14
+        
+        // Values
+        "$\(String(format: "%.2f", farmData.avgPricePerKg))/kg".draw(at: CGPoint(x: col1X, y: y), withAttributes: dataAttributes)
+        formatCurrency(farmData.valuePerHead).draw(at: CGPoint(x: col2X, y: y), withAttributes: dataAttributes)
+        
+        return cardStartY + cardHeight + cardSpacing
+    }
+    
     // Debug: Generate Saleyard Comparison PDF
     private func generateSaleyardComparisonPDF(
         data: ReportData,
         configuration: ReportConfiguration
     ) -> URL? {
         
-        // TODO: Implement saleyard comparison PDF with charts/tables
+        let pdfMetaData = [
+            kCGPDFContextCreator: "Stockman's Wallet",
+            kCGPDFContextAuthor: data.farmName ?? "User",
+            kCGPDFContextTitle: "Saleyard Comparison"
+        ]
+        let format = UIGraphicsPDFRendererFormat()
+        format.documentInfo = pdfMetaData as [String: Any]
+        
+        let pageWidth = 8.5 * 72.0
+        let pageHeight = 11 * 72.0
+        let pageRect = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
+        let margin: CGFloat = 72.0
+        
+        let renderer = UIGraphicsPDFRenderer(bounds: pageRect, format: format)
+        
         let fileName = "SaleyardComparison_\(Date().timeIntervalSince1970).pdf"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-        return tempURL
+        
+        var currentPage = 0
+        var totalPages = 1
+        
+        let pdfData = renderer.pdfData { context in
+            context.beginPage()
+            currentPage += 1
+            var yPosition: CGFloat = margin
+            
+            // Draw header
+            yPosition = drawReportHeader(
+                title: "Saleyard Comparison",
+                farmName: data.farmName,
+                userDetails: data.userDetails,
+                configuration: configuration,
+                context: context,
+                yPosition: yPosition,
+                pageWidth: pageWidth,
+                margin: margin
+            )
+            
+            // Draw section header
+            yPosition = drawSectionHeader("Saleyard Price Comparison", yPosition: yPosition, margin: margin)
+            
+            // Check if we have data
+            if data.saleyardComparison.isEmpty {
+                let messageAttributes: [NSAttributedString.Key: Any] = [
+                    .font: bodyFont,
+                    .foregroundColor: secondaryTextColor
+                ]
+                "No saleyard data available for the selected period.".draw(
+                    at: CGPoint(x: margin, y: yPosition),
+                    withAttributes: messageAttributes
+                )
+            } else {
+                // Draw saleyard comparison cards
+                for saleyardData in data.saleyardComparison {
+                    // Check if we need a new page
+                    if yPosition > pageHeight - 200 {
+                        drawPageFooter(
+                            pageNumber: currentPage,
+                            totalPages: totalPages,
+                            yPosition: pageHeight - margin/2,
+                            pageWidth: pageWidth,
+                            margin: margin
+                        )
+                        
+                        context.beginPage()
+                        currentPage += 1
+                        totalPages = currentPage
+                        yPosition = margin + 20
+                    }
+                    
+                    yPosition = drawSaleyardComparisonData(
+                        saleyardData: saleyardData,
+                        yPosition: yPosition,
+                        margin: margin,
+                        pageWidth: pageWidth
+                    )
+                }
+            }
+            
+            // Draw footer
+            totalPages = currentPage
+            drawPageFooter(
+                pageNumber: currentPage,
+                totalPages: totalPages,
+                yPosition: pageHeight - margin/2,
+                pageWidth: pageWidth,
+                margin: margin
+            )
+        }
+        
+        do {
+            try pdfData.write(to: tempURL)
+            return tempURL
+        } catch {
+            print("Failed to save PDF: \(error)")
+            return nil
+        }
     }
     
     // Debug: Generate Livestock Value vs Land Area PDF
@@ -397,10 +730,103 @@ class EnhancedReportExportService {
         configuration: ReportConfiguration
     ) -> URL? {
         
-        // TODO: Implement land area analysis PDF with charts
+        let pdfMetaData = [
+            kCGPDFContextCreator: "Stockman's Wallet",
+            kCGPDFContextAuthor: data.farmName ?? "User",
+            kCGPDFContextTitle: "Value vs Land Area"
+        ]
+        let format = UIGraphicsPDFRendererFormat()
+        format.documentInfo = pdfMetaData as [String: Any]
+        
+        let pageWidth = 8.5 * 72.0
+        let pageHeight = 11 * 72.0
+        let pageRect = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
+        let margin: CGFloat = 72.0
+        
+        let renderer = UIGraphicsPDFRenderer(bounds: pageRect, format: format)
+        
         let fileName = "LivestockValueVsLandArea_\(Date().timeIntervalSince1970).pdf"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-        return tempURL
+        
+        var currentPage = 0
+        var totalPages = 1
+        
+        let pdfData = renderer.pdfData { context in
+            context.beginPage()
+            currentPage += 1
+            var yPosition: CGFloat = margin
+            
+            // Draw header
+            yPosition = drawReportHeader(
+                title: "Value vs Land Area",
+                farmName: data.farmName,
+                userDetails: data.userDetails,
+                configuration: configuration,
+                context: context,
+                yPosition: yPosition,
+                pageWidth: pageWidth,
+                margin: margin
+            )
+            
+            // Draw section header
+            yPosition = drawSectionHeader("Land Area Analysis", yPosition: yPosition, margin: margin)
+            
+            // Check if we have data
+            if data.landValueAnalysis.isEmpty {
+                let messageAttributes: [NSAttributedString.Key: Any] = [
+                    .font: bodyFont,
+                    .foregroundColor: secondaryTextColor
+                ]
+                "No land area data available. Please add property acreage in settings.".draw(
+                    at: CGPoint(x: margin, y: yPosition),
+                    withAttributes: messageAttributes
+                )
+            } else {
+                // Draw land value analysis cards
+                for landData in data.landValueAnalysis {
+                    // Check if we need a new page
+                    if yPosition > pageHeight - 200 {
+                        drawPageFooter(
+                            pageNumber: currentPage,
+                            totalPages: totalPages,
+                            yPosition: pageHeight - margin/2,
+                            pageWidth: pageWidth,
+                            margin: margin
+                        )
+                        
+                        context.beginPage()
+                        currentPage += 1
+                        totalPages = currentPage
+                        yPosition = margin + 20
+                    }
+                    
+                    yPosition = drawLandValueAnalysisData(
+                        landData: landData,
+                        yPosition: yPosition,
+                        margin: margin,
+                        pageWidth: pageWidth
+                    )
+                }
+            }
+            
+            // Draw footer
+            totalPages = currentPage
+            drawPageFooter(
+                pageNumber: currentPage,
+                totalPages: totalPages,
+                yPosition: pageHeight - margin/2,
+                pageWidth: pageWidth,
+                margin: margin
+            )
+        }
+        
+        do {
+            try pdfData.write(to: tempURL)
+            return tempURL
+        } catch {
+            print("Failed to save PDF: \(error)")
+            return nil
+        }
     }
     
     // Debug: Generate Farm Comparison PDF
@@ -409,10 +835,103 @@ class EnhancedReportExportService {
         configuration: ReportConfiguration
     ) -> URL? {
         
-        // TODO: Implement farm comparison PDF with comparative tables
+        let pdfMetaData = [
+            kCGPDFContextCreator: "Stockman's Wallet",
+            kCGPDFContextAuthor: data.farmName ?? "User",
+            kCGPDFContextTitle: "Farm Comparison"
+        ]
+        let format = UIGraphicsPDFRendererFormat()
+        format.documentInfo = pdfMetaData as [String: Any]
+        
+        let pageWidth = 8.5 * 72.0
+        let pageHeight = 11 * 72.0
+        let pageRect = CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight)
+        let margin: CGFloat = 72.0
+        
+        let renderer = UIGraphicsPDFRenderer(bounds: pageRect, format: format)
+        
         let fileName = "FarmComparison_\(Date().timeIntervalSince1970).pdf"
         let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
-        return tempURL
+        
+        var currentPage = 0
+        var totalPages = 1
+        
+        let pdfData = renderer.pdfData { context in
+            context.beginPage()
+            currentPage += 1
+            var yPosition: CGFloat = margin
+            
+            // Draw header
+            yPosition = drawReportHeader(
+                title: "Farm Comparison",
+                farmName: data.farmName,
+                userDetails: data.userDetails,
+                configuration: configuration,
+                context: context,
+                yPosition: yPosition,
+                pageWidth: pageWidth,
+                margin: margin
+            )
+            
+            // Draw section header
+            yPosition = drawSectionHeader("Property Comparison", yPosition: yPosition, margin: margin)
+            
+            // Check if we have data
+            if data.farmComparison.isEmpty {
+                let messageAttributes: [NSAttributedString.Key: Any] = [
+                    .font: bodyFont,
+                    .foregroundColor: secondaryTextColor
+                ]
+                "No comparison data available. Add multiple properties to compare.".draw(
+                    at: CGPoint(x: margin, y: yPosition),
+                    withAttributes: messageAttributes
+                )
+            } else {
+                // Draw farm comparison cards
+                for farmData in data.farmComparison {
+                    // Check if we need a new page
+                    if yPosition > pageHeight - 200 {
+                        drawPageFooter(
+                            pageNumber: currentPage,
+                            totalPages: totalPages,
+                            yPosition: pageHeight - margin/2,
+                            pageWidth: pageWidth,
+                            margin: margin
+                        )
+                        
+                        context.beginPage()
+                        currentPage += 1
+                        totalPages = currentPage
+                        yPosition = margin + 20
+                    }
+                    
+                    yPosition = drawFarmComparisonData(
+                        farmData: farmData,
+                        yPosition: yPosition,
+                        margin: margin,
+                        pageWidth: pageWidth
+                    )
+                }
+            }
+            
+            // Draw footer
+            totalPages = currentPage
+            drawPageFooter(
+                pageNumber: currentPage,
+                totalPages: totalPages,
+                yPosition: pageHeight - margin/2,
+                pageWidth: pageWidth,
+                margin: margin
+            )
+        }
+        
+        do {
+            try pdfData.write(to: tempURL)
+            return tempURL
+        } catch {
+            print("Failed to save PDF: \(error)")
+            return nil
+        }
     }
     
     // MARK: - PDF Drawing Helper Methods
@@ -465,7 +984,12 @@ class EnhancedReportExportService {
         let periodText = "\(dateFormatter.string(from: configuration.startDate)) – \(dateFormatter.string(from: configuration.endDate))"
         periodText.draw(at: CGPoint(x: margin, y: y), withAttributes: periodAttributes)
         
-        y += 32 // Space after period
+        y += 52 // Increased space after period (more space above horizontal line)
+        
+        // Draw horizontal divider line before user details section
+        drawDivider(at: y, margin: margin, width: contentWidth)
+        
+        y += 40 // Increased space after divider before user details
         
         // MARK: - User Details (Two-column grid)
         if let userDetails = userDetails {
@@ -638,8 +1162,9 @@ class EnhancedReportExportService {
         let cardWidth = pageWidth - (margin * 2)
         let cardStartY = y
         
-        // Estimate card height based on content (increased for bottom padding)
-        let estimatedHeight: CGFloat = 130 // Increased from 120 for more bottom padding
+        // Debug: Calculate card height based on whether we show breeding/risk data
+        let showBreedingRiskData = herdData.breedingAccrual != nil || herdData.dailyWeightGain > 0 || herdData.mortalityRate > 0
+        let estimatedHeight: CGFloat = showBreedingRiskData ? 170 : 130 // Taller for breeding/risk data
         
         // Card background
         let cardRect = CGRect(x: margin, y: cardStartY, width: cardWidth, height: estimatedHeight)
@@ -727,6 +1252,69 @@ class EnhancedReportExportService {
             priceText = "$\(String(format: "%.2f", herdData.pricePerKg))/kg"
         }
         priceText.draw(at: CGPoint(x: col4X, y: y), withAttributes: dataAttributes)
+        
+        // MARK: - Breeding & Risk Allocations (for bank review)
+        // Debug: Show calf accrual, DWG, and mortality provisions if relevant
+        if showBreedingRiskData {
+            y += 24 // Space before breeding/risk section
+            
+            // Section divider with lighter color
+            let dividerY = y
+            let dividerPath = UIBezierPath()
+            dividerPath.move(to: CGPoint(x: leftX, y: dividerY))
+            dividerPath.addLine(to: CGPoint(x: margin + cardWidth - cardPadding, y: dividerY))
+            UIColor(white: 0.92, alpha: 1.0).setStroke()
+            dividerPath.lineWidth = 0.5
+            dividerPath.stroke()
+            
+            y += 12 // Space after divider
+            
+            // Calculate three-column layout for breeding/risk data
+            let riskCol1X = leftX
+            let riskCol2X = leftX + (contentWidth * 0.33)
+            let riskCol3X = leftX + (contentWidth * 0.66)
+            
+            // Row: Labels (lighter, smaller text)
+            if let breedingAccrual = herdData.breedingAccrual {
+                "CALF ACCRUAL".draw(at: CGPoint(x: riskCol1X, y: y), withAttributes: labelAttributes)
+            }
+            if herdData.dailyWeightGain > 0 {
+                let dwgX = herdData.breedingAccrual != nil ? riskCol2X : riskCol1X
+                "DWG ALLOCATION".draw(at: CGPoint(x: dwgX, y: y), withAttributes: labelAttributes)
+            }
+            if herdData.mortalityRate > 0 {
+                let mortX: CGFloat
+                if herdData.breedingAccrual != nil && herdData.dailyWeightGain > 0 {
+                    mortX = riskCol3X
+                } else if herdData.breedingAccrual != nil || herdData.dailyWeightGain > 0 {
+                    mortX = riskCol2X
+                } else {
+                    mortX = riskCol1X
+                }
+                "MORTALITY".draw(at: CGPoint(x: mortX, y: y), withAttributes: labelAttributes)
+            }
+            y += 12
+            
+            // Row: Values
+            if let breedingAccrual = herdData.breedingAccrual {
+                formatCurrency(breedingAccrual).draw(at: CGPoint(x: riskCol1X, y: y), withAttributes: dataAttributes)
+            }
+            if herdData.dailyWeightGain > 0 {
+                let dwgX = herdData.breedingAccrual != nil ? riskCol2X : riskCol1X
+                "\(String(format: "%.2f", herdData.dailyWeightGain)) kg/day".draw(at: CGPoint(x: dwgX, y: y), withAttributes: dataAttributes)
+            }
+            if herdData.mortalityRate > 0 {
+                let mortX: CGFloat
+                if herdData.breedingAccrual != nil && herdData.dailyWeightGain > 0 {
+                    mortX = riskCol3X
+                } else if herdData.breedingAccrual != nil || herdData.dailyWeightGain > 0 {
+                    mortX = riskCol2X
+                } else {
+                    mortX = riskCol1X
+                }
+                "\(String(format: "%.1f", herdData.mortalityRate * 100))% p.a.".draw(at: CGPoint(x: mortX, y: y), withAttributes: dataAttributes)
+            }
+        }
         
         // Return position after card with spacing
         return cardStartY + estimatedHeight + cardSpacing

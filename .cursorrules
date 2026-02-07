@@ -3,8 +3,9 @@
 - Every time you choose to apply a rule(s), explicitly state the rule{s} in the output. You can abbreviate the rule description to a single word or phrase
 - Do not make any changes, until you have 95% confidence that you know what to build. Ask me follow up questions until you have that confidence.
 
-# Task Completion Summary (MANDATORY)
-- After completing ANY feature request, update, or fix, you MUST provide a spreadsheet entry summary
+# Task Completion Summary
+- Only provide the task completion summary when explicitly asked by the user
+- The user may want to complete several tasks before requesting the summary
 - Format: Each field in a separate copyable code block (```text```)
 - Required fields in order:
   1. Epic/Area: (e.g., "Portfolio Management / Add Herd Flow")
@@ -13,8 +14,7 @@
   4. Status: (Usually "Done" when complete)
   5. Priority: (P0-P2 based on impact)
   6. Notes: (Files Modified with details, Technical Details, lines changed)
-- Only provide this AFTER the task is complete and tested, not before
-- This is NON-NEGOTIABLE and must be done every single time a task is completed
+- Only provide this AFTER all requested tasks are complete
 
 # Project structure
 - All the files go inside /StockmansWallet

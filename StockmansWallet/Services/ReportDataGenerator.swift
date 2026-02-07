@@ -170,6 +170,9 @@ class ReportDataGenerator {
             let maxPrice = currentPrice * 1.1 // TODO: Get actual max from historical data
             let avgPrice = currentPrice // TODO: Calculate actual average
             
+            // Debug: Get mortality rate (herd-specific or default from preferences)
+            let mortalityRate = herd.mortalityRate ?? preferences.defaultMortalityRate
+            
             let herdData = HerdReportData(
                 id: herd.id,
                 name: herd.name,
@@ -181,7 +184,11 @@ class ReportDataGenerator {
                 minPrice: minPrice,
                 maxPrice: maxPrice,
                 avgPrice: avgPrice,
-                netValue: valuation.netRealizableValue
+                netValue: valuation.netRealizableValue,
+                breedingAccrual: valuation.breedingAccrual > 0 ? valuation.breedingAccrual : nil,
+                dailyWeightGain: herd.dailyWeightGain,
+                mortalityRate: mortalityRate,
+                isBreeder: herd.isBreeder
             )
             
             herdDataArray.append(herdData)
